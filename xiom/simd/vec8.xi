@@ -45,7 +45,9 @@ pub type I32x8 = {
 
 /// Build a vector from a fixed 8-element array.
 /// Complexity: O(1).
-pub fn f32x8_new(v: [8]Float32) -> F32x8 {
+pub fn f32x8_new(v: [8]Float32) -> F32x8
+  ensures: result.a0 == v[0] && result.a1 == v[1] && result.a2 == v[2] && result.a3 == v[3] && result.a4 == v[4] && result.a5 == v[5] && result.a6 == v[6] && result.a7 == v[7]
+{
   F32x8{ a0: v[0]; a1: v[1]; a2: v[2]; a3: v[3]; a4: v[4]; a5: v[5]; a6: v[6]; a7: v[7]; }
 }
 
@@ -75,7 +77,9 @@ pub fn f32x8_mul(x: F32x8, y: F32x8) -> F32x8
 
 /// Lane-wise division.
 /// Complexity: O(1).
-pub fn f32x8_div(x: F32x8, y: F32x8) -> F32x8 {
+pub fn f32x8_div(x: F32x8, y: F32x8) -> F32x8
+  ensures: result.a0 == x.a0 / y.a0 && result.a1 == x.a1 / y.a1 && result.a2 == x.a2 / y.a2 && result.a3 == x.a3 / y.a3 && result.a4 == x.a4 / y.a4 && result.a5 == x.a5 / y.a5 && result.a6 == x.a6 / y.a6 && result.a7 == x.a7 / y.a7
+{
   F32x8{ a0: x.a0 / y.a0; a1: x.a1 / y.a1; a2: x.a2 / y.a2; a3: x.a3 / y.a3; a4: x.a4 / y.a4; a5: x.a5 / y.a5; a6: x.a6 / y.a6; a7: x.a7 / y.a7; }
 }
 
@@ -253,7 +257,9 @@ pub fn f32x8_insert(x: F32x8, i: Int, v: Float32) -> F32x8
 
 /// The sum of all lanes.
 /// Complexity: O(1).
-pub fn f32x8_sum(x: F32x8) -> Float32 {
+pub fn f32x8_sum(x: F32x8) -> Float32
+  ensures: result == x.a0 + x.a1 + x.a2 + x.a3 + x.a4 + x.a5 + x.a6 + x.a7
+{
   x.a0 + x.a1 + x.a2 + x.a3 + x.a4 + x.a5 + x.a6 + x.a7
 }
 
@@ -288,7 +294,9 @@ pub fn f32x8_store(ptr: Int, x: F32x8)
 
 /// Build a vector from a fixed 8-element integer array.
 /// Complexity: O(1).
-pub fn i32x8_new(v: [8]Int) -> I32x8 {
+pub fn i32x8_new(v: [8]Int) -> I32x8
+  ensures: result.a0 == v[0] && result.a1 == v[1] && result.a2 == v[2] && result.a3 == v[3] && result.a4 == v[4] && result.a5 == v[5] && result.a6 == v[6] && result.a7 == v[7]
+{
   I32x8{ a0: v[0]; a1: v[1]; a2: v[2]; a3: v[3]; a4: v[4]; a5: v[5]; a6: v[6]; a7: v[7]; }
 }
 

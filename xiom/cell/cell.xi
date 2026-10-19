@@ -15,17 +15,23 @@ use xiom.ptr;
 pub type Cell[T] = { value: T; }
 
 /// Create a new cell holding `value`.
-pub fn Cell.new[T](value: T) -> Cell[T] {
+pub fn Cell.new[T](value: T) -> Cell[T]
+  ensures: result.value == value
+{
   return Cell[T]{ value: value };
 }
 
 /// Copy the current value out.
-pub fn Cell.get[T](self) -> T {
+pub fn Cell.get[T](self) -> T
+  ensures: result == value
+{
   return value;
 }
 
 /// Replace the stored value.
-pub fn Cell.set[T](&mut self, value: T) {
+pub fn Cell.set[T](&mut self, value: T)
+  ensures: self.value == value
+{
     self.value = value;
 }
 

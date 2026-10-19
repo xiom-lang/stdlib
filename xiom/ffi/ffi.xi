@@ -332,7 +332,10 @@ pub fn safe_ptr_copy(dst: &mut SafePtr, src: &SafePtr, count: Int) -> Result[Uni
 
 /// Copy all bytes from a SafePtr into a Vec[Int].
 /// Each byte becomes a separate Int element. Result length equals ptr.size.
-pub fn safe_ptr_to_vec(ptr: &SafePtr) -> Result[Vec[Int], Str] {
+pub fn safe_ptr_to_vec(ptr: &SafePtr) -> Result[Vec[Int], Str]
+  requires: ptr.size >= 0
+  ensures: result is Ok => result.len() == ptr.size
+{
   var result = Vec[Int].new();
   unsafe {
     var i = 0;
@@ -486,17 +489,23 @@ fn buffer_read_slice(buf: &FFIBuffer, offset: Int, len: Int, idx: Int, acc: Vec[
 }
 
 /// Reset the buffer length to zero.
-pub fn buffer_clear(buf: &mut FFIBuffer) {
+pub fn buffer_clear(buf: &mut FFIBuffer)
+  ensures: buf.data.len() == 0
+{
   buf.data = Vec[Int].new();
 }
 
 /// Current buffer length in bytes.
-pub fn buffer_len(buf: &FFIBuffer) -> Int {
+pub fn buffer_len(buf: &FFIBuffer) -> Int
+  ensures: result >= 0
+{
   buf.data.len()
 }
 
 /// True when the buffer is empty.
-pub fn buffer_is_empty(buf: &FFIBuffer) -> Bool {
+pub fn buffer_is_empty(buf: &FFIBuffer) -> Bool
+  ensures: result == (buf.data.len() == 0)
+{
   buf.data.len() == 0
 }
 
@@ -507,7 +516,10 @@ pub type FFIError = {
 }
 
 /// C convention: negative return code = error.
-pub fn ffi_check(code: Int, msg: Str) -> Result[Int, FFIError] {
+pub fn ffi_check(code: Int, msg: Str) -> Result[Int, FFIError]
+  ensures: code < 0 => result is Err
+  ensures: code >= 0 => result is Ok
+{
   if code < 0 {
     Err(FFIError { code: code; message: msg })
   } else {
@@ -528,7 +540,10 @@ pub fn ffi_check_ptr(ptr: *UInt8, msg: Str) -> Result[*UInt8, FFIError]
 }
 
 /// C convention: non-zero return = error.
-pub fn ffi_check_nonzero(code: Int, msg: Str) -> Result[Int, FFIError] {
+pub fn ffi_check_nonzero(code: Int, msg: Str) -> Result[Int, FFIError]
+  ensures: code != 0 => result is Err
+  ensures: code == 0 => result is Ok
+{
   if code != 0 {
     Err(FFIError { code: code; message: msg })
   } else {

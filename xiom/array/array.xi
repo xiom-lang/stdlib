@@ -65,7 +65,9 @@ pub fn get_mut[T, const N: Int](arr: &mut [N]T, index: Int) -> Option[T]
 }
 
 /// Apply `f` to every element, returning a new array.
-pub fn map[T, U, const N: Int](arr: [N]T, f: fn(T) -> U) -> [N]U {
+pub fn map[T, U, const N: Int](arr: [N]T, f: fn(T) -> U) -> [N]U
+  ensures: result.len() == N
+{
   var result: [N]U;
   var i = 0;
   while i < N {
@@ -76,7 +78,9 @@ pub fn map[T, U, const N: Int](arr: [N]T, f: fn(T) -> U) -> [N]U {
 }
 
 /// Pair the elements of two arrays positionally.
-pub fn zip[T, U, const N: Int](a: [N]T, b: [N]U) -> [N](T, U) {
+pub fn zip[T, U, const N: Int](a: [N]T, b: [N]U) -> [N](T, U)
+  ensures: result.len() == N
+{
   var result: [N](T, U);
   var i = 0;
   while i < N {
@@ -114,7 +118,9 @@ pub fn as_mut_slice[T, const N: Int](arr: &mut [N]T) -> Slice[T]
 }
 
 /// Array of shared references to each element.
-pub fn each_ref[T, const N: Int](arr: &[N]T) -> [N]&T {
+pub fn each_ref[T, const N: Int](arr: &[N]T) -> [N]&T
+  ensures: result.len() == N
+{
   var result: [N]&T;
   var i = 0;
   while i < N {
@@ -125,7 +131,9 @@ pub fn each_ref[T, const N: Int](arr: &[N]T) -> [N]&T {
 }
 
 /// Array of mutable references to each element.
-pub fn each_mut[T, const N: Int](arr: &mut [N]T) -> [N]&mut T {
+pub fn each_mut[T, const N: Int](arr: &mut [N]T) -> [N]&mut T
+  ensures: result.len() == N
+{
   var result: [N]&mut T;
   var i = 0;
   while i < N {
