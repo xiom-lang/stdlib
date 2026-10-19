@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 62 (updated 2026-10-19 15:15Z at this docs commit; **waves 186/187 + wishlist 47 MERGED** -- string 68.9%, math 56.0%, sync 95.2%, global 76.1%, floors189 wired; readiness 87.6% (gate 8 76.1%); **v0.64.8 release candidate prepared** (COMPILER_VERSION/package/notes), tag blocked on the compiler v0.64.8 ref; paste-ready next-session prompt in `## 0C`)
+## 0A. CONTINUE HERE -- handoff snapshot 63 (updated 2026-10-19 15:55Z at this docs commit; **stdlib-v0.64.8 TAGGED** at 2a7fa7b (tag object 8e32a1a), COMPILER_VERSION candidate-v0.64.8-r1; release run 39280967329 queued; registry publish pending the final compiler v0.64.8; waves 179-188 + wishlist 47 merged; coverage 76.1%, readiness 87.6%; paste-ready next-session prompt in `## 0C`)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-18)
 
@@ -25,11 +25,11 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\xiom-relays pull --ff-only
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 62 + block 248 (and this 0C block).
+Read docs/stdlib_session.md snapshot 63 + block 249 (and this 0C block).
 
-State: stdlib-v0.64.7 is released; tag stdlib-v0.64.7 = f4482b14 (tag object 11bf62a6); registry xiom-std 0.64.7 is live; compiler v0.64.7 is released. Waves 179-188 and wishlist 47 are merged: time 52.9%, async 62.7%, num 50.7%, core 78.6%, stats 99.3%, regex 98.0%, search 100%, string 68.9%, math 56.0%, sync 95.2%; global 76.1%; floors189 wired; readiness 87.6% (gates 1-7 and 10 met; gate 8 76.1%; gate 9 compiler-owned). The v0.64.8 release candidate is prepared: COMPILER_VERSION v0.64.8, package.xi 0.64.8, release-notes/v0.64.8.md (validator green), CHANGELOG [0.64.8], prep commit 3cf6f30 plus this docs commit; the tag is blocked because xiom-lang/xiom has no v0.64.8 ref. New compiler items: REL-20261018-1546-stdlib (callee reads of &Vec[GenericStruct]) and REL-20261019-1451-stdlib (generic call nested in ptr.read loses its type argument; repro tools/known_failures/p_nested_generic_ptr_read.xi). Wishlist row 47 is fixed pending xvector verification. Relay: compiler v0.64.8 gate acked with blocker + ETA; PULSE tag-move fixed; 2257/2305 closed.
+State: stdlib-v0.64.7 is released; tag stdlib-v0.64.7 = f4482b14 (tag object 11bf62a6); registry xiom-std 0.64.7 is live. **stdlib-v0.64.8 is tagged**: tag object 8e32a1ac9ca1a4e19d218ce2effca16e3ef0efe8 at commit 2a7fa7ba56ccb48db68f3526ea688eb18dc1d417; COMPILER_VERSION=candidate-v0.64.8-r1 (the compiler source ref for the sequencing window); package.xi 0.64.8; release-notes/v0.64.8.md; CHANGELOG [0.64.8]. release.yml run 39280967329 is queued: https://github.com/xiom-lang/stdlib/actions/runs/39280967329. The tag-push registry run 39280967292 may fail on the candidate compiler asset; expected. Local battery on the code-identical parent 9b88b46: modules 533/533, probes 368/368, smokes 960/962 (only the two documented v0.64.7-gated guard smokes on the v0.64.6 pin), barename/coverage/doc rc 0. Waves 179-188 and wishlist 47 are merged: time 52.9%, async 62.7%, num 50.7%, core 78.6%, stats 99.3%, regex 98.0%, search 100%, string 68.9%, math 56.0%, sync 95.2%; global 76.1%; floors189 wired; readiness 87.6% (gates 1-7 and 10 met; gate 8 76.1%; gate 9 compiler-owned). New compiler items: REL-20261018-1546-stdlib (callee reads of &Vec[GenericStruct]) and REL-20261019-1451-stdlib (generic call nested in ptr.read loses its type argument; repro tools/known_failures/p_nested_generic_ptr_read.xi). Wishlist row 47 is fixed pending xvector verification. Relay: 1513 candidate ref acked; 1432 carries the live tag/run; PULSE tag-move fixed; 2257/2305 closed.
 
-Release gate first: as soon as the compiler provides the v0.64.8 source tag or an immutable candidate ref, tag stdlib-v0.64.8 on the final release commit (the docs/floors commit after 3cf6f30), push main + tag, run release.yml, then dispatch publish-registry after the asset exists. The full local battery is running on the final candidate; report the run/URL to REL-20261019-1432-compiler. Remaining gate 8 after the cut: iter 46.4%, num 50.7%, math 56.0%, string 68.9%, core 78.6%, regex 98.0%, stats 99.3%, search 100%; next waves are num/num.xi and the string/math continuations; dump floors190, wire workflows + tools/README, update the readiness meter.
+Release next: monitor run 39280967329, return the release asset sha, and then dispatch publish-registry after the compiler v0.64.8 release with the compiler override (the tag-push registry run is expected to fail on the candidate asset). The compiler can set STDLIB_VERSION=stdlib-v0.64.8 and cut v0.64.8 now; send the final compiler tag/asset sha so the registry publish can complete. Remaining gate 8 after the cut: iter 46.4%, num 50.7%, math 56.0%, string 68.9%, core 78.6%, regex 98.0%, stats 99.3%, search 100%; next waves are num/num.xi and the string/math continuations; dump floors190, wire workflows + tools/README, update the readiness meter.
 
 Gate 9 (corrected live ids): REL-20261011-1053-stdlib, -1456-stdlib, -1626-stdlib, REL-20261015-2328-stdlib, -2343-stdlib, REL-20261016-2000-stdlib, -2100-stdlib, -2331-stdlib. All are stdlib -> compiler; only 2331 is fixed. Verify 1456/1053/2328/2000 first on the official v0.64.7 archive (sha256 16a436c4...), then 2100 W2-W4 green/W1 red; 1626 needs m354, 2343 m355, 2100 W1 m357, 2331 needs the next archive + the stdlib runtime helper fix. Do not close from the unverified local v0647 extract. 1549-pulse-5 waits on compiler 1609, 1834 on 1550. Wishlist: row 33 open (compiler/install), row 47 fixed pending xvector verify. Kqueue needs a macOS runner; net.event wrapper and LISTEN_FDS server integration remain.
 
@@ -3674,6 +3674,26 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-19 block 249 (v0.64.8 RELEASE TAG CUT -- stdlib-v0.64.8 at 2a7fa7b; release run 39280967329; compiler candidate ref; registry pending)**
+- Local battery on `9b88b46` (the code-identical parent of the marker
+  commit): modules 533/533, probes 368/368, smokes 960/962 (only
+  `smoke_guard_fault`/`smoke_guard_retry`, the documented v0.64.7-gated
+  pair on the v0.64.6 pin), barename/coverage/doc rc 0.
+- Release commit `2a7fa7b` (`9b88b46` plus
+  `COMPILER_VERSION=candidate-v0.64.8-r1`). Tag object
+  `8e32a1ac9ca1a4e19d218ce2effca16e3ef0efe8`. Main pushed
+  `e635249..2a7fa7b`. `release.yml` run `39280967329` queued; the
+  tag-push registry run `39280967292` is queued and is expected to fail
+  on the candidate compiler asset -- dispatch it after v0.64.8 with the
+  compiler override.
+- Relay: `1513` candidate ref acked; `1432` carries the live tag/run.
+  The compiler can set `STDLIB_VERSION=stdlib-v0.64.8` and cut v0.64.8.
+  Wishlist `1518` is fixed; new item `1451` covers the nested generic
+  `ptr.read` miscompile.
+- Pending: release asset sha, compiler final tag/asset, registry
+  publish timing, and gate 8 remaining (iter 46.4%, num 50.7%, math
+  56.0%, string 68.9%).
 
 **SESSION 2026-10-19 block 248 (WAVES 186/187 + WISHLIST 47 MERGED -- string 68.9, math 56.0, sync 95.2, global 76.1%; floors189; v0.64.8 candidate prepared; tag blocked on compiler ref)**
 - Agent results: `wave/186` (`667a7c4`; 30 fns / 14 modules;
