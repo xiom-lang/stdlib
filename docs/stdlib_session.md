@@ -3762,10 +3762,11 @@ registry pin, agent recon for the rest)**
   divided by gcd(denominators). Fixed to
   `a.num*(b.den/g) + b.num*(a.den/g)` (commit `109afa1`), probe
   `p_fraction_add_reduce` rc 0; targeted num smokes 18/18.
-- Final battery on the merged tree (official v0.64.8; repo stdlib):
-  modules 533/533, smokes 962/962 (0 compilefail / 0 runfail), probes
-  372/372, barename 0/533, regex 17/17, doc_scan 100% (2 pre-existing
-  net misses), floors190 ratchet OK. Runtime `__udivti3` fix +
+- Merged-tree battery (official v0.64.8; repo stdlib): smokes 962/962
+  (0 compilefail / 0 runfail) before the fraction fix; after it,
+  targeted num smokes 18/18, probes 372/372, modules 533/533, barename
+  0/533, regex 17/17, doc_scan 100% (2 pre-existing net misses),
+  floors190 ratchet OK. Runtime `__udivti3` fix +
   `tests/runtime/test_udivti3.c` (kept out of `runtime/` because the
   compiler links every `runtime/*.c`).
 - Gate 9: filed `REL-20261019-1953-stdlib` to compiler
