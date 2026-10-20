@@ -169,7 +169,11 @@ pub fn blocking_probability(arrival_rate: Float64, service_rate: Float64, capaci
 /// Kingman heavy-traffic approximation of the queue size for G/G/c:
 /// L_q ~ (rho^2/(1 - rho)) * (c_a^2 + c_s^2)/2 (unit-coefficient traffic).
 /// Complexity: O(1).
-pub fn heavy_traffic(arrival_rate: Float64, service_rate: Float64, servers: Int) -> Float64 {
+pub fn heavy_traffic(arrival_rate: Float64, service_rate: Float64, servers: Int) -> Float64
+  ensures: (arrival_rate <= 0.0 || service_rate <= 0.0 || servers <= 0) => (result != result)
+  ensures: (arrival_rate > 0.0 && service_rate > 0.0 && servers > 0 && arrival_rate < service_rate * (servers as Float64)) => (result >= 0.0)
+  ensures: (arrival_rate > 0.0 && service_rate > 0.0 && servers > 0 && arrival_rate >= service_rate * (servers as Float64)) => (result == 1.0 / 0.0)
+{
   if arrival_rate <= 0.0 || service_rate <= 0.0 || servers <= 0 { return 0.0 / 0.0; }
   var rho = arrival_rate / (service_rate * (servers as Float64));
   if rho >= 1.0 { return 1.0 / 0.0; }
@@ -180,7 +184,10 @@ pub fn heavy_traffic(arrival_rate: Float64, service_rate: Float64, servers: Int)
 
 /// Diffusion approximation of the M/M/1 queue length at time t:
 /// L(t) = max(0, (lambda - mu) t). Complexity: O(1).
-pub fn diffusion_approx(arrival_rate: Float64, service_rate: Float64, time: Float64) -> Float64 {
+pub fn diffusion_approx(arrival_rate: Float64, service_rate: Float64, time: Float64) -> Float64
+  ensures: (time < 0.0) => (result != result)
+  ensures: (time >= 0.0 && arrival_rate <= service_rate) => (result == 0.0)
+{
   if time < 0.0 { return 0.0 / 0.0; }
   var drift = arrival_rate - service_rate;
   if drift <= 0.0 { return 0.0; }

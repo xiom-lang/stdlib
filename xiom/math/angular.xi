@@ -127,6 +127,8 @@ pub fn angle_diff(a: Float64, b: Float64) -> Float64
 /// Shortest-path linear interpolation between angles a and b at parameter t:
 /// a + normalize_angle(b - a) * t. t in [0, 1] interpolates; angle_lerp(0, pi,
 /// 0.5) == pi/2. Complexity: O(1).
-pub fn angle_lerp(a: Float64, b: Float64, t: Float64) -> Float64 {
+pub fn angle_lerp(a: Float64, b: Float64, t: Float64) -> Float64
+  ensures: (t != 0.0) || (result == a)
+{
   return a + normalize_angle(b - a) * t;
 }

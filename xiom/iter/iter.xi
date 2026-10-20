@@ -783,7 +783,9 @@ pub fn FilterIter[T].last(self) -> Option[T] {
 }
 
 /// Lazily apply `f` to each (index, element) pair.
-pub fn EnumerateIter[T].map[U](self, f: fn((Int, T)) -> U) -> MapIter[(Int, T), U] {
+pub fn EnumerateIter[T].map[U](self, f: fn((Int, T)) -> U) -> MapIter[(Int, T), U]
+  ensures: self.index == self.index@pre
+{
   var it = self;
   MapIter[(Int, T), U]{ next_fn: fn() -> Option[(Int, T)] { return it.next(); }, f: f }
 }
@@ -820,13 +822,17 @@ pub fn EnumerateIter[T].count(self) -> Int
 }
 
 /// Lazily apply `f` to each taken element.
-pub fn TakeIter[T].map[U](self, f: fn(T) -> U) -> MapIter[T, U] {
+pub fn TakeIter[T].map[U](self, f: fn(T) -> U) -> MapIter[T, U]
+  ensures: self.remaining == self.remaining@pre
+{
   var it = self;
   MapIter[T, U]{ next_fn: fn() -> Option[T] { return it.next(); }, f: f }
 }
 
 /// Lazily keep taken elements satisfying `predicate`.
-pub fn TakeIter[T].filter(self, predicate: fn(&T) -> Bool) -> FilterIter[T] {
+pub fn TakeIter[T].filter(self, predicate: fn(&T) -> Bool) -> FilterIter[T]
+  ensures: self.remaining == self.remaining@pre
+{
   var it = self;
   FilterIter[T]{ next_fn: fn() -> Option[T] { return it.next(); }, predicate: predicate }
 }
@@ -834,6 +840,7 @@ pub fn TakeIter[T].filter(self, predicate: fn(&T) -> Bool) -> FilterIter[T] {
 /// Drain the taken elements into a Vec.
 pub fn TakeIter[T].collect(self) -> Vec[T]
   ensures: (self.remaining@pre <= 0) => (result.len() == 0)
+  ensures: self.remaining <= self.remaining@pre
 {
   var it = self;
   return _collect_via[T](fn() -> Option[T] { return it.next(); });
@@ -842,6 +849,7 @@ pub fn TakeIter[T].collect(self) -> Vec[T]
 /// Fold the taken elements with `f`, starting from `init`.
 pub fn TakeIter[T].fold[B](self, init: B, f: fn(B, T) -> B) -> B
   ensures: (self.remaining@pre <= 0) => (result == init)
+  ensures: self.remaining <= self.remaining@pre
 {
   var it = self;
   return _fold_via[T, B](fn() -> Option[T] { return it.next(); }, init, f);
@@ -851,6 +859,7 @@ pub fn TakeIter[T].fold[B](self, init: B, f: fn(B, T) -> B) -> B
 pub fn TakeIter[T].count(self) -> Int
   ensures: result >= 0
   ensures: (self.remaining@pre > 0) => (result <= self.remaining@pre)
+  ensures: self.remaining <= self.remaining@pre
 {
   var it = self;
   return _count_via[T](fn() -> Option[T] { return it.next(); });
@@ -859,6 +868,7 @@ pub fn TakeIter[T].count(self) -> Int
 /// Sum of the taken elements.
 pub fn TakeIter[T].sum(self) -> T
   ensures: (self.remaining@pre <= 0) => (result == 0)
+  ensures: self.remaining <= self.remaining@pre
 {
   var it = self;
   return _sum_via[T](fn() -> Option[T] { return it.next(); });
@@ -867,6 +877,7 @@ pub fn TakeIter[T].sum(self) -> T
 /// Product of the taken elements.
 pub fn TakeIter[T].product(self) -> T
   ensures: (self.remaining@pre <= 0) => (result == 1)
+  ensures: self.remaining <= self.remaining@pre
 {
   var it = self;
   return _product_via[T](fn() -> Option[T] { return it.next(); });
@@ -875,6 +886,7 @@ pub fn TakeIter[T].product(self) -> T
 /// Largest taken element, or None.
 pub fn TakeIter[T].max(self) -> Option[T]
   ensures: (self.remaining@pre <= 0) => (result.is_none == true)
+  ensures: self.remaining <= self.remaining@pre
 {
   var it = self;
   return _max_via[T](fn() -> Option[T] { return it.next(); });
@@ -883,6 +895,7 @@ pub fn TakeIter[T].max(self) -> Option[T]
 /// Smallest taken element, or None.
 pub fn TakeIter[T].min(self) -> Option[T]
   ensures: (self.remaining@pre <= 0) => (result.is_none == true)
+  ensures: self.remaining <= self.remaining@pre
 {
   var it = self;
   return _min_via[T](fn() -> Option[T] { return it.next(); });
@@ -891,6 +904,7 @@ pub fn TakeIter[T].min(self) -> Option[T]
 /// First taken element satisfying `predicate`, or None.
 pub fn TakeIter[T].find(self, predicate: fn(&T) -> Bool) -> Option[T]
   ensures: (self.remaining@pre <= 0) => (result.is_none == true)
+  ensures: self.remaining <= self.remaining@pre
 {
   var it = self;
   return _find_via[T](fn() -> Option[T] { return it.next(); }, predicate);
@@ -899,6 +913,7 @@ pub fn TakeIter[T].find(self, predicate: fn(&T) -> Bool) -> Option[T]
 /// True when every taken element satisfies `predicate`.
 pub fn TakeIter[T].all(self, predicate: fn(&T) -> Bool) -> Bool
   ensures: (self.remaining@pre <= 0) => (result == true)
+  ensures: self.remaining <= self.remaining@pre
 {
   var it = self;
   return _all_via[T](fn() -> Option[T] { return it.next(); }, predicate);
@@ -907,6 +922,7 @@ pub fn TakeIter[T].all(self, predicate: fn(&T) -> Bool) -> Bool
 /// True when at least one taken element satisfies `predicate`.
 pub fn TakeIter[T].any(self, predicate: fn(&T) -> Bool) -> Bool
   ensures: (self.remaining@pre <= 0) => (result == false)
+  ensures: self.remaining <= self.remaining@pre
 {
   var it = self;
   return _any_via[T](fn() -> Option[T] { return it.next(); }, predicate);
@@ -915,6 +931,7 @@ pub fn TakeIter[T].any(self, predicate: fn(&T) -> Bool) -> Bool
 /// Skip to and return the `n`-th taken element (0-based), or None.
 pub fn TakeIter[T].nth(self, n: Int) -> Option[T]
   ensures: (self.remaining@pre <= 0) => (result.is_none == true)
+  ensures: self.remaining <= self.remaining@pre
 {
   var it = self;
   return _nth_via[T](fn() -> Option[T] { return it.next(); }, n);
@@ -923,31 +940,40 @@ pub fn TakeIter[T].nth(self, n: Int) -> Option[T]
 /// Consume and return the final taken element, or None.
 pub fn TakeIter[T].last(self) -> Option[T]
   ensures: (self.remaining@pre <= 0) => (result.is_none == true)
+  ensures: self.remaining <= self.remaining@pre
 {
   var it = self;
   return _last_via[T](fn() -> Option[T] { return it.next(); });
 }
 
 /// Lazily apply `f` to each element after the skipped prefix.
-pub fn SkipIter[T].map[U](self, f: fn(T) -> U) -> MapIter[T, U] {
+pub fn SkipIter[T].map[U](self, f: fn(T) -> U) -> MapIter[T, U]
+  ensures: self.to_skip == self.to_skip@pre
+{
   var it = self;
   MapIter[T, U]{ next_fn: fn() -> Option[T] { return it.next(); }, f: f }
 }
 
 /// Lazily keep post-prefix elements satisfying `predicate`.
-pub fn SkipIter[T].filter(self, predicate: fn(&T) -> Bool) -> FilterIter[T] {
+pub fn SkipIter[T].filter(self, predicate: fn(&T) -> Bool) -> FilterIter[T]
+  ensures: self.to_skip == self.to_skip@pre
+{
   var it = self;
   FilterIter[T]{ next_fn: fn() -> Option[T] { return it.next(); }, predicate: predicate }
 }
 
 /// Drain the post-prefix elements into a Vec.
-pub fn SkipIter[T].collect(self) -> Vec[T] {
+pub fn SkipIter[T].collect(self) -> Vec[T]
+  ensures: self.to_skip <= self.to_skip@pre
+{
   var it = self;
   return _collect_via[T](fn() -> Option[T] { return it.next(); });
 }
 
 /// Fold the post-prefix elements with `f`, starting from `init`.
-pub fn SkipIter[T].fold[B](self, init: B, f: fn(B, T) -> B) -> B {
+pub fn SkipIter[T].fold[B](self, init: B, f: fn(B, T) -> B) -> B
+  ensures: self.to_skip <= self.to_skip@pre
+{
   var it = self;
   return _fold_via[T, B](fn() -> Option[T] { return it.next(); }, init, f);
 }
@@ -955,61 +981,80 @@ pub fn SkipIter[T].fold[B](self, init: B, f: fn(B, T) -> B) -> B {
 /// Number of post-prefix elements remaining.
 pub fn SkipIter[T].count(self) -> Int
   ensures: result >= 0
+  ensures: self.to_skip <= self.to_skip@pre
 {
   var it = self;
   return _count_via[T](fn() -> Option[T] { return it.next(); });
 }
 
 /// Sum of the post-prefix elements.
-pub fn SkipIter[T].sum(self) -> T {
+pub fn SkipIter[T].sum(self) -> T
+  ensures: self.to_skip <= self.to_skip@pre
+{
   var it = self;
   return _sum_via[T](fn() -> Option[T] { return it.next(); });
 }
 
 /// Product of the post-prefix elements.
-pub fn SkipIter[T].product(self) -> T {
+pub fn SkipIter[T].product(self) -> T
+  ensures: self.to_skip <= self.to_skip@pre
+{
   var it = self;
   return _product_via[T](fn() -> Option[T] { return it.next(); });
 }
 
 /// Largest post-prefix element, or None.
-pub fn SkipIter[T].max(self) -> Option[T] {
+pub fn SkipIter[T].max(self) -> Option[T]
+  ensures: self.to_skip <= self.to_skip@pre
+{
   var it = self;
   return _max_via[T](fn() -> Option[T] { return it.next(); });
 }
 
 /// Smallest post-prefix element, or None.
-pub fn SkipIter[T].min(self) -> Option[T] {
+pub fn SkipIter[T].min(self) -> Option[T]
+  ensures: self.to_skip <= self.to_skip@pre
+{
   var it = self;
   return _min_via[T](fn() -> Option[T] { return it.next(); });
 }
 
 /// First post-prefix element satisfying `predicate`, or None.
-pub fn SkipIter[T].find(self, predicate: fn(&T) -> Bool) -> Option[T] {
+pub fn SkipIter[T].find(self, predicate: fn(&T) -> Bool) -> Option[T]
+  ensures: self.to_skip <= self.to_skip@pre
+{
   var it = self;
   return _find_via[T](fn() -> Option[T] { return it.next(); }, predicate);
 }
 
 /// True when every post-prefix element satisfies `predicate`.
-pub fn SkipIter[T].all(self, predicate: fn(&T) -> Bool) -> Bool {
+pub fn SkipIter[T].all(self, predicate: fn(&T) -> Bool) -> Bool
+  ensures: self.to_skip <= self.to_skip@pre
+{
   var it = self;
   return _all_via[T](fn() -> Option[T] { return it.next(); }, predicate);
 }
 
 /// True when at least one post-prefix element satisfies `predicate`.
-pub fn SkipIter[T].any(self, predicate: fn(&T) -> Bool) -> Bool {
+pub fn SkipIter[T].any(self, predicate: fn(&T) -> Bool) -> Bool
+  ensures: self.to_skip <= self.to_skip@pre
+{
   var it = self;
   return _any_via[T](fn() -> Option[T] { return it.next(); }, predicate);
 }
 
 /// Skip to and return the `n`-th post-prefix element (0-based), or None.
-pub fn SkipIter[T].nth(self, n: Int) -> Option[T] {
+pub fn SkipIter[T].nth(self, n: Int) -> Option[T]
+  ensures: self.to_skip <= self.to_skip@pre
+{
   var it = self;
   return _nth_via[T](fn() -> Option[T] { return it.next(); }, n);
 }
 
 /// Consume and return the final post-prefix element, or None.
-pub fn SkipIter[T].last(self) -> Option[T] {
+pub fn SkipIter[T].last(self) -> Option[T]
+  ensures: self.to_skip <= self.to_skip@pre
+{
   var it = self;
   return _last_via[T](fn() -> Option[T] { return it.next(); });
 }

@@ -267,7 +267,13 @@ pub fn ceil(x: Float64) -> Float64
 }
 
 /// Nearest integer to `x`, halves rounded away from zero.
-pub fn round(x: Float64) -> Int {
+pub fn round(x: Float64) -> Int
+  requires: x >= -9.0e18
+  requires: x <= 9.0e18
+  ensures: (x > -0.5 && x < 0.5) => (result == 0)
+  ensures: (x >= 0.5) => (result >= 1)
+  ensures: (x <= -0.5) => (result <= -1)
+{
   if x >= 0.0 { return to_int(x + 0.5); }
   return to_int(x - 0.5);
 }
@@ -385,7 +391,10 @@ pub fn log2(x: Float64) -> Float64
 // === Bitwise ===
 
 /// Bitwise AND of two Ints (two's-complement semantics, sign preserved).
-pub fn bit_and(a: Int, b: Int) -> Int {
+pub fn bit_and(a: Int, b: Int) -> Int
+  ensures: (a == 0) => (result == 0)
+  ensures: (b == 0) => (result == 0)
+{
   var sign_a = a < 0;
   var sign_b = b < 0;
   var lower_a = _extract_lower(a);
@@ -406,7 +415,10 @@ pub fn bit_and(a: Int, b: Int) -> Int {
 }
 
 /// Bitwise OR of two Ints (two's-complement semantics, sign preserved).
-pub fn bit_or(a: Int, b: Int) -> Int {
+pub fn bit_or(a: Int, b: Int) -> Int
+  ensures: (a == 0) => (result == b)
+  ensures: (b == 0) => (result == a)
+{
   var sign_a = a < 0;
   var sign_b = b < 0;
   var lower_a = _extract_lower(a);
@@ -427,7 +439,10 @@ pub fn bit_or(a: Int, b: Int) -> Int {
 }
 
 /// Bitwise XOR of two Ints (two's-complement semantics, sign preserved).
-pub fn bit_xor(a: Int, b: Int) -> Int {
+pub fn bit_xor(a: Int, b: Int) -> Int
+  ensures: (a == 0) => (result == b)
+  ensures: (b == 0) => (result == a)
+{
   var sign_a = a < 0;
   var sign_b = b < 0;
   var lower_a = _extract_lower(a);
@@ -448,7 +463,9 @@ pub fn bit_xor(a: Int, b: Int) -> Int {
 }
 
 /// Bitwise complement of `a` (equivalent to `-1 - a`).
-pub fn bit_not(a: Int) -> Int {
+pub fn bit_not(a: Int) -> Int
+  ensures: (a == 0) => (result == -1)
+{
   return -1 - a;
 }
 

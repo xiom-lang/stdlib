@@ -133,7 +133,12 @@ pub fn gcd_extended(a: Int, b: Int) -> (Int, Int, Int)
 /// Multiplicative inverse of a mod m: x with (a * x) % m == 1. Returns None
 /// when gcd(a, m) != 1 (no inverse exists), when m == 0 (no modulus), and
 /// Some(0) for m == 1 (everything is 0 mod 1). Complexity: O(log min(a, m)).
-pub fn mod_inverse(a: Int, m: Int) -> Option[Int] {
+pub fn mod_inverse(a: Int, m: Int) -> Option[Int]
+  ensures: (m == 0) => (result.is_none == true)
+  ensures: (m == 1) => (result is Some && result.value == 0)
+  ensures: (m > 1 && result is Some) => (result.value >= 0 && result.value < m)
+  ensures: (m > 1 && a >= 0 && result is Some) => ((a * result.value) % m == 1)
+{
   if m == 0 { return None; }
   if m == 1 { return Some(0); }
   var old_r = a % m;
@@ -198,7 +203,10 @@ pub fn is_even(n: Int) -> Bool
 /// Integer division rounded toward positive infinity (ceiling).
 /// ceil(-7, 2) == -3. Division by zero returns 0; INT_MIN / -1 returns
 /// INT_MIN (unrepresentable +2^63). Complexity: O(1).
-pub fn div_ceil(a: Int, b: Int) -> Int {
+pub fn div_ceil(a: Int, b: Int) -> Int
+  ensures: (b == 0) => (result == 0)
+  ensures: (b > 0) => (result == a / b || (a % b != 0 && result == a / b + 1))
+{
   if b == 0 { return 0; }
   if a == -9223372036854775808 && b == -1 { return -9223372036854775808; }
   var q = a / b;
@@ -210,7 +218,10 @@ pub fn div_ceil(a: Int, b: Int) -> Int {
 /// Integer division rounded toward negative infinity (floor).
 /// floor(-7, 2) == -4. Division by zero returns 0; INT_MIN / -1 returns
 /// INT_MIN. Complexity: O(1).
-pub fn div_floor(a: Int, b: Int) -> Int {
+pub fn div_floor(a: Int, b: Int) -> Int
+  ensures: (b == 0) => (result == 0)
+  ensures: (b > 1) => (result == a / b || (a % b != 0 && result == a / b - 1))
+{
   if b == 0 { return 0; }
   if a == -9223372036854775808 && b == -1 { return -9223372036854775808; }
   var q = a / b;
@@ -222,7 +233,10 @@ pub fn div_floor(a: Int, b: Int) -> Int {
 /// Integer division truncated toward zero (native semantics).
 /// trunc(-7, 2) == -3. Division by zero returns 0; INT_MIN / -1 returns
 /// INT_MIN. Complexity: O(1).
-pub fn div_trunc(a: Int, b: Int) -> Int {
+pub fn div_trunc(a: Int, b: Int) -> Int
+  ensures: (b == 0) => (result == 0)
+  ensures: (b == 1) => (result == a)
+{
   if b == 0 { return 0; }
   if a == -9223372036854775808 && b == -1 { return -9223372036854775808; }
   return a / b;

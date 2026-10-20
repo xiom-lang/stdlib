@@ -259,7 +259,9 @@ pub fn integrate_adaptive(f: fn(Float64) -> Float64, a: Float64, b: Float64, tol
 /// n-point Gauss-Legendre quadrature over [a, b]. Supported point counts are
 /// 1..8 (standard node/weight tables); other counts fall back to the 8-point
 /// rule (documented). Complexity: O(n).
-pub fn integrate_gauss_legendre(f: fn(Float64) -> Float64, a: Float64, b: Float64, n: Int) -> Float64 {
+pub fn integrate_gauss_legendre(f: fn(Float64) -> Float64, a: Float64, b: Float64, n: Int) -> Float64
+  ensures: (a == b) => (result == 0.0 || result != result)
+{
   var nodes = _gl_nodes(n);
   var weights = _gl_weights(n);
   var mid = (a + b) / 2.0;
