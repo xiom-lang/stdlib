@@ -102,12 +102,16 @@ pub fn free_memory() -> Int
 }
 
 /// Set an environment variable (overwrites; portable shim).
-pub fn env_set(name: Str, value: Str) {
+pub fn env_set(name: Str, value: Str)
+  requires: name.len() > 0
+{
   env.set_var(name, value);
 }
 
 /// Remove an environment variable (portable shim).
-pub fn env_unset(name: Str) {
+pub fn env_unset(name: Str)
+  requires: name.len() > 0
+{
   env.remove_var(name);
 }
 

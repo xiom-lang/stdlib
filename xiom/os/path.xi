@@ -221,7 +221,9 @@ pub fn Path.with_file_name(self, name: Str) -> PathBuf
 }
 
 /// True when the path exists on disk.
-pub fn Path.exists(self) -> Bool {
+pub fn Path.exists(self) -> Bool
+  ensures: result => (self.inner.len() > 0)
+{
   return file_exists(self.inner);
 }
 
@@ -234,12 +236,16 @@ pub fn Path.is_file(self) -> Bool
 }
 
 /// True when the path exists and is a directory.
-pub fn Path.is_dir(self) -> Bool {
+pub fn Path.is_dir(self) -> Bool
+  ensures: result => (self.inner.len() > 0)
+{
   return is_dir(self.inner);
 }
 
 /// File metadata, or Err carrying the OS message.
-pub fn Path.metadata(self) -> Result<Metadata, Str> {
+pub fn Path.metadata(self) -> Result<Metadata, Str>
+  ensures: result is Ok => (self.inner.len() > 0)
+{
   var result = metadata(self.inner);
   match result {
     Ok(m) => { return Ok(m); }

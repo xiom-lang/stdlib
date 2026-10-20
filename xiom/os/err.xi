@@ -196,7 +196,9 @@ pub fn backtrace_symbols(frames: &Vec[Int]) -> Vec[Str] {
 /// Demangle a compiler-mangled symbol name.
 /// NOT IMPLEMENTED: no demangler is available. Returns the symbol unchanged.
 /// Complexity: O(1). Pure.
-pub fn demangle(symbol: Str) -> Str {
+pub fn demangle(symbol: Str) -> Str
+  ensures: result == symbol
+{
   symbol
 }
 

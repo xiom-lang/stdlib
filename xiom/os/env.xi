@@ -361,7 +361,9 @@ pub fn all_var_values() -> Vec[Str]
 
 /// set_var_if_absent sets name to value only if name is not already set.
 /// Complexity: O(1).  WARNING: setenv is not available on Windows MSVC.
-pub fn set_var_if_absent(name: Str, value: Str) {
+pub fn set_var_if_absent(name: Str, value: Str)
+  requires: name.len() > 0
+{
   if !has_var(name) {
     let _ = set_var(name, value);
   };
@@ -369,7 +371,9 @@ pub fn set_var_if_absent(name: Str, value: Str) {
 
 /// clear_var removes the environment variable name.
 /// Alias for remove_var.  Same Windows caveat.
-pub fn clear_var(name: Str) {
+pub fn clear_var(name: Str)
+  requires: name.len() > 0
+{
   let _ = remove_var(name);
 }
 
