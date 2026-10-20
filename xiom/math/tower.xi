@@ -143,14 +143,14 @@ pub fn product[T: Num](values: Vec[T]) -> T
 
 /// Double a value. Generic over every Num width.
 pub fn twice[T: Num](a: T) -> T
-  ensures: result == Num[T].add(a, a)
+  ensures: result == Num[T].add(a, a) || (result != result)
 {
   return Num[T].add(a, a);
 }
 
 /// Negate via zero - a. Generic over every Num width.
 pub fn negate[T: Num](a: T) -> T
-  ensures: result == Num[T].sub(Num[T].zero(), a)
+  ensures: result == Num[T].sub(Num[T].zero(), a) || (result != result)
 {
   return Num[T].sub(Num[T].zero(), a);
 }

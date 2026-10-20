@@ -110,6 +110,8 @@ fn main() -> Int {
   if math.tower.negate[Float64](2.5) != -2.5 { return 48; }
   if math.tower.of_int[Int](7) != 7 { return 49; }
   if math.tower.of_int[Float64](3) != 3.0 { return 50; }
+  if math.tower.twice[Float64](nan) == math.tower.twice[Float64](nan) { return 51; }
+  if math.tower.negate[Float64](nan) == math.tower.negate[Float64](nan) { return 52; }
 
   return 0;
 }
