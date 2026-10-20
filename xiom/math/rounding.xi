@@ -61,7 +61,10 @@ pub fn fract(x: Float64) -> Float64
 /// Split x into (fract, int): fract is the fractional part, int is the
 /// integer part truncated toward zero. modf(2.5) == (0.5, 2.0).
 /// Complexity: O(1).
-pub fn modf(x: Float64) -> (Float64, Float64) {
+pub fn modf(x: Float64) -> (Float64, Float64)
+  ensures: (x >= 0.0 && x < 1.0) => (result.0 == x && result.1 == 0.0)
+  ensures: (x < 0.0 && x > -1.0) => (result.0 == x && result.1 == 0.0)
+{
   var i = trunc(x);
   return (x - i, i);
 }

@@ -17,7 +17,8 @@
 // 5. queueing: NaN/zero/inf domain sentinels and non-negative waiting time.
 // 6. integral/transcendental: zero-width integral, power/root/gamma/lambert
 //    sentinels and special values.
-// 7. trig/math/angular/primitives: zero-input identities and round bounds.
+// 7. trig/math/angular/primitives: zero-input identities, round bounds, and
+//    the bitwise identity-element laws.
 // 8. iter: TakeIter/SkipIter counter state laws and EnumerateIter.map index
 //    preservation (the only remaining defensible iterator laws).
 // Returns 0 when every case holds.
@@ -172,6 +173,19 @@ fn main() -> Int {
   if math.round(-2.5) != -3 { return 82; }
   if math.angular.angle_lerp(1.0, 2.0, 0.0) != 1.0 { return 83; }
   if math.primitives.lerp(1.0, 2.0, 0.0) != 1.0 { return 84; }
+
+  // 7b: bit identity elements and modf unit-interval split.
+  if math.bit_and(0, -1) != 0 { return 201; }
+  if math.bit_and(12345, 0) != 0 { return 202; }
+  if math.bit_or(0, -12345) != -12345 { return 203; }
+  if math.bit_or(-12345, 0) != -12345 { return 204; }
+  if math.bit_xor(0, 12345) != 12345 { return 205; }
+  if math.bit_xor(-12345, 0) != -12345 { return 206; }
+  if math.bit_not(0) != -1 { return 207; }
+  let mf = math.rounding.modf(0.25);
+  if mf.0 != 0.25 || mf.1 != 0.0 { return 208; }
+  let mf2 = math.rounding.modf(-0.25);
+  if mf2.0 != -0.25 || mf2.1 != 0.0 { return 209; }
 
   // 8: iter counter state laws (the clauses check the receivers).
   var tc = iter.range(1, 6).take(3).collect();
