@@ -26,7 +26,7 @@ gates flip:
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (499/542 modules, 3501/6575 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN
-   (94.6%, 6519/6891; clauses/fns 96.8%, 9013 clauses; floors194).
+   (94.6%, 6521/6891; clauses/fns 96.9%, 9017 clauses; floors194).
    Waves 202-204 lifted math 83.4% -> 87.7%, iter 61.7% -> 70.5%,
    async 86.6% -> 92.5%, ptr 100%, misc/compress/sync/text 100%, num
    99.8%; string/collect/convert/bits/net/core/stats/regex and many

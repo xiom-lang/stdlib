@@ -45,7 +45,7 @@ CI lives in `.github/workflows/` (PR gates, weekly heavy suites, release).
   (0 compilefail / 0 runfail), probe corpus **391/391**, strict bare-name
   scan **0/533**, coverage ratchet OK (`floors194`).
 - Contract coverage: **94.6%** of public functions carry at least one
-  clause (6519/6891); clauses/functions **96.8%** (9013). Readiness meter:
+  clause (6521/6891); clauses/functions **96.9%** (9017). Readiness meter:
   **89.5%**; gate 8 is 94.6% and gate 9 is the remaining open gate. Full
   record: `docs/PRODUCTION_READINESS_QUEUE.md` and
   `docs/stdlib_session.md` (snapshot 76).

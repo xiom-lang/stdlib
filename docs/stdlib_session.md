@@ -3787,6 +3787,13 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
+**SESSION 2026-10-20 block 266 (error wrap_error/context contracts; 6521/6891)**
+- Renamed the shadowing `result` parameters in `wrap_error` and `context`
+  to `r`, then added real contracts: `result.is_ok == r.is_ok` and the
+  Err payload equals the supplied context/message. Commit `665e62e`;
+  error smokes 5/5; floors194 ratchet OK. Coverage 6521/6891 = 94.6%,
+  clauses 9017 (96.9%).
+
 **SESSION 2026-10-20 block 265 (io.read_at_into caller-buffer page reader; probes 391; 94.6%)**
 - Added `io.read_at_into(path, offset, &mut Vec[UInt8], len) ->
   Result[Int, IOError]` (commit `9bad232`) for the m375/orbitdb page
