@@ -167,7 +167,9 @@ fn extract_str(line: Str, key: Str) -> Option[Str] {
 /// Parse a JSON log line into an entry. Returns Err when the line is
 /// malformed (missing the level, message or timestamp keys).
 /// Complexity: O(len(line)).
-pub fn log_json_parse(line: Str) -> Result[JsonLogEntry, Str] {
+pub fn log_json_parse(line: Str) -> Result[JsonLogEntry, Str]
+  ensures: result is Ok => result.value.level >= 0 && result.value.level <= 5
+{
   let level = extract_str(line, "level");
   match level {
     Some(lv) => {

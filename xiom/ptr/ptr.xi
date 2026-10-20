@@ -33,7 +33,9 @@ pub fn dangling[T]() -> *T
 }
 
 /// True when `ptr` is a null pointer.
-pub fn is_null[T](ptr: *const T) -> Bool {
+pub fn is_null[T](ptr: *const T) -> Bool
+  ensures: result == (ptr == null)
+{
   return ptr == null[T]();
 }
 
@@ -128,7 +130,9 @@ pub fn copy_nonoverlapping[T](src: *const T, dst: *mut T, count: Int)
 }
 
 /// Pointer equality (address comparison).
-pub fn eq[T](a: *const T, b: *const T) -> Bool {
+pub fn eq[T](a: *const T, b: *const T) -> Bool
+  ensures: result == (a == b)
+{
   return a == b;
 }
 

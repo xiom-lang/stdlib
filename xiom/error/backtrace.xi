@@ -78,14 +78,18 @@ pub fn error_capture_backtrace() -> Vec[Str]
 
 /// Whether backtrace capture is currently enabled.
 /// Complexity: O(1).
-pub fn error_backtrace_enabled() -> Bool {
+pub fn error_backtrace_enabled() -> Bool
+  ensures: result == capture_enabled
+{
   capture_enabled
 }
 
 /// Enable or disable backtrace capture. When disabled,
 /// `error_with_backtrace` attaches no frames.
 /// Complexity: O(1).
-pub fn error_set_backtrace_enabled(on: Bool) {
+pub fn error_set_backtrace_enabled(on: Bool)
+  ensures: capture_enabled == on
+{
   capture_enabled = on;
 }
 

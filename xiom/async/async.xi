@@ -228,7 +228,9 @@ pub fn delay(ms: Int, task: fn())
 /// tasks, so the single thread keeps making progress during the wait.
 /// NOTE: with no coroutine transform this blocks the calling frame; it does
 /// not suspend-and-resume it. Use `delay` for true fire-after-deadline tasks.
-pub fn sleep_ms(ms: Int) {
+pub fn sleep_ms(ms: Int)
+  requires: ms >= 0
+{
   let deadline = _now() + ms;
   while _now() < deadline {
     if !_pump() {
@@ -342,7 +344,9 @@ pub fn async_now_ms() -> Int
 
 /// Cooperative sleep: waits `ms` milliseconds while driving other ready tasks.
 /// Complexity: O(ms) pump iterations.
-pub fn async_sleep_ms(ms: Int) {
+pub fn async_sleep_ms(ms: Int)
+  requires: ms >= 0
+{
   sleep_ms(ms);
 }
 
@@ -387,7 +391,9 @@ pub fn async_step_once(exec: &mut AsyncExecutor) -> Bool
 
 /// Returns `true` if the executor has pending tasks or timers.
 /// Complexity: O(1). Thread-safe: reads immutable data.
-pub fn async_has_pending(exec: &AsyncExecutor) -> Bool {
+pub fn async_has_pending(exec: &AsyncExecutor) -> Bool
+  ensures: result == (exec.ready.len() > 0 || exec.timers.len() > 0)
+{
   return exec.ready.len() > 0 || exec.timers.len() > 0;
 }
 
@@ -404,6 +410,8 @@ pub fn async_run_until_idle(exec: &mut AsyncExecutor)
 
 /// Returns the number of pending timers in the executor.
 /// Complexity: O(1). Thread-safe: reads immutable data.
-pub fn async_timer_count(exec: &AsyncExecutor) -> Int {
+pub fn async_timer_count(exec: &AsyncExecutor) -> Int
+  ensures: result == exec.timers.len()
+{
   return exec.timers.len();
 }

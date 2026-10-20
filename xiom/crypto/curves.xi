@@ -390,7 +390,9 @@ pub fn curve_order(curve: Int) -> Vec[UInt8]
 /// Test whether (x, y) satisfies the curve equation for a named curve
 /// (1 = secp256k1, 2 = P-256).
 /// Complexity: O(1) field operations.
-pub fn curve_point_on_curve(curve: Int, x: &Vec[UInt8], y: &Vec[UInt8]) -> Bool {
+pub fn curve_point_on_curve(curve: Int, x: &Vec[UInt8], y: &Vec[UInt8]) -> Bool
+  requires: curve == 1 || curve == 2
+{
   var p_str = _SECP_P;
   if curve == 2 { p_str = _P256_P; }
   var p = _bigint_from_str(p_str);
