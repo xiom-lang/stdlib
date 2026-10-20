@@ -84,7 +84,9 @@ pub fn errno_perror(msg: Str) {
 
 /// Last recorded errno (snapshot).
 /// Complexity: O(1).
-pub fn errno_last() -> Int {
+pub fn errno_last() -> Int
+  ensures: result == last_errno
+{
   last_errno
 }
 

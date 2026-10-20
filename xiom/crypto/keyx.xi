@@ -29,7 +29,9 @@ use xiom.encoding;
 /// NOTE: Vec-tuple returns miscompile in the current build; prefer
 /// x25519_public_key on a random secret.
 /// Complexity: O(255) field operations.
-pub fn x25519_keypair() -> (Vec[UInt8], Vec[UInt8]) {
+pub fn x25519_keypair() -> (Vec[UInt8], Vec[UInt8])
+  ensures: result.0.len() == 32 && result.1.len() == 32
+{
   var sk = crypto.secure_random_bytes(32);
   var pk = x25519_public_key(&sk);
   return (sk, pk);
