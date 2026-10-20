@@ -54,16 +54,22 @@ pub fn ErrorChain.display(self) -> Str
 /// bound resolves against the OK type; interface-as-value gap). The `Error`
 /// interface with `Option[Error]` returns also defaults to i64 (unknown-type
 /// warning). Re-enrich once the checker closes those gaps.
-pub fn wrap_error[T, E](result: Result[T, E], context: Str) -> Result[T, Str] {
-  match result {
+pub fn wrap_error[T, E](r: Result[T, E], context: Str) -> Result[T, Str]
+  ensures: result.is_ok == r.is_ok
+  ensures: r.is_err => result.value == context
+{
+  match r {
     Ok(v) => { return Ok(v); }
     Err(_) => { return Err(context); }
   }
 }
 
 /// Wrap a Result error with an additional context message.
-pub fn context[T, E](result: Result[T, E], msg: Str) -> Result[T, Str] {
-  match result {
+pub fn context[T, E](r: Result[T, E], msg: Str) -> Result[T, Str]
+  ensures: result.is_ok == r.is_ok
+  ensures: r.is_err => result.value == msg
+{
+  match r {
     Ok(v) => { return Ok(v); }
     Err(_) => { return Err(msg); }
   }
