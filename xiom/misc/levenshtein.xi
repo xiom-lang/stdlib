@@ -194,7 +194,11 @@ pub fn levenshtein_matrix(a: Str, b: Str) -> Vec[Vec[Int]]
 
 /// Optimal alignment of a and b as (aligned_a, aligned_b) with '-' marking
 /// gaps. O(m*n) time, O(m*n) space.
-pub fn levenshtein_align(a: Str, b: Str) -> (Str, Str) {
+pub fn levenshtein_align(a: Str, b: Str) -> (Str, Str)
+  ensures: result.0.len() == result.1.len()  // one column per aligned pair
+  ensures: result.0.len() >= a.len() && result.0.len() >= b.len()
+  ensures: result.0.len() <= a.len() + b.len()  // gaps never exceed the other side
+{
   var m = a.len();
   var n = b.len();
   var d = Vec[Int].new();

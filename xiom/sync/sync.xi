@@ -55,7 +55,10 @@ pub fn Mutex.new[T](value: T) -> Mutex[T]
 
 /// Block until the lock is acquired; returns the guard.
 #[unsafe_direct]
-pub fn Mutex.lock[T](self) -> MutexGuard[T] {
+pub fn Mutex.lock[T](self) -> MutexGuard[T]
+  ensures: result.mutex.inner == inner  // guard wraps the lock just acquired
+  ensures: result.mutex.data == data
+{
   unsafe { xiom_mutex_lock(inner); }
   return MutexGuard[T]{ mutex: self; }
 }
