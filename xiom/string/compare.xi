@@ -187,6 +187,8 @@ pub fn str_compare_natural(a: Str, b: Str) -> Int
 /// Returns: true when they compare equal under str_compare_ignore_case.
 /// Error case: none.
 /// Complexity: O(min(|a|, |b|)).
-pub fn str_eq_ignore_case(a: Str, b: Str) -> Bool {
+pub fn str_eq_ignore_case(a: Str, b: Str) -> Bool
+  ensures: result => a.len() == b.len()  // equal ordering requires equal lengths
+{
   str_compare_ignore_case(a, b) == 0
 }

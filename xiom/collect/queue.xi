@@ -23,7 +23,9 @@ pub fn workqueue_new() -> WorkQueue
 }
 
 /// Append an item to the back of the queue.
-pub fn workqueue_push(q: &mut WorkQueue, item: Int) {
+pub fn workqueue_push(q: &mut WorkQueue, item: Int)
+  ensures: q.items.len() == q.items.len()@pre + 1
+{
   q.items.push(item);
 }
 
@@ -78,13 +80,18 @@ pub fn deque_new() -> Deque
 }
 
 /// Append an item to the back of the deque.
-pub fn deque_push_back(d: &mut Deque, item: Int) {
+pub fn deque_push_back(d: &mut Deque, item: Int)
+  ensures: d.tail == d.tail@pre + 1
+{
   d.items.push(item);
   d.tail = d.items.len();
 }
 
 /// Prepend an item to the front of the deque.
-pub fn deque_push_front(d: &mut Deque, item: Int) {
+pub fn deque_push_front(d: &mut Deque, item: Int)
+  ensures: d.head == 0
+  ensures: d.tail == d.items.len()
+{
   var new_items = Vec[Int].new();
   new_items.push(item);
   var i = d.head;
@@ -156,7 +163,9 @@ pub fn spsc_ring_new(cap: Int) -> SpscRing
 }
 
 /// Push `item` from the producer side. Returns false when the ring is full.
-pub fn spsc_ring_push(r: &mut SpscRing, item: Int) -> Bool {
+pub fn spsc_ring_push(r: &mut SpscRing, item: Int) -> Bool
+  ensures: result => r.cap > 0
+{
   var t = r.tail.fetch_add(1);
   var h = r.head.load();
   if t - h >= r.cap {
@@ -168,7 +177,9 @@ pub fn spsc_ring_push(r: &mut SpscRing, item: Int) -> Bool {
 }
 
 /// Pop an item from the consumer side. None when empty.
-pub fn spsc_ring_pop(r: &mut SpscRing) -> Option[Int] {
+pub fn spsc_ring_pop(r: &mut SpscRing) -> Option[Int]
+  ensures: result is Some => r.cap > 0
+{
   var h = r.head.fetch_add(1);
   var t = r.tail.load();
   if h >= t {

@@ -101,7 +101,9 @@ pub fn str_reverse(s: Str) -> Str
 /// reversed. Returns `s` unchanged when `s` has no words.
 /// Wave 127: span pass + reverse raw-byte copy (was slice+concat per run).
 /// Complexity: O(|s|).
-pub fn str_reverse_words(s: Str) -> Str {
+pub fn str_reverse_words(s: Str) -> Str
+  ensures: result.len() == s.len()  // only the run order changes
+{
   var starts = Vec[Int].new();
   var ends = Vec[Int].new();
   let len = xiom.string.str_len(s);

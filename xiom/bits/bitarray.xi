@@ -40,7 +40,10 @@ pub fn bit_array_new(n: Int) -> BitArray
 
 /// Sets bit i to 1. Out-of-range indices are ignored.
 /// Complexity: O(1).
-pub fn bit_array_set(ba: &mut BitArray, i: Int) {
+pub fn bit_array_set(ba: &mut BitArray, i: Int)
+  ensures: ba.len == ba.len@pre
+  ensures: ba.bits.len() == ba.bits.len()@pre
+{
   if i < 0 || i >= ba.len {
     return;
   };
@@ -52,7 +55,10 @@ pub fn bit_array_set(ba: &mut BitArray, i: Int) {
 
 /// Clears bit i to 0. Out-of-range indices are ignored.
 /// Complexity: O(1).
-pub fn bit_array_clear(ba: &mut BitArray, i: Int) {
+pub fn bit_array_clear(ba: &mut BitArray, i: Int)
+  ensures: ba.len == ba.len@pre
+  ensures: ba.bits.len() == ba.bits.len()@pre
+{
   if i < 0 || i >= ba.len {
     return;
   };
@@ -84,7 +90,10 @@ pub fn bit_array_test(ba: BitArray, i: Int) -> Bool
 
 /// Toggles bit i (0 -> 1, 1 -> 0). Out-of-range indices are ignored.
 /// Complexity: O(1).
-pub fn bit_array_flip(ba: &mut BitArray, i: Int) {
+pub fn bit_array_flip(ba: &mut BitArray, i: Int)
+  ensures: ba.len == ba.len@pre
+  ensures: ba.bits.len() == ba.bits.len()@pre
+{
   if i < 0 || i >= ba.len {
     return;
   };

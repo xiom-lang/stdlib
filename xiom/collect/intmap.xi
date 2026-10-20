@@ -148,7 +148,9 @@ pub fn int_map_new(capacity: Int) -> IntMap
 /// Insert or overwrite `key` -> `value`. A re-insert of an existing key
 /// updates its value without changing its insertion position.
 /// O(1) amortized.
-pub fn int_map_put(m: &mut IntMap, key: Int, value: Int) {
+pub fn int_map_put(m: &mut IntMap, key: Int, value: Int)
+  ensures: int_map_contains(m, key)
+{
   var hit = _imap_find(m, key);
   if hit >= 0 {
     m.vals[hit] = value;
@@ -175,7 +177,9 @@ pub fn int_map_get(m: &IntMap, key: Int) -> Option[Int]
 
 /// True if `key` is present.
 /// O(1) amortized.
-pub fn int_map_contains(m: &IntMap, key: Int) -> Bool {
+pub fn int_map_contains(m: &IntMap, key: Int) -> Bool
+  ensures: result == (_imap_find(m, key) >= 0)
+{
   return _imap_find(m, key) >= 0;
 }
 
@@ -248,7 +252,9 @@ pub fn string_map_new() -> OrderedStringMap
 /// Insert or overwrite `key` -> `value`. A re-insert of an existing key
 /// updates its value without changing its insertion position.
 /// O(n).
-pub fn string_map_put(m: &mut OrderedStringMap, key: Str, value: Int) {
+pub fn string_map_put(m: &mut OrderedStringMap, key: Str, value: Int)
+  ensures: string_map_contains(m, key)
+{
   var i = 0;
   while i < m.keys.len() {
     var k = m.keys[i];
@@ -280,7 +286,9 @@ pub fn string_map_get(m: &OrderedStringMap, key: Str) -> Option[Int]
 
 /// True if `key` is present.
 /// O(n).
-pub fn string_map_contains(m: &OrderedStringMap, key: Str) -> Bool {
+pub fn string_map_contains(m: &OrderedStringMap, key: Str) -> Bool
+  ensures: result => m.keys.len() > 0
+{
   var i = 0;
   while i < m.keys.len() {
     var k = m.keys[i];

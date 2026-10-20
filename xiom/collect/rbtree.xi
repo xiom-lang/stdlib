@@ -195,7 +195,9 @@ pub fn rbtree_get(t: &RbTree, key: Int) -> Option[Int]
 }
 
 /// True if `key` is present. O(log n).
-pub fn rbtree_contains(t: &RbTree, key: Int) -> Bool {
+pub fn rbtree_contains(t: &RbTree, key: Int) -> Bool
+  ensures: result == (rb_find_node(t, key) != -1)
+{
   return rb_find_node(t, key) != -1;
 }
 

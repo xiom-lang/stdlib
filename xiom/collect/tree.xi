@@ -30,7 +30,10 @@ fn bst_new_node(b: &mut Bst, key: Int) -> Int {
 }
 
 /// Insert a key. Duplicates are ignored.
-pub fn bst_insert(b: &mut Bst, key: Int) {
+pub fn bst_insert(b: &mut Bst, key: Int)
+  ensures: bst_contains(b, key)
+  ensures: b.keys.len() == b.keys.len()@pre || b.keys.len() == b.keys.len()@pre + 1
+{
   if b.root == -1 {
     b.root = bst_new_node(b, key);
     return;
@@ -59,7 +62,9 @@ pub fn bst_insert(b: &mut Bst, key: Int) {
 }
 
 /// Returns true if the key is present.
-pub fn bst_contains(b: &Bst, key: Int) -> Bool {
+pub fn bst_contains(b: &Bst, key: Int) -> Bool
+  ensures: result => b.keys.len() > 0
+{
   var cur = b.root;
   while cur != -1 {
     var k = b.keys[cur];
@@ -222,7 +227,9 @@ pub fn bst_height(b: &Bst) -> Int
 }
 
 /// True if the in-order traversal is strictly sorted (a valid BST).
-pub fn bst_is_bst(b: &Bst) -> Bool {
+pub fn bst_is_bst(b: &Bst) -> Bool
+  ensures: b.keys.len() <= 1 => result
+{
   var v = bst_inorder(b);
   var i = 1;
   while i < v.len() {
@@ -339,12 +346,16 @@ fn avl_insert_at(a: &mut Avl, idx: Int, key: Int) -> Int {
 }
 
 /// Insert a key. Duplicates are ignored.
-pub fn avl_insert(a: &mut Avl, key: Int) {
+pub fn avl_insert(a: &mut Avl, key: Int)
+  ensures: avl_contains(a, key)
+{
   a.root = avl_insert_at(a, a.root, key);
 }
 
 /// Returns true if the key is present.
-pub fn avl_contains(a: &Avl, key: Int) -> Bool {
+pub fn avl_contains(a: &Avl, key: Int) -> Bool
+  ensures: result => a.keys.len() > 0
+{
   var cur = a.root;
   while cur != -1 {
     var k = a.keys[cur];

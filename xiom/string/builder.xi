@@ -136,7 +136,9 @@ pub fn sb_to_str(sb: &Vec[UInt8]) -> Str
 /// NUL-terminated, so the result ends at the first 0x00 byte -- use
 /// sb_to_str for byte counts known to be NUL-free, and keep binary-ish text
 /// in Vec[UInt8]. Complexity: O(n).
-pub fn sb_into_str(sb: Vec[UInt8]) -> Str {
+pub fn sb_into_str(sb: Vec[UInt8]) -> Str
+  ensures: result.len() <= sb.len()  // stops at the first NUL byte
+{
   Str::from_utf8(sb)
 }
 

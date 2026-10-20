@@ -46,7 +46,10 @@ pub fn pheap_new() -> PHeap
 }
 
 /// Insert a key into the heap.
-pub fn pheap_insert(h: &mut PHeap, key: Int) {
+pub fn pheap_insert(h: &mut PHeap, key: Int)
+  ensures: pheap_size(h) == pheap_size(h)@pre + 1
+  ensures: h.keys.len() == h.keys.len()@pre + 3
+{
   var id = h.keys.len() / 3;
   h.keys.push(key);
   h.keys.push(-1);
@@ -64,7 +67,10 @@ pub fn pheap_find_min(h: &PHeap) -> Option[Int]
 
 /// Remove and return the minimum key, or None if empty.
 /// Children of the removed root are merged pairwise (left-to-right pass).
-pub fn pheap_extract_min(h: &mut PHeap) -> Option[Int] {
+pub fn pheap_extract_min(h: &mut PHeap) -> Option[Int]
+  ensures: result is Some => pheap_size(h) == pheap_size(h)@pre - 1
+  ensures: result is None => pheap_size(h) == pheap_size(h)@pre
+{
   if h.root == -1 { return None; }
   var r = h.root;
   var min_key = h.keys[3 * r];
@@ -163,7 +169,9 @@ pub fn fib_heap_new() -> FibHeap
 }
 
 /// Insert a key into the heap.
-pub fn fib_heap_insert(h: &mut FibHeap, key: Int) {
+pub fn fib_heap_insert(h: &mut FibHeap, key: Int)
+  ensures: h.n == h.n@pre + 1
+{
   var id = fib_heap_new_node(h, key);
   if h.min == -1 {
     h.left[id] = id;
@@ -272,7 +280,10 @@ fn fib_heap_consolidate(h: &mut FibHeap, start: Int) {
 
 /// Remove and return the minimum key, or None if empty.
 /// Consolidates the root list so future extract-mins stay amortized.
-pub fn fib_heap_extract_min(h: &mut FibHeap) -> Option[Int] {
+pub fn fib_heap_extract_min(h: &mut FibHeap) -> Option[Int]
+  ensures: result is Some => h.n == h.n@pre - 1
+  ensures: result is None => h.n == h.n@pre
+{
   if h.min == -1 { return None; }
   var z = h.min;
   var min_key = h.keys[z];
@@ -374,7 +385,9 @@ fn fib_heap_cascading_cut(h: &mut FibHeap, y: Int) {
 
 /// Decrease the key of `node` to `new_key`. Returns false if the node index
 /// is out of range or the new key is not smaller.
-pub fn fib_heap_decrease_key(h: &mut FibHeap, node: Int, new_key: Int) -> Bool {
+pub fn fib_heap_decrease_key(h: &mut FibHeap, node: Int, new_key: Int) -> Bool
+  ensures: result => h.keys[node] == new_key
+{
   if node < 0 || node >= h.keys.len() { return false; }
   if new_key > h.keys[node] { return false; }
   h.keys[node] = new_key;

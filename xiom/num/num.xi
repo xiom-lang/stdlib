@@ -3149,12 +3149,17 @@ pub fn fraction_is_zero(a: Fraction) -> Bool
 }
 
 /// The numerator. Complexity: O(1).
-pub fn fraction_num(a: Fraction) -> Int {
+pub fn fraction_num(a: Fraction) -> Int
+  ensures: result == a.num
+{
   return a.num;
 }
 
 /// The denominator (always > 0). Complexity: O(1).
-pub fn fraction_den(a: Fraction) -> Int {
+pub fn fraction_den(a: Fraction) -> Int
+  ensures: result == a.den
+  ensures: result > 0
+{
   return a.den;
 }
 

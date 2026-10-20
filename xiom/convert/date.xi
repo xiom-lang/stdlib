@@ -30,7 +30,10 @@ pub fn date_new(year: Int, month: Int, day: Int) -> Date
 /// The current calendar date, computed from the Unix clock.
 /// Returns: today's Date (UTC).
 /// Complexity: O(1).
-pub fn date_now() -> Date {
+pub fn date_now() -> Date
+  ensures: result.month >= 1 && result.month <= 12
+  ensures: result.day >= 1 && result.day <= 31
+{
   let ts = time.unix_timestamp();
   return time.timestamp_to_date(ts);
 }

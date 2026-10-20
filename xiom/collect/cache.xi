@@ -84,7 +84,9 @@ pub fn lru_put(c: &mut LruCache, key: Int, value: Int)
 }
 
 /// True if the key is present in the cache.
-pub fn lru_contains(c: &LruCache, key: Int) -> Bool {
+pub fn lru_contains(c: &LruCache, key: Int) -> Bool
+  ensures: result == (lru_find(c, key) >= 0)
+{
   return lru_find(c, key) >= 0;
 }
 
@@ -210,7 +212,9 @@ pub fn lfu_put(c: &mut LfuCache, key: Int, value: Int)
 }
 
 /// True if the key is present in the cache.
-pub fn lfu_contains(c: &LfuCache, key: Int) -> Bool {
+pub fn lfu_contains(c: &LfuCache, key: Int) -> Bool
+  ensures: result => c.keys.len() > 0
+{
   var i = 0;
   while i < c.keys.len() {
     if c.keys[i] == key { return true; }
@@ -508,7 +512,9 @@ pub fn arc_get(c: &mut ArcCache, key: Int) -> Option[Int]
 }
 
 /// True if `key` is cached (does not change recency).
-pub fn arc_contains(c: &ArcCache, key: Int) -> Bool {
+pub fn arc_contains(c: &ArcCache, key: Int) -> Bool
+  ensures: result => c.t1k.len() + c.t2k.len() > 0
+{
   return _find_idx(&c.t1k, key) >= 0 || _find_idx(&c.t2k, key) >= 0;
 }
 

@@ -36,7 +36,9 @@ pub fn levenshtein_distance(a: Str, b: Str) -> Int
 /// Errors: none (the empty-vs-empty case is guarded to avoid a division by
 /// zero).
 /// Complexity: O(|a| * |b|) via the underlying distance.
-pub fn levenshtein_normalized(a: Str, b: Str) -> Float64 {
+pub fn levenshtein_normalized(a: Str, b: Str) -> Float64
+  ensures: result >= 0.0 && result <= 1.0  // distance / max(len) is a ratio
+{
   let d = misc.levenshtein_distance(a, b);
   let m = a.len();
   let n = b.len();

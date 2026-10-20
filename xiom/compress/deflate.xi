@@ -1386,7 +1386,9 @@ pub fn deflate_bound(len: Int) -> Int
 /// `reader`, compresses them, writes the container to `writer`, and returns
 /// the number of bytes written. Errors (empty input, read/write failures) are
 /// returned as Err.
-pub fn deflate_compress_stream(reader: Int, writer: Int) -> Result[Int, Str] {
+pub fn deflate_compress_stream(reader: Int, writer: Int) -> Result[Int, Str]
+  ensures: result is Ok => result.value >= 0  // bytes written
+{
   var input = Vec[UInt8].new();
   var done = false;
   while !done {

@@ -329,7 +329,9 @@ pub fn diff_patch(a: Str, b: Str) -> Str {
 /// Apply a patch produced by `diff_patch` to `a`. Returns Err on a malformed
 /// patch or a context/deletion mismatch.
 /// Complexity: O(|patch lines| * |a lines|).
-pub fn diff_apply(a: Str, patch: Str) -> Result[Str, Str] {
+pub fn diff_apply(a: Str, patch: Str) -> Result[Str, Str]
+  ensures: result is Err => result.value.len() > 0  // every Err carries a reason
+{
   let a_raw = string.str_split(a, "\n");
   let a_lines = copy_strs(&a_raw);
   let p_raw = string.str_split(patch, "\n");

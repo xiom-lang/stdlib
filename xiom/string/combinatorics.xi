@@ -346,7 +346,9 @@ pub fn str_shuffle_seeded(s: Str, seed: Int) -> Str
 /// Returns: the shuffled words joined by single spaces.
 /// Error case: none; a string with no words yields "".
 /// Complexity: O(|s|).
-pub fn str_shuffle_words(s: Str) -> Str {
+pub fn str_shuffle_words(s: Str) -> Str
+  ensures: result.len() <= s.len()  // words are rejoined with single spaces
+{
   let words = string.words(s);
   let shuffled = _shuffle(&words, true, 0);
   let r = _join_words(&shuffled);
@@ -358,7 +360,9 @@ pub fn str_shuffle_words(s: Str) -> Str {
 /// Returns: the seeded permutation of the words of `s`.
 /// Error case: none; a string with no words yields "".
 /// Complexity: O(|s|).
-pub fn str_shuffle_words_seeded(s: Str, seed: Int) -> Str {
+pub fn str_shuffle_words_seeded(s: Str, seed: Int) -> Str
+  ensures: result.len() <= s.len()  // words are rejoined with single spaces
+{
   let words = string.words(s);
   let shuffled = _shuffle(&words, false, seed);
   let r = _join_words(&shuffled);
@@ -441,7 +445,9 @@ pub fn str_rotate_right(s: Str, n: Int) -> Str
 /// Returns: the word-rotated string.
 /// Error case: none; a string with no words yields "".
 /// Complexity: O(|s|).
-pub fn str_rotate_word(s: Str, n: Int) -> Str {
+pub fn str_rotate_word(s: Str, n: Int) -> Str
+  ensures: result.len() <= s.len()  // words are rejoined with single spaces
+{
   let words = string.words(s);
   let wc = words.len();
   if wc == 0 {

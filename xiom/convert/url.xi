@@ -97,7 +97,9 @@ pub fn url_parse(s: Str) -> Result[Url, Str]
 ///          raw query string without '?' (empty means none).
 /// Returns: the assembled URL.
 /// Complexity: O(n).
-pub fn url_build(scheme: Str, host: Str, port: Int, path: Str, query: Str) -> Str {
+pub fn url_build(scheme: Str, host: Str, port: Int, path: Str, query: Str) -> Str
+  ensures: result.len() >= scheme.len() + host.len() + 4  // "://" plus "/" path
+{
   var result = string.str_concat(scheme, "://");
   result = string.str_concat(result, host);
   if port > 0 {

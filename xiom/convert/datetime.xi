@@ -30,7 +30,11 @@ pub fn datetime_new(year: Int, month: Int, day: Int, hour: Int, minute: Int, sec
 /// The current date-time value (UTC clock).
 /// Returns: a DateTime for the current instant.
 /// Complexity: O(1).
-pub fn datetime_now() -> DateTime {
+pub fn datetime_now() -> DateTime
+  ensures: result.hour >= 0 && result.hour <= 23
+  ensures: result.minute >= 0 && result.minute <= 59
+  ensures: result.second >= 0 && result.second <= 59
+{
   return time.utc_now();
 }
 

@@ -113,7 +113,9 @@ pub fn assert_false(cond: Bool, msg: Str)
 
 /// Fail unless `a` and `b` are within `eps` of each other.
 /// Complexity: O(1).
-pub fn assert_near(a: Float64, b: Float64, eps: Float64, msg: Str) {
+pub fn assert_near(a: Float64, b: Float64, eps: Float64, msg: Str)
+  ensures: a - b <= eps && b - a <= eps  // |a - b| <= eps on a normal return
+{
   var d = a - b;
   if d < 0.0 {
     d = -d;
@@ -136,7 +138,9 @@ pub fn assert_contains(haystack: Str, needle: Str, msg: Str)
 /// Fail unless `s` matches the regex `pattern` (search semantics, via
 /// xiom.regex.engine).
 /// Complexity: O(len(s) * len(pattern)) worst case.
-pub fn assert_matches(s: Str, pattern: Str, msg: Str) {
+pub fn assert_matches(s: Str, pattern: Str, msg: Str)
+  ensures: engine.regex_is_match(pattern, s)
+{
   if !engine.regex_is_match(pattern, s) {
     xiom.core.panic(msg);
   };

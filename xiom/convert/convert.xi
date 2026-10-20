@@ -341,7 +341,9 @@ pub fn bool_to_string(b: Bool) -> Str
 }
 
 /// Unicode code point of a Char.
-pub fn char_to_int(c: Char) -> Int {
+pub fn char_to_int(c: Char) -> Int
+  ensures: result >= 0 && result <= 1114111
+{
   return to_int_from_char(c);
 }
 

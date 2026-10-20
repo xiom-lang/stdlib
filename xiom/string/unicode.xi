@@ -649,7 +649,9 @@ pub fn unicode_has_emoji(s: Str) -> Bool
 }
 
 /// True when `c` defaults to emoji presentation (not text).
-pub fn unicode_emoji_presentation(c: Char) -> Bool {
+pub fn unicode_emoji_presentation(c: Char) -> Bool
+  ensures: to_int_from_char(c) < 0x1F300 && to_int_from_char(c) != 0xFE0F => !result
+{
   let cp = to_int_from_char(c);
   _emoji_pres_cp(cp)
 }
@@ -870,7 +872,9 @@ pub fn unicode_scripts(s: Str) -> Vec[Str]
 }
 
 /// True when `c` is in an ideographic range (Han, Hiragana, Katakana, Hangul).
-pub fn unicode_is_ideographic(c: Char) -> Bool {
+pub fn unicode_is_ideographic(c: Char) -> Bool
+  ensures: result => to_int_from_char(c) >= 0x1100  // lowest ideographic block
+{
   let cp = to_int_from_char(c);
   _is_ideo_cp(cp)
 }
@@ -985,13 +989,17 @@ pub fn unicode_bidi_scan(s: Str) -> Vec[Int]
 // -- Whitespace and numeric classification -----------------------------------
 
 /// True when `c` matches the White_Space property.
-pub fn unicode_is_whitespace(c: Char) -> Bool {
+pub fn unicode_is_whitespace(c: Char) -> Bool
+  ensures: result => to_int_from_char(c) >= 0x09 && to_int_from_char(c) <= 0x3000
+{
   let cp = to_int_from_char(c);
   _is_ws_cp(cp)
 }
 
 /// True when `c` has the Alphabetic property (approximated by letter + marks).
-pub fn unicode_is_alphabetic(c: Char) -> Bool {
+pub fn unicode_is_alphabetic(c: Char) -> Bool
+  ensures: result => !unicode_is_control(c)  // letters and marks are not controls
+{
   let cat = category.unicode_general_category(c);
   _cat_is_alpha(cat)
 }
@@ -1005,7 +1013,9 @@ pub fn unicode_is_cased(c: Char) -> Bool
 }
 
 /// True when `c` has the Numeric_Type property.
-pub fn unicode_is_numeric(c: Char) -> Bool {
+pub fn unicode_is_numeric(c: Char) -> Bool
+  ensures: result => to_int_from_char(c) >= 0x30  // lowest numeric codepoint
+{
   let cat = category.unicode_general_category(c);
   cat == "Nd" || cat == "Nl" || cat == "No"
 }

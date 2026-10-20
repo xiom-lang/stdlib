@@ -61,7 +61,11 @@ pub fn log_sink_new(target: Int) -> Sink
 /// Open a file sink for appending. Returns Err when the file cannot be
 /// opened for append.
 /// Complexity: O(1).
-pub fn log_sink_file(path: Str) -> Result[Sink, Str] {
+pub fn log_sink_file(path: Str) -> Result[Sink, Str]
+  ensures: result is Ok => result.value.target == 3
+  ensures: result is Ok => result.value.path.len() == path.len()
+  ensures: result is Ok => result.value.bytes == 0
+{
   let probe = io.append_file(path, "");
   match probe {
     Ok(_) => {

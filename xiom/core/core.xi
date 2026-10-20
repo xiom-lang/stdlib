@@ -269,12 +269,16 @@ pub fn to_bool_from_str(s: Str) -> Result[Bool, Str]
 }
 
 /// Convert a code point to a Char.
-pub fn to_char(x: Int) -> Char {
+pub fn to_char(x: Int) -> Char
+  ensures: x < 0 || x > 1114111 || to_int_from_char(result) == x
+{
   return x as Char;
 }
 
 /// Code point of a Char as Int.
-pub fn to_int_from_char(c: Char) -> Int {
+pub fn to_int_from_char(c: Char) -> Int
+  ensures: result >= 0  // Char holds Unicode scalar values
+{
   return c as Int;
 }
 
@@ -920,20 +924,28 @@ pub fn Bool.into(self) -> Int
 }
 
 /// Char -> Int
-pub fn Int.from(value: Char) -> Int {
+pub fn Int.from(value: Char) -> Int
+  ensures: result == to_int_from_char(value)
+{
   return to_int_from_char(value);
 }
 /// Unicode code point conversion.
-pub fn Char.into(self) -> Int {
+pub fn Char.into(self) -> Int
+  ensures: result == to_int_from_char(self)
+{
   return to_int_from_char(self);
 }
 
 /// Int -> Char (may fail, returns first char)
-pub fn Char.from(value: Int) -> Char {
+pub fn Char.from(value: Int) -> Char
+  ensures: result == to_char(value)
+{
   return to_char(value);
 }
 /// Char for the code point (invalid values map to U+FFFD).
-pub fn Int.into(self) -> Char {
+pub fn Int.into(self) -> Char
+  ensures: result == to_char(self)
+{
   return to_char(self);
 }
 

@@ -80,7 +80,9 @@ pub fn fheap_merge(h: &mut FibHeap, other: &mut FibHeap)
 /// allocated by fheap_push); new_key - the smaller key.
 /// Out-of-range handles and non-decreasing keys are ignored.
 /// Complexity: O(1) amortized.
-pub fn fheap_decrease_key(h: &mut FibHeap, node: &mut FibNode, new_key: Int) {
+pub fn fheap_decrease_key(h: &mut FibHeap, node: &mut FibNode, new_key: Int)
+  ensures: h.keys.len() == h.keys.len()@pre  // no nodes are allocated
+{
   var ok = fib_heap_decrease_key(h, node.idx, new_key);
 }
 

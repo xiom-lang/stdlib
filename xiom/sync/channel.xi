@@ -85,7 +85,10 @@ pub fn channel_send[T](ch: &mut Channel[T], item: T) -> Result[Unit, Str]
 /// Params: ch - the channel; item - the value to send.
 /// Returns: true if queued, false if the channel is full or closed.
 /// Complexity: O(1). Never blocks.
-pub fn channel_try_send[T](ch: &mut Channel[T], item: T) -> Bool {
+pub fn channel_try_send[T](ch: &mut Channel[T], item: T) -> Bool
+  ensures: result => ch.cap == 0 || ch.items.len() <= ch.cap
+  ensures: !result => ch.closed || (ch.cap > 0 && ch.items.len() >= ch.cap)
+{
   if ch.closed {
     return false;
   }
@@ -123,7 +126,9 @@ pub fn channel_recv[T](ch: &mut Channel[T]) -> Option[T]
 /// Params: ch - the channel.
 /// Returns: Some(item) in FIFO order, None if empty or closed.
 /// Complexity: O(n) shift per pop. Never blocks.
-pub fn channel_try_recv[T](ch: &mut Channel[T]) -> Option[T] {
+pub fn channel_try_recv[T](ch: &mut Channel[T]) -> Option[T]
+  ensures: result is None => ch.items.len() == 0
+{
   if ch.items.len() == 0 {
     return None;
   }
@@ -181,7 +186,9 @@ pub fn channel_capacity[T](ch: &Channel[T]) -> Int
 /// Returns: Some(index) of the first channel with a queued item, or None if
 ///          every channel is closed and drained.
 /// Complexity: O(n) per poll; blocks while no channel is ready.
-pub fn channel_select[T](chs: &Vec[Channel[T]]) -> Option[Int] {
+pub fn channel_select[T](chs: &Vec[Channel[T]]) -> Option[Int]
+  ensures: result is Some => result.value >= 0 && result.value < chs.len()
+{
   var done = false;
   var result: Option[Int] = None;
   while !done {

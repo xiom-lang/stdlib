@@ -166,7 +166,9 @@ pub fn utf8_seq_len(first_byte: Int) -> Int
 
 /// Validate that a byte slice contains only well-formed UTF-8.
 /// Complexity: O(n) where n = data.len().
-pub fn utf8_validate(data: &Vec[UInt8]) -> Bool {
+pub fn utf8_validate(data: &Vec[UInt8]) -> Bool
+    ensures: data.len() == 0 => result  // the empty sequence is valid UTF-8
+{
     let len = data.len();
     var i: Int = 0;
     while i < len {
@@ -254,7 +256,9 @@ pub fn utf8_encode_str(codepoints: &Vec[Int]) -> Result[Vec[UInt8], Str]
 
 /// Returns true if the byte is a UTF-8 continuation byte (10xxxxxx).
 /// Complexity: O(1).
-pub fn utf8_is_continuation(byte: Int) -> Bool {
+pub fn utf8_is_continuation(byte: Int) -> Bool
+    ensures: result == ((byte & 0xC0) == 0x80)
+{
     (byte & 0xC0) == 0x80
 }
 
