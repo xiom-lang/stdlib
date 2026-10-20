@@ -26,7 +26,9 @@ use xiom.math;
 /// spline (the default smooth interpolant). Delegates to
 /// math.numerical.interp_cubic. Returns NaN for empty, mismatched, or
 /// fewer-than-2-points input. Complexity: O(n).
-pub fn interpolation(x: &Vec[Float64], y: &Vec[Float64], point: Float64) -> Float64 {
+pub fn interpolation(x: &Vec[Float64], y: &Vec[Float64], point: Float64) -> Float64
+  ensures: (x.len() >= 2 && y.len() == x.len()) || (result != result)
+{
   return math.numerical.interp_cubic(x, y, point);
 }
 
@@ -34,7 +36,9 @@ pub fn interpolation(x: &Vec[Float64], y: &Vec[Float64], point: Float64) -> Floa
 /// linear extension of the two nearest end segments. Points inside the range
 /// are interpolated (cubic spline). Returns NaN for empty, mismatched, or
 /// fewer-than-2-points input. Complexity: O(n).
-pub fn extrapolation(x: &Vec[Float64], y: &Vec[Float64], point: Float64) -> Float64 {
+pub fn extrapolation(x: &Vec[Float64], y: &Vec[Float64], point: Float64) -> Float64
+  ensures: (x.len() >= 2 && y.len() == x.len()) || (result != result)
+{
   var n = x.len();
   if n < 2 || y.len() != n { return 0.0 / 0.0; }
   if point >= x[0] && point <= x[n - 1] {

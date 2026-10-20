@@ -118,7 +118,9 @@ pub fn secant(f: fn(Float64) -> Float64, x0: Float64, x1: Float64, tol: Float64)
 /// Root of f in [a, b] via regula falsi (false position) with the Illinois
 /// anti-stalling adjustment. Returns NaN when no sign change exists in
 /// [a, b] (documented), at most 200 iterations. Complexity: O(200 * cost(f)).
-pub fn falsi(f: fn(Float64) -> Float64, a: Float64, b: Float64, tol: Float64) -> Float64 {
+pub fn falsi(f: fn(Float64) -> Float64, a: Float64, b: Float64, tol: Float64) -> Float64
+  ensures: (f(a) * f(b) > 0.0) => (result != result)
+{
   var lo = a;
   var hi = b;
   var f_lo = f(lo);
@@ -154,7 +156,9 @@ pub fn falsi(f: fn(Float64) -> Float64, a: Float64, b: Float64, tol: Float64) ->
 /// with bisection fallback). The most robust of the bracketing methods;
 /// returns NaN when no sign change exists in [a, b] (documented). At most
 /// 200 iterations. Complexity: O(200 * cost(f)).
-pub fn brent(f: fn(Float64) -> Float64, a: Float64, b: Float64, tol: Float64) -> Float64 {
+pub fn brent(f: fn(Float64) -> Float64, a: Float64, b: Float64, tol: Float64) -> Float64
+  ensures: (f(a) * f(b) > 0.0) => (result != result)
+{
   var fa = f(a);
   var fb = f(b);
   if fa == 0.0 { return a; }
@@ -622,7 +626,9 @@ pub fn solver_system(fs: &Vec[fn(&Vec[Float64]) -> Float64], x0: &Vec[Float64], 
 /// Piecewise linear interpolation of the points (xs, ys) at x. x outside
 /// [xs[0], xs[n-1]] is clamped to the nearest endpoint (documented).
 /// Returns NaN for empty or mismatched input. Complexity: O(n).
-pub fn interp_linear(xs: &Vec[Float64], ys: &Vec[Float64], x: Float64) -> Float64 {
+pub fn interp_linear(xs: &Vec[Float64], ys: &Vec[Float64], x: Float64) -> Float64
+  ensures: (xs.len() != 0 && ys.len() == xs.len()) || (result != result)
+{
   var n = xs.len();
   if n == 0 || ys.len() != n { return 0.0 / 0.0; }
   if n == 1 { return ys[0]; }
@@ -644,7 +650,9 @@ pub fn interp_linear(xs: &Vec[Float64], ys: &Vec[Float64], x: Float64) -> Float6
 /// Polynomial interpolation through the points (xs, ys) evaluated at x
 /// (Lagrange form). Returns NaN for empty, mismatched, or repeated-x input
 /// (division by zero guard). Complexity: O(n^2).
-pub fn interp_polynomial(xs: &Vec[Float64], ys: &Vec[Float64], x: Float64) -> Float64 {
+pub fn interp_polynomial(xs: &Vec[Float64], ys: &Vec[Float64], x: Float64) -> Float64
+  ensures: (xs.len() != 0 && ys.len() == xs.len()) || (result != result)
+{
   var n = xs.len();
   if n == 0 || ys.len() != n { return 0.0 / 0.0; }
   var result = 0.0;
@@ -670,14 +678,18 @@ pub fn interp_polynomial(xs: &Vec[Float64], ys: &Vec[Float64], x: Float64) -> Fl
 /// points (xs, ys). Same semantics as interp_cubic. Returns NaN for empty,
 /// mismatched, or fewer-than-2-points input. Complexity: O(n) per call after
 /// an O(n) setup.
-pub fn interp_spline(xs: &Vec[Float64], ys: &Vec[Float64], x: Float64) -> Float64 {
+pub fn interp_spline(xs: &Vec[Float64], ys: &Vec[Float64], x: Float64) -> Float64
+  ensures: (xs.len() >= 2 && ys.len() == xs.len()) || (result != result)
+{
   return interp_cubic(xs, ys, x);
 }
 
 /// Natural cubic spline interpolation at x through the points (xs, ys)
 /// (zero second derivatives at the ends). Returns NaN for empty, mismatched,
 /// or fewer-than-2-points input. Complexity: O(n) setup + O(n) evaluation.
-pub fn interp_cubic(xs: &Vec[Float64], ys: &Vec[Float64], x: Float64) -> Float64 {
+pub fn interp_cubic(xs: &Vec[Float64], ys: &Vec[Float64], x: Float64) -> Float64
+  ensures: (xs.len() >= 2 && ys.len() == xs.len()) || (result != result)
+{
   var n = xs.len();
   if n < 2 || ys.len() != n { return 0.0 / 0.0; }
   // BUG 24 fix: xs/ys are ALREADY &Vec[Float64] -- `&xs` was a double-address.
@@ -689,7 +701,9 @@ pub fn interp_cubic(xs: &Vec[Float64], ys: &Vec[Float64], x: Float64) -> Float64
 /// NaN for empty, mismatched input, or fewer than 2 points. x outside the
 /// data range is clamped to the nearest endpoint (documented).
 /// Complexity: O(n).
-pub fn interp_hermite(xs: &Vec[Float64], ys: &Vec[Float64], dys: &Vec[Float64], x: Float64) -> Float64 {
+pub fn interp_hermite(xs: &Vec[Float64], ys: &Vec[Float64], dys: &Vec[Float64], x: Float64) -> Float64
+  ensures: (xs.len() >= 2 && ys.len() == xs.len() && dys.len() == xs.len()) || (result != result)
+{
   var n = xs.len();
   if n < 2 || ys.len() != n || dys.len() != n { return 0.0 / 0.0; }
   if x <= xs[0] { return ys[0]; }
@@ -1420,7 +1434,9 @@ pub fn newton_root(f: fn(Float64) -> Float64, fprime: fn(Float64) -> Float64, x0
 
 /// General single-equation root solver over [a, b]. Uses Brent's method
 /// (robust bracketing with quadratic convergence). Alias of brent.
-pub fn solver_single(f: fn(Float64) -> Float64, a: Float64, b: Float64, tol: Float64) -> Float64 {
+pub fn solver_single(f: fn(Float64) -> Float64, a: Float64, b: Float64, tol: Float64) -> Float64
+  ensures: (f(a) * f(b) > 0.0) => (result != result)
+{
   return brent(f, a, b, tol);
 }
 
