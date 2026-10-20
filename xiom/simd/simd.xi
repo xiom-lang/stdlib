@@ -248,14 +248,16 @@ pub fn Vec4f.dot(self, other: Vec4f) -> Float32
 pub fn Vec4f.get(self, index: Int) -> Float32
   requires: index >= 0 && index < 4
 {
-  unsafe { return ptr.read((data + index * 4) as *Float32); }
+  // `data` is *Float32; pointer arithmetic is element-based (do not scale by 4).
+  unsafe { return ptr.read((data + index) as *Float32); }
 }
 
 /// Write `value` to lane `index` (0..3).
 pub fn Vec4f.set(self, index: Int, value: Float32)
   requires: index >= 0 && index < 4
 {
-  unsafe { ptr.write((data + index * 4) as *Float32, value); }
+  // Element-based pointer arithmetic; see Vec4f.get.
+  unsafe { ptr.write((data + index) as *Float32, value); }
 }
 
 /// Euclidean length of the vector.
