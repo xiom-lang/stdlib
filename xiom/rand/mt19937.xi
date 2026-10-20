@@ -96,7 +96,10 @@ fn _mt_twist(r: &mut Mt19937) {
 
 /// Return the next 32-bit output word, tempering with:
 ///   y ^= y >> 11; y ^= (y << 7) & 0x9d2c5680; y ^= (y << 15) & 0xefc60000; y ^= y >> 18.
-pub fn mt19937_next_u32(r: &mut Mt19937) -> UInt32 {
+pub fn mt19937_next_u32(r: &mut Mt19937) -> UInt32
+  requires: r.state.len() == 624
+  requires: r.index >= 0 && r.index <= 624
+{
   if r.index >= _MT_N {
     _mt_twist(r);
   };

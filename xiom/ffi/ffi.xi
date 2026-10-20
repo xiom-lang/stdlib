@@ -552,7 +552,9 @@ pub fn ffi_check_nonzero(code: Int, msg: Str) -> Result[Int, FFIError]
 }
 
 /// FFI success code (0).
-pub fn ffi_ok() -> Int { 0 }
+pub fn ffi_ok() -> Int
+  ensures: result == 0
+{ 0 }
 
 /// FFI error value from a code and message.
 pub fn ffi_error(code: Int, msg: Str) -> FFIError {

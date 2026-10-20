@@ -127,29 +127,40 @@ pub fn Duration.as_secs(self) -> Int {
 }
 
 /// Whole milliseconds of the duration.
-pub fn Duration.as_millis(self) -> Int {
+pub fn Duration.as_millis(self) -> Int
+  requires: 0 <= self.nanos && self.nanos < NANOS_PER_SEC
+{
   return self.secs * MILLIS_PER_SEC + self.nanos / NANOS_PER_MILLI;
 }
 
 /// Whole microseconds of the duration.
-pub fn Duration.as_micros(self) -> Int {
+pub fn Duration.as_micros(self) -> Int
+  requires: 0 <= self.nanos && self.nanos < NANOS_PER_SEC
+{
   return self.secs * 1000000 + self.nanos / NANOS_PER_MICRO;
 }
 
 /// Total nanoseconds of the duration.
-pub fn Duration.as_nanos(self) -> Int {
+pub fn Duration.as_nanos(self) -> Int
+  requires: 0 <= self.nanos && self.nanos < NANOS_PER_SEC
+{
   return self.secs * NANOS_PER_SEC + self.nanos;
 }
 
 /// Duration as fractional seconds.
-pub fn Duration.as_secs_f64(self) -> Float64 {
+pub fn Duration.as_secs_f64(self) -> Float64
+  requires: 0 <= self.nanos && self.nanos < NANOS_PER_SEC
+{
   var result = self.secs as Float64;
   result = result + (self.nanos as Float64) / (NANOS_PER_SEC as Float64);
   return result;
 }
 
 /// Nanosecond remainder within the current second.
-pub fn Duration.subsec_nanos(self) -> Int {
+pub fn Duration.subsec_nanos(self) -> Int
+  requires: 0 <= self.nanos && self.nanos < NANOS_PER_SEC
+  ensures:  0 <= result && result < NANOS_PER_SEC
+{
   return self.nanos;
 }
 
@@ -542,8 +553,16 @@ fn days_from_civil(y: Int, m: Int, d: Int) -> Int {
 }
 
 /// date_new creates a Date from year, month, day.
-/// Complexity: O(1). No validation performed.
-pub fn date_new(year: Int, month: Int, day: Int) -> Date {
+/// The caller supplies a calendar month (1-12) and day (1-31); the fields
+/// are stored unchanged, with no further validation.
+/// Complexity: O(1).
+pub fn date_new(year: Int, month: Int, day: Int) -> Date
+  requires: 1 <= month && month <= 12
+  requires: 1 <= day && day <= 31
+  ensures:  result.year == year
+  ensures:  result.month == month
+  ensures:  result.day == day
+{
   return Date{ year: year; month: month; day: day; };
 }
 
@@ -566,20 +585,28 @@ pub fn date_year(d: &Date) -> Int {
 
 /// date_month returns the month field of a Date (1-12).
 /// Complexity: O(1).
-pub fn date_month(d: &Date) -> Int {
+pub fn date_month(d: &Date) -> Int
+  requires: 1 <= d.month && d.month <= 12
+  ensures:  1 <= result && result <= 12
+{
   return d.month;
 }
 
 /// date_day returns the day-of-month field of a Date (1-31).
 /// Complexity: O(1).
-pub fn date_day(d: &Date) -> Int {
+pub fn date_day(d: &Date) -> Int
+  requires: 1 <= d.day && d.day <= 31
+  ensures:  1 <= result && result <= 31
+{
   return d.day;
 }
 
 /// date_is_leap_year returns true if the given year is a leap year
 /// in the proleptic Gregorian calendar.
 /// Complexity: O(1).
-pub fn date_is_leap_year(year: Int) -> Bool {
+pub fn date_is_leap_year(year: Int) -> Bool
+  ensures: result == (year % 400 == 0 || (year % 4 == 0 && year % 100 != 0))
+{
   if year % 400 == 0 {
     return true;
   };
@@ -739,7 +766,9 @@ pub fn date_add_days(d: &Date, days: Int) -> Date
 
 /// date_diff_days returns the number of days between a and b (a - b).
 /// Complexity: O(1).
-pub fn date_diff_days(a: &Date, b: &Date) -> Int {
+pub fn date_diff_days(a: &Date, b: &Date) -> Int
+  ensures: (a.year == b.year && a.month == b.month && a.day == b.day) => result == 0
+{
   let da = days_from_civil(a.year, a.month, a.day);
   let db = days_from_civil(b.year, b.month, b.day);
   return da - db;

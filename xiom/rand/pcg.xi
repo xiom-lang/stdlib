@@ -63,7 +63,9 @@ pub fn pcg_from_seed(seed: UInt64) -> Pcg
 /// xorshifted = ((oldstate >> 18) ^ oldstate) >> 27;
 /// rot = oldstate >> 59;
 /// output = (xorshifted >> rot) | (xorshifted << ((-rot) & 31)).
-pub fn pcg_next_u32(r: &mut Pcg) -> UInt32 {
+pub fn pcg_next_u32(r: &mut Pcg) -> UInt32
+  ensures: result < 4294967296
+{
   let oldstate: UInt64 = r.state;
   _pcg_advance(r);
   let xs: UInt64 = _u64_lshr(_u64_lshr(oldstate, 18) ^ oldstate, 27);

@@ -48,7 +48,9 @@ pub fn errno_get() -> Int
 
 /// Set the errno value (byte-wise 64-bit little-endian store).
 /// Complexity: O(1).
-pub fn errno_set(code: Int) {
+pub fn errno_set(code: Int)
+  requires: code >= 0
+{
   unsafe {
     let p = xiom_errno_ptr() as *UInt8;
     p[0] = ( code        & 0xFF) as UInt8;

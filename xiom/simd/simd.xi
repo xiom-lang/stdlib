@@ -150,7 +150,9 @@ pub fn has_neon() -> Bool
 }
 
 /// Vec4f Operations (4 x f32, SSE/NEON)
-pub fn Vec4f.new(x: Float32, y: Float32, z: Float32, w: Float32) -> Vec4f {
+pub fn Vec4f.new(x: Float32, y: Float32, z: Float32, w: Float32) -> Vec4f
+  ensures: result.data != null
+{
   let data = alloc.alloc(16);  // 4 * 4 bytes = 16 bytes (128-bit aligned)
   unsafe {
     ptr.write(data as *Float32, x);
@@ -164,12 +166,16 @@ pub fn Vec4f.new(x: Float32, y: Float32, z: Float32, w: Float32) -> Vec4f {
 }
 
 /// Vector with all four lanes set to `value`.
-pub fn Vec4f.splat(value: Float32) -> Vec4f {
+pub fn Vec4f.splat(value: Float32) -> Vec4f
+  ensures: result.data != null
+{
   return Vec4f.new(value, value, value, value);
 }
 
 /// All-zero vector.
-pub fn Vec4f.zero() -> Vec4f {
+pub fn Vec4f.zero() -> Vec4f
+  ensures: result.data != null
+{
   return Vec4f.splat(0.0);
 }
 
@@ -261,12 +267,18 @@ pub fn Vec4f.set(self, index: Int, value: Float32)
 }
 
 /// Euclidean length of the vector.
-pub fn Vec4f.len(self) -> Float32 {
+pub fn Vec4f.len(self) -> Float32
+  requires: simd_supported()
+  ensures:  result >= 0.0
+{
   return math.sqrt(dot(self, self));
 }
 
 /// Unit vector in the same direction (a zero vector stays zero).
-pub fn Vec4f.normalize(self) -> Vec4f {
+pub fn Vec4f.normalize(self) -> Vec4f
+  requires: simd_supported()
+  ensures:  result.data != null
+{
   let l = len(self);
   if l == 0.0 {
     unsafe { alloc.free(data as *UInt8); }
@@ -279,7 +291,9 @@ pub fn Vec4f.normalize(self) -> Vec4f {
 }
 
 /// Cross product using the first three lanes.
-pub fn Vec4f.cross3(self, other: Vec4f) -> Vec4f {
+pub fn Vec4f.cross3(self, other: Vec4f) -> Vec4f
+  ensures: result.data != null
+{
   let x = get(1) * other.get(2) - get(2) * other.get(1);
   let y = get(2) * other.get(0) - get(0) * other.get(2);
   let z = get(0) * other.get(1) - get(1) * other.get(0);
@@ -297,7 +311,9 @@ pub fn Vec4f.drop(self)
 
 /// Scalar fallback when SIMD unavailable
 /// Add the scalar in lane 0 to every lane.
-pub fn Vec4f.add_scalar(self, other: Vec4f) -> Vec4f {
+pub fn Vec4f.add_scalar(self, other: Vec4f) -> Vec4f
+  ensures: result.data != null
+{
   return Vec4f.new(
     get(0) + other.get(0),
     get(1) + other.get(1),
@@ -307,7 +323,9 @@ pub fn Vec4f.add_scalar(self, other: Vec4f) -> Vec4f {
 }
 
 /// Multiply every lane by the scalar in lane 0.
-pub fn Vec4f.mul_scalar(self, other: Vec4f) -> Vec4f {
+pub fn Vec4f.mul_scalar(self, other: Vec4f) -> Vec4f
+  ensures: result.data != null
+{
   return Vec4f.new(
     get(0) * other.get(0),
     get(1) * other.get(1),
@@ -319,7 +337,9 @@ pub fn Vec4f.mul_scalar(self, other: Vec4f) -> Vec4f {
 /// Vec8f Operations (8 x f32, AVX)
 /// Build an 8-lane vector from eight lane values.
 pub fn Vec8f.new(v0: Float32, v1: Float32, v2: Float32, v3: Float32,
-                  v4: Float32, v5: Float32, v6: Float32, v7: Float32) -> Vec8f {
+                  v4: Float32, v5: Float32, v6: Float32, v7: Float32) -> Vec8f
+  ensures: result.data != null
+{
   let data = alloc.alloc(32);  // 8 * 4 = 32 bytes (256-bit)
   unsafe {
     var p = data as *Float32;

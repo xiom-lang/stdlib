@@ -15,17 +15,31 @@ extern "C" {
 pub type Layout = { size: Int; align: Int; } derive[Eq, Clone]
 
 /// Layout with the given size and natural (8-byte) alignment.
-pub fn Layout.new(size: Int) -> Layout {
+pub fn Layout.new(size: Int) -> Layout
+  requires: size > 0
+  ensures:  result.size == size
+  ensures:  result.align == 8
+{
   Layout{ size: size, align: 8 }
 }
 
 /// Same size with the given alignment.
-pub fn Layout.with_align(self, align: Int) -> Layout {
+pub fn Layout.with_align(self, align: Int) -> Layout
+  requires: align > 0
+  ensures:  result.size == self.size
+  ensures:  result.align == align
+{
   Layout{ size: self.size, align: align }
 }
 
 /// Size rounded up to a multiple of the alignment.
-pub fn Layout.padded_size(self) -> Int {
+pub fn Layout.padded_size(self) -> Int
+  requires: self.size >= 0
+  requires: self.align > 0
+  ensures:  result >= self.size
+  ensures:  result % self.align == 0
+  ensures:  result < self.size + self.align
+{
   (self.size + self.align - 1) / self.align * self.align
 }
 

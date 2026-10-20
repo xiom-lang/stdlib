@@ -113,7 +113,9 @@ pub fn join(t: SpawnThread) -> Result[Int, Str]
 /// handles are a no-op.
 /// Params: t - the thread handle (consumed).
 /// Complexity: O(1).
-pub fn detach(t: SpawnThread) {
+pub fn detach(t: SpawnThread)
+  requires: t.id > 0
+{
   if t.handle == 0 {
     return;
   }

@@ -131,7 +131,9 @@ pub fn compare(a: BenchResult, b: BenchResult) -> Str
 }
 
 /// Opaque identity that prevents the optimizer from eliding the value.
-pub fn black_box[T](value: T) -> T {
+pub fn black_box[T](value: T) -> T
+  ensures: result == value
+{
   return value;
 }
 
@@ -275,7 +277,9 @@ pub fn bench_run_avg(name: Str, iterations: Int, f: fn()) -> BenchResult
 /// Complexity: runs `f` exactly once.
 /// Defect fix 2026-10-08 (wave 91): used to call `run_bench("", f)`, which
 /// violated run_bench's own `requires: name.len() > 0` at runtime.
-pub fn bench_time_fn(f: fn()) -> Int {
+pub fn bench_time_fn(f: fn()) -> Int
+  ensures: result >= 0
+{
   let result = run_bench("bench_time_fn", f);
   return result.mean_ns;
 }
