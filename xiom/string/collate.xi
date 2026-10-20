@@ -74,7 +74,9 @@ pub fn collate_compare(a: Str, b: Str) -> Int
 /// Returns: negative / zero / positive per the natural ordering of a vs b.
 /// Error case: none.
 /// Complexity: O(|a| + |b|).
-pub fn collate_compare_numeric(a: Str, b: Str) -> Int {
+pub fn collate_compare_numeric(a: Str, b: Str) -> Int
+  ensures: result >= -1 && result <= 1
+{
   let r = misc.natural_compare(a, b);
   r
 }

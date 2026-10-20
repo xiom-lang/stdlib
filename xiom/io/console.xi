@@ -62,7 +62,9 @@ pub fn console_read_line() -> Result[Str, Str]
 /// Read one character without echo.
 /// Returns: Some(char) read from stdin, None at EOF.
 /// Complexity: O(1).
-pub fn console_read_char() -> Option[Char] {
+pub fn console_read_char() -> Option[Char]
+  ensures: result is Some => to_int_from_char(result.value) >= 0 && to_int_from_char(result.value) <= 255
+{
   let c = unsafe { fgetc(xiom_stdin() as *UInt8) };
   if c == -1 {
     return None;
@@ -74,7 +76,9 @@ pub fn console_read_char() -> Option[Char] {
 /// Returns: Some(char) for the key, None at EOF. Raw mode is not exposed by
 ///          the runtime; this reads one buffered character.
 /// Complexity: O(1).
-pub fn console_read_key() -> Option[Char] {
+pub fn console_read_key() -> Option[Char]
+  ensures: result is Some => to_int_from_char(result.value) >= 0 && to_int_from_char(result.value) <= 255
+{
   let c = unsafe { fgetc(xiom_stdin() as *UInt8) };
   if c == -1 {
     return None;

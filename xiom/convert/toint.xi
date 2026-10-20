@@ -19,7 +19,9 @@ use xiom.core.INT_MAX;
 /// Truncates a float toward zero. Behavior for NaN and out-of-range values is
 /// undefined (use the checked/saturating variants for those inputs).
 /// Complexity: O(1).
-pub fn to_int(n: Float64) -> Int {
+pub fn to_int(n: Float64) -> Int
+  ensures: (n == 0.0) => (result == 0)
+{
   n as Int
 }
 
@@ -54,6 +56,8 @@ pub fn to_int_checked(f: Float64) -> Option[Int]
 
 /// Returns a character's code point as an integer.
 /// Complexity: O(1).
-pub fn to_int_from_char(c: Char) -> Int {
+pub fn to_int_from_char(c: Char) -> Int
+  ensures: result >= 0  // Char holds Unicode scalar values
+{
   c as Int
 }

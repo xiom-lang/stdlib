@@ -137,7 +137,9 @@ fn _block_name(cp: Int) -> Str {
 /// Returns: the block name.
 /// Error case: none.
 /// Complexity: O(number of table entries).
-pub fn unicode_block(c: Char) -> Str {
+pub fn unicode_block(c: Char) -> Str
+  ensures: result.len() > 0  // block names are never empty ("Undefined" fallback)
+{
   _block_name(to_int_from_char(c))
 }
 

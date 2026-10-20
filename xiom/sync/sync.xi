@@ -42,7 +42,10 @@ pub type Mutex[T] = {
 
 /// Create an unlocked mutex holding `value`.
 #[unsafe_direct]
-pub fn Mutex.new[T](value: T) -> Mutex[T] {
+pub fn Mutex.new[T](value: T) -> Mutex[T]
+  ensures: result.inner != null
+  ensures: result.data != null
+{
   let m = alloc.alloc(64);  // enough for any platform mutex
   unsafe { xiom_mutex_init(m); }
   let d = alloc.alloc(size_of[T]());
@@ -785,6 +788,8 @@ pub fn cdl_new(n: Int) -> CountDownLatch
 /// Decrements the latch counter by one. Does nothing if already zero.
 /// Complexity: O(1).
 pub fn cdl_count_down(l: &mut CountDownLatch)
+  ensures: l.remaining == l.remaining@pre || l.remaining == l.remaining@pre - 1
+  ensures: l.remaining >= 0
 {
   if l.remaining > 0 {
     l.remaining = l.remaining - 1;

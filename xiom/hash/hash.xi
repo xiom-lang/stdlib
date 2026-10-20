@@ -153,7 +153,9 @@ pub fn Int.hash(self) -> UInt64
 }
 
 /// Stable hash of a Bool.
-pub fn Bool.hash(self) -> UInt64 {
+pub fn Bool.hash(self) -> UInt64
+  ensures: result == 177573 || result == 177574  // 5381 * 33 (+ 1 when true)
+{
   var h: Int = 5381;
   if self {
     h = ((h * 33) + 1);

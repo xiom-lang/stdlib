@@ -26,6 +26,8 @@ pub fn str_uppercase(s: Str) -> Str
 /// Returns the uppercase variant of `c`, or `c` unchanged when `c` has no
 /// uppercase mapping.
 /// Complexity: O(1).
-pub fn char_uppercase(c: Char) -> Char {
+pub fn char_uppercase(c: Char) -> Char
+  ensures: result == c || to_int_from_char(result) == to_int_from_char(c) - 32
+{
   return xiom.char.to_uppercase(c);
 }

@@ -26,13 +26,17 @@ pub fn lru_new(capacity: Int) -> LruCache
 }
 
 /// Get the value for `key`, marking it recently used. None if absent. O(n).
-pub fn lru_get(c: &mut LruCache, key: Int) -> Option[Int] {
+pub fn lru_get(c: &mut LruCache, key: Int) -> Option[Int]
+  ensures: result is Some => c.keys.len() > 0
+{
   return xiom.collect.cache.lru_get(c, key);
 }
 
 /// Insert or update `key` -> `value`, evicting the least-recently-used entry
 /// when full. O(n).
-pub fn lru_put(c: &mut LruCache, key: Int, value: Int) {
+pub fn lru_put(c: &mut LruCache, key: Int, value: Int)
+  ensures: c.keys.len() > 0
+{
   xiom.collect.cache.lru_put(c, key, value);
 }
 

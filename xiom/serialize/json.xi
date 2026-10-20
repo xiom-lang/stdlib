@@ -491,7 +491,9 @@ pub fn json_parse(s: Str) -> Result[JsonValue, Str]
 
 /// Serialize `v` as compact JSON (no insignificant whitespace).
 /// Complexity: O(n), n = number of nodes.
-pub fn json_stringify(v: JsonValue) -> Str {
+pub fn json_stringify(v: JsonValue) -> Str
+  ensures: result.len() > 0  // every JSON value renders to at least one byte
+{
   return _json_stringify_node(v, 0);
 }
 
@@ -538,7 +540,9 @@ fn _json_stringify_node(v: JsonValue, depth: Int) -> Str {
 
 /// Serialize `v` as indented JSON (2 spaces per level).
 /// Complexity: O(n), n = number of nodes.
-pub fn json_pretty(v: JsonValue) -> Str {
+pub fn json_pretty(v: JsonValue) -> Str
+  ensures: result.len() > 0  // every JSON value renders to at least one byte
+{
   return _json_pretty_node(v, 0);
 }
 

@@ -511,7 +511,9 @@ pub type JsonValue = enum {
 }
 
 /// === JsonValue methods ===
-pub fn JsonValue.to_str(self) -> Str {
+pub fn JsonValue.to_str(self) -> Str
+  ensures: result.len() > 0  // every variant renders to at least one byte
+{
   match self {
     Null => { return "null"; };
     Bool(v) => {

@@ -305,12 +305,16 @@ pub fn str_trim(s: Str) -> Str
 
 /// Parse an Int; Err with a message on bad input.
 pub fn str_to_int(s: Str) -> Result[Int, Str]
+  ensures: s.len() == 0 => result.is_err
+  ensures: s == "0" => result.is_ok
 {
   xiom.core.to_int_from_str(s)
 }
 
 /// Parse a Float64; Err with a message on bad input.
 pub fn str_to_float(s: Str) -> Result[Float64, Str]
+  ensures: s.len() == 0 => result.is_err
+  ensures: s == "1.5" => result.is_ok
 {
   xiom.core.to_float_from_str(s)
 }
@@ -366,7 +370,9 @@ pub fn str_lower(s: Str) -> Str
 }
 
 /// Return `fmt` unchanged (formatting with no arguments).
-pub fn format(fmt: Str) -> Str {
+pub fn format(fmt: Str) -> Str
+  ensures: result == fmt  // no placeholders to substitute
+{
   fmt
 }
 
@@ -386,7 +392,9 @@ pub fn format1(fmt: Str, arg: Str) -> Str
 }
 
 /// Substitute the first two `{}` placeholders with the arguments.
-pub fn format2(fmt: Str, arg1: Str, arg2: Str) -> Str {
+pub fn format2(fmt: Str, arg1: Str, arg2: Str) -> Str
+  ensures: result.len() >= fmt.len() - 4  // two placeholders remove at most 4 bytes
+{
   let s = format1(fmt, arg1);
   format1(s, arg2)
 }
@@ -463,6 +471,7 @@ pub fn last_index_of(s: Str, substr: Str) -> Option[Int]
 
 /// Replace all occurrences of `from` with `to`.
 pub fn replace(s: Str, from: Str, to: Str) -> Str
+  ensures: from.len() == 0 => result == s  // empty needle is a no-op
 {
   let from_len = from.len();
   if from_len == 0 {
@@ -672,7 +681,9 @@ pub fn str_pad_right(s: Str, width: Int, pad: Char) -> Str
 /// If `s` starts with `prefix`, returns `Some(s without prefix)`.
 /// Otherwise returns `None`.
 /// O(|prefix|).
-pub fn str_strip_prefix(s: Str, prefix: Str) -> Option[Str] {
+pub fn str_strip_prefix(s: Str, prefix: Str) -> Option[Str]
+  ensures: result is Some => result.value.len() == s.len() - prefix.len()
+{
   if str_starts_with(s, prefix) {
     let remaining = str_slice(s, prefix.len(), s.len());
     return Some(remaining);
@@ -683,7 +694,9 @@ pub fn str_strip_prefix(s: Str, prefix: Str) -> Option[Str] {
 /// If `s` ends with `suffix`, returns `Some(s without suffix)`.
 /// Otherwise returns `None`.
 /// O(|suffix|).
-pub fn str_strip_suffix(s: Str, suffix: Str) -> Option[Str] {
+pub fn str_strip_suffix(s: Str, suffix: Str) -> Option[Str]
+  ensures: result is Some => result.value.len() == s.len() - suffix.len()
+{
   if str_ends_with(s, suffix) {
     let remaining = str_slice(s, 0, s.len() - suffix.len());
     return Some(remaining);

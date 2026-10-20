@@ -122,7 +122,9 @@ pub fn log_json_fields(fields: &Vec[(Str, Str)]) -> Str
 
 /// The current time as an ISO 8601 string (via xiom.time.iso8601_now).
 /// Complexity: O(1).
-pub fn log_json_timestamp() -> Str {
+pub fn log_json_timestamp() -> Str
+  ensures: result.len() > 0  // ISO 8601 text is never empty
+{
   time.iso8601_now()
 }
 

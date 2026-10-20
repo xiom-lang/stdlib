@@ -70,7 +70,10 @@ pub fn unicode_display_width(s: Str) -> Int
 /// Returns: the longest prefix of `s` whose display width is <= max_width.
 /// Error case: max_width <= 0 yields ""; malformed bytes pass through whole.
 /// Complexity: O(|s|).
-pub fn unicode_truncate_display(s: Str, max_width: Int) -> Str {
+pub fn unicode_truncate_display(s: Str, max_width: Int) -> Str
+  ensures: max_width <= 0 => result.len() == 0
+  ensures: result.len() <= s.len()  // truncation only removes a suffix
+{
   if max_width <= 0 {
     return "";
   };

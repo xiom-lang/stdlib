@@ -75,7 +75,9 @@ pub fn group_fold_add(g: &mut GroupFold, key: Int, value: Int)
 }
 
 /// True when `key` has a bucket.
-pub fn group_fold_contains(g: &GroupFold, key: Int) -> Bool {
+pub fn group_fold_contains(g: &GroupFold, key: Int) -> Bool
+  ensures: result == (_gf_find(g, key) >= 0)
+{
   return _gf_find(g, key) >= 0;
 }
 
@@ -96,7 +98,9 @@ pub fn group_fold_count(g: &GroupFold, key: Int) -> Int
 }
 
 /// Sum of `key`'s values (0 when the key has no bucket).
-pub fn group_fold_sum(g: &GroupFold, key: Int) -> Int {
+pub fn group_fold_sum(g: &GroupFold, key: Int) -> Int
+  ensures: !group_fold_contains(g, key) => result == 0
+{
   var idx = _gf_find(g, key);
   if idx < 0 { return 0; }
   return g.sums[idx];

@@ -220,7 +220,9 @@ pub fn gzip_decompress_capped(data: &Vec[UInt8], max_out: Int) -> Result[Vec[UIn
 
 /// Gzip a file to `<path>.gz`. Returns Err when the source cannot be read or
 /// the target cannot be written.
-pub fn gzip_compress_file(path: Str) -> Result[Unit, Str] {
+pub fn gzip_compress_file(path: Str) -> Result[Unit, Str]
+  ensures: result is Ok => io.file_exists(path + ".gz")
+{
   var bytes = io.read_file_bytes(path);
   match bytes {
     Ok(b) => {

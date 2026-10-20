@@ -609,7 +609,9 @@ pub fn bigint_compare(a: &BigInt, b: &BigInt) -> Int
 }
 
 /// True when the value is zero.
-pub fn bigint_is_zero(b: &BigInt) -> Bool {
+pub fn bigint_is_zero(b: &BigInt) -> Bool
+  ensures: b.digits.len() == 0 => result
+{
   if b.digits.len() == 0 { return true; }
   var i = 0;
   while i < b.digits.len() {

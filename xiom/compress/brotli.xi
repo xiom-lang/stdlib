@@ -150,7 +150,9 @@ pub fn brotli_decompress(data: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
 /// `reader`, decompresses them (custom NOT-RFC-7932 frame; real brotli:
 /// registry package `xiom.brotli`), writes the result to `writer`, and
 /// returns the number of bytes written. Errors surface as Err.
-pub fn brotli_decompress_stream(reader: Int, writer: Int) -> Result[Int, Str] {
+pub fn brotli_decompress_stream(reader: Int, writer: Int) -> Result[Int, Str]
+  ensures: result is Ok => result.value >= 0  // bytes written
+{
   var input = Vec[UInt8].new();
   var done = false;
   while !done {

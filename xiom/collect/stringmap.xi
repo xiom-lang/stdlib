@@ -125,7 +125,9 @@ pub fn string_map_put(m: &mut StringMap, key: Str, value: Int)
 /// Params: m - the map; key - Str key.
 /// Returns: Some(value) if present, None otherwise.
 /// Complexity: O(1) amortized.
-pub fn string_map_get(m: &StringMap, key: Str) -> Option[Int] {
+pub fn string_map_get(m: &StringMap, key: Str) -> Option[Int]
+  ensures: result.is_some == string_map_contains(m, key)
+{
   var idx = _find(m, key);
   if idx < 0 { return None; }
   return Some(m.values[idx]);
@@ -135,7 +137,9 @@ pub fn string_map_get(m: &StringMap, key: Str) -> Option[Int] {
 /// Params: m - the map; key - Str key.
 /// Returns: true if `key` maps to a value.
 /// Complexity: O(1) amortized.
-pub fn string_map_contains(m: &StringMap, key: Str) -> Bool {
+pub fn string_map_contains(m: &StringMap, key: Str) -> Bool
+  ensures: result == (_find(m, key) >= 0)
+{
   return _find(m, key) >= 0;
 }
 
@@ -286,7 +290,9 @@ pub fn string_str_map_get(m: &StringStrMap, key: Str) -> Option[Str]
 }
 
 /// Check whether a key is present.
-pub fn string_str_map_contains(m: &StringStrMap, key: Str) -> Bool {
+pub fn string_str_map_contains(m: &StringStrMap, key: Str) -> Bool
+  ensures: result == (_ssm_find(m, key) >= 0)
+{
   return _ssm_find(m, key) >= 0;
 }
 
@@ -330,7 +336,9 @@ pub fn string_str_map_entry_count(m: &StringStrMap) -> Int
 }
 
 /// True when arena entry `e` is live.
-pub fn string_str_map_entry_live(m: &StringStrMap, e: Int) -> Bool {
+pub fn string_str_map_entry_live(m: &StringStrMap, e: Int) -> Bool
+  ensures: result => e >= 0 && e < m.live.len()
+{
   if e < 0 || e >= m.live.len() { return false; }
   return m.live[e];
 }

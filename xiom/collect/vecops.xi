@@ -84,7 +84,9 @@ pub fn vec_pop_or[T](v: &mut Vec[T], fallback: T) -> T
 }
 
 /// Last element, or `fallback` when the vector is empty. O(1).
-pub fn vec_last_or[T](v: &Vec[T], fallback: T) -> T {
+pub fn vec_last_or[T](v: &Vec[T], fallback: T) -> T
+  ensures: v.len() == 0 => result == fallback
+{
   var n = v.len();
   if n <= 0 { return fallback; }
   return v[n - 1];

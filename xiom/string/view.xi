@@ -97,7 +97,9 @@ pub fn view_len(v: &StrView) -> Int
 }
 
 /// True when the view has zero bytes.
-pub fn view_is_empty(v: &StrView) -> Bool {
+pub fn view_is_empty(v: &StrView) -> Bool
+  ensures: result == (v.len == 0)
+{
   v.len == 0
 }
 
@@ -144,7 +146,9 @@ pub fn view_to_str(v: &StrView) -> Str
 
 /// Byte-wise equality of two views (length first, then bytes).
 /// Complexity: O(min lengths) on unequal, O(len) on equal.
-pub fn view_eq(a: &StrView, b: &StrView) -> Bool {
+pub fn view_eq(a: &StrView, b: &StrView) -> Bool
+  ensures: result => a.len == b.len
+{
   if a.len != b.len {
     return false;
   };
@@ -160,7 +164,9 @@ pub fn view_eq(a: &StrView, b: &StrView) -> Bool {
 
 /// True when the view starts with the bytes of `prefix` (an empty prefix
 /// always matches). Complexity: O(|prefix|).
-pub fn view_starts_with(v: &StrView, prefix: Str) -> Bool {
+pub fn view_starts_with(v: &StrView, prefix: Str) -> Bool
+  ensures: result => prefix.len() <= v.len
+{
   let plen = prefix.len();
   if plen > v.len {
     return false;
@@ -179,7 +185,10 @@ pub fn view_starts_with(v: &StrView, prefix: Str) -> Bool {
 /// Byte offset (relative to the view start) of the first occurrence of
 /// `needle`, or None. An empty needle matches at 0 (index_of convention).
 /// Complexity: O(view length * |needle|).
-pub fn view_find(v: &StrView, needle: Str) -> Option[Int] {
+pub fn view_find(v: &StrView, needle: Str) -> Option[Int]
+  ensures: result is Some => result.value >= 0
+  ensures: result is Some => result.value + needle.len() <= v.len
+{
   let nlen = needle.len();
   if nlen == 0 {
     return Some(0);

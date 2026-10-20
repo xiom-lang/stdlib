@@ -28,7 +28,9 @@ use xiom.string;
 /// Returns: true when c is emoji or an emoji component.
 /// Error case: none.
 /// Complexity: O(1).
-pub fn unicode_is_emoji(c: Char) -> Bool {
+pub fn unicode_is_emoji(c: Char) -> Bool
+  ensures: result => to_int_from_char(c) >= 0x2000  // no emoji below this block
+{
   _is_emoji_cp(to_int_from_char(c))
 }
 
@@ -63,7 +65,9 @@ pub fn unicode_count_emoji(s: Str) -> Int
 /// Returns: true when s contains an emoji.
 /// Error case: none.
 /// Complexity: O(|s|).
-pub fn unicode_has_emoji(s: Str) -> Bool {
+pub fn unicode_has_emoji(s: Str) -> Bool
+  ensures: result == (unicode_count_emoji(s) > 0)
+{
   let len = string.str_len(s);
   var i: Int = 0;
   while i < len {

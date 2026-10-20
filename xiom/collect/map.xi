@@ -138,7 +138,9 @@ pub fn map_put(m: &mut HashIntMap, key: Int, value: Int)
 
 /// Get the value for a key.
 /// Complexity: O(1) average.
-pub fn map_get(m: &HashIntMap, key: Int) -> Option[Int] {
+pub fn map_get(m: &HashIntMap, key: Int) -> Option[Int]
+  ensures: result is Some => m.used >= 1
+{
   let cap = m.states.len();
   var idx = key;
   if idx < 0 {
@@ -161,7 +163,9 @@ pub fn map_get(m: &HashIntMap, key: Int) -> Option[Int] {
 
 /// Check whether a key is present.
 /// Complexity: O(1) average.
-pub fn map_contains(m: &HashIntMap, key: Int) -> Bool {
+pub fn map_contains(m: &HashIntMap, key: Int) -> Bool
+  ensures: result == (map_get(m, key).is_some)
+{
   let found = map_get(m, key);
   found.is_some
 }
@@ -236,7 +240,10 @@ pub fn map_clear(m: &mut HashIntMap)
 /// delete+insert workloads, where tombstone density between automatic
 /// grows can degrade lookups toward O(capacity) linear scans.
 /// Complexity: O(capacity).
-pub fn map_rehash(m: &mut HashIntMap) {
+pub fn map_rehash(m: &mut HashIntMap)
+  ensures: m.states.len() == m.states.len()@pre
+  ensures: m.used == m.used@pre
+{
   let cap = m.states.len();
   let old_keys = m.keys;
   let old_values = m.values;

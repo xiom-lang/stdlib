@@ -1297,7 +1297,9 @@ pub fn move_file(src: Str, dst: Str) -> Result[Unit, IOError]
 }
 
 /// dir_exists returns true if the path exists and is a directory.
-pub fn dir_exists(path: Str) -> Bool {
+pub fn dir_exists(path: Str) -> Bool
+  ensures: result == is_dir(path)
+{
   return is_dir(path);
 }
 

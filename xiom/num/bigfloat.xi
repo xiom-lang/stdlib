@@ -712,14 +712,20 @@ fn _split_int_frac(f: &BigFloat) -> IntFrac {
 }
 
 /// Round toward zero.
-pub fn bigfloat_trunc(f: &BigFloat) -> BigFloat {
+pub fn bigfloat_trunc(f: &BigFloat) -> BigFloat
+  ensures: result.exponent == 0
+  ensures: result.precision == f.precision
+{
   var split = _split_int_frac(f);
   return BigFloat{ sign: f.sign; exponent: 0;
                    significand: split.q; precision: f.precision; };
 }
 
 /// Round toward negative infinity.
-pub fn bigfloat_floor(f: &BigFloat) -> BigFloat {
+pub fn bigfloat_floor(f: &BigFloat) -> BigFloat
+  ensures: result.exponent == 0
+  ensures: result.precision == f.precision
+{
   var split = _split_int_frac(f);
   var q = split.q;
   var r = split.r;
@@ -731,7 +737,10 @@ pub fn bigfloat_floor(f: &BigFloat) -> BigFloat {
 }
 
 /// Round toward positive infinity.
-pub fn bigfloat_ceil(f: &BigFloat) -> BigFloat {
+pub fn bigfloat_ceil(f: &BigFloat) -> BigFloat
+  ensures: result.exponent == 0
+  ensures: result.precision == f.precision
+{
   var split = _split_int_frac(f);
   var q = split.q;
   var r = split.r;
@@ -743,7 +752,10 @@ pub fn bigfloat_ceil(f: &BigFloat) -> BigFloat {
 }
 
 /// Round to the nearest integer, ties to even (magnitude rounding).
-pub fn bigfloat_round(f: &BigFloat) -> BigFloat {
+pub fn bigfloat_round(f: &BigFloat) -> BigFloat
+  ensures: result.exponent == 0
+  ensures: result.precision == f.precision
+{
   var split = _split_int_frac(f);
   var q = split.q;
   var r = split.r;
@@ -816,27 +828,37 @@ pub fn bigfloat_compare(a: &BigFloat, b: &BigFloat) -> Int
 }
 
 /// Exact equality.
-pub fn bigfloat_eq(a: &BigFloat, b: &BigFloat) -> Bool {
+pub fn bigfloat_eq(a: &BigFloat, b: &BigFloat) -> Bool
+  ensures: result == (bigfloat_compare(a, b) == 0)
+{
   return bigfloat_compare(a, b) == 0;
 }
 
 /// Strictly less than.
-pub fn bigfloat_lt(a: &BigFloat, b: &BigFloat) -> Bool {
+pub fn bigfloat_lt(a: &BigFloat, b: &BigFloat) -> Bool
+  ensures: result == (bigfloat_compare(a, b) < 0)
+{
   return bigfloat_compare(a, b) < 0;
 }
 
 /// Less than or equal.
-pub fn bigfloat_le(a: &BigFloat, b: &BigFloat) -> Bool {
+pub fn bigfloat_le(a: &BigFloat, b: &BigFloat) -> Bool
+  ensures: result == (bigfloat_compare(a, b) <= 0)
+{
   return bigfloat_compare(a, b) <= 0;
 }
 
 /// Strictly greater than.
-pub fn bigfloat_gt(a: &BigFloat, b: &BigFloat) -> Bool {
+pub fn bigfloat_gt(a: &BigFloat, b: &BigFloat) -> Bool
+  ensures: result == (bigfloat_compare(a, b) > 0)
+{
   return bigfloat_compare(a, b) > 0;
 }
 
 /// Greater than or equal.
-pub fn bigfloat_ge(a: &BigFloat, b: &BigFloat) -> Bool {
+pub fn bigfloat_ge(a: &BigFloat, b: &BigFloat) -> Bool
+  ensures: result == (bigfloat_compare(a, b) >= 0)
+{
   return bigfloat_compare(a, b) >= 0;
 }
 

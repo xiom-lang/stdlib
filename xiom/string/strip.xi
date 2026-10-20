@@ -43,14 +43,18 @@ fn _raw_byte(s: Str, i: Int) -> UInt8
 /// If `s` starts with `prefix`, returns `Some(s without the prefix)`.
 /// Returns `None` when `s` does not start with `prefix`.
 /// Complexity: O(|prefix|).
-pub fn str_strip_prefix(s: Str, prefix: Str) -> Option[Str] {
+pub fn str_strip_prefix(s: Str, prefix: Str) -> Option[Str]
+  ensures: result is Some => result.value.len() == s.len() - prefix.len()
+{
   return string.str_strip_prefix(s, prefix);
 }
 
 /// If `s` ends with `suffix`, returns `Some(s without the suffix)`.
 /// Returns `None` when `s` does not end with `suffix`.
 /// Complexity: O(|suffix|).
-pub fn str_strip_suffix(s: Str, suffix: Str) -> Option[Str] {
+pub fn str_strip_suffix(s: Str, suffix: Str) -> Option[Str]
+  ensures: result is Some => result.value.len() == s.len() - suffix.len()
+{
   return string.str_strip_suffix(s, suffix);
 }
 

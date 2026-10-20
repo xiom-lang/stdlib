@@ -126,7 +126,9 @@ pub fn uri_normalize(s: Str) -> Result[Str, Str]
 ///          absolute or relative).
 /// Returns: Ok(resolved) on success; Err when parsing fails.
 /// Complexity: O(n).
-pub fn uri_resolve(base: Str, rel: Str) -> Result[Str, Str] {
+pub fn uri_resolve(base: Str, rel: Str) -> Result[Str, Str]
+  ensures: result is Err => result.value.len() > 0  // parse errors carry a reason
+{
   var rel_parsed = uri_parse(rel);
   if !rel_parsed.is_ok {
     return Err(rel_parsed.error);

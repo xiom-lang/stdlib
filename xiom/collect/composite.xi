@@ -78,7 +78,10 @@ pub fn ckmap_key_hash(key: &Vec[Int], arity: Int) -> Int
 
 /// Documented key equality: component-wise compare of the first `arity`
 /// components. False when either key has fewer than `arity` components.
-pub fn ckmap_key_eq(a: &Vec[Int], b: &Vec[Int], arity: Int) -> Bool {
+pub fn ckmap_key_eq(a: &Vec[Int], b: &Vec[Int], arity: Int) -> Bool
+  ensures: arity <= 0 => result
+  ensures: result => a.len() >= arity && b.len() >= arity
+{
   if a.len() < arity { return false; }
   if b.len() < arity { return false; }
   var i = 0;
@@ -249,7 +252,9 @@ pub fn ckmap_entry_count(m: &CompositeKeyMap) -> Int
 }
 
 /// True when arena entry `e` is live.
-pub fn ckmap_entry_live(m: &CompositeKeyMap, e: Int) -> Bool {
+pub fn ckmap_entry_live(m: &CompositeKeyMap, e: Int) -> Bool
+  ensures: result => e >= 0 && e < m.live.len()
+{
   if e < 0 || e >= m.live.len() { return false; }
   return m.live[e];
 }

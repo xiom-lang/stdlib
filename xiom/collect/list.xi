@@ -40,7 +40,9 @@ fn ll_new_node(l: &mut LinkedList, value: Int) -> Int {
 }
 
 /// Add `value` to the front of the list. O(1).
-pub fn ll_push_front(l: &mut LinkedList, value: Int) {
+pub fn ll_push_front(l: &mut LinkedList, value: Int)
+  ensures: l.size == l.size@pre + 1
+{
   var id = ll_new_node(l, value);
   if l.size == 0 {
     l.head = id;
@@ -54,7 +56,9 @@ pub fn ll_push_front(l: &mut LinkedList, value: Int) {
 }
 
 /// Add `value` to the back of the list. O(1).
-pub fn ll_push_back(l: &mut LinkedList, value: Int) {
+pub fn ll_push_back(l: &mut LinkedList, value: Int)
+  ensures: l.size == l.size@pre + 1
+{
   var id = ll_new_node(l, value);
   if l.size == 0 {
     l.head = id;

@@ -333,7 +333,10 @@ fn _scrypt_blockmix(b: &Vec[UInt8], r: Int) -> Vec[UInt8] {
 /// the outer/inner hashes and Salsa20/8 for the block mix. `n` must be a
 /// power of two; it is clamped to 2^18 and r*p to 256.
 /// Complexity: O(n * r * p).
-pub fn scrypt(password: &Vec[UInt8], salt: &Vec[UInt8], n: Int, r: Int, p: Int, key_len: Int) -> Vec[UInt8] {
+pub fn scrypt(password: &Vec[UInt8], salt: &Vec[UInt8], n: Int, r: Int, p: Int, key_len: Int) -> Vec[UInt8]
+  ensures: key_len < 1 => result.len() == 0
+  ensures: key_len >= 1 => result.len() == key_len
+{
   var nv = n;
   if nv < 2 { nv = 2; }
   if nv > 262144 { nv = 262144; }

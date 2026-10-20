@@ -41,7 +41,9 @@ pub fn from_float(f: Float64) -> Int
 /// Parameters: c -- the character.
 /// Returns: the Unicode code point of c.
 /// Complexity: O(1).
-pub fn from_char(c: Char) -> Int {
+pub fn from_char(c: Char) -> Int
+  ensures: result == to_int_from_char(c)
+{
   return to_int_from_char(c);
 }
 

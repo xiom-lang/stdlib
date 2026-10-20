@@ -62,7 +62,9 @@ pub fn lines_count(s: Str) -> Int
 }
 
 /// Byte offsets of every newline byte, in source order. Complexity: O(n).
-pub fn lines_newline_index(s: Str) -> Vec[Int] {
+pub fn lines_newline_index(s: Str) -> Vec[Int]
+  ensures: result.len() <= s.len()  // one index per newline byte
+{
   var result = Vec[Int].new();
   let len = s.len();
   let base = s.c_str();
@@ -79,7 +81,10 @@ pub fn lines_newline_index(s: Str) -> Vec[Int] {
 /// Byte range [start, end) of line `idx` (terminator excluded), or None when
 /// `idx` is negative or >= lines_count. Allocates nothing.
 /// Complexity: O(start of line idx) -- one forward pass.
-pub fn lines_span(s: Str, idx: Int) -> Option[(Int, Int)] {
+pub fn lines_span(s: Str, idx: Int) -> Option[(Int, Int)]
+  ensures: idx < 0 => result is None
+  ensures: result is None => idx < 0 || idx >= lines_count(s)
+{
   if idx < 0 {
     return None;
   };
@@ -106,7 +111,11 @@ pub fn lines_span(s: Str, idx: Int) -> Option[(Int, Int)] {
 
 /// Next line range; advances the cursor. None once all lines were yielded.
 /// Complexity: O(line length) -- the cursor never rescans the source.
-pub fn lines_next(c: &mut LineCursor) -> Option[(Int, Int)] {
+pub fn lines_next(c: &mut LineCursor) -> Option[(Int, Int)]
+  ensures: result is Some => c.line == c.line@pre + 1
+  ensures: result is Some => c.pos > c.pos@pre
+  ensures: result is None => c.line == c.line@pre
+{
   let start = c.pos;
   if start > c.len {
     return None;
@@ -122,7 +131,10 @@ pub fn lines_next(c: &mut LineCursor) -> Option[(Int, Int)] {
 
 /// Materializing form of lines_span: a copied Str for line `idx`, or None.
 /// Complexity: O(start of line idx + line length).
-pub fn lines_slice(s: Str, idx: Int) -> Option[Str] {
+pub fn lines_slice(s: Str, idx: Int) -> Option[Str]
+  ensures: idx < 0 => result is None
+  ensures: result is Some => result.value.len() <= s.len()
+{
   let span = lines_span(s, idx);
   match span {
     Some(range) => {

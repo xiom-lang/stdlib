@@ -86,7 +86,9 @@ pub fn is_whitespace(c: Char) -> Bool
 }
 
 /// Lowercase mapping of the character.
-pub fn to_lowercase(c: Char) -> Char {
+pub fn to_lowercase(c: Char) -> Char
+  ensures: result == c || to_int_from_char(result) == to_int_from_char(c) + 32
+{
   let code = to_int_from_char(c);
   if code >= 65 && code <= 90 {
     return to_char(code + 32);
@@ -95,7 +97,9 @@ pub fn to_lowercase(c: Char) -> Char {
 }
 
 /// Uppercase mapping of the character.
-pub fn to_uppercase(c: Char) -> Char {
+pub fn to_uppercase(c: Char) -> Char
+  ensures: result == c || to_int_from_char(result) == to_int_from_char(c) - 32
+{
   let code = to_int_from_char(c);
   if code >= 97 && code <= 122 {
     return to_char(code - 32);
@@ -171,7 +175,10 @@ pub fn len_utf8(c: Char) -> Int
 }
 
 /// Append the UTF-8 encoding of the character to `buf`.
-pub fn encode_utf8(c: Char, buf: &mut Vec[UInt8]) {
+pub fn encode_utf8(c: Char, buf: &mut Vec[UInt8])
+  ensures: buf.len() >= buf.len()@pre + 1  // UTF-8 adds at least one byte
+  ensures: buf.len() <= buf.len()@pre + 4  // ... and at most four
+{
   let code = to_int_from_char(c);
   if code <= 0x7F {
     buf.push(code);
@@ -304,7 +311,9 @@ pub fn is_combining_mark(c: Char) -> Bool
 
 /// Returns the title-case version of `c`. For a single character this is
 /// equivalent to to_uppercase.
-pub fn to_title_case(c: Char) -> Char {
+pub fn to_title_case(c: Char) -> Char
+  ensures: result == to_uppercase(c)
+{
   to_uppercase(c)
 }
 
@@ -371,12 +380,18 @@ pub fn is_ascii_printable(c: Char) -> Bool
 // -- Digit Value Conversion --
 
 /// Returns the numeric value (0-9) of a digit character, or None if `c` is not a digit.
-pub fn char_to_digit_value(c: Char) -> Option[Int] {
+pub fn char_to_digit_value(c: Char) -> Option[Int]
+  ensures: result is Some => result.value >= 0
+  ensures: result is Some => result.value <= 9
+{
   to_digit(c, 10)
 }
 
 /// Returns the character representation of a single digit value `n` (0-9), or None if out of range.
-pub fn digit_value_to_char(n: Int) -> Option[Char] {
+pub fn digit_value_to_char(n: Int) -> Option[Char]
+  ensures: n < 0 || n > 9 => result is None
+  ensures: result is Some => n >= 0 && n <= 9
+{
   from_digit(n, 10)
 }
 
