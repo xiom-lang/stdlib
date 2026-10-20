@@ -145,7 +145,10 @@ pub fn chacha_rng_from_seed(seed: UInt64) -> ChaChaRng
 /// `pos` tracks the position within the 64-word keystream window (16 words
 /// per block, 4 blocks per window); the block counter advances at each
 /// 16-word boundary.
-pub fn chacha_rng_next_u32(r: &mut ChaChaRng) -> UInt32 {
+pub fn chacha_rng_next_u32(r: &mut ChaChaRng) -> UInt32
+  requires: r.state.len() == 16
+  requires: r.pos >= 0 && r.pos < 64
+{
   var ks = chacha_block(&r.state);
   let word: UInt32 = ks[r.pos % 16];
   r.pos = r.pos + 1;

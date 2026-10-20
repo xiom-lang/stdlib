@@ -368,7 +368,9 @@ pub fn async_spawn(f: fn()) -> Int
 
 /// Schedules a task to become ready after `ms` milliseconds.
 /// Complexity: O(1). Thread-safe: accesses global executor.
-pub fn async_spawn_delayed(ms: Int, f: fn()) {
+pub fn async_spawn_delayed(ms: Int, f: fn())
+  requires: ms >= 0
+{
   _exec.at(_now() + ms, f);
 }
 

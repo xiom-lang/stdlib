@@ -224,7 +224,9 @@ pub fn chrono_diff(a: &DateTime, b: &DateTime) -> Duration
 /// Params: dt - the date/time.
 /// Returns: 0 for Sunday through 6 for Saturday.
 /// Complexity: O(1).
-pub fn chrono_weekday(dt: &DateTime) -> Int {
+pub fn chrono_weekday(dt: &DateTime) -> Int
+  requires: 0 <= dt.weekday && dt.weekday < 7
+{
   return dt.weekday;
 }
 
@@ -250,7 +252,9 @@ pub fn chrono_compare(a: &DateTime, b: &DateTime) -> Int
 /// Params: dt - the date/time.
 /// Returns: 0 (the runtime clock is UTC).
 /// Complexity: O(1).
-pub fn chrono_timezone_offset(dt: &DateTime) -> Int {
+pub fn chrono_timezone_offset(dt: &DateTime) -> Int
+  ensures: result == 0
+{
   return 0;
 }
 

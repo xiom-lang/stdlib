@@ -221,7 +221,10 @@ pub fn rfc3339_parse(s: Str) -> Option[DateTime]
 /// Params: s - the date string.
 /// Returns: Some(Date) on success, None on malformed or out-of-range input.
 /// Complexity: O(1).
-pub fn iso8601_date_parse(s: Str) -> Option[Date] {
+pub fn iso8601_date_parse(s: Str) -> Option[Date]
+  ensures: result is Some => (1 <= result.value.month && result.value.month <= 12)
+  ensures: result is Some => (1 <= result.value.day && result.value.day <= 31)
+{
   return time.date_from_iso8601(s);
 }
 
@@ -230,7 +233,12 @@ pub fn iso8601_date_parse(s: Str) -> Option[Date] {
 /// Returns: the ISO week year, ISO week number (1-53), and ISO weekday
 ///          (1 = Monday .. 7 = Sunday).
 /// Complexity: O(1).
-pub fn iso8601_week_date(d: &Date) -> (Int, Int, Int) {
+pub fn iso8601_week_date(d: &Date) -> (Int, Int, Int)
+  requires: 1 <= d.month && d.month <= 12
+  requires: 1 <= d.day && d.day <= 31
+  ensures:  result.1 >= 1 && result.1 <= 53
+  ensures:  result.2 >= 1 && result.2 <= 7
+{
   let wd = time.date_day_of_week(d.year, d.month, d.day);
   var iso_wd = wd;
   if iso_wd == 0 {
@@ -267,7 +275,11 @@ fn weeks_in_year_i(year: Int) -> Int {
 /// Params: d - the date.
 /// Returns: the year and the day of the year (1-366).
 /// Complexity: O(month).
-pub fn iso8601_ordinal_date(d: &Date) -> (Int, Int) {
+pub fn iso8601_ordinal_date(d: &Date) -> (Int, Int)
+  requires: 1 <= d.month && d.month <= 12
+  requires: 1 <= d.day && d.day <= 31
+  ensures:  result.1 >= 1 && result.1 <= 366
+{
   let doy = time.date_day_of_year(d.year, d.month, d.day);
   return (d.year, doy);
 }

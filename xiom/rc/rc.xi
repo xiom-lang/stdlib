@@ -104,7 +104,9 @@ pub fn Rc.downgrade[T](self) -> Weak[T]
 
 /// Return the value without cloning when this is the last strong handle;
 /// otherwise return a clone.
-pub fn Rc.unwrap_or_clone[T: Clone](self) -> T {
+pub fn Rc.unwrap_or_clone[T: Clone](self) -> T
+  requires: ptr != null
+{
   let val = self.get();
   let count = self.strong_count();
   if count == 1 {
@@ -191,7 +193,10 @@ pub fn Weak.weak_count[T](self) -> Int
 
 /// Decrement the weak count; free the control block when no strong or weak
 /// handles remain.
-pub fn Weak.drop[T](self) {
+pub fn Weak.drop[T](self)
+  requires: ptr != null
+  requires: weak_count() > 0
+{
   let layout = alloc.Layout.new(size_of[RcInner[T]]());
   unsafe {
     (*ptr).weak = (*ptr).weak - 1;

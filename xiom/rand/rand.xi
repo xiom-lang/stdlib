@@ -454,7 +454,9 @@ pub fn seed_from_time()
 }
 
 /// Reseed the global RNG from an explicit value.
-pub fn seed_from_value(seed: Int) {
+pub fn seed_from_value(seed: Int)
+  ensures: state() != 0
+{
   if seed == 0 {
     _global_state = 1;
   } else {
@@ -504,7 +506,10 @@ pub fn Xorshift64.new(seed: Int) -> Xorshift64
 
 /// Returns the next pseudo-random integer from this Xorshift64 generator.
 /// Uses triple-xorshift: x ^= x << 13; x ^= x >> 7; x ^= x << 17.
-pub fn Xorshift64.next_int(self) -> Int {
+pub fn Xorshift64.next_int(self) -> Int
+  requires: self.state != 0
+  ensures:  result != 0
+{
   state = state ^ (state << 13);
   state = state ^ (state >> 7);
   state = state ^ (state << 17);
