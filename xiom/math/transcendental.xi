@@ -97,21 +97,27 @@ pub fn log1p(x: Float64) -> Float64
 /// a raised to the power b (libm pow). A negative base with a non-integral
 /// exponent returns NaN (IEEE). Delegates to math.exponential.pow.
 /// Complexity: O(1), libm.
-pub fn pow(a: Float64, b: Float64) -> Float64 {
+pub fn pow(a: Float64, b: Float64) -> Float64
+  ensures: (a > 0.0) => (result >= 0.0 || result != result)
+{
   return math.exponential.pow(a, b);
 }
 
 /// a raised to the integer power n via binary exponentiation.
 /// pow_int(2, 10) == 1024, pow_int(2, -2) == 0.25; 0^0 == 1.0, 0^negative
 /// == +inf. Delegates to math.exponential.pow_int. Complexity: O(log |n|).
-pub fn pow_int(a: Float64, n: Int) -> Float64 {
+pub fn pow_int(a: Float64, n: Int) -> Float64
+  ensures: (n == 0) => (result == 1.0)
+{
   return math.exponential.pow_int(a, n);
 }
 
 /// n-th root of x. Even roots require x >= 0 (NaN otherwise); odd roots
 /// preserve the sign. n == 0 returns 1.0 (documented). Delegates to
 /// math.roots.nth_root. Complexity: O(1), libm pow.
-pub fn root(x: Float64, n: Int) -> Float64 {
+pub fn root(x: Float64, n: Int) -> Float64
+  ensures: (result >= 0.0 || result != result || n % 2 != 0)
+{
   return math.roots.nth_root(x, n);
 }
 
@@ -119,7 +125,11 @@ pub fn root(x: Float64, n: Int) -> Float64 {
 /// for x > 0). gamma(5) == 24, gamma(0.5) == sqrt(pi). Non-positive integer
 /// arguments are poles and return NaN; other x <= 0 values are handled by the
 /// reflection formula. Complexity: O(1), ~9 rational terms.
-pub fn gamma(x: Float64) -> Float64 {
+pub fn gamma(x: Float64) -> Float64
+  ensures: (x == 1.0) => (result == 1.0)
+  ensures: (x == 2.0) => (result == 1.0)
+  ensures: (x == 0.5) => (result > 1.0)
+{
   if x == 1.0 { return 1.0; }
   if x == 2.0 { return 1.0; }
   if x == 0.5 { return math.sqrt(3.14159265358979323846); }
@@ -136,7 +146,10 @@ pub fn gamma(x: Float64) -> Float64 {
 /// Log-gamma: (ln |gamma(x)|, sign(gamma(x))) with sign in {-1, 1}. Returns
 /// (NaN, 0) when gamma is a pole (x a non-positive integer). The sign is 1
 /// for positive values and -1 for negative ones. Complexity: O(gamma).
-pub fn lgamma(x: Float64) -> (Float64, Int) {
+pub fn lgamma(x: Float64) -> (Float64, Int)
+  ensures: (x == 1.0) => (result.1 == 1)
+  ensures: (x == 2.0) => (result.1 == 1)
+{
   var g = gamma(x);
   if g != g { return (0.0 / 0.0, 0); }
   if g < 0.0 {
@@ -170,7 +183,10 @@ pub fn erfc(x: Float64) -> Float64
 /// 0.567143. Returns NaN for x < -1/e (no real branch exists). Newton
 /// iteration on the standard Halley-ish update converges quadratically.
 /// Complexity: O(100) iterations, O(1) each.
-pub fn lambert_w(x: Float64) -> Float64 {
+pub fn lambert_w(x: Float64) -> Float64
+  ensures: (x == 0.0) => (result == 0.0)
+  ensures: (x < -0.36787944117144233) => (result != result)
+{
   if x == 0.0 { return 0.0; }
   if x < -0.36787944117144233 { return 0.0 / 0.0; }
   var w = 0.0;

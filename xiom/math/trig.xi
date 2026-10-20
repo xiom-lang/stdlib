@@ -34,7 +34,9 @@ pub fn cos(x: Float64) -> Float64
 
 /// Tangent of x in radians; a pole (cos(x) == 0) yields +-infinity (IEEE).
 /// Complexity: O(1).
-pub fn tan(x: Float64) -> Float64 {
+pub fn tan(x: Float64) -> Float64
+  ensures: (x != 0.0) || (result == 0.0)
+{
   return math.tan(x);
 }
 
@@ -76,7 +78,9 @@ pub fn atan2(y: Float64, x: Float64) -> Float64
 /// infinity. Complexity: O(1). Delegates to xiom.math.hyperbolic (the
 /// pure-exp composition is gate-green there; the old inline-arithmetic stub
 /// refreshed 2026-09-24).
-pub fn sinh(x: Float64) -> Float64 {
+pub fn sinh(x: Float64) -> Float64
+  ensures: (x != 0.0) || (result == 0.0)
+{
   return hyperbolic.sinh(x);
 }
 
@@ -123,7 +127,9 @@ pub fn acosh(x: Float64) -> Float64
 /// Inverse hyperbolic tangent of x: ln((1+x)/(1-x))/2. For |x| >= 1 returns
 /// NaN (documented domain error; the function is undefined at the poles).
 /// Complexity: O(1). Delegates to xiom.math.hyperbolic.
-pub fn atanh(x: Float64) -> Float64 {
+pub fn atanh(x: Float64) -> Float64
+  ensures: (x != 0.0) || (result == 0.0)
+{
   return hyperbolic.atanh(x);
 }
 
@@ -154,13 +160,17 @@ pub fn cot(x: Float64) -> Float64 {
 }
 
 /// Convert radians to degrees: x * 180/pi. Complexity: O(1).
-pub fn degrees(x: Float64) -> Float64 {
+pub fn degrees(x: Float64) -> Float64
+  ensures: (x != 0.0) || (result == 0.0)
+{
   var pi = math.constants.PI;
   return x * 180.0 / pi;
 }
 
 /// Convert degrees to radians: x * pi/180. Complexity: O(1).
-pub fn radians(x: Float64) -> Float64 {
+pub fn radians(x: Float64) -> Float64
+  ensures: (x != 0.0) || (result == 0.0)
+{
   var pi = math.constants.PI;
   return x * pi / 180.0;
 }
@@ -182,7 +192,9 @@ pub fn cos_deg(x: Float64) -> Float64
 }
 
 /// Tangent of x in degrees. Complexity: O(1).
-pub fn tan_deg(x: Float64) -> Float64 {
+pub fn tan_deg(x: Float64) -> Float64
+  ensures: (x != 0.0) || (result == 0.0)
+{
   var r = radians(x);
   return math.tan(r);
 }

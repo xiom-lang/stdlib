@@ -167,7 +167,11 @@ pub fn is_prime_deterministic(n: Int) -> Bool
 /// Smallest prime strictly greater than n. Returns 0 for n < 0 (no positive
 /// prime is representable in range for the largest inputs) and 0 when no such
 /// prime fits in Int (n >= INT_MAX - 1). Complexity: O(gap * sqrt(p)).
-pub fn next_prime(n: Int) -> Int {
+pub fn next_prime(n: Int) -> Int
+  ensures: (n < 2) => (result == 2)
+  ensures: (n >= 2 && result != 0) => (result > n)
+  ensures: (n >= 9223372036854775806) => (result == 0)
+{
   if n < 2 { return 2; }
   if n >= 9223372036854775806 { return 0; }
   var cand = n + 1;
@@ -233,7 +237,10 @@ pub fn factor(n: Int) -> Vec[Int]
 /// found within the retry budget (documented; a repeated call with a different
 /// internal constant is the standard recovery). Returns 1 for n <= 1.
 /// Complexity: O(sqrt(p)) expected for the smallest prime factor p.
-pub fn pollard_rho(n: Int) -> Int {
+pub fn pollard_rho(n: Int) -> Int
+  ensures: result >= 1
+  ensures: (n > 1) => (result <= n)
+{
   if n <= 1 { return 1; }
   if n % 2 == 0 { return 2; }
   if is_prime(n) { return n; }
@@ -262,7 +269,10 @@ pub fn pollard_rho(n: Int) -> Int {
 /// increasing stage bound B). Returns n itself when n is prime or when no
 /// factor is found within the stage bound (documented). Returns 1 for n <= 1.
 /// Complexity: O(B * log B * mulmod).
-pub fn p_1_factor(n: Int) -> Int {
+pub fn p_1_factor(n: Int) -> Int
+  ensures: result >= 1
+  ensures: (n > 1) => (result <= n)
+{
   if n <= 1 { return 1; }
   if n % 2 == 0 { return 2; }
   if is_prime(n) { return n; }
@@ -399,7 +409,10 @@ pub fn mersenne_prime_p(p: Int) -> Bool
 
 /// Euler totient phi(n): count of integers k in [1, n] coprime to n.
 /// Returns 0 for n <= 0 (documented). Complexity: O(sqrt(n)).
-pub fn euler_phi(n: Int) -> Int {
+pub fn euler_phi(n: Int) -> Int
+  ensures: (n <= 0) => (result == 0)
+  ensures: (n > 0) => (result >= 1 && result <= n)
+{
   if n <= 0 { return 0; }
   if n == 1 { return 1; }
   var result = n;
@@ -421,7 +434,10 @@ pub fn euler_phi(n: Int) -> Int {
 /// Mobius function mu(n): 0 if n has a squared prime factor, otherwise
 /// (-1)^k with k the number of distinct prime factors. Returns 0 for n <= 0
 /// (documented). Complexity: O(sqrt(n)).
-pub fn mobius(n: Int) -> Int {
+pub fn mobius(n: Int) -> Int
+  ensures: (n <= 0) => (result == 0)
+  ensures: (n > 0) => (result >= -1 && result <= 1)
+{
   if n <= 0 { return 0; }
   if n == 1 { return 1; }
   var x = n;
@@ -445,7 +461,11 @@ pub fn mobius(n: Int) -> Int {
 /// (documented) and 0 for k == 0 with n > 1 (J_0(n) = 0). Returns 0
 /// (documented overflow) when the value exceeds Int range.
 /// Complexity: O(sqrt(n) * log k).
-pub fn jordan_totient(n: Int, k: Int) -> Int {
+pub fn jordan_totient(n: Int, k: Int) -> Int
+  ensures: (n <= 0) => (result == 0)
+  ensures: (n == 1) => (result == 1)
+  ensures: (n > 1 && k <= 0) => (result == 0)
+{
   if n <= 0 { return 0; }
   if n == 1 { return 1; }
   if k < 0 { return 0; }
@@ -482,7 +502,11 @@ pub fn jordan_totient(n: Int, k: Int) -> Int {
 /// lambda(p^a) = p^(a-1)(p-1) for odd p. Returns 0 for n <= 0 and 0
 /// (documented overflow) when the value exceeds Int range. Complexity:
 /// O(sqrt(n) * lcm).
-pub fn carmichael(n: Int) -> Int {
+pub fn carmichael(n: Int) -> Int
+  ensures: (n <= 0) => (result == 0)
+  ensures: (n == 1) => (result == 1)
+  ensures: (n > 1 && result != 0) => (result >= 1 && result <= n)
+{
   if n <= 0 { return 0; }
   if n == 1 { return 1; }
   var result = 1;
@@ -523,7 +547,10 @@ pub fn carmichael(n: Int) -> Int {
 
 /// pi(n): the number of primes <= n. Returns 0 for n < 2. Uses a simple
 /// sieve of Eratosthenes over [0, n]. Complexity: O(n log log n).
-pub fn prime_pi(n: Int) -> Int {
+pub fn prime_pi(n: Int) -> Int
+  ensures: (n < 2) => (result == 0)
+  ensures: (n >= 2) => (result >= 1 && result <= n - 1)
+{
   if n < 2 { return 0; }
   var isc = Vec[Bool].new();
   var i = 0;
@@ -674,7 +701,10 @@ pub fn is_power_of(n: Int, base: Int) -> Bool
 /// n <= 1 (rad(1) = 1, rad(0) = 0) and 0 (documented overflow) when the product
 /// exceeds Int range. Negative n is handled by absolute value. Complexity:
 /// O(sqrt(n)).
-pub fn radical(n: Int) -> Int {
+pub fn radical(n: Int) -> Int
+  ensures: (n <= 1) => (result == n)
+  ensures: (n > 1 && result != 0) => (result >= 2 && result <= n)
+{
   if n <= 1 { return n; }
   var x = n;
   if x < 0 { x = -x; }

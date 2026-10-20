@@ -48,7 +48,9 @@ pub fn lcm(a: Int, b: Int) -> Int
 /// Extended Euclid: (g, x, y) with a*x + b*y == g == gcd(a, b), g >= 0.
 /// For a == b == 0 returns (0, 1, 0). Delegates to
 /// xiom.math.arithmetic.gcd_extended. Complexity: O(log min(|a|, |b|)).
-pub fn egcd(a: Int, b: Int) -> (Int, Int, Int) {
+pub fn egcd(a: Int, b: Int) -> (Int, Int, Int)
+  ensures: result.0 >= 0
+{
   return math.arithmetic.gcd_extended(a, b);
 }
 
@@ -56,7 +58,12 @@ pub fn egcd(a: Int, b: Int) -> (Int, Int, Int) {
 /// None when gcd(a, m) != 1 (no inverse), when m == 0 (no modulus), and
 /// Some(0) for m == 1 (everything is 0 mod 1). Delegates to
 /// xiom.math.arithmetic.mod_inverse. Complexity: O(log min(|a|, |m|)).
-pub fn mod_inverse(a: Int, m: Int) -> Option[Int] {
+pub fn mod_inverse(a: Int, m: Int) -> Option[Int]
+  ensures: (m == 0) => (result.is_none == true)
+  ensures: (m == 1) => (result is Some && result.value == 0)
+  ensures: (m > 1 && result is Some) => (result.value >= 0 && result.value < m)
+  ensures: (m > 1 && a >= 0 && result is Some) => ((a * result.value) % m == 1)
+{
   return math.arithmetic.mod_inverse(a, m);
 }
 
@@ -72,7 +79,9 @@ pub fn mod_inverse(a: Int, m: Int) -> Option[Int] {
 /// pairwise-coprime small moduli the result is exact and in [0, M)).
 /// Complexity: O(n^2 * log max(m_i)) for the coprimality check plus O(n log)
 /// for the inverses.
-pub fn crt(remainders: &Vec[Int], moduli: &Vec[Int]) -> Option[Int] {
+pub fn crt(remainders: &Vec[Int], moduli: &Vec[Int]) -> Option[Int]
+  ensures: (remainders.len() != moduli.len() || moduli.len() == 0) => (result.is_none == true)
+{
   var n = moduli.len();
   if remainders.len() != n { return None; }
   if n == 0 { return None; }

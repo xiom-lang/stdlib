@@ -267,7 +267,13 @@ pub fn ceil(x: Float64) -> Float64
 }
 
 /// Nearest integer to `x`, halves rounded away from zero.
-pub fn round(x: Float64) -> Int {
+pub fn round(x: Float64) -> Int
+  requires: x >= -9.0e18
+  requires: x <= 9.0e18
+  ensures: (x > -0.5 && x < 0.5) => (result == 0)
+  ensures: (x >= 0.5) => (result >= 1)
+  ensures: (x <= -0.5) => (result <= -1)
+{
   if x >= 0.0 { return to_int(x + 0.5); }
   return to_int(x - 0.5);
 }

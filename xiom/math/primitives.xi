@@ -143,7 +143,9 @@ pub fn signum(x: Float64) -> Int
 }
 
 /// Linear interpolation: a + (b - a) * t. t outside [0,1] extrapolates.
-pub fn lerp(a: Float64, b: Float64, t: Float64) -> Float64 {
+pub fn lerp(a: Float64, b: Float64, t: Float64) -> Float64
+  ensures: (t != 0.0) || (result == a)
+{
   return a + (b - a) * t;
 }
 

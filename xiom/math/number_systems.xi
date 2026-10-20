@@ -25,7 +25,9 @@ const _DIGITS: Str = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 /// Binary string to Int. Err("invalid") for empty, non-'0'/'1', or overflow
 /// input. Complexity: O(len).
-pub fn binary_to_int(s: Str) -> Result[Int, Str] {
+pub fn binary_to_int(s: Str) -> Result[Int, Str]
+  ensures: (s.len() == 0) => (result.is_err == true)
+{
   return _parse_radix(s, 2);
 }
 
@@ -38,7 +40,9 @@ pub fn int_to_binary(n: Int) -> Str
 }
 
 /// Octal string to Int. Err on invalid input. Complexity: O(len).
-pub fn octal_to_int(s: Str) -> Result[Int, Str] {
+pub fn octal_to_int(s: Str) -> Result[Int, Str]
+  ensures: (s.len() == 0) => (result.is_err == true)
+{
   return _parse_radix(s, 8);
 }
 
@@ -50,7 +54,9 @@ pub fn int_to_octal(n: Int) -> Str
 }
 
 /// Hexadecimal string to Int. Err on invalid input. Complexity: O(len).
-pub fn hex_to_int(s: Str) -> Result[Int, Str] {
+pub fn hex_to_int(s: Str) -> Result[Int, Str]
+  ensures: (s.len() == 0) => (result.is_err == true)
+{
   return _parse_radix(s, 16);
 }
 
@@ -154,7 +160,11 @@ fn _to_radix(n: Int, base: Int) -> Str {
 
 /// Roman numeral string to Int. Err for empty or invalid input; subtractive
 /// notation (IV, IX, XL, XC, CD, CM) is supported. Complexity: O(len).
-pub fn roman_to_int(s: Str) -> Result[Int, Str] {
+pub fn roman_to_int(s: Str) -> Result[Int, Str]
+  ensures: (s.len() == 0) => (result.is_err == true)
+  ensures: (result.is_ok == true) => (result.value >= 1)
+  ensures: (result.is_err == true) => (result.error.len() > 0)
+{
   var len = string.str_len(s);
   if len == 0 {
     return Result[Int, Str]{ is_ok: false, value: 0, error: "empty" };
