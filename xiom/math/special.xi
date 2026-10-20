@@ -648,7 +648,9 @@ pub fn bessel_jn(n: Int, x: Float64) -> Float64
 
 /// Y_0(x), Bessel of the second kind of order zero: series with the
 /// digamma/harmonic terms. NaN for x <= 0 (branch cut). Complexity: O(terms).
-pub fn bessel_y0(x: Float64) -> Float64 {
+pub fn bessel_y0(x: Float64) -> Float64
+  ensures: (x > 0.0) || (result != result)
+{
   if x != x { return x; }
   if x <= 0.0 { return 0.0 / 0.0; }
   if x > 30.0 {
@@ -681,7 +683,9 @@ pub fn bessel_y0(x: Float64) -> Float64 {
 
 /// Y_1(x), Bessel of the second kind of order one, via -d/dx Y_0 (central
 /// difference, ~1e-9 relative for moderate x). NaN for x <= 0. Complexity: O(1).
-pub fn bessel_y1(x: Float64) -> Float64 {
+pub fn bessel_y1(x: Float64) -> Float64
+  ensures: (x > 0.0) || (result != result)
+{
   if x != x { return x; }
   if x <= 0.0 { return 0.0 / 0.0; }
   var h = 1.0e-6 * math.max_float(1.0, math.abs_float(x));
@@ -691,12 +695,16 @@ pub fn bessel_y1(x: Float64) -> Float64 {
 /// Y_n(x), Bessel of the second kind of integer order n by upward recurrence
 /// Y_{n+1} = (2n/x) Y_n - Y_{n-1} from Y_0, Y_1. NaN for x <= 0.
 /// Complexity: O(n).
-pub fn bessel_y(n: Int, x: Float64) -> Float64 {
+pub fn bessel_y(n: Int, x: Float64) -> Float64
+  ensures: (x > 0.0) || (result != result)
+{
   return bessel_yn(n, x);
 }
 
 /// Y_n(x) for integer order n. NaN for x <= 0 or negative n. Complexity: O(n).
-pub fn bessel_yn(n: Int, x: Float64) -> Float64 {
+pub fn bessel_yn(n: Int, x: Float64) -> Float64
+  ensures: (n >= 0 && x > 0.0) || (result != result)
+{
   if n < 0 { return 0.0 / 0.0; }
   if x != x { return x; }
   if x <= 0.0 { return 0.0 / 0.0; }
@@ -943,7 +951,9 @@ pub fn polylog(s: Float64, z: Float64) -> Float64
 /// Digamma psi(x) = d/dx ln gamma(x). NaN at poles (x <= 0 integer); uses the
 /// shift recurrence + asymptotic for x >= 6 and the reflection formula for
 /// x < 0.5. Complexity: O(ceil(6 - x)) shifts.
-pub fn digamma(x: Float64) -> Float64 {
+pub fn digamma(x: Float64) -> Float64
+  ensures: (x > 0.0) || (x != x) || (x != (to_int(x) as Float64)) || (result == 1.0 / 0.0)
+{
   if x != x { return x; }
   if x <= 0.0 {
     var ti = to_int(x);
@@ -1038,7 +1048,9 @@ pub fn legendre_p(n: Int, x: Float64) -> Float64
 /// Legendre function of the second kind Q_n(x) for |x| < 1 (Q0 = atanh(x),
 /// Q1 = x atanh(x) - 1, then the same recurrence as P). NaN for |x| >= 1 or
 /// n < 0. Complexity: O(n).
-pub fn legendre_q(n: Int, x: Float64) -> Float64 {
+pub fn legendre_q(n: Int, x: Float64) -> Float64
+  ensures: (n >= 0 && x > -1.0 && x < 1.0) || (result != result)
+{
   if n < 0 { return 0.0 / 0.0; }
   if x >= 1.0 || x <= -1.0 { return 0.0 / 0.0; }
   var at = 0.5 * math.ln((1.0 + x) / (1.0 - x));
@@ -1078,7 +1090,9 @@ pub fn chebyshev_t(n: Int, x: Float64) -> Float64
 
 /// Hermite polynomial (physicists') H_n(x): H_{n+1} = 2x H_n - 2n H_{n-1}.
 /// NaN for n < 0. Complexity: O(n).
-pub fn hermite_h(n: Int, x: Float64) -> Float64 {
+pub fn hermite_h(n: Int, x: Float64) -> Float64
+  ensures: (n >= 0) || (result != result)
+{
   if n < 0 { return 0.0 / 0.0; }
   if n == 0 { return 1.0; }
   if n == 1 { return 2.0 * x; }
@@ -1096,7 +1110,9 @@ pub fn hermite_h(n: Int, x: Float64) -> Float64 {
 
 /// Generalized Laguerre polynomial L_n^(a)(x). NaN for n < 0 or a <= -1.
 /// Complexity: O(n).
-pub fn laguerre_l(n: Int, a: Float64, x: Float64) -> Float64 {
+pub fn laguerre_l(n: Int, a: Float64, x: Float64) -> Float64
+  ensures: (n >= 0 && a > -1.0) || (result != result)
+{
   if n < 0 || a <= -1.0 { return 0.0 / 0.0; }
   if n == 0 { return 1.0; }
   if n == 1 { return 1.0 + a - x; }
@@ -1114,7 +1130,9 @@ pub fn laguerre_l(n: Int, a: Float64, x: Float64) -> Float64 {
 
 /// Jacobi polynomial P_n^(a,b)(x). NaN for n < 0, a <= -1, b <= -1.
 /// Three-term recurrence (DLMF 18.9.2). Complexity: O(n).
-pub fn jacobi_p(n: Int, a: Float64, b: Float64, x: Float64) -> Float64 {
+pub fn jacobi_p(n: Int, a: Float64, b: Float64, x: Float64) -> Float64
+  ensures: (n >= 0 && a > -1.0 && b > -1.0) || (result != result)
+{
   if n < 0 || a <= -1.0 || b <= -1.0 { return 0.0 / 0.0; }
   if n == 0 { return 1.0; }
   var p0 = 1.0;
@@ -1142,7 +1160,9 @@ pub fn jacobi_p(n: Int, a: Float64, b: Float64, x: Float64) -> Float64 {
 
 /// Gegenbauer (ultraspherical) polynomial C_n^a(x). NaN for n < 0.
 /// Complexity: O(n).
-pub fn gegenbauer_c(n: Int, a: Float64, x: Float64) -> Float64 {
+pub fn gegenbauer_c(n: Int, a: Float64, x: Float64) -> Float64
+  ensures: (n >= 0) || (result != result)
+{
   if n < 0 { return 0.0 / 0.0; }
   if n == 0 { return 1.0; }
   if n == 1 { return 2.0 * a * x; }
@@ -1162,7 +1182,9 @@ pub fn gegenbauer_c(n: Int, a: Float64, x: Float64) -> Float64 {
 /// Y_l^m = sqrt((2l+1)/(4 pi) (l-|m|)!/(l+|m|)!) P_l^|m|(cos theta) cos(m phi)
 /// (m >= 0; m < 0 uses sin(|m| phi)). NaN for invalid l, m or theta outside
 /// [0, pi]. Complexity: O(l).
-pub fn spherical_harmonic(l: Int, m: Int, theta: Float64, phi: Float64) -> Float64 {
+pub fn spherical_harmonic(l: Int, m: Int, theta: Float64, phi: Float64) -> Float64
+  ensures: (l >= 0 && m >= -l && m <= l && theta >= 0.0 && theta <= 3.141592653589793) || (result != result)
+{
   if l < 0 { return 0.0 / 0.0; }
   var am = m;
   if am < 0 { am = -am; }
@@ -1277,7 +1299,9 @@ pub fn airy_ai(x: Float64) -> Float64
 
 /// Airy function of the second kind Bi(x). Series for |x| <= 6; asymptotic
 /// for larger |x|. Complexity: O(60).
-pub fn airy_bi(x: Float64) -> Float64 {
+pub fn airy_bi(x: Float64) -> Float64
+  ensures: (x == x) || (result != result)
+{
   if x != x { return x; }
   var ax = math.abs_float(x);
   if ax <= 6.0 {
@@ -1310,7 +1334,9 @@ pub fn airy_aip(x: Float64) -> Float64
 /// Derivative of the Airy function of the second kind Bi'(x). Series for
 /// |x| <= 6; for larger |x| a central-difference of airy_bi is used.
 /// Complexity: O(60).
-pub fn airy_bip(x: Float64) -> Float64 {
+pub fn airy_bip(x: Float64) -> Float64
+  ensures: (x == x) || (result != result)
+{
   if x != x { return x; }
   if math.abs_float(x) <= 6.0 {
     return _airy_series_d(x, 0.6149266274460007, 0.4482883573538263);
@@ -1458,7 +1484,9 @@ pub fn elliptic_e(k: Float64) -> Float64
 /// Complete elliptic integral of the third kind Pi(n, k) = integral_0^(pi/2)
 /// dtheta / ((1 - n sin^2 theta) sqrt(1 - k^2 sin^2 theta)) by Simpson
 /// quadrature (500 panels). NaN for n > 1 or |k| > 1 (documented domain).
-pub fn elliptic_pi(n: Float64, k: Float64) -> Float64 {
+pub fn elliptic_pi(n: Float64, k: Float64) -> Float64
+  ensures: (math.abs_float(k) <= 1.0 && n <= 1.0) || (result != result)
+{
   if math.abs_float(k) > 1.0 || n > 1.0 { return 0.0 / 0.0; }
   if n == 0.0 { return elliptic_k(k); }
   var m = 500;
@@ -1590,7 +1618,9 @@ pub fn theta_1(x: Float64, q: Float64) -> Float64
 
 /// theta_2(x, q) = 2 sum_{n>=0} q^((n+1/2)^2) cos((2n+1)x). Converges for
 /// 0 < q < 1 (real-domain); NaN otherwise. Complexity: O(terms).
-pub fn theta_2(x: Float64, q: Float64) -> Float64 {
+pub fn theta_2(x: Float64, q: Float64) -> Float64
+  ensures: (q > 0.0 && q < 1.0) || (result != result)
+{
   if q <= 0.0 || q >= 1.0 { return 0.0 / 0.0; }
   var sum = 0.0;
   var n = 0;
@@ -1621,7 +1651,9 @@ pub fn theta_3(x: Float64, q: Float64) -> Float64
 }
 
 /// theta_4(x, q) = 1 + 2 sum_{n>=1} (-1)^n q^(n^2) cos(2nx). Complexity: O(terms).
-pub fn theta_4(x: Float64, q: Float64) -> Float64 {
+pub fn theta_4(x: Float64, q: Float64) -> Float64
+  ensures: (math.abs_float(q) < 1.0) || (result != result)
+{
   if math.abs_float(q) >= 1.0 { return 0.0 / 0.0; }
   var sum = 1.0;
   var n = 1;
@@ -1642,7 +1674,9 @@ pub fn theta_4(x: Float64, q: Float64) -> Float64 {
 /// Exponential integral Ei(x) = gamma + ln|x| + sum x^k/(k k!) (Cauchy
 /// principal value for x < 0). At most 80 terms; Ei(0) = -inf.
 /// Complexity: O(n^2).
-pub fn exponential_integral(x: Float64) -> Float64 {
+pub fn exponential_integral(x: Float64) -> Float64
+  ensures: (x == x) || (result != result)
+{
   if x != x { return x; }
   if x == 0.0 { return -1.0 / 0.0; }
   var sum = _EULER_GAMMA + math.ln(math.abs_float(x));
@@ -1714,7 +1748,9 @@ pub fn sin_integral(x: Float64) -> Float64
 
 /// Cosine integral Ci(x) = gamma + ln x + sum (-1)^n x^(2n)/((2n)(2n)!) for
 /// x > 0. NaN for x < 0 (branch cut); Ci(0) = -inf. Complexity: O(n^2).
-pub fn cos_integral(x: Float64) -> Float64 {
+pub fn cos_integral(x: Float64) -> Float64
+  ensures: (x >= 0.0) || (result != result)
+{
   if x != x { return x; }
   if x < 0.0 { return 0.0 / 0.0; }
   if x == 0.0 { return -1.0 / 0.0; }
@@ -1742,7 +1778,9 @@ pub fn cos_integral(x: Float64) -> Float64 {
 /// Gauss hypergeometric function 2F1(a, b; c; x) by series summation (rising
 /// factorials), convergent for |x| < 1. NaN for |x| > 1 (divergent) or
 /// c <= 0 (singular). Complexity: O(terms).
-pub fn hypergeometric_2f1(a: Float64, b: Float64, c: Float64, x: Float64) -> Float64 {
+pub fn hypergeometric_2f1(a: Float64, b: Float64, c: Float64, x: Float64) -> Float64
+  ensures: (c > 0.0 && math.abs_float(x) <= 1.0) || (result != result)
+{
   if c <= 0.0 { return 0.0 / 0.0; }
   if math.abs_float(x) > 1.0 { return 0.0 / 0.0; }
   var sum = 1.0;

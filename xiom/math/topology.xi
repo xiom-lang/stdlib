@@ -26,7 +26,9 @@ use xiom.math;
 
 /// True iff s is a member of the open-set family tau (set equality, order
 /// insensitive). An empty tau never contains a non-empty s. Complexity: O(|tau| * |s|).
-pub fn open_set(tau: &Vec[Vec[Int]], s: &Vec[Int]) -> Bool {
+pub fn open_set(tau: &Vec[Vec[Int]], s: &Vec[Int]) -> Bool
+  ensures: (tau.len() != 0 || s.len() == 0) || (result == false)
+{
   var i = 0;
   while i < tau.len() {
     if _set_eq(&tau[i], s) { return true; }
@@ -48,7 +50,9 @@ pub fn closed_set(tau: &Vec[Vec[Int]], s: &Vec[Int], universe: &Vec[Int]) -> Boo
 /// as a whole covers s (a set outside the union of all open sets cannot be
 /// compact). Returns true when s is covered, false otherwise (including an
 /// empty s with empty tau). Complexity: O(|tau| * |s|).
-pub fn compactness(tau: &Vec[Vec[Int]], s: &Vec[Int]) -> Bool {
+pub fn compactness(tau: &Vec[Vec[Int]], s: &Vec[Int]) -> Bool
+  ensures: (s.len() != 0) || (result == true)
+{
   var i = 0;
   while i < s.len() {
     var covered = false;
@@ -70,7 +74,9 @@ pub fn compactness(tau: &Vec[Vec[Int]], s: &Vec[Int]) -> Bool {
 /// every pair (a, b) of open sets: s is disconnected when (a | b) covers s,
 /// a and b are disjoint on s, and each meets s in a non-empty set. An empty
 /// s is vacuously connected. Complexity: O(|tau|^2 * |s|).
-pub fn connectedness(tau: &Vec[Vec[Int]], s: &Vec[Int]) -> Bool {
+pub fn connectedness(tau: &Vec[Vec[Int]], s: &Vec[Int]) -> Bool
+  ensures: (s.len() != 0) || (result == true)
+{
   if s.len() == 0 { return true; }
   var i = 0;
   while i < tau.len() {
@@ -95,7 +101,9 @@ pub fn connectedness(tau: &Vec[Vec[Int]], s: &Vec[Int]) -> Bool {
 /// every open set in tau_y is open in tau_x. The domain X is taken as the
 /// union of all members of tau_x; Y likewise from tau_y. An empty tau_y is
 /// vacuously continuous. Complexity: O(|tau_x| * |tau_y| * |X|).
-pub fn continuity(f: fn(Int) -> Int, tau_x: &Vec[Vec[Int]], tau_y: &Vec[Vec[Int]]) -> Bool {
+pub fn continuity(f: fn(Int) -> Int, tau_x: &Vec[Vec[Int]], tau_y: &Vec[Vec[Int]]) -> Bool
+  ensures: (tau_y.len() != 0) || (result == true)
+{
   var y = 0;
   while y < tau_y.len() {
     var pre = _preimage(f, &tau_y[y], tau_x);
@@ -108,7 +116,9 @@ pub fn continuity(f: fn(Int) -> Int, tau_x: &Vec[Vec[Int]], tau_y: &Vec[Vec[Int]
 /// True iff f and g form a homeomorphism: f bijective between the domains,
 /// both continuous, and g is the two-sided inverse of f. The domains are the
 /// unions of the tau_x / tau_y members. Complexity: O(|tau_x|*|tau_y|*|X|).
-pub fn homeomorphism(f: fn(Int) -> Int, g: fn(Int) -> Int, tau_x: &Vec[Vec[Int]], tau_y: &Vec[Vec[Int]]) -> Bool {
+pub fn homeomorphism(f: fn(Int) -> Int, g: fn(Int) -> Int, tau_x: &Vec[Vec[Int]], tau_y: &Vec[Vec[Int]]) -> Bool
+  ensures: (tau_x.len() != 0 || tau_y.len() != 0) || (result == true)
+{
   var dom_x = _family_union(tau_x);
   var dom_y = _family_union(tau_y);
   if !continuity(f, tau_x, tau_y) { return false; }
@@ -173,7 +183,9 @@ pub fn topological_space(points: &Vec[Int], open_sets: &Vec[Vec[Int]]) -> Bool {
 /// iff x == y, symmetry, and the triangle inequality, all within a 1e-9
 /// tolerance. An empty point set is vacuously a metric space. Complexity:
 /// O(|points|^3).
-pub fn metric_space(d: fn(Int, Int) -> Float64, points: &Vec[Int]) -> Bool {
+pub fn metric_space(d: fn(Int, Int) -> Float64, points: &Vec[Int]) -> Bool
+  ensures: (points.len() != 0) || (result == true)
+{
   var i = 0;
   while i < points.len() {
     var j = i;
@@ -286,7 +298,9 @@ pub fn boundary(tau: &Vec[Vec[Int]], s: &Vec[Int]) -> Vec[Int]
 /// True iff x is a limit point of s: every neighborhood of x (open set
 /// containing x) meets s in a point other than x. When x has no
 /// neighborhoods the condition is vacuously true. Complexity: O(|tau| * |s|).
-pub fn limit_point(tau: &Vec[Vec[Int]], s: &Vec[Int], x: Int) -> Bool {
+pub fn limit_point(tau: &Vec[Vec[Int]], s: &Vec[Int], x: Int) -> Bool
+  ensures: (tau.len() != 0) || (result == true)
+{
   var i = 0;
   while i < tau.len() {
     if _contains(tau[i], x) {
@@ -300,7 +314,9 @@ pub fn limit_point(tau: &Vec[Vec[Int]], s: &Vec[Int], x: Int) -> Bool {
 
 /// True iff s contains an open set that contains x (s is a neighborhood of
 /// x). Complexity: O(|tau| * |s|).
-pub fn neighborhood(tau: &Vec[Vec[Int]], x: Int, s: &Vec[Int]) -> Bool {
+pub fn neighborhood(tau: &Vec[Vec[Int]], x: Int, s: &Vec[Int]) -> Bool
+  ensures: (tau.len() != 0) || (result == false)
+{
   var i = 0;
   while i < tau.len() {
     if _contains(tau[i], x) {

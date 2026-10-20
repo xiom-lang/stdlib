@@ -142,12 +142,16 @@ pub fn product[T: Num](values: Vec[T]) -> T
 }
 
 /// Double a value. Generic over every Num width.
-pub fn twice[T: Num](a: T) -> T {
+pub fn twice[T: Num](a: T) -> T
+  ensures: result == Num[T].add(a, a)
+{
   return Num[T].add(a, a);
 }
 
 /// Negate via zero - a. Generic over every Num width.
-pub fn negate[T: Num](a: T) -> T {
+pub fn negate[T: Num](a: T) -> T
+  ensures: result == Num[T].sub(Num[T].zero(), a)
+{
   return Num[T].sub(Num[T].zero(), a);
 }
 
@@ -273,7 +277,9 @@ pub fn max2[T: Real](a: T, b: T) -> T
 }
 
 /// Build a value of any FromInt width from an Int literal.
-pub fn of_int[T: FromInt](v: Int) -> T {
+pub fn of_int[T: FromInt](v: Int) -> T
+  ensures: result == FromInt[T].from_int(v)
+{
   return FromInt[T].from_int(v);
 }
 
