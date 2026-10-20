@@ -141,7 +141,9 @@ pub fn platform_os_version() -> Str
 
 /// platform_user_name returns the current user name from the USERNAME
 /// (Windows) or USER (Unix) environment variable. Complexity: O(1).
-pub fn platform_user_name() -> Option[Str] {
+pub fn platform_user_name() -> Option[Str]
+  ensures: (result is Some && result.value.len() == 0) => env.var_opt("USER").is_some == true
+{
   let rt = _rt_user_name();
   if rt.len() > 0 {
     return Some(rt);

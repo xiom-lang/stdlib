@@ -797,7 +797,9 @@ pub fn EnumerateIter[T].take(self, n: Int) -> TakeIter[(Int, T)]
 }
 
 /// Drain the (index, element) pairs into a Vec.
-pub fn EnumerateIter[T].collect(self) -> Vec[(Int, T)] {
+pub fn EnumerateIter[T].collect(self) -> Vec[(Int, T)]
+  ensures: self.index == self.index@pre + result.len()
+{
   var result = Vec[(Int, T)].new();
   var item = self.next();
   while item is Some {
@@ -830,13 +832,17 @@ pub fn TakeIter[T].filter(self, predicate: fn(&T) -> Bool) -> FilterIter[T] {
 }
 
 /// Drain the taken elements into a Vec.
-pub fn TakeIter[T].collect(self) -> Vec[T] {
+pub fn TakeIter[T].collect(self) -> Vec[T]
+  ensures: (self.remaining@pre <= 0) => (result.len() == 0)
+{
   var it = self;
   return _collect_via[T](fn() -> Option[T] { return it.next(); });
 }
 
 /// Fold the taken elements with `f`, starting from `init`.
-pub fn TakeIter[T].fold[B](self, init: B, f: fn(B, T) -> B) -> B {
+pub fn TakeIter[T].fold[B](self, init: B, f: fn(B, T) -> B) -> B
+  ensures: (self.remaining@pre <= 0) => (result == init)
+{
   var it = self;
   return _fold_via[T, B](fn() -> Option[T] { return it.next(); }, init, f);
 }
@@ -851,55 +857,73 @@ pub fn TakeIter[T].count(self) -> Int
 }
 
 /// Sum of the taken elements.
-pub fn TakeIter[T].sum(self) -> T {
+pub fn TakeIter[T].sum(self) -> T
+  ensures: (self.remaining@pre <= 0) => (result == 0)
+{
   var it = self;
   return _sum_via[T](fn() -> Option[T] { return it.next(); });
 }
 
 /// Product of the taken elements.
-pub fn TakeIter[T].product(self) -> T {
+pub fn TakeIter[T].product(self) -> T
+  ensures: (self.remaining@pre <= 0) => (result == 1)
+{
   var it = self;
   return _product_via[T](fn() -> Option[T] { return it.next(); });
 }
 
 /// Largest taken element, or None.
-pub fn TakeIter[T].max(self) -> Option[T] {
+pub fn TakeIter[T].max(self) -> Option[T]
+  ensures: (self.remaining@pre <= 0) => (result.is_none == true)
+{
   var it = self;
   return _max_via[T](fn() -> Option[T] { return it.next(); });
 }
 
 /// Smallest taken element, or None.
-pub fn TakeIter[T].min(self) -> Option[T] {
+pub fn TakeIter[T].min(self) -> Option[T]
+  ensures: (self.remaining@pre <= 0) => (result.is_none == true)
+{
   var it = self;
   return _min_via[T](fn() -> Option[T] { return it.next(); });
 }
 
 /// First taken element satisfying `predicate`, or None.
-pub fn TakeIter[T].find(self, predicate: fn(&T) -> Bool) -> Option[T] {
+pub fn TakeIter[T].find(self, predicate: fn(&T) -> Bool) -> Option[T]
+  ensures: (self.remaining@pre <= 0) => (result.is_none == true)
+{
   var it = self;
   return _find_via[T](fn() -> Option[T] { return it.next(); }, predicate);
 }
 
 /// True when every taken element satisfies `predicate`.
-pub fn TakeIter[T].all(self, predicate: fn(&T) -> Bool) -> Bool {
+pub fn TakeIter[T].all(self, predicate: fn(&T) -> Bool) -> Bool
+  ensures: (self.remaining@pre <= 0) => (result == true)
+{
   var it = self;
   return _all_via[T](fn() -> Option[T] { return it.next(); }, predicate);
 }
 
 /// True when at least one taken element satisfies `predicate`.
-pub fn TakeIter[T].any(self, predicate: fn(&T) -> Bool) -> Bool {
+pub fn TakeIter[T].any(self, predicate: fn(&T) -> Bool) -> Bool
+  ensures: (self.remaining@pre <= 0) => (result == false)
+{
   var it = self;
   return _any_via[T](fn() -> Option[T] { return it.next(); }, predicate);
 }
 
 /// Skip to and return the `n`-th taken element (0-based), or None.
-pub fn TakeIter[T].nth(self, n: Int) -> Option[T] {
+pub fn TakeIter[T].nth(self, n: Int) -> Option[T]
+  ensures: (self.remaining@pre <= 0) => (result.is_none == true)
+{
   var it = self;
   return _nth_via[T](fn() -> Option[T] { return it.next(); }, n);
 }
 
 /// Consume and return the final taken element, or None.
-pub fn TakeIter[T].last(self) -> Option[T] {
+pub fn TakeIter[T].last(self) -> Option[T]
+  ensures: (self.remaining@pre <= 0) => (result.is_none == true)
+{
   var it = self;
   return _last_via[T](fn() -> Option[T] { return it.next(); });
 }
