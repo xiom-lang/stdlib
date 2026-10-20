@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 76 (updated 2026-10-20 18:55Z; **v0.64.8 PINNED + RELEASED**; waves 202-204 merged: global 94.6%, readiness 89.5%, floors194; final battery modules 533/533, smokes 963/963, probes 390/390, barename 0/533; next: iter/os/math blockers, thread/ffi/serialize/log/async; gate 9 reds 1626/2343/2100-W1 + 1609 + compiler 2249/1242/1326/1550)
+## 0A. CONTINUE HERE -- handoff snapshot 76 (updated 2026-10-20 19:20Z; **v0.64.8 PINNED + RELEASED**; waves 202-204 merged + io.read_at_into: global 94.6%, readiness 89.5%, floors194; final battery modules 533/533, smokes 963/963, probes 391/391, barename 0/533; next: iter/os/math blockers, thread/ffi/serialize/log/async; gate 9 reds 1626/2343/2100-W1 + 1609 + compiler 2249/1242/1326/1550)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-20, snapshot 76)
 
@@ -25,7 +25,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
   git -C E:\xiom-lang\xiom-relays pull --ff-only origin main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 76 + blocks 263/264 (and this 0C block).
+Read docs/stdlib_session.md snapshot 76 + blocks 264/265 (and this 0C block).
 
 State: v0.64.8 is RELEASED and PINNED. COMPILER_VERSION=v0.64.8; staged
 archive %TEMP%\kilo\stdlib_ws\v0.64.8-official (windows zip sha256
@@ -45,13 +45,14 @@ async 92.5%, ffi 93.2%, serialize 94.4%, debug 95.1%, error 95.2%,
 format 95.2%.
 
 Final battery on the merged tree (official v0.64.8): modules 533/533,
-smokes 963/963 (0 compilefail / 0 runfail), probes 390/390, barename
+smokes 963/963 (0 compilefail / 0 runfail), probes 391/391, barename
 0/533, coverage floors194 RATCHET OK, regex 17/17, doc_scan 100%
 (2 pre-existing net misses). Bug fixes on top: fraction_add cross-cancel
 (109afa1), io.rename directory-aware postcondition (19d86de), runtime
 __udivti3 (1555c93), Routh-Hurwitz recurrence (07a9619), weekday
 0=Sunday (d1ee6b3), AsyncExecutor.run receiver drain (fc8e2b6), Vec4f
-lane pointer scale (2e99c81; verify on m377).
+lane pointer scale (2e99c81; verify on m377), and io.read_at_into
+caller-buffer page reader (9bad232).
 Probes: p_fraction_add_reduce, p_routh_stability, p_async_executor_state,
 p_hash_shadow, p_async_select_closed_drain, p_wave196_small_gaps,
 p_wave197_math_os, p_wave198_long_tail, p_wave199_mid_gaps,
@@ -108,8 +109,9 @@ Relays, bugs, wishlist:
   `icmp eq %struct.LogLevel`), and REL-20261020-1550 (tuple-returning
   fn-value ABI). xvector REL-20261020-1531 (shared HEAD breaks --check)
   is acked as NOT REPRODUCED: probe_hello --check rc 0 on 87090ec,
-  shared and bundled. Re-test on the next candidate; the wave-196 probe
-  excludes the AV combination.
+  shared and bundled. REL-20261020-1302 io.read_at_into is implemented
+  and fixed (9bad232, p_io_read_at_into). Re-test the rest on the next
+  candidate; the wave-196 probe excludes the AV combination.
 - Wishlist row 33 (compiler/install) open; row 47 fixed pending xvector
   verify; thread-pool item 1834 no-arg path green, persistent fleet /
   Send-Sync remain. New stdlib fixes: fraction_add, io.rename,
@@ -3784,6 +3786,19 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-20 block 265 (io.read_at_into caller-buffer page reader; probes 391; 94.6%)**
+- Added `io.read_at_into(path, offset, &mut Vec[UInt8], len) ->
+  Result[Int, IOError]` (commit `9bad232`) for the m375/orbitdb page
+  reader: clears the caller buffer, clamps at EOF, reuses capacity, and
+  returns the byte count; ensures `count <= len` and
+  `buf.len() == count`. No fresh Vec per read.
+- Probe `p_io_read_at_into` PASS (count, contents, EOF clamp, len=0,
+  reuse); targeted io smokes 21/21; floors194 ratchet OK; doc_scan 100%
+  (7464/7466, 2 pre-existing net misses). Coverage 6519/6891 = 94.6%,
+  clauses 9013; probes 391.
+- Relay `REL-20261020-1302-compiler` fixed; `1531` acked as not
+  reproduced; `1550` tuple fn-value ABI filed.
 
 **SESSION 2026-10-20 block 264 (waves 202-204 merged: global 94.6%; readiness 89.5%; floors194; final battery green)**
 - Merged --no-ff: wave 202 mid-final `cca3710` (ptr 100%, async 92.5%,
