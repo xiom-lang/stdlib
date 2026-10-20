@@ -17,15 +17,15 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 74 (updated 2026-10-20 02:15Z; **v0.64.8 PINNED + RELEASED**; waves 196-197 merged: global 90.0%, readiness 89.0%, floors192; final battery modules 533/533, smokes 963/963, probes 383/383, barename 0/533; next: iter/os/math/simd/ffi/format/alloc/rc/bench; gate 9 reds 1626/2343/2100-W1 + 1609 + compiler 2249)
+## 0A. CONTINUE HERE -- handoff snapshot 75 (updated 2026-10-20 16:55Z; **v0.64.8 PINNED + RELEASED**; waves 198-201 merged: global 93.5%, readiness 89.4%, floors193; final battery modules 533/533, smokes 963/963, probes 387/387, barename 0/533; next: iter/os/math/async/thread/ffi/log/serialize; gate 9 reds 1626/2343/2100-W1 + 1609 + compiler 2249/1242/1326)
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-20, snapshot 74)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-20, snapshot 75)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
   git -C E:\xiom-lang\xiom-relays pull --ff-only origin main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 74 + blocks 261/262 (and this 0C block).
+Read docs/stdlib_session.md snapshot 75 + blocks 262/263 (and this 0C block).
 
 State: v0.64.8 is RELEASED and PINNED. COMPILER_VERSION=v0.64.8; staged
 archive %TEMP%\kilo\stdlib_ws\v0.64.8-official (windows zip sha256
@@ -34,54 +34,61 @@ c31d9c46..., linux tar.gz a8c003c0...). stdlib-v0.64.8 tag object 0bf5b75
 run 39289746856; registry xiom-std 0.64.8 live (sha256 c4ab5c61..., run
 39298965606). Tags frozen; do NOT move/re-cut v0.64.8.
 
-Coverage: global pub-with-clause 90.0% (6200/6890; clauses/fns 92.1%,
-8574 clauses), readiness 89.0% (gate 8 90.0%; floors192; gates 1-7/10
-met, gate 9 open). Waves 188-197 merged: num/num.xi 5.4% -> 99.2%,
-string 90.4%, time 85.5%, async 85.1%, os 69.2%, collect 93.2%, thread
-89.3%, compress 96.3%, math 79.5%, bits 97.0%, iter 55.2%, core 94.7%;
-collections/array/cell 100%, format 95.2%, ffi 89.0%, simd 87.8%.
-Worst dirs: iter 55.2%, os 69.2%, alloc 78.6%, math 79.5%, async
-85.1%, time 85.5%, rc 86.7%, bench 87.5%, simd 87.8%.
+Coverage: global pub-with-clause 93.5% (6441/6890; clauses/fns 95.4%,
+8877 clauses), readiness 89.4% (gate 8 93.5%; floors193; gates 1-7/10
+met, gate 9 open). Waves 188-201 merged: num/num.xi 100%, string 100%,
+collect 99.8%, time 96.4%, async 86.6%, os 71.5%, thread 91.1%,
+compress 99.1%, math 83.4%, bits 100%, iter 61.7%, core 99.2%, simd
+97.8%, ffi 91.8%; collections/array/cell and many smaller modules at
+100%. Worst dirs: iter 61.7%, os 71.5%, math 83.4%, async 86.6%,
+ptr 89.5%, error 90.5%, thread 91.1%, ffi 91.8%, log 94.1%,
+serialize 94.4%.
 
 Final battery on the merged tree (official v0.64.8): modules 533/533,
-smokes 963/963 (0 compilefail / 0 runfail), probes 383/383, barename
-0/533, coverage floors192 RATCHET OK, regex 17/17, doc_scan 100%
+smokes 963/963 (0 compilefail / 0 runfail), probes 387/387, barename
+0/533, coverage floors193 RATCHET OK, regex 17/17, doc_scan 100%
 (2 pre-existing net misses). Bug fixes on top: fraction_add cross-cancel
 (109afa1), io.rename directory-aware postcondition (19d86de), runtime
 __udivti3 (1555c93), Routh-Hurwitz recurrence (07a9619), weekday
-0=Sunday (d1ee6b3), AsyncExecutor.run receiver drain (fc8e2b6).
+0=Sunday (d1ee6b3), AsyncExecutor.run receiver drain (fc8e2b6), Vec4f
+lane pointer scale (2e99c81; verify on m377).
 Probes: p_fraction_add_reduce, p_routh_stability, p_async_executor_state,
 p_hash_shadow, p_async_select_closed_drain, p_wave196_small_gaps,
-p_wave197_math_os. New compiler bugs filed: REL-20261019-2249-stdlib
-(Map/Set multi-wrapper AV) and -2 (Vec4f lane miscompile).
+p_wave197_math_os, p_wave198_long_tail, p_wave199_mid_gaps,
+p_wave200_math, p_wave201_os_iter. Compiler items: 2249 Map/Set AV,
+2249-2 Vec4f lane, 1242 acked (stdlib fixed, verify on m377), 1326
+log+serialize IR.
 
 Immediate housekeeping:
 - Stop/remove the merged Agent Manager sessions for
-  wave/196-small-gaps-contracts and wave/197-math-os-remainder; remove
+  wave/198-long-tail-contracts, wave/199-mid-gaps-contracts,
+  wave/200-math-contracts, and wave/201-os-iter-contracts; remove
   worktrees, delete the merged branches. Keep wave/154 (foreign).
 - Agent Manager may list stale no-session worktrees for 179/180 and the
   merged wave worktrees; clean only if safe. Do not merge anything else.
 
 Next waves (Agent Manager worktrees, 2-3 parallel, same rules as
-196-197):
-1. iter remainder 55.2%: the remaining 82 pub fns are opaque closure
+198-201):
+1. iter remainder 61.7%: the remaining ~70 pub fns are opaque closure
    adapters; only add the few defensible clauses, then document the
    contract-limited remainder. Do NOT chase tautologies.
-2. os 69.2%: the remaining event/terminal/unix/win/ioctl/err/fs_ffi/
+2. os 71.5%: the remaining event/terminal/unix/win/ioctl/err/fs_ffi/
    proc_ffi fns are mostly documented Err stubs and no-ops; add only
    clauses for the real paths and report the stub remainder.
-3. math 79.5%: optimization/calculus/game_theory/tower and the
-   compiler-limited matrix stubs; bits is 97.0%.
-4. simd 87.8%, ffi 89.0%, format 95.2%, alloc 78.6%, rc 86.7%,
-   bench 87.5%: target real bounds only.
-Agent prompt: scope files; read snapshot 74 + block 262; real
+3. math 83.4%: optimization/calculus/game_theory/operations_research/
+   mathematical_physics and the compiler-limited matrix stubs; bits is
+   100%.
+4. async 86.6%, ffi 91.8%, thread 91.1%, log 94.1%, serialize 94.4%:
+   target real bounds only; the global async driver still crashes
+   independently.
+Agent prompt: scope files; read snapshot 75 + block 263; real
 requires/ensures only; clause-only/no body changes; pin
 C:\Users\lefte\AppData\Local\Temp\kilo\stdlib_ws\v0.64.8-official\bin\xiom.exe;
 check_modules with unique -OutDir; coverage_scan -RatchetFile
-tools/coverage_floors192.json; doc_scan; targeted smokes/probes; add a
+tools/coverage_floors193.json; doc_scan; targeted smokes/probes; add a
 runner-compatible probe; do NOT edit floors/workflows/readiness/session
 docs/COMPILER_VERSION; commit on branch; no merge/push. Main session
-reviews, runs combined gates, merges --no-ff, dumps floors193, wires
+reviews, runs combined gates, merges --no-ff, dumps floors194, wires
 ci/heavy/release + tools/README, updates readiness/session.
 
 Relays, bugs, wishlist:
@@ -94,14 +101,16 @@ Relays, bugs, wishlist:
   payload read, still blocking PULSE list_dir). Re-test on the next
   compiler candidate; close only with evidence.
 - Verified/closed on v0.64.8: 1053 (p_hash_shadow), 1456, 2328, 2000,
-  1546 (m370 + p_async_select_closed_drain), 1624, and 2331 runtime
-  residual. 1451 (nested generic ptr.read) is queued for the next
-  compiler candidate; 1549 list_dir stays blocked by 1609.
-- New compiler items filed from wave 196: REL-20261019-2249-stdlib
-  (multiple generic Map/Set free helpers in one program AV
-  0xC0000005) and REL-20261019-2249-stdlib-2 (Vec4f lane get/write
-  miscompile). Re-test on the next candidate; the small-gaps probe
-  excludes the AV combination.
+  1546 (m370 + p_async_select_closed_drain), 1624, 1548-5 (generic
+  by-ref/slice), and 2331 runtime residual. Superseded stdlib status
+  addenda were closed. 1451 (nested generic ptr.read) is queued for the
+  next compiler candidate; 1549 list_dir stays blocked by 1609.
+- New compiler items: REL-20261019-2249-stdlib (multiple generic Map/Set
+  free helpers in one program AV 0xC0000005), -2 (Vec4f lane get/write
+  miscompile), REL-20261020-1242 (Vec4f pointer scale; stdlib fixed in
+  2e99c81, verify on m377), and REL-20261020-1326 (log+serialize IR
+  `icmp eq %struct.LogLevel`). Re-test on the next candidate; the
+  wave-196 probe excludes the AV combination.
 - Wishlist row 33 (compiler/install) open; row 47 fixed pending xvector
   verify; thread-pool item 1834 no-arg path green, persistent fleet /
   Send-Sync remain. New stdlib fixes: fraction_add, io.rename,
@@ -125,7 +134,8 @@ Pitfalls:
 - Multiple generic Map/Set free helpers in one program AV on v0.64.8
   (see 2249); keep only the read-only combos in p_wave196_small_gaps.
 - Top-level `xiom.simd.Vec4f` lane get/write miscompiles on v0.64.8
-  (`*Float32` defaulted to i64; see 2249-2); lane clauses withdrawn.
+  (`*Float32` defaulted to i64; see 2249-2). The stdlib double-scale is
+  fixed in 2e99c81, but lane clauses/verification wait for m377.
 - Release ruleset bypass is expected; do not move tags.
 - agent_manager list to review reports; idle = done; merge --no-ff; clean
   worktrees/branches.
@@ -3773,6 +3783,36 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-20 block 263 (waves 198-201 merged: global 93.5%; readiness 89.4%; floors193; final battery green; Vec4f lane fix)**
+- Merged --no-ff: wave 198 long-tail `9ae06c3` (string 100%, collect
+  99.8%, global 92.0 standalone); 199 mid-gap `000695a` (alloc/rc/bench
+  100%, time 96.4%, simd 97.8%); 200 math `67f107a` (math 83.4%);
+  201 os/iter `6516fb6` (os 71.5%, iter 61.7%).
+- Coverage: global pub-with-clause 93.5% (6441/6890; was 90.0%),
+  clauses/fns 95.4% (8877). Worst dirs: iter 61.7, os 71.5, math
+  83.4, async 86.6, ptr 89.5, error 90.5, thread 91.1, ffi 91.8,
+  log 94.1, serialize 94.4. String/collect/convert/num/bits/net/
+  compress/core/sync/stats/regex and many smaller dirs are 98-100%.
+- Floors193 dumped/wired into ci/heavy/release + tools/README;
+  RATCHET OK. README status refreshed to v0.64.8 / 93.5%.
+- Final battery on merged tree: modules 533/533 (608s), smokes
+  963/963 0/0 (1145s), probes 387/387, barename 0/533, floors193
+  ratchet OK, doc_scan 100% (2 pre-existing net misses).
+- Vec4f lane fix `2e99c81`: get/set use element-based
+  `(data + index)` instead of `index * 4`; verification waits for a
+  compiler with m377 (not in v0.64.8), `REL-20261020-1242-compiler`
+  acked. The m377 item's withdrawn lane clauses stay out of
+  p_wave196_small_gaps until then.
+- New compiler bug filed `REL-20261020-1326-stdlib`: log + serialize in
+  one program emits `icmp eq %struct.LogLevel` and fails IR/compile;
+  wave-198 probe keeps the serialize runtime leg out.
+- Relay: 1548-5 verified/closed; superseded stdlib status addenda
+  closed. Gate 9 reds: 1626/2343/2100-W1/1609. Open compiler items:
+  2249 Map/Set AV, 2249-2 Vec4f lane, 1242 acked, 1326 log+serialize.
+- Readiness 89.4% (gate 8 93.5%; gates 1-7/10 met; gate 9 open). Next:
+  iter/os/math remainders (contract-limited/stubs), async/thread/ffi/
+  log/serialize, and the next compiler candidate for 1451/1242/2249/1326.
 
 **SESSION 2026-10-20 block 262 (waves 196-197 merged: global 90.0%; readiness 89.0%; floors192; final battery green; two compiler bugs filed)**
 - Merged --no-ff: wave 196 small-gaps `c03daaf` (collections/array/cell
