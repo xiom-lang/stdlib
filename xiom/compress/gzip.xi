@@ -240,7 +240,9 @@ pub fn gzip_compress_file(path: Str) -> Result[Unit, Str]
 
 /// Gunzip a file into raw bytes. Returns Err on read failures or invalid
 /// gzip data.
-pub fn gzip_decompress_file(path: Str) -> Result[Vec[UInt8], Str] {
+pub fn gzip_decompress_file(path: Str) -> Result[Vec[UInt8], Str]
+  ensures: result is Err => result.value.len() > 0  // every Err carries a reason
+{
   var bytes = io.read_file_bytes(path);
   match bytes {
     Ok(b) => { return gzip_decompress(&b); };

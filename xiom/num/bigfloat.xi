@@ -206,7 +206,9 @@ fn _round_to_precision(f: &BigFloat) -> BigFloat {
 }
 
 /// Rounding mode (thread-local default; whole-value global assignment)
-pub fn bigfloat_set_round_mode(mode: RoundMode) {
+pub fn bigfloat_set_round_mode(mode: RoundMode)
+  ensures: bigfloat_get_round_mode() == mode  // setter/getter round-trip
+{
   _default_round = mode;
 }
 
@@ -450,7 +452,9 @@ fn _f128_neg(acc: Float128, neg: Bool) -> Float128 {
 /// the undefined `%struct.Float128` (opaque) instead of native `fp128`, so
 /// the Option-returning form cannot be consumed yet; returns the value
 /// directly until the unwrap path is fixed.
-pub fn bigfloat_to_float128(f: &BigFloat) -> Float128 {
+pub fn bigfloat_to_float128(f: &BigFloat) -> Float128
+  ensures: (f.significand.digits.len() == 0) => (result == 0.0)  // zero -> exact +0.0
+{
   if xiom.bigint.bigint_is_zero(&f.significand) { return 0.0 as Float128; }
   var acc = 0.0 as Float128;
   var i = f.significand.digits.len() - 1;

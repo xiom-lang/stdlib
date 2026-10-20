@@ -306,7 +306,9 @@ pub fn diff_unified(a: Str, b: Str, context: Int) -> Str
 /// Render a compact patch text from `a` to `b`: one line per operation with a
 /// `- ` / `+ ` / `  ` prefix. Diffable with `diff_apply`.
 /// Complexity: O(|a| * |b|).
-pub fn diff_patch(a: Str, b: Str) -> Str {
+pub fn diff_patch(a: Str, b: Str) -> Str
+  ensures: (result.len() == 0) || (result.byte_at(result.len() - 1) == 10)  // every emitted line ends in newline
+{
   let ops = diff_myers_lines(a, b);
   var out = "";
   var i: Int = 0;
