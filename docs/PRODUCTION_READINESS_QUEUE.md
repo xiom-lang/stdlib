@@ -1,14 +1,14 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**89.4% -- 8 of 10 gates complete; gate 8 at 93.5% (partial credit) and
+**89.5% -- 8 of 10 gates complete; gate 8 at 94.6% (partial credit) and
 gate 9 discrete.** (Compiler pin: **v0.64.8**; stdlib-v0.64.8 tag object
 `0bf5b75` at `112c5b6` with tag-time `COMPILER_VERSION=candidate-v0.64.8-r2`;
 main pin `v0.64.8` after the block-259 battery; compiler v0.64.8 pins
 `STDLIB_VERSION=stdlib-v0.64.8`; registry `xiom-std 0.64.8` is live, run
 39298965606 re-ran green after the ops mapping fix.)
 **Gates: merged corpus 963/963 (0 compilefail / 0 runfail), modules
-533/533, probes 387/387, barename 0/533, floors193. Wave pin: v0.64.8
-(block 263).**
+533/533, probes 390/390, barename 0/533, floors194. Wave pin: v0.64.8
+(block 264).**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -17,22 +17,22 @@ gates flip:
 2. Smoke corpus green -- MET: merged 963/963 on v0.64.8 (0/0),
    including the directory-rename regression; plus 956/956 on both
    Windows and Ubuntu release gates, no carve-outs.
-3. Probe corpus green -- MET (387/387; waves 188-201, fraction-add,
+3. Probe corpus green -- MET (390/390; waves 188-204, fraction-add,
    io.rename, hash-shadow, async-select, Routh, executor, small-gap,
-   math-os, long-tail, mid-gap, math, and os/iter probes are included
-   and individually green).
+   math-os, long-tail, mid-gap, math, os/iter, and final-gap probes are
+   included and individually green).
 4. Strict bare-name scan clean -- MET (0/533).
-5. Coverage ratchet green -- MET (floors193).
+5. Coverage ratchet green -- MET (floors194).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (499/542 modules, 3501/6575 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN
-   (93.5%, 6441/6890; clauses/fns 95.4%, 8877 clauses; floors193).
-   Waves 198-201 lifted string/collect/convert/num/bits/net/compress/
-   core/sync/stats/regex and others to 98-100%; math 83.4%, os 71.5%,
-   iter 61.7%, async 86.6%, thread 91.1%, ffi 91.8%, log 94.1%,
-   serialize 94.4%. Worst directories: iter 61.7%, os 71.5%, math 83.4%,
-   async 86.6%, ptr 89.5%, error 90.5%, thread 91.1%, ffi 91.8%,
-   log 94.1%, serialize 94.4%.
+   (94.6%, 6518/6890; clauses/fns 96.8%, 9008 clauses; floors194).
+   Waves 202-204 lifted math 83.4% -> 87.7%, iter 61.7% -> 70.5%,
+   async 86.6% -> 92.5%, ptr 100%, misc/compress/sync/text 100%, num
+   99.8%; string/collect/convert/bits/net/core/stats/regex and many
+   smaller dirs are 98-100%. Worst directories: iter 70.5%, os 71.5%,
+   math 87.7%, thread 91.1%, async 92.5%, ffi 93.2%, serialize 94.4%,
+   debug 95.1%, error 95.2%, format 95.2%.
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN. Gate 9 on v0.64.8: 1053/1456/2328/2000/1546/1624/1548-5
    verified and closed; 1626 (T001 trailing match), 2343 (bare inline
@@ -41,11 +41,13 @@ gates flip:
    2331 stdlib runtime residual verified/closed. New compiler items:
    REL-20261019-2249-stdlib (multiple generic Map/Set free helpers AV
    0xC0000005), -2 (Vec4f lane get/write miscompile), REL-20261020-1242
-   (Vec4f pointer scale, stdlib fixed, verify on m377), and
-   REL-20261020-1326 (log+serialize IR icmp on LogLevel). New stdlib
-   fixes this cycle: fraction_add, io.rename directory postcondition,
-   Routh-Hurwitz, weekday convention, AsyncExecutor.run receiver drain,
-   Vec4f lane pointer arithmetic.
+   (Vec4f pointer scale, stdlib fixed, verify on m377),
+   REL-20261020-1326 (log+serialize IR icmp on LogLevel), and
+   REL-20261020-1550 (tuple-returning fn-value ABI). xvector claim
+   REL-20261020-1531 does not reproduce on 87090ec (check rc 0); acked.
+   New stdlib fixes this cycle: fraction_add, io.rename directory
+   postcondition, Routh-Hurwitz, weekday convention, AsyncExecutor.run
+   receiver drain, Vec4f lane pointer arithmetic.
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- MET
     (stdlib-v0.64.8 released 2026-10-19; tag object 0bf5b75 -> commit
     112c5b6; release run 39289746856; assets + SHA256SUMS published;
@@ -53,8 +55,8 @@ gates flip:
     xiom-std 0.64.8 live via run 39298965606; tags frozen).
 
 Meter formula: MET gates count 1.0; gate 8 counts its current
-pub-with-clause fraction (93.5% -> 0.935); gate 9 gets no partial credit
-(discrete). 8.935 / 10 = 89.4%. Update the percentage and the gate-8
+pub-with-clause fraction (94.6% -> 0.946); gate 9 gets no partial credit
+(discrete). 8.946 / 10 = 89.5%. Update the percentage and the gate-8
 fraction in the same commit as each floors dump so the meter moves
 smoothly toward 90%.
 
@@ -66,15 +68,15 @@ pin v0.64.8** (tag object `0bf5b75` -> commit `112c5b6` with tag-time
 `4d040604b`; release run 39289746856; registry run 39298965606 green,
 `xiom-std 0.64.8` sha256 `c4ab5c61...`). Assets:
 `xiom-std-0.64.8.tar.gz` sha256 `6ea77968...`. Main carries waves
-188-201: num/num.xi 100%, string 100%, collect 99.8%, time 96.4%,
-async 86.6%, os 71.5%, thread 91.1%, compress 99.1%, math 83.4%,
-bits 100%, iter 61.7%, core 99.2%, simd 97.8%, ffi 91.8%; collections/
+188-204: num/num.xi 100%, string 100%, collect 99.8%, time 96.4%,
+async 92.5%, os 71.5%, thread 91.1%, compress 100%, math 87.7%,
+bits 100%, iter 70.5%, core 99.2%, simd 97.8%, ffi 93.2%; collections/
 array/cell and many smaller modules at 100%. Gates: modules 533/533,
-smokes 963/963, probes 387/387, barename 0/533, floors193. Also fixed
+smokes 963/963, probes 390/390, barename 0/533, floors194. Also fixed
 this cycle: runtime `__udivti3`, `fraction_add`, `io.rename` directory
 postcondition, Routh-Hurwitz, weekday convention, `AsyncExecutor.run`
-receiver drain, and Vec4f lane pointer arithmetic. Gate 8 is 93.5%;
-readiness is 89.4%; gate 9 reds are 1626/2343/2100-W1 plus 1609.
+receiver drain, and Vec4f lane pointer arithmetic. Gate 8 is 94.6%;
+readiness is 89.5%; gate 9 reds are 1626/2343/2100-W1 plus 1609.
 Historical state below is retained.
 
 Historical state (2026-10-11): compiler pin **v0.64.4** (released

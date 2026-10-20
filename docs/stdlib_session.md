@@ -17,15 +17,15 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 75 (updated 2026-10-20 16:55Z; **v0.64.8 PINNED + RELEASED**; waves 198-201 merged: global 93.5%, readiness 89.4%, floors193; final battery modules 533/533, smokes 963/963, probes 387/387, barename 0/533; next: iter/os/math/async/thread/ffi/log/serialize; gate 9 reds 1626/2343/2100-W1 + 1609 + compiler 2249/1242/1326)
+## 0A. CONTINUE HERE -- handoff snapshot 76 (updated 2026-10-20 18:55Z; **v0.64.8 PINNED + RELEASED**; waves 202-204 merged: global 94.6%, readiness 89.5%, floors194; final battery modules 533/533, smokes 963/963, probes 390/390, barename 0/533; next: iter/os/math blockers, thread/ffi/serialize/log/async; gate 9 reds 1626/2343/2100-W1 + 1609 + compiler 2249/1242/1326/1550)
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-20, snapshot 75)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-20, snapshot 76)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
   git -C E:\xiom-lang\xiom-relays pull --ff-only origin main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 75 + blocks 262/263 (and this 0C block).
+Read docs/stdlib_session.md snapshot 76 + blocks 263/264 (and this 0C block).
 
 State: v0.64.8 is RELEASED and PINNED. COMPILER_VERSION=v0.64.8; staged
 archive %TEMP%\kilo\stdlib_ws\v0.64.8-official (windows zip sha256
@@ -34,19 +34,19 @@ c31d9c46..., linux tar.gz a8c003c0...). stdlib-v0.64.8 tag object 0bf5b75
 run 39289746856; registry xiom-std 0.64.8 live (sha256 c4ab5c61..., run
 39298965606). Tags frozen; do NOT move/re-cut v0.64.8.
 
-Coverage: global pub-with-clause 93.5% (6441/6890; clauses/fns 95.4%,
-8877 clauses), readiness 89.4% (gate 8 93.5%; floors193; gates 1-7/10
-met, gate 9 open). Waves 188-201 merged: num/num.xi 100%, string 100%,
-collect 99.8%, time 96.4%, async 86.6%, os 71.5%, thread 91.1%,
-compress 99.1%, math 83.4%, bits 100%, iter 61.7%, core 99.2%, simd
-97.8%, ffi 91.8%; collections/array/cell and many smaller modules at
-100%. Worst dirs: iter 61.7%, os 71.5%, math 83.4%, async 86.6%,
-ptr 89.5%, error 90.5%, thread 91.1%, ffi 91.8%, log 94.1%,
-serialize 94.4%.
+Coverage: global pub-with-clause 94.6% (6518/6890; clauses/fns 96.8%,
+9008 clauses), readiness 89.5% (gate 8 94.6%; floors194; gates 1-7/10
+met, gate 9 open). Waves 188-204 merged: num/num.xi 100%, string 100%,
+collect 99.8%, time 96.4%, async 92.5%, os 71.5%, thread 91.1%,
+compress 100%, math 87.7%, bits 100%, iter 70.5%, core 99.2%, simd
+97.8%, ffi 93.2%; collections/array/cell and many smaller modules at
+100%. Worst dirs: iter 70.5%, os 71.5%, math 87.7%, thread 91.1%,
+async 92.5%, ffi 93.2%, serialize 94.4%, debug 95.1%, error 95.2%,
+format 95.2%.
 
 Final battery on the merged tree (official v0.64.8): modules 533/533,
-smokes 963/963 (0 compilefail / 0 runfail), probes 387/387, barename
-0/533, coverage floors193 RATCHET OK, regex 17/17, doc_scan 100%
+smokes 963/963 (0 compilefail / 0 runfail), probes 390/390, barename
+0/533, coverage floors194 RATCHET OK, regex 17/17, doc_scan 100%
 (2 pre-existing net misses). Bug fixes on top: fraction_add cross-cancel
 (109afa1), io.rename directory-aware postcondition (19d86de), runtime
 __udivti3 (1555c93), Routh-Hurwitz recurrence (07a9619), weekday
@@ -55,40 +55,36 @@ lane pointer scale (2e99c81; verify on m377).
 Probes: p_fraction_add_reduce, p_routh_stability, p_async_executor_state,
 p_hash_shadow, p_async_select_closed_drain, p_wave196_small_gaps,
 p_wave197_math_os, p_wave198_long_tail, p_wave199_mid_gaps,
-p_wave200_math, p_wave201_os_iter. Compiler items: 2249 Map/Set AV,
-2249-2 Vec4f lane, 1242 acked (stdlib fixed, verify on m377), 1326
-log+serialize IR.
+p_wave200_math, p_wave201_os_iter, p_wave202_mid_final,
+p_wave203_limited_final, p_wave204_last_mile. Compiler items: 2249
+Map/Set AV, 2249-2 Vec4f lane, 1242 acked (stdlib fixed, verify on
+m377), 1326 log+serialize IR, 1550 tuple-returning fn ABI. 1531 xvector
+shared-HEAD claim acked as not reproducible.
 
 Immediate housekeeping:
 - Stop/remove the merged Agent Manager sessions for
-  wave/198-long-tail-contracts, wave/199-mid-gaps-contracts,
-  wave/200-math-contracts, and wave/201-os-iter-contracts; remove
-  worktrees, delete the merged branches. Keep wave/154 (foreign).
+  wave/202-mid-final-contracts, wave/203-limited-final-contracts, and
+  wave/204-last-mile-contracts; remove worktrees, delete the merged
+  branches. Keep wave/154 (foreign).
 - Agent Manager may list stale no-session worktrees for 179/180 and the
   merged wave worktrees; clean only if safe. Do not merge anything else.
 
-Next waves (Agent Manager worktrees, 2-3 parallel, same rules as
-198-201):
-1. iter remainder 61.7%: the remaining ~70 pub fns are opaque closure
-   adapters; only add the few defensible clauses, then document the
-   contract-limited remainder. Do NOT chase tautologies.
-2. os 71.5%: the remaining event/terminal/unix/win/ioctl/err/fs_ffi/
-   proc_ffi fns are mostly documented Err stubs and no-ops; add only
-   clauses for the real paths and report the stub remainder.
-3. math 83.4%: optimization/calculus/game_theory/operations_research/
-   mathematical_physics and the compiler-limited matrix stubs; bits is
-   100%.
-4. async 86.6%, ffi 91.8%, thread 91.1%, log 94.1%, serialize 94.4%:
-   target real bounds only; the global async driver still crashes
-   independently.
-Agent prompt: scope files; read snapshot 75 + block 263; real
+Next waves (only if a new real path exists; 2-3 parallel, same rules):
+1. iter 70.5%: 54 remaining are opaque closure adapters; stop forcing.
+2. os 71.5%: 111 remaining are stubs/no-ops; no further clause work.
+3. math 87.7%: 125 remaining are BUG 20/23 stubs, Bool/table predicates,
+   and opaque solver/closure joints; wait for compiler fixes.
+4. thread 91.1%, ffi 93.2%, serialize 94.4%, debug 95.1%, error 95.2%,
+   format 95.2%: remaining are no-clause printers/getters/pass-throughs;
+   do not add tautologies.
+Agent prompt: scope files; read snapshot 76 + block 264; real
 requires/ensures only; clause-only/no body changes; pin
 C:\Users\lefte\AppData\Local\Temp\kilo\stdlib_ws\v0.64.8-official\bin\xiom.exe;
 check_modules with unique -OutDir; coverage_scan -RatchetFile
-tools/coverage_floors193.json; doc_scan; targeted smokes/probes; add a
+tools/coverage_floors194.json; doc_scan; targeted smokes/probes; add a
 runner-compatible probe; do NOT edit floors/workflows/readiness/session
 docs/COMPILER_VERSION; commit on branch; no merge/push. Main session
-reviews, runs combined gates, merges --no-ff, dumps floors194, wires
+reviews, runs combined gates, merges --no-ff, dumps floors195, wires
 ci/heavy/release + tools/README, updates readiness/session.
 
 Relays, bugs, wishlist:
@@ -108,9 +104,12 @@ Relays, bugs, wishlist:
 - New compiler items: REL-20261019-2249-stdlib (multiple generic Map/Set
   free helpers in one program AV 0xC0000005), -2 (Vec4f lane get/write
   miscompile), REL-20261020-1242 (Vec4f pointer scale; stdlib fixed in
-  2e99c81, verify on m377), and REL-20261020-1326 (log+serialize IR
-  `icmp eq %struct.LogLevel`). Re-test on the next candidate; the
-  wave-196 probe excludes the AV combination.
+  2e99c81, verify on m377), REL-20261020-1326 (log+serialize IR
+  `icmp eq %struct.LogLevel`), and REL-20261020-1550 (tuple-returning
+  fn-value ABI). xvector REL-20261020-1531 (shared HEAD breaks --check)
+  is acked as NOT REPRODUCED: probe_hello --check rc 0 on 87090ec,
+  shared and bundled. Re-test on the next candidate; the wave-196 probe
+  excludes the AV combination.
 - Wishlist row 33 (compiler/install) open; row 47 fixed pending xvector
   verify; thread-pool item 1834 no-arg path green, persistent fleet /
   Send-Sync remain. New stdlib fixes: fraction_add, io.rename,
@@ -136,6 +135,8 @@ Pitfalls:
 - Top-level `xiom.simd.Vec4f` lane get/write miscompiles on v0.64.8
   (`*Float32` defaulted to i64; see 2249-2). The stdlib double-scale is
   fixed in 2e99c81, but lane clauses/verification wait for m377.
+- Tuple-returning fn values lose payloads through iter adapters on
+  v0.64.8 (REL-20261020-1550; count is correct, fields are garbage).
 - Release ruleset bypass is expected; do not move tags.
 - agent_manager list to review reports; idle = done; merge --no-ff; clean
   worktrees/branches.
@@ -3783,6 +3784,30 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-20 block 264 (waves 202-204 merged: global 94.6%; readiness 89.5%; floors194; final battery green)**
+- Merged --no-ff: wave 202 mid-final `cca3710` (ptr 100%, async 92.5%,
+  crypto 96.3%); 203 limited-final `410f284` + `cfcca38` (math 87.7%,
+  iter 70.5%); 204 last-mile `b8ccf6e` (misc/compress/sync/text 100%).
+- Coverage: global pub-with-clause 94.6% (6518/6890; was 93.5%),
+  clauses/fns 96.8% (9008). Worst dirs: iter 70.5, os 71.5, math
+  87.7, thread 91.1, async 92.5, ffi 93.2, serialize 94.4, debug
+  95.1, error 95.2, format 95.2; string/collect/num/bits/net/core/
+  stats/regex and many smaller dirs are 98-100%.
+- Floors194 dumped/wired into ci/heavy/release + tools/README;
+  RATCHET OK. README status refreshed to 94.6%.
+- Final battery on merged tree: modules 533/533, smokes 963/963 0/0,
+  probes 390/390, barename 0/533, floors194 ratchet OK, doc_scan 100%
+  (2 pre-existing net misses).
+- New compiler items: `REL-20261020-1550-stdlib` (tuple-returning
+  fn-value ABI: EnumerateIter.map count correct, payloads garbage);
+  `REL-20261020-1531-xvector` shared-HEAD claim acked as NOT
+  REPRODUCED (probe_hello --check rc 0 on 87090ec, shared and bundled).
+  1242 Vec4f acked; 1326 log+serialize; 2249/2249-2 open. Gate 9 reds
+  unchanged: 1626/2343/2100-W1/1609.
+- Readiness 89.5% (gate 8 94.6%; gates 1-7/10 met; gate 9 open). Next:
+  remaining iter/os/math blockers (documented), thread/ffi/serialize/
+  log/async; next compiler candidate for 1451/1242/2249/1326/1550.
 
 **SESSION 2026-10-20 block 263 (waves 198-201 merged: global 93.5%; readiness 89.4%; floors193; final battery green; Vec4f lane fix)**
 - Merged --no-ff: wave 198 long-tail `9ae06c3` (string 100%, collect
