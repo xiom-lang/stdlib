@@ -1080,6 +1080,58 @@ pub fn read_at(path: Str, offset: Int, len: Int) -> Result[Vec[UInt8], IOError]
   Ok(buf)
 }
 
+/// read_at_into reads up to `len` bytes at `offset` into the caller's `buf`
+/// (cleared first), clamped to the file size, and returns the byte count.
+/// Reuses the existing buffer capacity: no fresh Vec per call (m375 page-reader
+/// path). Binary read.
+pub fn read_at_into(path: Str, offset: Int, buf: &mut Vec[UInt8], len: Int) -> Result[Int, IOError]
+  requires: path.len() > 0
+  requires: offset >= 0
+  requires: len >= 0
+  ensures: result is Ok => result.value <= len
+  ensures: result is Ok => buf.len() == result.value
+{
+  buf.clear();
+  if len == 0 {
+    return Ok(0);
+  }
+  let size: Int;
+  unsafe {
+    size = xiom_file_size(path.c_str());
+  }
+  if size < 0 {
+    return Err(IOError{ message: "failed to read file: " + path, code: 1 });
+  }
+  var count: Int = len;
+  if offset >= size {
+    count = 0;
+  } else {
+    let avail = size - offset;
+    if count > avail {
+      count = avail;
+    }
+  }
+  if count == 0 {
+    return Ok(0);
+  }
+  let ptr: *UInt8;
+  unsafe {
+    ptr = xiom_read_at(path.c_str(), offset, count);
+  }
+  if ptr == 0 {
+    return Err(IOError{ message: "failed to read file: " + path, code: 1 });
+  }
+  unsafe {
+    var i = 0;
+    while i < count {
+      buf.push(*(ptr.offset(i)));
+      i = i + 1;
+    }
+    xiom_free(ptr);
+  }
+  Ok(count)
+}
+
 /// write_at writes `data` at byte `offset`, creating the file when missing
 /// and zero-filling a gap when the offset is past the current end. Binary.
 /// Returns: Err on open/write failure; an empty `data` is a no-op.
