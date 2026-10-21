@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 76 (updated 2026-10-21 10:55Z; **v0.64.8 PINNED + RELEASED**; waves 202-204 + read_at_into + JSON builders: global 94.6%, readiness 89.5%, floors194; final battery modules 533/533, smokes 963/963, probes 393/393, barename 0/533; next: 1704 JSON drop/triage, 0918 macOS witness, next compiler candidate for 1626/1451/1242/2249/1326/1550; coverage hard tail iter/os/math)
+## 0A. CONTINUE HERE -- handoff snapshot 77 (updated 2026-10-21 17:50Z; **v0.64.8 PINNED + RELEASED**; list_dir owned names fixed; global 94.6%, readiness 89.5%, floors194; probes 393/393; next: PULSE macOS verification, 1704 compiler drop fix, next compiler candidate for 1626/1451/1242/2249/1326/1550; coverage hard tail iter/os/math)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-20, snapshot 76)
 
@@ -25,7 +25,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
   git -C E:\xiom-lang\xiom-relays pull --ff-only origin main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 76 + blocks 265/267 (and this 0C block).
+Read docs/stdlib_session.md snapshot 77 + blocks 267/268 (and this 0C block).
 
 State: v0.64.8 is RELEASED and PINNED. COMPILER_VERSION=v0.64.8; staged
 archive %TEMP%\kilo\stdlib_ws\v0.64.8-official (windows zip sha256
@@ -117,10 +117,10 @@ Relays, bugs, wishlist:
   shared and bundled. REL-20261020-1302 io.read_at_into is implemented
   and fixed (9bad232, p_io_read_at_into). 1704 JSON retention is acked
   with in-place builders (526fd96) as a partial mitigation; 0918 macOS
-  list_dir is acked with p_io_listdir_roundtrip pending CI. 1626 is
-  fixed on compiler main (626dfbc65/8bfd4235d), pending the next
-  release. Re-test the rest on the next candidate; the wave-196 probe
-  excludes the AV combination.
+  list_dir is fixed in 05673f8 (runtime-owned names, dirent in one TU)
+  and awaits the macos-15-intel witness. 1626 is fixed on compiler main
+  (626dfbc65/8bfd4235d), pending the next release. Re-test the rest on
+  the next candidate; the wave-196 probe excludes the AV combination.
 - Wishlist row 33 (compiler/install) open; row 47 fixed pending xvector
   verify; thread-pool item 1834 no-arg path green, persistent fleet /
   Send-Sync remain. New stdlib fixes: fraction_add, io.rename,
@@ -3795,6 +3795,24 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-21 block 268 (list_dir owned names; macOS dirent ABI/lifetime fix)**
+- Fixed `REL-20261021-0918-pulse` in `05673f8`: new runtime
+  `xiom_list_dir_names` keeps `opendir`/`readdir`/`struct dirent` in one
+  TU (so macOS inode64 layout cannot mismatch XIOM-generated calls) and
+  copies names into an owned NUL-separated buffer. `io.list_dir` parses
+  the owned buffer, copies each `Str`, and frees it; no borrowed dirent
+  pointers.
+- The portable witness now forces an allocation after `list_dir` before
+  comparing. Windows x64 PASS, Linux x64 WSL PASS; io smokes 21/21,
+  list_dir stress 1/1. PULSE to verify on macos-15-intel.
+- `1704` remains acked: builders (`526fd96`) are a partial mitigation;
+  PULSE measured the 512 MB crossing at ~1,000-1,200 iterations vs ~500
+  for json_set. An explicit `json_clear(&mut JsonValue)` was attempted
+  but hangs at runtime on v0.64.8 (mutable-enum recursion), so it was
+  not shipped; the compiler m375 drop-elaboration fix remains required.
+- `1626` is fixed on compiler main (`626dfbc65` / `8bfd4235d`), pending
+  the next release. Coverage 6527/6897 = 94.6%, probes 393.
 
 **SESSION 2026-10-21 block 267 (JSON in-place builders; macOS list_dir witness; probes 393; 94.6%)**
 - Added `JsonObjectBuilder`/`JsonArrayBuilder` in `xiom/serialize/json.xi`
