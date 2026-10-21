@@ -3843,7 +3843,7 @@ registry pin, agent recon for the rest)**
   (fixed/scientific thresholds, rounding, subnormals, signs) against
   `convert.float_to_string` byte for byte.
 - Measured with PULSE's capped runner (official v0.64.8, 50-publication
-  sample): **10,000/10,000 stringify iterations under 256 MB on both
+  sample): **10,000/10,000 stringify iterations and 10,000/10,000 pretty iterations (t=51,540,000) under 256 MB on both
   Windows x64 and Linux x64 WSL**; the pre-fix path hit 256 MB near
   iteration 500 and the builder-only path near 1800. The pure builder
   control is flat. Probe `p_json_stringify_render` (new) checks
@@ -13815,5 +13815,6 @@ policy applied (`docs/CI.md`, attestations, dispatch-gated registry
 publish). The single-param sweep repro remains the one open
 stdlib->compiler handoff (fails/hangs on main R45 `483f283e`; repro and
 current evidence in `tools/known_failures/README.md`).
+
 
 
