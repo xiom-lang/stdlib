@@ -101,7 +101,11 @@ pub fn errno_is_error(code: Int) -> Bool
 /// Symbolic name for an error code (for example "ENOENT"). Unknown codes map
 /// to "UNKNOWN".
 /// Complexity: O(1).
-pub fn errno_name(code: Int) -> Str {
+pub fn errno_name(code: Int) -> Str
+  ensures: (code == 1) => (result == "EPERM")
+  ensures: (code == 2) => (result == "ENOENT")
+  ensures: (code == 0) => (result == "UNKNOWN")
+{
   if code == 1 {
     return "EPERM";
   };

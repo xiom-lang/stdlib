@@ -112,7 +112,9 @@ pub fn assert_contains(haystack: Str, needle: Str, name: Str) -> TestResult
 }
 
 /// Pass when the Result is Ok.
-pub fn assert_ok[T, E](result: Result[T, E], name: Str) -> TestResult {
+pub fn assert_ok[T, E](result: Result[T, E], name: Str) -> TestResult
+  ensures: result.name == name
+{
   return TestResult{
     passed: result.is_ok;
     name: name;
@@ -123,7 +125,9 @@ pub fn assert_ok[T, E](result: Result[T, E], name: Str) -> TestResult {
 }
 
 /// Pass when the Result is Err.
-pub fn assert_err[T, E](result: Result[T, E], name: Str) -> TestResult {
+pub fn assert_err[T, E](result: Result[T, E], name: Str) -> TestResult
+  ensures: result.name == name
+{
   return TestResult{
     passed: !result.is_ok;
     name: name;

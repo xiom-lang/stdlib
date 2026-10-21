@@ -322,6 +322,7 @@ pub fn append_file(path: Str, content: Str) -> Result[Unit, IOError]
 pub fn file_exists(path: Str) -> Bool
   // Graceful query: empty path is a valid false answer (locked by
   // smoke_io_file_exists) -- deliberately no path requires.
+  ensures: (path.len() == 0) => (result == false)
 {
   let file: *UInt8;
   unsafe {
@@ -339,6 +340,7 @@ pub fn file_exists(path: Str) -> Bool
 /// True when the path exists and is a directory.
 pub fn is_dir(path: Str) -> Bool
   // Graceful query (false on any unusable path) -- deliberately no requires.
+  ensures: (path.len() == 0) => (result == false)
 {
   let result: Int32;
   unsafe {
