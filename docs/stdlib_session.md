@@ -3814,7 +3814,9 @@ registry pin, agent recon for the rest)**
 - `REL-20261011-1626-stdlib` is fixed on compiler main
   (`626dfbc65` / `8bfd4235d`), pending the next release; verify then.
 - Coverage 6527/6897 = 94.6%, clauses 9023 (96.9); probes 393.
-  Final7 battery in flight at block time.
+  Final7 battery: modules 533/533, smokes 963/963, probes 393/393,
+  barename 0/533, floors194 ratchet OK, doc_scan 100% (2 pre-existing
+  net misses).
 
 **SESSION 2026-10-20 block 266 (error wrap_error/context contracts; 6521/6891)**
 - Renamed the shadowing `result` parameters in `wrap_error` and `context`
