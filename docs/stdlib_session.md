@@ -3875,7 +3875,7 @@ registry pin, agent recon for the rest)**
   stringify/pretty retention is now flat in the 10k capped probe, but
   `json_set`/builder-built trees and parse still retain and need the
   compiler m375 drop elaboration.
-- Same wave: `yaml_stringify`, `yaml_emit_sequence`, `yaml_emit_mapping`
+- Same wave `f4ca800`: `yaml_stringify`, `yaml_emit_sequence`, `yaml_emit_mapping`
   and the quoted-scalar path use the byte builder. Byte-identical against
   a `27cb9a3` worktree (46 golden lines); 10k emits of a 50-entry mapping
   complete under 128 MB (the old path crossed 128-512 MB late in the
