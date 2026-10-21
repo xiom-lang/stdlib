@@ -610,7 +610,9 @@ fn _fuzzy_primary(st: &mut _PS, values: &Vec[Float64]) -> Float64 {
 /// Theorem follows from the axioms via the inference rules: true when the
 /// theorem string matches an axiom or a single modus ponens step (an axiom is
 /// an implication "a>b" and "a" is derivable). Complexity: O(axioms^2 * len).
-pub fn provability(axioms: &Vec[Str], theorem: Str) -> Bool {
+pub fn provability(axioms: &Vec[Str], theorem: Str) -> Bool
+  ensures: (axioms.len() == 0) => (result == false)
+{
   var i = 0;
   while i < axioms.len() {
     if axioms[i] == theorem {
@@ -654,7 +656,9 @@ fn _find_gt(s: Str) -> Int {
 
 /// Structure is a model of every sentence (atoms P(d) evaluated by the
 /// structure). Complexity: O(sentences * len).
-pub fn model_theory(sentences: &Vec[Str], structure: fn(&Vec[Int]) -> Bool) -> Bool {
+pub fn model_theory(sentences: &Vec[Str], structure: fn(&Vec[Int]) -> Bool) -> Bool
+  ensures: (sentences.len() == 0) => (result == true)
+{
   var i = 0;
   while i < sentences.len() {
     var st = _PS{ s: sentences[i], pos: 0 };
@@ -745,7 +749,9 @@ pub fn type_theory(term: Str, context: fn(Str) -> Str) -> Option[Str] {
 /// target) triples; the axioms verified are the existence of an identity per
 /// object and the closure/associativity of composition where defined.
 /// Complexity: O(morphisms^2).
-pub fn category_theory(obj: Str, morphisms: &Vec[(Str, Str, Str)]) -> Bool {
+pub fn category_theory(obj: Str, morphisms: &Vec[(Str, Str, Str)]) -> Bool
+  ensures: (morphisms.len() == 0) => (result == true)
+{
   var n = morphisms.len();
   if n == 0 {
     return true;

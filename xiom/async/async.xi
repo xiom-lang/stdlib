@@ -287,7 +287,9 @@ pub fn Channel.send[T](&mut self, value: T)
 }
 
 /// Receive a value (blocking until one is available).
-pub fn Channel.recv[T](&mut self) -> T {
+pub fn Channel.recv[T](&mut self) -> T
+  ensures: (self.items.len()@pre > 0) => (self.items.len() == self.items.len()@pre - 1)
+{
   // Cooperative receive: when empty, yield to the executor so a queued sender
   // can run, then return the value. Never panics during normal flow.
   while items.len() == 0 {

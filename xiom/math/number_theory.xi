@@ -728,7 +728,10 @@ pub fn radical(n: Int) -> Int
 /// True iff every prime factor of n is <= bound. Returns true for n <= 1
 /// (no prime factors) and false for bound <= 1. Negative n is handled by
 /// absolute value. Complexity: O(sqrt(n)).
-pub fn smooth(n: Int, bound: Int) -> Bool {
+pub fn smooth(n: Int, bound: Int) -> Bool
+  ensures: (n <= 1) => (result == true)
+  ensures: (n > 1 && bound <= 1) => (result == false)
+{
   if n <= 1 { return true; }
   if bound <= 1 { return false; }
   var x = n;
@@ -748,7 +751,9 @@ pub fn smooth(n: Int, bound: Int) -> Bool {
 /// True iff every prime factor of n is > bound. Returns true for n <= 1 (no
 /// prime factors). Negative n is handled by absolute value. Complexity:
 /// O(sqrt(n)).
-pub fn rough(n: Int, bound: Int) -> Bool {
+pub fn rough(n: Int, bound: Int) -> Bool
+  ensures: (n <= 1) => (result == true)
+{
   if n <= 1 { return true; }
   var x = n;
   if x < 0 { x = -x; }

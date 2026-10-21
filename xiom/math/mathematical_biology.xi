@@ -180,7 +180,9 @@ fn _neuron_v(v: Float64, input: Float64, tau: Float64, threshold: Float64, dt: F
 /// BUG 23 #7; verified by minimal probes). The returned voltage resets to 0.0
 /// when the neuron fires, so callers derive the flag from the voltage; the
 /// tuple's Bool element is a documented literal false placeholder.
-pub fn neuroscience(v: Float64, input: Float64, tau: Float64, threshold: Float64, dt: Float64) -> (Float64, Bool) {
+pub fn neuroscience(v: Float64, input: Float64, tau: Float64, threshold: Float64, dt: Float64) -> (Float64, Bool)
+  ensures: result.1 == false
+{
   var v_new = _neuron_v(v, input, tau, threshold, dt);
   var r = _nb_out(v_new);
   return r;

@@ -141,7 +141,9 @@ pub fn homeomorphism(f: fn(Int) -> Int, g: fn(Int) -> Int, tau_x: &Vec[Vec[Int]]
 /// open; the family is closed under finite intersections and arbitrary
 /// unions. Returns false for any violation (an empty points with a family
 /// containing only the empty set is valid). Complexity: O(2^|tau| * |tau|).
-pub fn topological_space(points: &Vec[Int], open_sets: &Vec[Vec[Int]]) -> Bool {
+pub fn topological_space(points: &Vec[Int], open_sets: &Vec[Vec[Int]]) -> Bool
+  ensures: (open_sets.len() == 0) => (result == false)
+{
   var empty = Vec[Int].new();
   if !open_set(open_sets, &empty) { return false; }
   if !open_set(open_sets, points) { return false; }

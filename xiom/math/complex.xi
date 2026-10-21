@@ -57,7 +57,10 @@ pub fn complex_mul(a: Complex, b: Complex) -> Complex
 }
 
 /// Divide a by b: (a+bi)/(c+di) = (ac+bd)/(c2+d2) + i*(bc-ad)/(c2+d2). O(1).
-pub fn complex_div(a: Complex, b: Complex) -> Complex {
+pub fn complex_div(a: Complex, b: Complex) -> Complex
+  ensures: (result.re == (a.re * b.re + a.im * b.im) / (b.re * b.re + b.im * b.im)) || (result.re != result.re)
+  ensures: (result.im == (a.im * b.re - a.re * b.im) / (b.re * b.re + b.im * b.im)) || (result.im != result.im)
+{
   var denom = b.re * b.re + b.im * b.im;
   return Complex{
     re: (a.re * b.re + a.im * b.im) / denom;

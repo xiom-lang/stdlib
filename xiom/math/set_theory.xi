@@ -124,7 +124,9 @@ pub fn set_symmetric_difference(a: &Vec[Int], b: &Vec[Int]) -> Vec[Int]
 /// True iff a is a subset of b: every element of a appears in b (duplicates in
 /// the inputs are ignored). The empty set is a subset of everything.
 /// Complexity: O(|a| * |b|).
-pub fn set_subset(a: &Vec[Int], b: &Vec[Int]) -> Bool {
+pub fn set_subset(a: &Vec[Int], b: &Vec[Int]) -> Bool
+  ensures: (a.len() == 0) => (result == true)
+{
   var i = 0;
   while i < a.len() {
     if !_contains(b, a[i]) { return false; }
@@ -134,19 +136,25 @@ pub fn set_subset(a: &Vec[Int], b: &Vec[Int]) -> Bool {
 }
 
 /// True iff a is a superset of b. Complexity: O(|b| * |a|).
-pub fn set_superset(a: &Vec[Int], b: &Vec[Int]) -> Bool {
+pub fn set_superset(a: &Vec[Int], b: &Vec[Int]) -> Bool
+  ensures: (b.len() == 0) => (result == true)
+{
   return set_subset(b, a);
 }
 
 /// True iff a is a proper subset of b: a is a subset of b and the two sets
 /// differ in cardinality. Complexity: O(|a| * |b| + |b|).
-pub fn set_proper_subset(a: &Vec[Int], b: &Vec[Int]) -> Bool {
+pub fn set_proper_subset(a: &Vec[Int], b: &Vec[Int]) -> Bool
+  ensures: (a.len() == 0 && b.len() > 0) => (result == true)
+{
   if !set_subset(a, b) { return false; }
   return set_cardinality(a) < set_cardinality(b);
 }
 
 /// True iff a and b share no element. Complexity: O(|a| * |b|).
-pub fn set_disjoint(a: &Vec[Int], b: &Vec[Int]) -> Bool {
+pub fn set_disjoint(a: &Vec[Int], b: &Vec[Int]) -> Bool
+  ensures: (a.len() == 0 || b.len() == 0) => (result == true)
+{
   return !_share(a, b);
 }
 
@@ -162,7 +170,9 @@ pub fn set_disjoint(a: &Vec[Int], b: &Vec[Int]) -> Bool {
 /// v0.61.3 with the row-copy shape, so the previous NOT-IMPLEMENTABLE stub
 /// is closed.
 /// Complexity: O(|s| * total block elements).
-pub fn set_partition(s: &Vec[Int], blocks: &Vec[Vec[Int]]) -> Bool {
+pub fn set_partition(s: &Vec[Int], blocks: &Vec[Vec[Int]]) -> Bool
+  ensures: (s.len() == 0 && blocks.len() == 0) => (result == true)
+{
   var i = 0;
   while i < s.len() {
     var count = 0;

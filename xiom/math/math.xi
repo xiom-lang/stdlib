@@ -571,12 +571,18 @@ pub fn lerp(a: Float64, b: Float64, t: Float64) -> Float64
 }
 
 /// True when `x` is NaN (`x != x`).
-pub fn is_nan(x: Float64) -> Bool {
+pub fn is_nan(x: Float64) -> Bool
+  ensures: (result == true) => (x != x)
+  ensures: (result == false) => (x == x)
+{
   return x != x;
 }
 
 /// True when `x` is positive or negative infinity.
-pub fn is_inf(x: Float64) -> Bool {
+pub fn is_inf(x: Float64) -> Bool
+  ensures: (result == true) => (x == 1.0 / 0.0 || x == -1.0 / 0.0)
+  ensures: (result == false) => (x != 1.0 / 0.0 && x != -1.0 / 0.0)
+{
   return x == 1.0 / 0.0 || x == -1.0 / 0.0;
 }
 

@@ -139,7 +139,9 @@ pub fn frac_part(x: Float64) -> Float64
 /// Decimal rounding is subject to binary float representation error; the
 /// result is the correctly rounded Float64 of x scaled by 10^places.
 /// Complexity: O(1).
-pub fn round_to(x: Float64, places: Int) -> Float64 {
+pub fn round_to(x: Float64, places: Int) -> Float64
+  ensures: (places == 0) => (result == round(x) || x != x)
+{
   var factor = math.pow(10.0, places as Float64);
   return round(x * factor) / factor;
 }

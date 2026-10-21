@@ -153,7 +153,9 @@ pub fn csc(x: Float64) -> Float64
 
 /// Cotangent of x: cos(x)/sin(x). A pole (sin(x) == 0) yields +-infinity
 /// (IEEE). Complexity: O(1).
-pub fn cot(x: Float64) -> Float64 {
+pub fn cot(x: Float64) -> Float64
+  ensures: (x != 0.0) || (result == 1.0 / 0.0 || result == -1.0 / 0.0 || result != result)
+{
   var c = math.cos(x);
   var s = math.sin(x);
   return c / s;
