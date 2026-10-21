@@ -4,7 +4,7 @@
 
 module xiom.serialize.yaml_lite
 
-// Depends on: xiom.serialize, xiom.string
+// Depends on: xiom.serialize, xiom.string, xiom.string.builder
 
 // ============================================================================
 // Minimal YAML subset: parse to a value tree and emit simple documents.
@@ -27,6 +27,7 @@ module xiom.serialize.yaml_lite
 // ============================================================================
 
 use xiom.string;
+use xiom.string.builder;
 
 /// Parsed YAML-lite value (scalar/map/sequence).
 pub type YamlValue = enum {
@@ -230,89 +231,156 @@ pub fn yaml_parse_document(s: Str) -> Result[YamlValue, Str]
 /// Serialize `v` as YAML text.
 /// Complexity: O(n), n = number of nodes.
 pub fn yaml_stringify(v: YamlValue) -> Str {
-  return _yaml_emit_node(v, 0);
+  var sb: Vec[UInt8] = builder.sb_new();
+  _yaml_push_node(v, 0, &mut sb);
+  return builder.sb_to_str(&sb);
 }
 
-fn _yaml_pad(depth: Int) -> Str {
-  var result = "";
+fn _yaml_needs_quote(s: Str) -> Bool {
   var i = 0;
-  while i < depth * 2 {
-    result = result + " ";
+  while i < s.len() {
+    let c = _yaml_get_char(s, i);
+    if c == ':' || c == '#' || c == '{' || c == '}' || c == '[' || c == ']'
+       || c == ',' || c == '&' || c == '*' || c == '!' || c == '|' || c == '>'
+       || c == '\'' || c == '"' || c == '%' || c == '@' || c == '`'
+       || c == '\n' || c == '\r' || c == '\t' {
+      return true;
+    }
     i = i + 1;
   }
-  return result;
+  return false;
 }
 
-fn _yaml_emit_node(v: YamlValue, depth: Int) -> Str {
+// Wave 209: push the YAML emitter into a byte builder. The old recursive
+// Str concatenation retained per-node temporaries under repeated calls
+// (same family as REL-20261020-1704).
+fn _yaml_push_dquote(s: Str, sb: &mut Vec[UInt8]) {
+  builder.sb_push_byte(sb, 34);
+  let base: *UInt8 = s.c_str();
+  var i = 0;
+  while i < s.len() {
+    let c = _yaml_get_char(s, i);
+    let b: UInt8;
+    unsafe { b = *(base + i); }
+    if c == '"' {
+      builder.sb_push_byte(sb, 92);
+      builder.sb_push_byte(sb, 34);
+    } elif c == '\\' {
+      builder.sb_push_byte(sb, 92);
+      builder.sb_push_byte(sb, 92);
+    } elif c == '\n' {
+      builder.sb_push_byte(sb, 92);
+      builder.sb_push_byte(sb, 110);
+    } elif c == '\t' {
+      builder.sb_push_byte(sb, 92);
+      builder.sb_push_byte(sb, 116);
+    } elif c == '\r' {
+      builder.sb_push_byte(sb, 92);
+      builder.sb_push_byte(sb, 114);
+    } else {
+      builder.sb_push_byte(sb, b);
+    }
+    i = i + 1;
+  }
+  builder.sb_push_byte(sb, 34);
+}
+
+fn _yaml_push_scalar(s: Str, sb: &mut Vec[UInt8]) {
+  if s.len() == 0 {
+    builder.sb_push_str(sb, "\"\"");
+    return;
+  }
+  if _yaml_needs_quote(s) {
+    _yaml_push_dquote(s, sb);
+  } else {
+    builder.sb_push_str(sb, s);
+  }
+}
+
+fn _yaml_push_pad(depth: Int, sb: &mut Vec[UInt8]) {
+  var i = 0;
+  while i < depth * 2 {
+    builder.sb_push_byte(sb, 32);
+    i = i + 1;
+  }
+}
+
+fn _yaml_push_node(v: YamlValue, depth: Int, sb: &mut Vec[UInt8]) {
   match v {
     YamlValue.Scalar(s) => {
-      return yaml_emit_scalar(s);
+      _yaml_push_scalar(s, sb);
     }
     YamlValue.Sequence(items) => {
-      var result = "";
       var i = 0;
       while i < items.len() {
-        var pad = _yaml_pad(depth);
-        result = result + pad + "- " + _yaml_emit_flat(items[i], depth);
+        _yaml_push_pad(depth, sb);
+        builder.sb_push_str(sb, "- ");
+        _yaml_push_flat(items[i], depth, sb);
         if i + 1 < items.len() {
-          result = result + "\n";
+          builder.sb_push_byte(sb, 10);
         }
         i = i + 1;
       }
-      return result;
     }
     YamlValue.Mapping(keys, values) => {
-      var result = "";
       var i = 0;
       while i < keys.len() {
-        var pad = _yaml_pad(depth);
-        result = result + pad + yaml_emit_scalar(keys[i]) + ": ";
-        result = result + _yaml_emit_flat(values[i], depth + 1);
+        _yaml_push_pad(depth, sb);
+        _yaml_push_scalar(keys[i], sb);
+        builder.sb_push_str(sb, ": ");
+        _yaml_push_flat(values[i], depth + 1, sb);
         if i + 1 < keys.len() {
-          result = result + "\n";
+          builder.sb_push_byte(sb, 10);
         }
         i = i + 1;
       }
-      return result;
     }
-    _ => { return ""; }
+    _ => {}
   }
 }
 
 // Emit a value inline: scalars inline, nested structures on the next line.
-fn _yaml_emit_flat(v: YamlValue, depth: Int) -> Str {
+fn _yaml_push_flat(v: YamlValue, depth: Int, sb: &mut Vec[UInt8]) {
   match v {
     YamlValue.Scalar(s) => {
-      return yaml_emit_scalar(s);
+      _yaml_push_scalar(s, sb);
     }
     YamlValue.Sequence(items) => {
-      if items.len() == 0 { return "[]"; }
-      var result = "\n";
-      var i = 0;
-      while i < items.len() {
-        result = result + _yaml_pad(depth + 1) + "- " + _yaml_emit_flat(items[i], depth + 1);
-        if i + 1 < items.len() {
-          result = result + "\n";
+      if items.len() == 0 {
+        builder.sb_push_str(sb, "[]");
+      } else {
+        builder.sb_push_byte(sb, 10);
+        var i = 0;
+        while i < items.len() {
+          _yaml_push_pad(depth + 1, sb);
+          builder.sb_push_str(sb, "- ");
+          _yaml_push_flat(items[i], depth + 1, sb);
+          if i + 1 < items.len() {
+            builder.sb_push_byte(sb, 10);
+          }
+          i = i + 1;
         }
-        i = i + 1;
       }
-      return result;
     }
     YamlValue.Mapping(keys, values) => {
-      if keys.len() == 0 { return "{}"; }
-      var result = "\n";
-      var i = 0;
-      while i < keys.len() {
-        result = result + _yaml_pad(depth + 1) + yaml_emit_scalar(keys[i]) + ": ";
-        result = result + _yaml_emit_flat(values[i], depth + 1);
-        if i + 1 < keys.len() {
-          result = result + "\n";
+      if keys.len() == 0 {
+        builder.sb_push_str(sb, "{}");
+      } else {
+        builder.sb_push_byte(sb, 10);
+        var i = 0;
+        while i < keys.len() {
+          _yaml_push_pad(depth + 1, sb);
+          _yaml_push_scalar(keys[i], sb);
+          builder.sb_push_str(sb, ": ");
+          _yaml_push_flat(values[i], depth + 1, sb);
+          if i + 1 < keys.len() {
+            builder.sb_push_byte(sb, 10);
+          }
+          i = i + 1;
         }
-        i = i + 1;
       }
-      return result;
     }
-    _ => { return ""; }
+    _ => {}
   }
 }
 
@@ -341,46 +409,16 @@ pub fn yaml_emit_scalar(s: Str) -> Str
   if s.len() == 0 {
     return "\"\"";
   }
-  var needs_quote = false;
-  var i = 0;
-  while i < s.len() {
-    let c = _yaml_get_char(s, i);
-    if c == ':' || c == '#' || c == '{' || c == '}' || c == '[' || c == ']'
-       || c == ',' || c == '&' || c == '*' || c == '!' || c == '|' || c == '>'
-       || c == '\'' || c == '"' || c == '%' || c == '@' || c == '`'
-       || c == '\n' || c == '\r' || c == '\t' {
-      needs_quote = true;
-      break;
-    }
-    i = i + 1;
-  }
-  if needs_quote {
+  if _yaml_needs_quote(s) {
     return _yaml_dquote(s);
   }
   return s;
 }
 
 fn _yaml_dquote(s: Str) -> Str {
-  var result = "\"";
-  var i = 0;
-  while i < s.len() {
-    let c = _yaml_get_char(s, i);
-    if c == '"' {
-      result = result + "\\\"";
-    } elif c == '\\' {
-      result = result + "\\\\";
-    } elif c == '\n' {
-      result = result + "\\n";
-    } elif c == '\t' {
-      result = result + "\\t";
-    } elif c == '\r' {
-      result = result + "\\r";
-    } else {
-      result = result + xiom.string.str_slice(s, i, i + 1);
-    }
-    i = i + 1;
-  }
-  return result + "\"";
+  var sb: Vec[UInt8] = builder.sb_new();
+  _yaml_push_dquote(s, &mut sb);
+  return builder.sb_to_str(&sb);
 }
 
 /// Emit `items` as a YAML block sequence.
@@ -389,16 +427,17 @@ pub fn yaml_emit_sequence(items: &Vec[Str]) -> Str
   ensures: (items.len() == 0) => (result == "")
   ensures: result.len() >= items.len()
 {
-  var result = "";
+  var sb: Vec[UInt8] = builder.sb_new();
   var i = 0;
   while i < items.len() {
     if i > 0 {
-      result = result + "\n";
+      builder.sb_push_byte(sb, 10);
     }
-    result = result + "- " + yaml_emit_scalar(items[i]);
+    builder.sb_push_str(sb, "- ");
+    _yaml_push_scalar(items[i], &mut sb);
     i = i + 1;
   }
-  return result;
+  return builder.sb_to_str(&sb);
 }
 
 /// Emit `keys` and `values` as a YAML block mapping. The two vectors must be
@@ -407,7 +446,7 @@ pub fn yaml_emit_sequence(items: &Vec[Str]) -> Str
 pub fn yaml_emit_mapping(keys: &Vec[Str], values: &Vec[Str]) -> Str
   ensures: (keys.len() == 0 || values.len() == 0) => (result == "")
 {
-  var result = "";
+  var sb: Vec[UInt8] = builder.sb_new();
   var n = keys.len();
   if values.len() < n {
     n = values.len();
@@ -415,10 +454,12 @@ pub fn yaml_emit_mapping(keys: &Vec[Str], values: &Vec[Str]) -> Str
   var i = 0;
   while i < n {
     if i > 0 {
-      result = result + "\n";
+      builder.sb_push_byte(sb, 10);
     }
-    result = result + yaml_emit_scalar(keys[i]) + ": " + yaml_emit_scalar(values[i]);
+    _yaml_push_scalar(keys[i], &mut sb);
+    builder.sb_push_str(sb, ": ");
+    _yaml_push_scalar(values[i], &mut sb);
     i = i + 1;
   }
-  return result;
+  return builder.sb_to_str(&sb);
 }

@@ -27,6 +27,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   builder instead of a `str_slice`/concat allocation per character.
   Output is byte-identical; 10,000 repeated calls complete under a
   256 MB cap (both crossed it near iteration 4,000-5,000 before).
+- `yaml_stringify`, `yaml_emit_sequence`, `yaml_emit_mapping` and the
+  quoted-scalar path render through the shared byte builder. Output is
+  byte-identical; 10,000 repeated emits of a 50-entry mapping complete
+  under a 128 MB cap (the old path crossed 128-512 MB late in the loop).
 
 ### Fixed
 
