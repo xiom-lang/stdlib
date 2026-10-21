@@ -241,7 +241,9 @@ pub fn mat4_det(m: Mat4) -> Float64 {
 
 /// Inverse of a 4x4 matrix via the adjugate (cofactor-transpose / det).
 /// Returns None when |det| < 1e-12 (documented singularity cutoff). O(150).
-pub fn mat4_inv(m: Mat4) -> Option[Mat4] {
+pub fn mat4_inv(m: Mat4) -> Option[Mat4]
+  ensures: (result is None) => (math.abs_float(mat4_det(m)) < 1e-12)
+{
   var m00 = m.m11 * (m.m22 * m.m33 - m.m23 * m.m32)
           - m.m12 * (m.m21 * m.m33 - m.m23 * m.m31)
           + m.m13 * (m.m21 * m.m32 - m.m22 * m.m31);

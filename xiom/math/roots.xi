@@ -88,7 +88,9 @@ pub fn cbrt_pure(x: Float64) -> Float64
 
 /// True iff n is a perfect square. is_square(0) == true, is_square(16) ==
 /// true, is_square(-4) == false. Complexity: O(log sqrt(n)) via integer_sqrt.
-pub fn is_square(n: Int) -> Bool {
+pub fn is_square(n: Int) -> Bool
+  ensures: (n < 0) => (result == false)
+{
   if n < 0 { return false; }
   var r = integer_sqrt(n);
   return r * r == n;
@@ -96,7 +98,9 @@ pub fn is_square(n: Int) -> Bool {
 
 /// True iff n is a perfect cube. is_cube(0) == true, is_cube(27) == true,
 /// is_cube(-27) == false (negative inputs are rejected). Complexity: O(log).
-pub fn is_cube(n: Int) -> Bool {
+pub fn is_cube(n: Int) -> Bool
+  ensures: (n < 0) => (result == false)
+{
   if n < 0 { return false; }
   var r = integer_cbrt(n);
   return r * r * r == n;

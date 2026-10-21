@@ -125,7 +125,9 @@ pub fn detach(t: SpawnThread)
 /// Suspend the calling thread for `ms` milliseconds.
 /// Params: ms - the sleep duration (clamped to >= 0).
 /// Complexity: O(1) syscall.
-pub fn sleep_ms(ms: Int) {
+pub fn sleep_ms(ms: Int)
+  requires: ms >= 0
+{
   var m = ms;
   if m < 0 {
     m = 0;

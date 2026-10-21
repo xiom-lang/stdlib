@@ -31,7 +31,9 @@ use xiom.math;
 /// associativity, the two-sided identity law, and the existence of a
 /// two-sided inverse for every element. An empty carrier is vacuously a
 /// group of order zero. Complexity: O(|G|^3) plus inverse search O(|G|^3).
-pub fn group_theory(operation: fn(Int, Int) -> Int, elements: &Vec[Int], identity: Int) -> Bool {
+pub fn group_theory(operation: fn(Int, Int) -> Int, elements: &Vec[Int], identity: Int) -> Bool
+  ensures: (elements.len() == 0) => (result == true)
+{
   var n = elements.len();
   if n == 0 { return true; }
   var i = 0;
@@ -79,7 +81,9 @@ pub fn group_theory(operation: fn(Int, Int) -> Int, elements: &Vec[Int], identit
 /// avoid the compiler's built-in operator identifiers (`add`/`mul` resolve
 /// to Int/Float64 +/* regardless of the parameter, a name-resolution bug).
 /// Complexity: O(|R|^4).
-pub fn ring_theory(op_add: fn(Int, Int) -> Int, op_mul: fn(Int, Int) -> Int, elements: &Vec[Int], zero: Int, one: Int) -> Bool {
+pub fn ring_theory(op_add: fn(Int, Int) -> Int, op_mul: fn(Int, Int) -> Int, elements: &Vec[Int], zero: Int, one: Int) -> Bool
+  ensures: (elements.len() == 0) => (result == true)
+{
   var n = elements.len();
   if n == 0 { return true; }
   var i = 0;
@@ -166,7 +170,9 @@ pub fn ring_theory(op_add: fn(Int, Int) -> Int, op_mul: fn(Int, Int) -> Int, ele
 /// compiler's built-in operator identifiers (see ring_theory). Complexity:
 /// O(|F|^4).
 pub fn field_theory(op_add: fn(Float64, Float64) -> Float64, op_mul: fn(Float64, Float64) -> Float64,
-                    elements: &Vec[Float64], zero: Float64, one: Float64) -> Bool {
+                    elements: &Vec[Float64], zero: Float64, one: Float64) -> Bool
+  ensures: (elements.len() == 0) => (result == true)
+{
   var n = elements.len();
   if n == 0 { return true; }
   var i = 0;
@@ -220,7 +226,9 @@ pub fn field_theory(op_add: fn(Float64, Float64) -> Float64, op_mul: fn(Float64,
 /// closure of the action (r*v in module for every r, v) and the unital law
 /// assuming ring[0] is the multiplicative identity of the ring (documented
 /// convention). Complexity: O(|R| * |M|).
-pub fn module_theory(action: fn(Int, Int) -> Int, ring: &Vec[Int], module_set: &Vec[Int]) -> Bool {
+pub fn module_theory(action: fn(Int, Int) -> Int, ring: &Vec[Int], module_set: &Vec[Int]) -> Bool
+  ensures: (module_set.len() == 0) => (result == true)
+{
   var n = module_set.len();
   if n == 0 { return true; }
   var id = 0;
@@ -245,7 +253,9 @@ pub fn module_theory(action: fn(Int, Int) -> Int, ring: &Vec[Int], module_set: &
 /// separable over the field F_p: gcd(p, p') == 1 modulo p. Returns false for
 /// prime <= 1 (no field), or an empty/constant polynomial. Complexity:
 /// O(deg^2) modular Euclid.
-pub fn galois_theory(polynomial: &Vec[Int], prime: Int) -> Bool {
+pub fn galois_theory(polynomial: &Vec[Int], prime: Int) -> Bool
+  ensures: (prime <= 1) => (result == false)
+{
   if prime <= 1 { return false; }
   var d = polynomial.len();
   if d == 0 { return false; }
@@ -280,7 +290,9 @@ pub fn algebraic_number(alpha: Float64, polynomial: &Vec[Float64]) -> Bool {
 /// frozen signature omits the ring addition, so the additive ideal laws are
 /// not checked (documented). Parameter name avoids the built-in operator
 /// identifiers (see ring_theory). Complexity: O(|R| * |I|).
-pub fn commutative_algebra(ideal: &Vec[Int], ring: &Vec[Int], op_mul: fn(Int, Int) -> Int) -> Bool {
+pub fn commutative_algebra(ideal: &Vec[Int], ring: &Vec[Int], op_mul: fn(Int, Int) -> Int) -> Bool
+  ensures: (ideal.len() == 0) => (result == true)
+{
   var i = 0;
   while i < ideal.len() {
     if !_contains(ring, ideal[i]) { return false; }
@@ -308,7 +320,9 @@ pub fn commutative_algebra(ideal: &Vec[Int], ring: &Vec[Int], op_mul: fn(Int, In
 /// or a vector of zeros) of stage i+2. Each chain row is a set of elements;
 /// a single element is wrapped in a one-element vector before applying the
 /// corresponding map. Complexity: O(stages * |chain| * cost(map)).
-pub fn homological_algebra(chain: &Vec[Vec[Int]], maps: &Vec[fn(&Vec[Int]) -> Vec[Int]>) -> Bool {
+pub fn homological_algebra(chain: &Vec[Vec[Int]], maps: &Vec[fn(&Vec[Int]) -> Vec[Int]>) -> Bool
+  ensures: (chain.len() == 0) => (result == true)
+{
   var stages = chain.len();
   if stages == 0 { return true; }
   if maps.len() < stages - 1 { return false; }
@@ -334,7 +348,9 @@ pub fn homological_algebra(chain: &Vec[Vec[Int]], maps: &Vec[fn(&Vec[Int]) -> Ve
 /// composition of any composable pair (a, b) and (b, c) exists as a
 /// morphism (a, c). With the pair representation composition is then
 /// automatically associative (documented). Complexity: O(|M|^2).
-pub fn category_theory(objects: &Vec[Int], morphisms: &Vec[(Int, Int)]) -> Bool {
+pub fn category_theory(objects: &Vec[Int], morphisms: &Vec[(Int, Int)]) -> Bool
+  ensures: (objects.len() == 0 && morphisms.len() == 0) => (result == true)
+{
   var m = 0;
   while m < morphisms.len() {
     if !_contains(objects, morphisms[m].0) { return false; }
@@ -364,7 +380,9 @@ pub fn category_theory(objects: &Vec[Int], morphisms: &Vec[(Int, Int)]) -> Bool 
 /// arity: the operation is closed on elements (the result of every arity-
 /// tuple of elements is itself an element). Returns false for arity <= 0
 /// (documented). Complexity: O(|A|^arity).
-pub fn universal_algebra(operation: fn(&Vec[Int]) -> Int, arity: Int, elements: &Vec[Int]) -> Bool {
+pub fn universal_algebra(operation: fn(&Vec[Int]) -> Int, arity: Int, elements: &Vec[Int]) -> Bool
+  ensures: (arity > 0 && elements.len() == 0) => (result == true)
+{
   if arity <= 0 { return false; }
   var n = elements.len();
   if n == 0 { return true; }
@@ -398,7 +416,9 @@ pub fn universal_algebra(operation: fn(&Vec[Int]) -> Int, arity: Int, elements: 
 /// tolerance. Parameter name avoids the built-in operator identifiers (see
 /// ring_theory). Returns false when the assignment does not cover the group.
 /// Complexity: O(|G|^3 * dim^3).
-pub fn representation_theory(group: &Vec[Int], op_mul: fn(Int, Int) -> Int, matrices: &Vec[Vec[Vec[Float64]]]) -> Bool {
+pub fn representation_theory(group: &Vec[Int], op_mul: fn(Int, Int) -> Int, matrices: &Vec[Vec[Vec[Float64]]]) -> Bool
+  ensures: (group.len() == 0) => (result == true)
+{
   var n = group.len();
   if n == 0 { return true; }
   if matrices.len() != n { return false; }
@@ -424,7 +444,9 @@ pub fn representation_theory(group: &Vec[Int], op_mul: fn(Int, Int) -> Int, matr
 /// (using pair addition), and bracket(x, bracket(y, z)) + bracket(y,
 /// bracket(z, x)) + bracket(z, bracket(x, y)) == (0, 0). Complexity:
 /// O(|B|^3).
-pub fn lie_algebra(bracket: fn((Int, Int), (Int, Int)) -> (Int, Int), basis: &Vec[(Int, Int)]) -> Bool {
+pub fn lie_algebra(bracket: fn((Int, Int), (Int, Int)) -> (Int, Int), basis: &Vec[(Int, Int)]) -> Bool
+  ensures: (basis.len() == 0) => (result == true)
+{
   var n = basis.len();
   if n == 0 { return true; }
   var i = 0;
