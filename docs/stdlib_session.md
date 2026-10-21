@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 81 (updated 2026-10-21 23:20Z; **v0.64.8 PINNED + RELEASED, v0.64.9 NOT CUT**; global 95.2%, readiness 89.5%, floors196; doc_scan 100% with 0 misses; 0918 macOS witness verified; wave 208 JSON renderer flat at 10k renders/256MB (parse needs m375); battery modules 533/533, smokes 963/963, probes 399/399, barename 0/533; next: stage v0.64.9 archive when cut, run the battery, verify 1626/1451/1242/2249/2249-2/m377/1326, then tag stdlib-v0.64.9; coverage hard tail iter/os)
+## 0A. CONTINUE HERE -- handoff snapshot 81 (updated 2026-10-21 23:20Z; **v0.64.8 PINNED + RELEASED, v0.64.9 NOT CUT**; global 95.2%, readiness 89.5%, floors196; doc_scan 100% with 0 misses; 0918 macOS witness verified; wave 208 JSON byte-builder paths flat at 10k renders/256MB (parse needs m375); battery modules 533/533, smokes 963/963, probes 399/399, barename 0/533; next: stage v0.64.9 archive when cut, run the battery, verify 1626/1451/1242/2249/2249-2/m377/1326, then tag stdlib-v0.64.9; coverage hard tail iter/os)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-21, snapshot 81)
 
@@ -79,9 +79,9 @@ Immediate housekeeping:
   worktrees only if safe. Keep wave/154 (foreign). Do not merge anything.
 
 Priority before more coverage: 1704 JSON retention. Wave 208 fixed the
-stringify/pretty retention (10k renders under 256 MB on Windows and
-Linux), but the parse tree still retains and needs the compiler m375
-drop elaboration. The 0918 macOS witness is
+stringify/pretty/minify retention (10k loops under 256 MB on Windows and
+Linux), but the parse tree and builder-built values still retain and need
+the compiler m375 drop elaboration. The 0918 macOS witness is
 done: PULSE CI 39624153094 on 05673f8 is green (witness rc 0, migrations
 21/21, SQL 53/53); the item stays fixed until the reporter closes it after
 the next pin. Then verify 1626/1451/1242/2249/2249-2/m377/1326 on the
@@ -3850,7 +3850,8 @@ registry pin, agent recon for the rest)**
   `str_slice` plus a concat per character and crossed 256 MB near
   iteration 4,000-5,000; the builder path completes 10,000 under 256 MB.
   Output is byte-identical (checked against a `c8e889c` worktree on eight
-  inputs and by the new `p_serialize_minify_pretty`).
+  inputs and by the new `p_serialize_minify_pretty`; both probes are green
+  on Linux x64 too). Relay note `2d27f0f`.
 - Measured with PULSE's capped runner (official v0.64.8, 50-publication
   sample): **10,000/10,000 stringify iterations and 10,000/10,000 pretty iterations (t=51,540,000) under 256 MB on both
   Windows x64 and Linux x64 WSL**; the pre-fix path hit 256 MB near
