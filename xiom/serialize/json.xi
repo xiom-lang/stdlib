@@ -4,7 +4,7 @@
 
 module xiom.serialize.json
 
-// Depends on: xiom.serialize, xiom.string, xiom.convert
+// Depends on: xiom.serialize, xiom.string, xiom.string.builder, xiom.convert
 
 // ============================================================================
 // JSON parsing, stringification, tree navigation, raw format-preserving
