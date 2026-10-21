@@ -3827,8 +3827,9 @@ registry pin, agent recon for the rest)**
   the next pin.
 
 **SESSION 2026-10-21 block 272 (wave 208: JSON builder renderer -- stringify/pretty memory-flat; battery 397 probes; borrowed-match compiler item)**
-- Rewrote `json_stringify` and `json_pretty` in `xiom/serialize/json.xi`
-  to render into one `Vec[UInt8]` byte builder (`xiom.string.builder`)
+- Wave 208 `9f933aa`: rewrote `json_stringify` and `json_pretty` in
+  `xiom/serialize/json.xi` to render into one `Vec[UInt8]` byte builder
+  (`xiom.string.builder`)
   instead of recursive `Str` concatenation and one temporary escape
   `Vec`/`Str` per string. Output is byte-identical; one output allocation
   per call. `json_escape` and `_json_escape_impl` stay for the public
