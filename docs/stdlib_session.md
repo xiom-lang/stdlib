@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 76 (updated 2026-10-20 19:20Z; **v0.64.8 PINNED + RELEASED**; waves 202-204 merged + io.read_at_into: global 94.6%, readiness 89.5%, floors194; final battery modules 533/533, smokes 963/963, probes 391/391, barename 0/533; next: iter/os/math blockers, thread/ffi/serialize/log/async; gate 9 reds 1626/2343/2100-W1 + 1609 + compiler 2249/1242/1326/1550)
+## 0A. CONTINUE HERE -- handoff snapshot 76 (updated 2026-10-21 10:55Z; **v0.64.8 PINNED + RELEASED**; waves 202-204 + read_at_into + JSON builders: global 94.6%, readiness 89.5%, floors194; final battery modules 533/533, smokes 963/963, probes 393/393, barename 0/533; next: 1704 JSON drop/triage, 0918 macOS witness, next compiler candidate for 1626/1451/1242/2249/1326/1550; coverage hard tail iter/os/math)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-20, snapshot 76)
 
@@ -25,7 +25,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
   git -C E:\xiom-lang\xiom-relays pull --ff-only origin main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 76 + blocks 264/265 (and this 0C block).
+Read docs/stdlib_session.md snapshot 76 + blocks 265/267 (and this 0C block).
 
 State: v0.64.8 is RELEASED and PINNED. COMPILER_VERSION=v0.64.8; staged
 archive %TEMP%\kilo\stdlib_ws\v0.64.8-official (windows zip sha256
@@ -45,7 +45,7 @@ async 92.5%, ffi 93.2%, serialize 94.4%, debug 95.1%, error 95.2%,
 format 95.2%.
 
 Final battery on the merged tree (official v0.64.8): modules 533/533,
-smokes 963/963 (0 compilefail / 0 runfail), probes 391/391, barename
+smokes 963/963 (0 compilefail / 0 runfail), probes 393/393, barename
 0/533, coverage floors194 RATCHET OK, regex 17/17, doc_scan 100%
 (2 pre-existing net misses). Bug fixes on top: fraction_add cross-cancel
 (109afa1), io.rename directory-aware postcondition (19d86de), runtime
@@ -69,6 +69,11 @@ Immediate housekeeping:
   branches. Keep wave/154 (foreign).
 - Agent Manager may list stale no-session worktrees for 179/180 and the
   merged wave worktrees; clean only if safe. Do not merge anything else.
+
+Priority before more coverage: triage 1704 JSON retention (builder is a
+partial mitigation; drop elaboration is compiler-side) and 0918 macOS
+list_dir (awaiting a macos-15-intel witness), then verify 1626/1451/1242
+on the next compiler candidate.
 
 Next waves (only if a new real path exists; 2-3 parallel, same rules):
 1. iter 70.5%: 54 remaining are opaque closure adapters; stop forcing.
@@ -110,8 +115,12 @@ Relays, bugs, wishlist:
   fn-value ABI). xvector REL-20261020-1531 (shared HEAD breaks --check)
   is acked as NOT REPRODUCED: probe_hello --check rc 0 on 87090ec,
   shared and bundled. REL-20261020-1302 io.read_at_into is implemented
-  and fixed (9bad232, p_io_read_at_into). Re-test the rest on the next
-  candidate; the wave-196 probe excludes the AV combination.
+  and fixed (9bad232, p_io_read_at_into). 1704 JSON retention is acked
+  with in-place builders (526fd96) as a partial mitigation; 0918 macOS
+  list_dir is acked with p_io_listdir_roundtrip pending CI. 1626 is
+  fixed on compiler main (626dfbc65/8bfd4235d), pending the next
+  release. Re-test the rest on the next candidate; the wave-196 probe
+  excludes the AV combination.
 - Wishlist row 33 (compiler/install) open; row 47 fixed pending xvector
   verify; thread-pool item 1834 no-arg path green, persistent fleet /
   Send-Sync remain. New stdlib fixes: fraction_add, io.rename,
@@ -3786,6 +3795,26 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-21 block 267 (JSON in-place builders; macOS list_dir witness; probes 393; 94.6%)**
+- Added `JsonObjectBuilder`/`JsonArrayBuilder` in `xiom/serialize/json.xi`
+  (commit `526fd96`): one Map/Vec per builder, `put`/`push` mutate in
+  place, `build()` wraps once; no copy per key/item. Probe
+  `p_json_builder` PASS; serialize smokes 24/24.
+- `REL-20261020-1704-pulse` acked: builder-shaped 50-publication doc,
+  500 iterations on Windows x64 peaked at 219.5 MB (~0.44 MB/iter) vs
+  the json_set path hitting the 512 MB cap around 500 (~1 MB/iter).
+  Residual is `JsonValue` aggregate/drop elaboration (same class as
+  m375), plus parse/stringify retention; compiler-side drop fix needed.
+- `REL-20261021-0918-pulse` acked: not reproducible on Windows/Linux;
+  code audit found no stdlib first-byte offset. Added portable
+  `p_io_listdir_roundtrip` (20-char name, exact list+read, PASS here);
+  awaiting a macos-15-intel artifact. Likely runtime dirent/readdir ABI
+  or `Str::from_c_str`, not list_dir logic.
+- `REL-20261011-1626-stdlib` is fixed on compiler main
+  (`626dfbc65` / `8bfd4235d`), pending the next release; verify then.
+- Coverage 6527/6897 = 94.6%, clauses 9023 (96.9); probes 393.
+  Final7 battery in flight at block time.
 
 **SESSION 2026-10-20 block 266 (error wrap_error/context contracts; 6521/6891)**
 - Renamed the shadowing `result` parameters in `wrap_error` and `context`

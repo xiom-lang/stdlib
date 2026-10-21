@@ -42,10 +42,10 @@ CI lives in `.github/workflows/` (PR gates, weekly heavy suites, release).
 - 2026-10-20, compiler **`v0.64.8`** (official release archive; Windows
   x64 zip sha256 `c31d9c46...`, Linux x64 tar.gz sha256 `a8c003c0...`):
   module check **533/533 clean**, smoke corpus **963/963 PASS**
-  (0 compilefail / 0 runfail), probe corpus **391/391**, strict bare-name
+  (0 compilefail / 0 runfail), probe corpus **393/393**, strict bare-name
   scan **0/533**, coverage ratchet OK (`floors194`).
 - Contract coverage: **94.6%** of public functions carry at least one
-  clause (6521/6891); clauses/functions **96.9%** (9017). Readiness meter:
+  clause (6527/6897); clauses/functions **96.9%** (9023). Readiness meter:
   **89.5%**; gate 8 is 94.6% and gate 9 is the remaining open gate. Full
   record: `docs/PRODUCTION_READINESS_QUEUE.md` and
   `docs/stdlib_session.md` (snapshot 76).

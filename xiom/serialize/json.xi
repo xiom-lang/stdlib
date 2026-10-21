@@ -735,18 +735,21 @@ pub fn json_object_new() -> JsonValue
 /// return a JsonValue. Avoids the O(n^2) copy churn of `json_set`.
 pub type JsonObjectBuilder = { entries: Map[Str, JsonValue]; }
 
+/// New empty JSON object builder.
 pub fn json_object_builder_new() -> JsonObjectBuilder
   ensures: result.entries.len() == 0
 {
   return JsonObjectBuilder{ entries: Map[Str, JsonValue].new() };
 }
 
+/// Insert or replace one key in the object builder.
 pub fn JsonObjectBuilder.put(&mut self, key: Str, value: JsonValue)
   ensures: self.entries.contains(&key)
 {
   self.entries.insert(key, value);
 }
 
+/// Wrap the object builder's entries as a JSON object.
 pub fn JsonObjectBuilder.build(self) -> JsonValue
   ensures: json_type(result) == "object"
 {
@@ -756,18 +759,21 @@ pub fn JsonObjectBuilder.build(self) -> JsonValue
 /// In-place array builder: one Vec, no copy per item.
 pub type JsonArrayBuilder = { items: Vec[JsonValue]; }
 
+/// New empty JSON array builder.
 pub fn json_array_builder_new() -> JsonArrayBuilder
   ensures: result.items.len() == 0
 {
   return JsonArrayBuilder{ items: Vec[JsonValue].new() };
 }
 
+/// Append one item to the array builder.
 pub fn JsonArrayBuilder.push(&mut self, item: JsonValue)
   ensures: self.items.len() >= 1
 {
   self.items.push(item);
 }
 
+/// Wrap the array builder's items as a JSON array.
 pub fn JsonArrayBuilder.build(self) -> JsonValue
   ensures: json_type(result) == "array"
 {

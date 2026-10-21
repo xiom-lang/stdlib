@@ -7,8 +7,8 @@ main pin `v0.64.8` after the block-259 battery; compiler v0.64.8 pins
 `STDLIB_VERSION=stdlib-v0.64.8`; registry `xiom-std 0.64.8` is live, run
 39298965606 re-ran green after the ops mapping fix.)
 **Gates: merged corpus 963/963 (0 compilefail / 0 runfail), modules
-533/533, probes 391/391, barename 0/533, floors194. Wave pin: v0.64.8
-(block 265).**
+533/533, probes 393/393, barename 0/533, floors194. Wave pin: v0.64.8
+(block 267).**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -17,16 +17,17 @@ gates flip:
 2. Smoke corpus green -- MET: merged 963/963 on v0.64.8 (0/0),
    including the directory-rename regression; plus 956/956 on both
    Windows and Ubuntu release gates, no carve-outs.
-3. Probe corpus green -- MET (391/391; waves 188-204, fraction-add,
+3. Probe corpus green -- MET (393/393; waves 188-204, fraction-add,
    io.rename, hash-shadow, async-select, Routh, executor, small-gap,
-   math-os, long-tail, mid-gap, math, os/iter, final-gap, and
-   read_at_into probes are included and individually green).
+   math-os, long-tail, mid-gap, math, os/iter, final-gap, read_at_into,
+   JSON-builder, and list_dir-roundtrip probes are included and
+   individually green).
 4. Strict bare-name scan clean -- MET (0/533).
 5. Coverage ratchet green -- MET (floors194).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (499/542 modules, 3501/6575 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN
-   (94.6%, 6521/6891; clauses/fns 96.9%, 9017 clauses; floors194).
+   (94.6%, 6527/6897; clauses/fns 96.9%, 9023 clauses; floors194).
    Waves 202-204 lifted math 83.4% -> 87.7%, iter 61.7% -> 70.5%,
    async 86.6% -> 92.5%, ptr 100%, misc/compress/sync/text 100%, num
    99.8%; string/collect/convert/bits/net/core/stats/regex and many
@@ -46,10 +47,16 @@ gates flip:
    REL-20261020-1550 (tuple-returning fn-value ABI). xvector claim
    REL-20261020-1531 does not reproduce on 87090ec (check rc 0); acked.
    REL-20261020-1302 `io.read_at_into` caller-buffer page reader is
-   implemented and fixed.
+   implemented and fixed. REL-20261020-1704 JSON builders are
+   implemented as a partial mitigation (acked; drop elaboration remains
+   compiler-side). REL-20261021-0918 macOS list_dir is acked with a
+   portable witness, pending a macos-15-intel artifact. REL-20261011-1626
+   is fixed on compiler main (626dfbc65/8bfd4235d), pending the next
+   release.
    New stdlib fixes this cycle: fraction_add, io.rename directory
    postcondition, Routh-Hurwitz, weekday convention, AsyncExecutor.run
-   receiver drain, Vec4f lane pointer arithmetic, read_at_into.
+   receiver drain, Vec4f lane pointer arithmetic, read_at_into, JSON
+   in-place builders.
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- MET
     (stdlib-v0.64.8 released 2026-10-19; tag object 0bf5b75 -> commit
     112c5b6; release run 39289746856; assets + SHA256SUMS published;
@@ -74,11 +81,13 @@ pin v0.64.8** (tag object `0bf5b75` -> commit `112c5b6` with tag-time
 async 92.5%, os 71.5%, thread 91.1%, compress 100%, math 87.7%,
 bits 100%, iter 70.5%, core 99.2%, simd 97.8%, ffi 93.2%; collections/
 array/cell and many smaller modules at 100%. Gates: modules 533/533,
-smokes 963/963, probes 391/391, barename 0/533, floors194. Also fixed
+smokes 963/963, probes 393/393, barename 0/533, floors194. Also fixed
 this cycle: runtime `__udivti3`, `fraction_add`, `io.rename` directory
 postcondition, Routh-Hurwitz, weekday convention, `AsyncExecutor.run`
-receiver drain, Vec4f lane pointer arithmetic, and the caller-buffer
-`io.read_at_into` page reader. Gate 8 is 94.6%;
+receiver drain, Vec4f lane pointer arithmetic, the caller-buffer
+`io.read_at_into` page reader, and in-place JSON builders. New open
+items: 1704 JSON retention (partial builder mitigation; compiler drop
+elaboration remains) and 0918 macOS list_dir (witness pending). Gate 8 is 94.6%;
 readiness is 89.5%; gate 9 reds are 1626/2343/2100-W1 plus 1609.
 Historical state below is retained.
 
