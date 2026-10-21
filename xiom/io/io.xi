@@ -46,6 +46,7 @@ extern "C" {
   fn readdir(dir: *UInt8) -> *UInt8;
   fn closedir(dir: *UInt8) -> Int32;
   fn xiom_dirent_name(entry: *UInt8) -> *UInt8;
+  fn xiom_list_dir_names(path: *UInt8) -> *UInt8;
   fn xiom_stat_is_file(path: *UInt8) -> Int32;
   fn xiom_stat_is_dir(path: *UInt8) -> Int32;
   fn xiom_stat_size(path: *UInt8) -> Int;
@@ -368,33 +369,27 @@ pub fn list_dir(path: Str) -> Result[Vec[Str], IOError]
   requires: is_dir(path)
   ensures:  result is Ok => result.len() >= 0
 {
-  let dir: *UInt8;
+  let ptr: *UInt8;
   unsafe {
-    dir = opendir(path.c_str());
+    ptr = xiom_list_dir_names(path.c_str());
   }
-  if dir == 0 {
+  if ptr == 0 {
     return Err(IOError{ message: "failed to open directory: " + path, code: 7 });
   }
   var entries: Vec[Str] = Vec[Str]::new();
-  var entry: *UInt8;
   unsafe {
-    entry = readdir(dir);
-  }
-  while entry != 0 {
-    let name_ptr: *UInt8;
-    unsafe {
-      name_ptr = xiom_dirent_name(entry);
+    var off = 0;
+    var done = false;
+    while done == false {
+      let name = Str::from_c_str(ptr.offset(off));
+      if name.len() == 0 {
+        done = true;
+      } else {
+        entries.push(name);
+        off = off + name.len() + 1;
+      }
     }
-    let name = Str::from_c_str(name_ptr);
-    if name != "." && name != ".." {
-      entries.push(name);
-    }
-    unsafe {
-      entry = readdir(dir);
-    }
-  }
-  unsafe {
-    let _ = closedir(dir);
+    xiom_free(ptr);
   }
   Ok(entries)
 }

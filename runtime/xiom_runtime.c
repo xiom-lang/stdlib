@@ -4520,6 +4520,40 @@ const char* xiom_dirent_name(void* entry) {
 }
 #endif
 
+/* List a directory into one owned, NUL-separated, double-NUL-terminated
+   buffer. Keeping readdir()/struct dirent in this TU fixes the macOS
+   inode64 ABI mismatch that produced garbage names when XIOM parsed the
+   entry, and copying the names fixes the borrowed-string lifetime bug.
+   Caller owns the result (xiom_free). NULL on open/OOM failure. */
+char* xiom_list_dir_names(const char* path) {
+    if (!path) return NULL;
+    void* d = opendir(path);
+    if (!d) return NULL;
+    size_t cap = 1024, used = 0;
+    char* buf = (char*)malloc(cap);
+    if (!buf) { closedir(d); return NULL; }
+    void* e;
+    while ((e = readdir(d)) != NULL) {
+        const char* name = xiom_dirent_name(e);
+        if (!name || name[0] == '\0') continue;
+        if (strcmp(name, ".") == 0 || strcmp(name, "..") == 0) continue;
+        size_t n = strlen(name) + 1;
+        if (used + n + 1 > cap) {
+            size_t ncap = cap;
+            while (used + n + 1 > ncap) ncap *= 2;
+            char* nb = (char*)realloc(buf, ncap);
+            if (!nb) { free(buf); closedir(d); return NULL; }
+            buf = nb;
+            cap = ncap;
+        }
+        memcpy(buf + used, name, n);
+        used += n;
+    }
+    closedir(d);
+    buf[used] = '\0';
+    return buf;
+}
+
 // ============================================================================
 // System Info
 // ============================================================================

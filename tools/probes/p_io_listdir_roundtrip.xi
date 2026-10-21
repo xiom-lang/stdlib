@@ -21,6 +21,10 @@ fn main() -> Int {
   };
 
   let listing = list_dir(dir);
+  // Force an allocation after list_dir: the old implementation returned
+  // borrowed dirent buffers that went stale here.
+  let junk = "x" + "y";
+  if junk.len() != 2 { let _ = remove_file(path); return 6; }
   if listing.is_err { let _ = remove_file(path); return 2; }
   var found = false;
   var i = 0;
