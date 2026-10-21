@@ -1,4 +1,4 @@
-<!--
+﻿<!--
 Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 SPDX-License-Identifier: MIT OR Apache-2.0
 -->
@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 81 (updated 2026-10-21 20:35Z; **v0.64.8 PINNED + RELEASED, v0.64.9 NOT CUT**; global 95.2%, readiness 89.5%, floors196; doc_scan 100% with 0 misses; 0918 macOS witness verified; wave 208 JSON renderer flat at 10k renders/256MB (parse needs m375); battery modules 533/533, smokes 963/963, probes 398/398, barename 0/533; next: stage v0.64.9 archive when cut, run the battery, verify 1626/1451/1242/2249/2249-2/m377, then tag stdlib-v0.64.9; coverage hard tail iter/os)
+## 0A. CONTINUE HERE -- handoff snapshot 81 (updated 2026-10-21 23:20Z; **v0.64.8 PINNED + RELEASED, v0.64.9 NOT CUT**; global 95.2%, readiness 89.5%, floors196; doc_scan 100% with 0 misses; 0918 macOS witness verified; wave 208 JSON renderer flat at 10k renders/256MB (parse needs m375); battery modules 533/533, smokes 963/963, probes 398/398, barename 0/533; next: stage v0.64.9 archive when cut, run the battery, verify 1626/1451/1242/2249/2249-2/m377, then tag stdlib-v0.64.9; coverage hard tail iter/os)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-21, snapshot 81)
 
@@ -2186,7 +2186,7 @@ registry-publish
 workflow verifies the downloaded
 `xiom-<version>-linux-x64.tar.gz` against the release's published
 `SHA256SUMS` (registry lane independently verified the manifest
-`8839e5cc…` and the archive `4cc5d62b…`). The nightly heavy CI already
+`8839e5ccâ€¦` and the archive `4cc5d62bâ€¦`). The nightly heavy CI already
 tests compiler `main`. NOTE: history was rewritten 2026-09-20
 (owner-authorized): every author/committer/tagger is
 `Lefteris Notas <lefterisnotas@gmail.com>`, `main` force-pushed to HEAD
@@ -3835,7 +3835,7 @@ registry pin, agent recon for the rest)**
   `Vec`/`Str` per string. Output is byte-identical; one output allocation
   per call. `json_escape` and `_json_escape_impl` stay for the public
   escape API.
-- Second half (same wave): the residual 135 KB/iter was
+- Second half 72b2b4c: the residual 135 KB/iter was
   `convert.float_to_string` (50 calls per sample, ~2.5 KB each). Number
   rendering is now allocation-free (`_json_push_float` plus digit helpers
   that push straight into the builder, mirroring float_to_string's
@@ -3864,7 +3864,7 @@ registry pin, agent recon for the rest)**
 - REL-20261020-1704 stays acked for the parse half: stringify/pretty
   retention is now flat in the 10k capped probe, but parse still retains
   and needs the compiler m375 drop elaboration. CHANGELOG Unreleased
-  carries the fix; the relay note records the final numbers.
+  carries the fix; relay final note 8a02b4d.
 - Release prep for the next cut: `release-notes/v0.64.9.md` drafted with
   two highlights (contract coverage/readiness, JSON and IO retention) and
   validated with the compiler's `xiom-release-notes convert --tag
@@ -11213,7 +11213,7 @@ smoke, 3,332/6,200 public fns referenced). Readiness meter in the queue:
 release). Packages intake lives at `docs/STDLIB-WISHLIST.md` (32 rows from
 the four relays; full sheet `xiom-packages/packages` @ `66f26e1`).
 
-**Shipped**: stdlib **0.62.0 released** — tag `stdlib-v0.62.0` force-updated
+**Shipped**: stdlib **0.62.0 released** â€” tag `stdlib-v0.62.0` force-updated
 to `0e63101` (ruleset bypass), GitHub Release published 2026-09-29 00:10Z
 with `xiom-std-0.62.0.tar.gz` + `SHA256SUMS`, staging canary dispatched;
 registry lane has the subject sha and re-dispatches its publish. Two release
@@ -11267,7 +11267,7 @@ module must have a smoke).
 
 **Owner directives in force**: (1) family batching allowed, 40-60 pub per
 wave to shorten the path; (2) ensure every module/function has smoke
-coverage — grow the module-smoke ratchet alongside contract waves; (3)
+coverage â€” grow the module-smoke ratchet alongside contract waves; (3)
 release before 100% is acceptable when all gates are green, coverage
 continues toward 100% in the next release.
 
@@ -13815,4 +13815,5 @@ policy applied (`docs/CI.md`, attestations, dispatch-gated registry
 publish). The single-param sweep repro remains the one open
 stdlib->compiler handoff (fails/hangs on main R45 `483f283e`; repro and
 current evidence in `tools/known_failures/README.md`).
+
 
