@@ -21,8 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   concatenation, a temporary escape `Vec`/`Str` per string, and a
   formatted `Str` per number. Output is byte-identical; 10,000 repeated
   renders complete under a 256 MB cap on Windows and Linux (the pre-fix
-  path hit the cap near iteration 500). Parse-side retention remains
-  compiler drop-elaboration work (9f933aa, REL-20261020-1704).
+  path hit the cap near iteration 500). Build- and parse-side retention
+  remains compiler drop-elaboration work (9f933aa, REL-20261020-1704).
 
 ### Fixed
 

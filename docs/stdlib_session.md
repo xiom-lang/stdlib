@@ -3864,9 +3864,10 @@ registry pin, agent recon for the rest)**
   smokes 963/963, probes 398/398, barename 0/533, floors196 RATCHET OK,
   doc_scan 100% (7474/7474, 0 misses), coverage 6564/6897 = 95.2%,
   clauses 9075 (fns 9325 after the render + number helpers; 97.3%).
-- REL-20261020-1704 stays acked for the parse half: stringify/pretty
-  retention is now flat in the 10k capped probe, but parse still retains
-  and needs the compiler m375 drop elaboration. CHANGELOG Unreleased
+- REL-20261020-1704 stays acked for the build/parse halves:
+  stringify/pretty retention is now flat in the 10k capped probe, but
+  `json_set`/builder-built trees and parse still retain and need the
+  compiler m375 drop elaboration. CHANGELOG Unreleased
   carries the fix; relay final note 8a02b4d. Current parse witness: the 10k loop is killed near iteration 3500 at 512 MB (about 145 KB per parse) on Linux; relay bc5319.
 - Release prep for the next cut: `release-notes/v0.64.9.md` drafted with
   two highlights (contract coverage/readiness, JSON and IO retention) and
