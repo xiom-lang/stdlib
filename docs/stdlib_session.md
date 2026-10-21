@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 81 (updated 2026-10-21 20:35Z; **v0.64.8 PINNED + RELEASED, v0.64.9 NOT CUT**; global 95.2%, readiness 89.5%, floors196; doc_scan 100% with 0 misses; 0918 macOS witness verified; wave 208 JSON builder renderer is memory-flat on stringify/pretty; battery modules 533/533, smokes 963/963, probes 397/397, barename 0/533; next: stage v0.64.9 archive when cut, run the battery, verify 1626/1451/1242/2249/2249-2/m377, then tag stdlib-v0.64.9; coverage hard tail iter/os)
+## 0A. CONTINUE HERE -- handoff snapshot 81 (updated 2026-10-21 20:35Z; **v0.64.8 PINNED + RELEASED, v0.64.9 NOT CUT**; global 95.2%, readiness 89.5%, floors196; doc_scan 100% with 0 misses; 0918 macOS witness verified; wave 208 builder cuts stringify retention ~3.6x (residual needs m375); battery modules 533/533, smokes 963/963, probes 397/397, barename 0/533; next: stage v0.64.9 archive when cut, run the battery, verify 1626/1451/1242/2249/2249-2/m377, then tag stdlib-v0.64.9; coverage hard tail iter/os)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-21, snapshot 81)
 
@@ -78,9 +78,10 @@ Immediate housekeeping:
   worktrees only if safe. Keep wave/154 (foreign). Do not merge anything.
 
 Priority before more coverage: 1704 JSON retention. Wave 208's builder
-renderer removed the stringify/pretty retention (2000 iterations under
-256 MB; the old concat path died near 700), but parse still retains and
-needs the compiler m375 drop elaboration. The 0918 macOS witness is
+renderer cuts the stringify/pretty retained chain about 3.6x (256 MB:
+old died near 500, builder near 1800), but a residual owned-value
+copy/drop path and the parse tree still need the compiler m375 drop
+elaboration. The 0918 macOS witness is
 done: PULSE CI 39624153094 on 05673f8 is green (witness rc 0, migrations
 21/21, SQL 53/53); the item stays fixed until the reporter closes it after
 the next pin. Then verify 1626/1451/1242/2249/2249-2/m377 on the next
@@ -3826,7 +3827,7 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
-**SESSION 2026-10-21 block 272 (wave 208: JSON builder renderer -- stringify/pretty memory-flat; battery 397 probes; borrowed-match compiler item)**
+**SESSION 2026-10-21 block 272 (wave 208: JSON builder renderer -- stringify retention cut ~3.6x; battery 397 probes; borrowed-match compiler item)**
 - Wave 208 `9f933aa`: rewrote `json_stringify` and `json_pretty` in
   `xiom/serialize/json.xi` to render into one `Vec[UInt8]` byte builder
   (`xiom.string.builder`)
@@ -3834,14 +3835,18 @@ registry pin, agent recon for the rest)**
   `Vec`/`Str` per string. Output is byte-identical; one output allocation
   per call. `json_escape` and `_json_escape_impl` stay for the public
   escape API.
-- Measured with PULSE's `capped_app.ps1` (Windows x64, official v0.64.8):
-  the old `json_stringify` path on the 50-publication sample was killed at
-  256 MB near iteration 700; the builder renderer completed 2000/2000
-  under the same cap. Probe `p_json_stringify_render` (new) checks
+- Measured with PULSE's capped runner (official v0.64.8, 50-publication
+  sample). Windows x64: the old `json_stringify` path was killed at
+  256 MB near iteration 700; the builder renderer completed 2000/2000.
+  Linux x64 WSL 10k: a pure builder loop completes 10k under 512 MB, but
+  `json_stringify` still grows about 135 KB/iter and is killed near
+  iteration 3700 at 512 MB (about 1800 at 256 MB; PULSE's pre-fix path
+  died near 500 at 256 MB). The residual is the owned `JsonValue`
+  copy/drop path, not the builder; m375 remains the full fix for parse
+  and the renderer residual. Probe `p_json_stringify_render` (new) checks
   compact/pretty golden bytes, escapes (quote/backslash/newline/tab/slash/
   control), empty containers, and 500 repeated renders. `p_json_builder`
-  and the JSON smokes stay green. Parse-side retention is untouched and
-  remains compiler m375 work.
+  and the JSON smokes stay green.
 - Borrowed-enum match is broken on v0.64.8 and was the reason the fix
   keeps owned payloads: `match &v` passes `--check` then emits
   `%tmp defined with type 'ptr' but expected 'i64'`; a larger borrowed
@@ -3852,9 +3857,11 @@ registry pin, agent recon for the rest)**
   smokes 963/963, probes 397/397, barename 0/533, floors196 RATCHET OK,
   doc_scan 100% (7474/7474, 0 misses), coverage 6564/6897 = 95.2%,
   clauses 9066 (fns 9317 after the render helper).
-- REL-20261020-1704 stays acked: the stringify/pretty half is now
-  memory-flat in the capped probe; parse retention and the m375
-  drop-elaboration fix remain. CHANGELOG Unreleased carries the fix.
+- REL-20261020-1704 stays acked: the builder cuts the stringify/pretty
+  retained allocation chain ~3.6x, but a residual owned-value copy/drop
+  path remains; parse retention and the m375 drop-elaboration fix are
+  still required. CHANGELOG Unreleased carries the partial fix, and the
+  relay note was corrected with the Linux 10k numbers (relay `33e09da`).
 - Release prep for the next cut: `release-notes/v0.64.9.md` drafted with
   two highlights (contract coverage/readiness, JSON and IO retention) and
   validated with the compiler's `xiom-release-notes convert --tag
