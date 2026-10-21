@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- `json_stringify` and `json_pretty` now render through one byte builder
+  instead of per-node string concatenation and a temporary escape `Vec`/`Str`
+  per string. Output is byte-identical; repeated rendering no longer retains
+  the intermediate allocation chain (REL-20261020-1704). The parse-side
+  retention remains compiler drop-elaboration work.
+
 ## [0.64.8] - 2026-10-19
 
 Pinned to compiler `v0.64.8`. Consumes waves 172-185: contract coverage

@@ -29,6 +29,7 @@ module xiom.serialize.json
 // ============================================================================
 
 use xiom.string;
+use xiom.string.builder;
 use xiom.convert;
 use xiom.convert.parse;
 use xiom.encoding;
@@ -494,47 +495,106 @@ pub fn json_parse(s: Str) -> Result[JsonValue, Str]
 pub fn json_stringify(v: JsonValue) -> Str
   ensures: result.len() > 0  // every JSON value renders to at least one byte
 {
-  return _json_stringify_node(v, 0);
+  // Wave 208: render into one byte builder. The old recursive
+  // concat implementation paid one Str allocation per value and per
+  // escape, and the escape Vec/Str temporaries retained under repeated
+  // build/stringify loops (REL-20261020-1704-pulse). One builder means
+  // one output allocation and no per-node concatenation.
+  var sb: Vec[UInt8] = builder.sb_new();
+  _json_render_node(v, &mut sb);
+  return builder.sb_to_str(&sb);
 }
 
-fn _json_stringify_node(v: JsonValue, depth: Int) -> Str {
+fn _json_render_node(v: JsonValue, sb: &mut Vec[UInt8]) {
   match v {
     JsonValue.Null => {
-      return "null";
+      builder.sb_push_str(sb, "null");
     }
     JsonValue.Bool(b) => {
-      if b { return "true"; }
-      return "false";
+      if b { builder.sb_push_str(sb, "true"); } else { builder.sb_push_str(sb, "false"); }
     }
-      JsonValue.Number(f) => {
-        if f != f { return "null"; }
-        if f > 1.7976931348623157e308 || f < -1.7976931348623157e308 { return "null"; }
-        return convert.float_to_string(f);
-      }
+    JsonValue.Number(f) => {
+      if f != f { builder.sb_push_str(sb, "null"); }
+      elif f > 1.7976931348623157e308 || f < -1.7976931348623157e308 { builder.sb_push_str(sb, "null"); }
+      else { builder.sb_push_str(sb, convert.float_to_string(f)); }
+    }
     JsonValue.String(s) => {
-      return "\"" + _json_escape_impl(s) + "\"";
+      builder.sb_push_byte(sb, 34);
+      _json_escape_into(s, sb);
+      builder.sb_push_byte(sb, 34);
     }
     JsonValue.Array(items) => {
-      var result = "[";
+      builder.sb_push_byte(sb, 91);
       var i = 0;
       while i < items.len() {
-        if i > 0 { result = result + ","; }
-        result = result + _json_stringify_node(items[i], depth);
+        if i > 0 { builder.sb_push_byte(sb, 44); }
+        _json_render_node(items[i], sb);
         i = i + 1;
       }
-      return result + "]";
+      builder.sb_push_byte(sb, 93);
     }
     JsonValue.Object(entries) => {
-      var result = "{";
+      builder.sb_push_byte(sb, 123);
       var i = 0;
       while i < entries.keys.len() {
-        if i > 0 { result = result + ","; }
-        result = result + "\"" + _json_escape_impl(entries.keys[i]) + "\":";
-        result = result + _json_stringify_node(entries.values[i], depth);
+        if i > 0 { builder.sb_push_byte(sb, 44); }
+        builder.sb_push_byte(sb, 34);
+        _json_escape_into(entries.keys[i], sb);
+        builder.sb_push_byte(sb, 34);
+        builder.sb_push_byte(sb, 58);
+        _json_render_node(entries.values[i], sb);
         i = i + 1;
       }
-      return result + "}";
+      builder.sb_push_byte(sb, 125);
     }
+  }
+}
+
+// Append the JSON-escaped bytes of `s` to the render builder. Same escapes
+// as _json_escape_impl, but without a temporary Vec/Str per string.
+fn _json_escape_into(s: Str, sb: &mut Vec[UInt8]) {
+  let n = s.len();
+  let base: *UInt8 = s.c_str();
+  var i = 0;
+  while i < n {
+    let b = _json_byte(base, i);
+    if b == 34 {
+      builder.sb_push_byte(sb, 92);
+      builder.sb_push_byte(sb, 34);
+    } elif b == 92 {
+      builder.sb_push_byte(sb, 92);
+      builder.sb_push_byte(sb, 92);
+    } elif b == 10 {
+      builder.sb_push_byte(sb, 92);
+      builder.sb_push_byte(sb, 110);
+    } elif b == 13 {
+      builder.sb_push_byte(sb, 92);
+      builder.sb_push_byte(sb, 114);
+    } elif b == 9 {
+      builder.sb_push_byte(sb, 92);
+      builder.sb_push_byte(sb, 116);
+    } elif b == 8 {
+      builder.sb_push_byte(sb, 92);
+      builder.sb_push_byte(sb, 98);
+    } elif b == 12 {
+      builder.sb_push_byte(sb, 92);
+      builder.sb_push_byte(sb, 102);
+    } elif b == 47 {
+      builder.sb_push_byte(sb, 92);
+      builder.sb_push_byte(sb, 47);
+    } else {
+      if b < 0x20 {
+        builder.sb_push_byte(sb, 92);
+        builder.sb_push_byte(sb, 117);
+        builder.sb_push_byte(sb, 48);
+        builder.sb_push_byte(sb, 48);
+        builder.sb_push_byte(sb, _json_hex_digit((b as Int) >> 4));
+        builder.sb_push_byte(sb, _json_hex_digit((b as Int) & 0x0F));
+      } else {
+        builder.sb_push_byte(sb, b);
+      }
+    }
+    i = i + 1;
   }
 }
 
@@ -543,64 +603,79 @@ fn _json_stringify_node(v: JsonValue, depth: Int) -> Str {
 pub fn json_pretty(v: JsonValue) -> Str
   ensures: result.len() > 0  // every JSON value renders to at least one byte
 {
-  return _json_pretty_node(v, 0);
+  var sb: Vec[UInt8] = builder.sb_new();
+  _json_pretty_render(v, 0, &mut sb);
+  return builder.sb_to_str(&sb);
 }
 
-fn _json_indent(depth: Int) -> Str {
-  var result = "";
+fn _json_indent_into(depth: Int, sb: &mut Vec[UInt8]) {
   var i = 0;
   while i < depth {
-    result = result + "  ";
+    builder.sb_push_byte(sb, 32);
+    builder.sb_push_byte(sb, 32);
     i = i + 1;
   }
-  return result;
 }
 
-fn _json_pretty_node(v: JsonValue, depth: Int) -> Str {
+// Wave 208: pretty printing renders into the same byte builder as
+// json_stringify, so repeated pretty calls do not retain per-node
+// concatenation or per-string escape temporaries.
+fn _json_pretty_render(v: JsonValue, depth: Int, sb: &mut Vec[UInt8]) {
   match v {
     JsonValue.Null => {
-      return "null";
+      builder.sb_push_str(sb, "null");
     }
     JsonValue.Bool(b) => {
-      if b { return "true"; }
-      return "false";
+      if b { builder.sb_push_str(sb, "true"); } else { builder.sb_push_str(sb, "false"); }
     }
-      JsonValue.Number(f) => {
-        if f != f { return "null"; }
-        if f > 1.7976931348623157e308 || f < -1.7976931348623157e308 { return "null"; }
-        return convert.float_to_string(f);
-      }
+    JsonValue.Number(f) => {
+      if f != f { builder.sb_push_str(sb, "null"); }
+      elif f > 1.7976931348623157e308 || f < -1.7976931348623157e308 { builder.sb_push_str(sb, "null"); }
+      else { builder.sb_push_str(sb, convert.float_to_string(f)); }
+    }
     JsonValue.String(s) => {
-      return "\"" + _json_escape_impl(s) + "\"";
+      builder.sb_push_byte(sb, 34);
+      _json_escape_into(s, sb);
+      builder.sb_push_byte(sb, 34);
     }
     JsonValue.Array(items) => {
-      if items.len() == 0 { return "[]"; }
-      var result = "[\n";
-      var i = 0;
-      while i < items.len() {
-        result = result + _json_indent(depth + 1);
-        result = result + _json_pretty_node(items[i], depth + 1);
-        if i + 1 < items.len() { result = result + ","; }
-        result = result + "\n";
-        i = i + 1;
+      if items.len() == 0 {
+        builder.sb_push_str(sb, "[]");
+      } else {
+        builder.sb_push_str(sb, "[\n");
+        var i = 0;
+        while i < items.len() {
+          _json_indent_into(depth + 1, sb);
+          _json_pretty_render(items[i], depth + 1, sb);
+          if i + 1 < items.len() { builder.sb_push_byte(sb, 44); }
+          builder.sb_push_byte(sb, 10);
+          i = i + 1;
+        }
+        _json_indent_into(depth, sb);
+        builder.sb_push_byte(sb, 93);
       }
-      result = result + _json_indent(depth) + "]";
-      return result;
     }
     JsonValue.Object(entries) => {
-      if entries.keys.len() == 0 { return "{}"; }
-      var result = "{\n";
-      var i = 0;
-      while i < entries.keys.len() {
-        result = result + _json_indent(depth + 1);
-        result = result + "\"" + _json_escape_impl(entries.keys[i]) + "\": ";
-        result = result + _json_pretty_node(entries.values[i], depth + 1);
-        if i + 1 < entries.keys.len() { result = result + ","; }
-        result = result + "\n";
-        i = i + 1;
+      if entries.keys.len() == 0 {
+        builder.sb_push_str(sb, "{}");
+      } else {
+        builder.sb_push_str(sb, "{\n");
+        var i = 0;
+        while i < entries.keys.len() {
+          _json_indent_into(depth + 1, sb);
+          builder.sb_push_byte(sb, 34);
+          _json_escape_into(entries.keys[i], sb);
+          builder.sb_push_byte(sb, 34);
+          builder.sb_push_byte(sb, 58);
+          builder.sb_push_byte(sb, 32);
+          _json_pretty_render(entries.values[i], depth + 1, sb);
+          if i + 1 < entries.keys.len() { builder.sb_push_byte(sb, 44); }
+          builder.sb_push_byte(sb, 10);
+          i = i + 1;
+        }
+        _json_indent_into(depth, sb);
+        builder.sb_push_byte(sb, 125);
       }
-      result = result + _json_indent(depth) + "}";
-      return result;
     }
   }
 }

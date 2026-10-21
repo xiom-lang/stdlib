@@ -17,15 +17,15 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 80 (updated 2026-10-21 20:10Z; **v0.64.8 PINNED + RELEASED, v0.64.9 NOT CUT**; global 95.2%, readiness 89.5%, floors196; doc_scan 100% with 0 misses; 0918 macOS witness verified by PULSE on 05673f8; next: stage v0.64.9 archive when cut, run the battery, verify 1626/1451/1242/2249/2249-2/m377, then tag stdlib-v0.64.9; coverage hard tail iter/os)
+## 0A. CONTINUE HERE -- handoff snapshot 81 (updated 2026-10-21 20:35Z; **v0.64.8 PINNED + RELEASED, v0.64.9 NOT CUT**; global 95.2%, readiness 89.5%, floors196; doc_scan 100% with 0 misses; 0918 macOS witness verified; wave 208 JSON builder renderer is memory-flat on stringify/pretty; battery modules 533/533, smokes 963/963, probes 397/397, barename 0/533; next: stage v0.64.9 archive when cut, run the battery, verify 1626/1451/1242/2249/2249-2/m377, then tag stdlib-v0.64.9; coverage hard tail iter/os)
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-21, snapshot 80)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-21, snapshot 81)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
   git -C E:\xiom-lang\xiom-relays pull --ff-only origin main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 80 + blocks 271/270 (and this 0C block).
+Read docs/stdlib_session.md snapshot 81 + blocks 272/271 (and this 0C block).
 
 State: v0.64.8 is RELEASED and PINNED; v0.64.9 is NOT cut yet (latest
 compiler release is v0.64.8, checked 2026-10-21 20:10Z). COMPILER_VERSION=v0.64.8; staged
@@ -36,8 +36,9 @@ run 39289746856; registry xiom-std 0.64.8 live (sha256 c4ab5c61..., run
 39298965606). Tags frozen; do NOT move/re-cut v0.64.8.
 
 Coverage: global pub-with-clause 95.2% (6564/6897; clauses/fns 97.3%,
-9066 clauses), readiness 89.5% (gate 8 95.2%; floors196; gates 1-7/10
-met, gate 9 open). Waves 188-207 merged: num/num.xi 100%, string 100%,
+9066 clauses; 9317 fns after the wave-208 render helper), readiness
+89.5% (gate 8 95.2%; floors196; gates 1-7/10 met, gate 9 open).
+Waves 188-208 merged: num/num.xi 100%, string 100%,
 collect 99.8%, time 96.4%, async 95.5%, os 71.5%, thread 91.1%,
 compress 100%, math 90.7%, bits 100%, iter 70.5%, core 99.2%, simd
 97.8%, ffi 94.5%, io 99.2%, test 97.7%. Worst dirs: iter 70.5%, os
@@ -46,7 +47,7 @@ compress 100%, math 90.7%, bits 100%, iter 70.5%, core 99.2%, simd
 contradictory sleep preconditions; snapshot 79's 92.9% predated that.
 
 Final battery on the merged tree (official v0.64.8): modules 533/533,
-smokes 963/963 (0 compilefail / 0 runfail), probes 396/396, barename
+smokes 963/963 (0 compilefail / 0 runfail), probes 397/397, barename
 0/533, coverage floors196 RATCHET OK, regex 17/17, doc_scan 100%
 (7474/7474, 0 misses after block 271 documented the two TLS step
 constants). Bug fixes on top: fraction_add cross-cancel
@@ -55,17 +56,20 @@ __udivti3 (1555c93), Routh-Hurwitz recurrence (07a9619), weekday
 0=Sunday (d1ee6b3), AsyncExecutor.run receiver drain (fc8e2b6), Vec4f
 lane pointer scale (2e99c81; verify on m377), io.read_at_into
 caller-buffer page reader (9bad232), in-place JSON builders (526fd96),
-and runtime-owned list_dir names (05673f8).
+runtime-owned list_dir names (05673f8), and the builder-based
+json_stringify/json_pretty renderer (wave 208).
 Probes: p_fraction_add_reduce, p_routh_stability, p_async_executor_state,
 p_hash_shadow, p_async_select_closed_drain, p_wave196_small_gaps,
 p_wave197_math_os, p_wave198_long_tail, p_wave199_mid_gaps,
 p_wave200_math, p_wave201_os_iter, p_wave202_mid_final,
 p_wave203_limited_final, p_wave204_last_mile, p_wave205_iter_os,
 p_wave206_math_thread_async, p_wave207_long_tail_residual,
-p_io_read_at_into, p_json_builder, p_io_listdir_roundtrip. Compiler
+p_io_read_at_into, p_json_builder, p_json_stringify_render,
+p_io_listdir_roundtrip. Compiler
 items: 2249 Map/Set AV, 2249-2 Vec4f lane, 1242 acked (stdlib fixed,
 verify on m377), 1326 log+serialize IR, 1550 tuple-returning fn ABI,
-1520 adapter specialization collision. 1531 xvector shared-HEAD claim
+1520 adapter specialization collision, and 1731 borrowed-enum match
+(invalid IR / garbage Str payloads). 1531 xvector shared-HEAD claim
 acked as not reproducible.
 
 Immediate housekeeping:
@@ -73,8 +77,10 @@ Immediate housekeeping:
   prune stale no-session worktree entries for 179/180 and the merged
   worktrees only if safe. Keep wave/154 (foreign). Do not merge anything.
 
-Priority before more coverage: 1704 JSON retention (builder is a partial
-mitigation; drop elaboration is compiler-side). The 0918 macOS witness is
+Priority before more coverage: 1704 JSON retention. Wave 208's builder
+renderer removed the stringify/pretty retention (2000 iterations under
+256 MB; the old concat path died near 700), but parse still retains and
+needs the compiler m375 drop elaboration. The 0918 macOS witness is
 done: PULSE CI 39624153094 on 05673f8 is green (witness rc 0, migrations
 21/21, SQL 53/53); the item stays fixed until the reporter closes it after
 the next pin. Then verify 1626/1451/1242/2249/2249-2/m377 on the next
@@ -90,7 +96,7 @@ Next waves (only if a new real path exists; 2-3 parallel, same rules):
 4. thread 91.1%, ffi 94.5%, serialize 94.7%, debug 95.1%, format 95.2%:
    remaining are no-clause printers/getters/pass-throughs; do not add
    tautologies.
-Agent prompt: scope files; read snapshot 80 + block 271; real
+Agent prompt: scope files; read snapshot 81 + block 272; real
 requires/ensures only; clause-only/no body changes; pin
 C:\Users\lefte\AppData\Local\Temp\kilo\stdlib_ws\v0.64.8-official\bin\xiom.exe;
 check_modules with unique -OutDir; coverage_scan -RatchetFile
@@ -166,6 +172,10 @@ Pitfalls:
   p_wave78 caught the regression.
 - `json_clear(&mut JsonValue)` type-checks but hangs at runtime on
   v0.64.8; do not ship mutable-enum recursion.
+- `match &enum` is broken on v0.64.8 (REL-20261021-1731): the minimal
+  shape fails codegen with `ptr` vs `i64`, and a larger borrowed renderer
+  compiles but binds Str payloads to garbage. Keep enum payloads owned;
+  `json_stringify`/`json_pretty` use owned match + one builder.
 - `io.list_dir` now returns runtime-owned copies; keep the runtime
   `xiom_list_dir_names` path (dirent stays in one TU).
 - Release ruleset bypass is expected; do not move tags.
@@ -3815,6 +3825,35 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-21 block 272 (wave 208: JSON builder renderer -- stringify/pretty memory-flat; battery 397 probes; borrowed-match compiler item)**
+- Rewrote `json_stringify` and `json_pretty` in `xiom/serialize/json.xi`
+  to render into one `Vec[UInt8]` byte builder (`xiom.string.builder`)
+  instead of recursive `Str` concatenation and one temporary escape
+  `Vec`/`Str` per string. Output is byte-identical; one output allocation
+  per call. `json_escape` and `_json_escape_impl` stay for the public
+  escape API.
+- Measured with PULSE's `capped_app.ps1` (Windows x64, official v0.64.8):
+  the old `json_stringify` path on the 50-publication sample was killed at
+  256 MB near iteration 700; the builder renderer completed 2000/2000
+  under the same cap. Probe `p_json_stringify_render` (new) checks
+  compact/pretty golden bytes, escapes (quote/backslash/newline/tab/slash/
+  control), empty containers, and 500 repeated renders. `p_json_builder`
+  and the JSON smokes stay green. Parse-side retention is untouched and
+  remains compiler m375 work.
+- Borrowed-enum match is broken on v0.64.8 and was the reason the fix
+  keeps owned payloads: `match &v` passes `--check` then emits
+  `%tmp defined with type 'ptr' but expected 'i64'`; a larger borrowed
+  renderer compiles but binds every Str payload to garbage. New known
+  failure `tools/known_failures/p_match_borrowed_enum.xi`; filed
+  REL-20261021-1731-stdlib to compiler (relay commit `a65fd0d`).
+- Full battery on the final tree (official v0.64.8): modules 533/533,
+  smokes 963/963, probes 397/397, barename 0/533, floors196 RATCHET OK,
+  doc_scan 100% (7474/7474, 0 misses), coverage 6564/6897 = 95.2%,
+  clauses 9066 (fns 9317 after the render helper).
+- REL-20261020-1704 stays acked: the stringify/pretty half is now
+  memory-flat in the capped probe; parse retention and the m375
+  drop-elaboration fix remain. CHANGELOG Unreleased carries the fix.
 
 **SESSION 2026-10-21 block 271 (relay triage: 0918 macOS witness verified by PULSE; doc_scan 0 misses; v0.64.9 still uncut)**
 - Main `52d001c` (pushed); relay note commit `2b30e74`. Tree clean
