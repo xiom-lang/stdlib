@@ -17,15 +17,15 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 78 (updated 2026-10-21 19:05Z; **v0.64.8 PINNED + RELEASED**; waves 205-207 merged: global 95.2%, readiness 89.5%, floors196; probes 396/396; next: PULSE macOS verification, 1704 compiler drop fix, next compiler candidate for 1626/1451/1242/2249/1326/1550/1520; coverage hard tail iter/os)
+## 0A. CONTINUE HERE -- handoff snapshot 79 (updated 2026-10-21 19:45Z; **v0.64.8 PINNED + RELEASED**; global 95.2%, readiness 89.5%, floors196; final battery modules 533/533, smokes 963/963, probes 396/396, barename 0/533; next: PULSE macOS verification, 1704 compiler drop fix, next compiler candidate for 1626/1451/1242/2249/1326/1550/1520, next release tag; coverage hard tail iter/os)
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-21, snapshot 78)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-21, snapshot 79)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
   git -C E:\xiom-lang\xiom-relays pull --ff-only origin main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 78 + blocks 268/269 (and this 0C block).
+Read docs/stdlib_session.md snapshot 79 + blocks 269/270 (and this 0C block).
 
 State: v0.64.8 is RELEASED and PINNED. COMPILER_VERSION=v0.64.8; staged
 archive %TEMP%\kilo\stdlib_ws\v0.64.8-official (windows zip sha256
@@ -50,8 +50,9 @@ smokes 963/963 (0 compilefail / 0 runfail), probes 396/396, barename
 (109afa1), io.rename directory-aware postcondition (19d86de), runtime
 __udivti3 (1555c93), Routh-Hurwitz recurrence (07a9619), weekday
 0=Sunday (d1ee6b3), AsyncExecutor.run receiver drain (fc8e2b6), Vec4f
-lane pointer scale (2e99c81; verify on m377), and io.read_at_into
-caller-buffer page reader (9bad232).
+lane pointer scale (2e99c81; verify on m377), io.read_at_into
+caller-buffer page reader (9bad232), in-place JSON builders (526fd96),
+and runtime-owned list_dir names (05673f8).
 Probes: p_fraction_add_reduce, p_routh_stability, p_async_executor_state,
 p_hash_shadow, p_async_select_closed_drain, p_wave196_small_gaps,
 p_wave197_math_os, p_wave198_long_tail, p_wave199_mid_gaps,
@@ -65,12 +66,9 @@ verify on m377), 1326 log+serialize IR, 1550 tuple-returning fn ABI,
 acked as not reproducible.
 
 Immediate housekeeping:
-- Stop/remove the merged Agent Manager sessions for
-  wave/205-iter-os-residual, wave/206-math-thread-async, and
-  wave/207-long-tail-residual; remove worktrees, delete the merged
-  branches. Keep wave/154 (foreign).
-- Agent Manager may list stale no-session worktrees for 179/180 and the
-  merged wave worktrees; clean only if safe. Do not merge anything else.
+- The 205-207 sessions are already stopped and their branches deleted;
+  prune stale no-session worktree entries for 179/180 and the merged
+  worktrees only if safe. Keep wave/154 (foreign). Do not merge anything.
 
 Priority before more coverage: 1704 JSON retention (builder is a partial
 mitigation; drop elaboration is compiler-side) and the macOS witness for
@@ -99,17 +97,19 @@ ci/heavy/release + tools/README, updates readiness/session.
 Relays, bugs, wishlist:
 - Pull with explicit origin main; relay commits via python tools/relay.py
   commit --lane stdlib -m "..."; never edit another lane's item.
-- Gate 9 still red on v0.64.8: REL-20261011-1626-stdlib (T001 bare
-  trailing match after push), REL-20261015-2343-stdlib (bare inline i32
-  -1 read as >=0), REL-20261016-2100-stdlib W1 (alias/full-path field +
-  close() C001), and REL-20261010-1609-stdlib (inline Result.value[i]
-  payload read, still blocking PULSE list_dir). Re-test on the next
-  compiler candidate; close only with evidence.
+- Gate 9 on v0.64.8: still red REL-20261015-2343-stdlib (bare inline
+  i32 -1 read as >=0), REL-20261016-2100-stdlib W1 (alias/full-path
+  field + close C001), and REL-20261010-1609-stdlib (inline
+  Result.value[i]; still blocks PULSE list_dir). REL-20261011-1626 is
+  fixed on compiler main (626dfbc65/8bfd4235d), and REL-20261018-1451
+  is fixed on compiler main (0acbbdc8b); verify both on the next
+  candidate. Keep 1549 blocked until 1609 is green.
 - Verified/closed on v0.64.8: 1053 (p_hash_shadow), 1456, 2328, 2000,
   1546 (m370 + p_async_select_closed_drain), 1624, 1548-5 (generic
   by-ref/slice), and 2331 runtime residual. Superseded stdlib status
-  addenda were closed. 1451 (nested generic ptr.read) is queued for the
-  next compiler candidate; 1549 list_dir stays blocked by 1609.
+  addenda were closed. 1451 (nested generic ptr.read) is fixed on
+  compiler main 0acbbdc8b, pending the next candidate; 1549 list_dir
+  stays blocked by 1609.
 - New compiler items: REL-20261019-2249-stdlib (multiple generic Map/Set
   free helpers in one program AV 0xC0000005), -2 (Vec4f lane get/write
   miscompile), REL-20261020-1242 (Vec4f pointer scale; stdlib fixed in
@@ -152,6 +152,13 @@ Pitfalls:
   fixed in 2e99c81, but lane clauses/verification wait for m377.
 - Tuple-returning fn values lose payloads through iter adapters on
   v0.64.8 (REL-20261020-1550; count is correct, fields are garbage).
+- Do not add preconditions that contradict documented clamping
+  (`thread.spawn.sleep_ms`/`async.timer_sleep`); wave 206 did and
+  p_wave78 caught the regression.
+- `json_clear(&mut JsonValue)` type-checks but hangs at runtime on
+  v0.64.8; do not ship mutable-enum recursion.
+- `io.list_dir` now returns runtime-owned copies; keep the runtime
+  `xiom_list_dir_names` path (dirent stays in one TU).
 - Release ruleset bypass is expected; do not move tags.
 - agent_manager list to review reports; idle = done; merge --no-ff; clean
   worktrees/branches.
@@ -3799,6 +3806,32 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-21 block 270 (handoff snapshot 79 -- v0.64.8 pinned; 95.2%; floors196; relay 0918 fixed; next: compiler candidate + release)**
+- Main `c827960`; final battery: modules 533/533, smokes 963/963,
+  probes 396/396, barename 0/533, floors196 ratchet OK, doc_scan 100%
+  (2 pre-existing net misses). Global 6564/6897 = 95.2%, clauses 9066
+  (97.3%), readiness 89.5% (gate 8 95.2%; gate 9 open).
+- Relay: `0918` list_dir fixed in `05673f8` (runtime-owned names,
+  dirent in one TU); PULSE macOS witness pending. `1704` acked
+  (builders `526fd96` partial; compiler m375 drop remains). `1807`
+  orbitdb feedback and `1122` next-release tag request acked. `1626`
+  fixed on compiler main (`626dfbc65` / `8bfd4235d`), pending release.
+  `1451` fixed on compiler main (`0acbbdc8b`), pending release. `1242`
+  acked (stdlib `2e99c81`, verify m377). `1520` adapter specialization
+  collision open. `2249/2249-2/1326/1550` open. `1531` non-repro acked.
+- Regression caught: wave 206 added `requires: ms >= 0` to
+  `thread.spawn.sleep_ms` and `async.timer_sleep` despite documented
+  clamping; `p_wave78_shapes` failed. Removed in `c4e057d`; do not
+  reintroduce.
+- Coverage hard tail: iter 70.5%, os 71.5% (wave 205's exact 165-function
+  blocker list; no non-tautological clauses left), math 90.7%
+  (compiler/Bool/opaque-callable limited), thread 92.9%, ffi 94.5%,
+  serialize 94.7%.
+- Next: stage v0.64.9 when cut; verify `1626/1451/1242/1520/2249/1326/1550`;
+  pin and battery; tag the next stdlib release including `read_at_into`,
+  JSON builders, and the list_dir fix. PULSE macOS witness for 0918.
+  Do not add tautologies or contradictory preconditions.
 
 **SESSION 2026-10-21 block 269 (waves 205-207: global 95.2%; math 90.7%; ffi 94.5%; io 99.2%; floors196)**
 - Merged: wave 206 math/thread/async `4c6f856` (math 87.7% -> 90.7%,
