@@ -6,13 +6,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-### Fixed
+### Added
+
+- `io.read_at_into(path, offset, &mut Vec[UInt8], len)` reuses a caller
+  buffer for page reads, clamps at EOF, and returns the byte count
+  (9bad232).
+- `JsonObjectBuilder`/`JsonArrayBuilder` mutate one Map/Vec in place
+  instead of copying the aggregate per key/item (526fd96).
+
+### Changed
 
 - `json_stringify` and `json_pretty` now render through one byte builder
-  instead of per-node string concatenation and a temporary escape `Vec`/`Str`
-  per string. Output is byte-identical; repeated rendering no longer retains
-  the intermediate allocation chain (REL-20261020-1704). The parse-side
-  retention remains compiler drop-elaboration work.
+  instead of per-node string concatenation and a temporary escape
+  `Vec`/`Str` per string. Output is byte-identical; repeated rendering no
+  longer retains the intermediate allocation chain (9f933aa,
+  REL-20261020-1704). Parse-side retention remains compiler
+  drop-elaboration work.
+
+### Fixed
+
+- `io.list_dir` returns runtime-owned entry names, so names stay valid
+  after later allocations and the macOS dirent layout no longer leaks
+  into stdlib code (05673f8).
+- `io.rename` accepts a successful directory move (19d86de).
+- `fraction_add` cross-cancels correctly (109afa1).
+- The Routh-Hurwitz recurrence is corrected (07a9619).
+- `weekday` uses 0=Sunday (d1ee6b3).
+- `AsyncExecutor.run` drains the receiver (fc8e2b6).
+- `Vec4f` lane pointer arithmetic is single-scaled (2e99c81).
+- The runtime supplies `__udivti3` for 128-bit division (1555c93).
+- Removed the contradictory negative-duration preconditions from
+  `thread.sleep_ms` and `async.timer_sleep`; both clamp as documented
+  (c4e057d).
+
+### Documentation
+
+- Documented the TLS handshake step constants; API-doc coverage is now
+  7474/7474 (52d001c).
 
 ## [0.64.8] - 2026-10-19
 

@@ -3855,6 +3855,13 @@ registry pin, agent recon for the rest)**
 - REL-20261020-1704 stays acked: the stringify/pretty half is now
   memory-flat in the capped probe; parse retention and the m375
   drop-elaboration fix remain. CHANGELOG Unreleased carries the fix.
+- Release prep for the next cut: `release-notes/v0.64.9.md` drafted with
+  two highlights (contract coverage/readiness, JSON and IO retention) and
+  validated with the compiler's `xiom-release-notes convert --tag
+  v0.64.9` (exit 0, 4 merged highlights). CHANGELOG Unreleased now lists
+  read_at_into, the JSON builders and renderer, list_dir, io.rename, and
+  the post-tag correctness fixes. Do NOT tag until the compiler v0.64.9
+  archive exists and the release lane signals.
 
 **SESSION 2026-10-21 block 271 (relay triage: 0918 macOS witness verified by PULSE; doc_scan 0 misses; v0.64.9 still uncut)**
 - Main `52d001c` (pushed); relay note commit `2b30e74`. Tree clean
