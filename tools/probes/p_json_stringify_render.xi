@@ -41,6 +41,13 @@ fn main() -> Int {
     return 3;
   }
 
+  // Non-ASCII UTF-8 passes through byte-for-byte.
+  let utf8 = json.json_stringify(json.json_string("h\u{00e9}llo \u{1f600}"));
+  if utf8 != "\"h\u{00e9}llo \u{1f600}\"" {
+    io.println("utf8 got=" + utf8);
+    return 10;
+  }
+
   // Empty containers.
   if json.json_pretty(json.json_array_new()) != "[]" { return 4; }
   if json.json_pretty(json.json_object_new()) != "{}" { return 5; }
