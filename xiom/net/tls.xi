@@ -455,7 +455,9 @@ pub const TLS_ERR_ABI: Int = 12;
 /// Handshake step codes (Ok side of tls_session_step / tls_libssl_step;
 /// these are also the backend contract's tls_handshake return codes).
 pub const TLS_STEP_DONE: Int = 1;
+/// Handshake needs more input: retry when the fd is readable.
 pub const TLS_STEP_WANT_READ: Int = 2;
+/// Handshake needs output drain: retry when the fd is writable.
 pub const TLS_STEP_WANT_WRITE: Int = 3;
 
 /// tls_err_kind_name maps a taxonomy kind to a short stable name

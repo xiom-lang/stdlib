@@ -17,17 +17,18 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 79 (updated 2026-10-21 19:45Z; **v0.64.8 PINNED + RELEASED**; global 95.2%, readiness 89.5%, floors196; final battery modules 533/533, smokes 963/963, probes 396/396, barename 0/533; next: PULSE macOS verification, 1704 compiler drop fix, next compiler candidate for 1626/1451/1242/2249/1326/1550/1520, next release tag; coverage hard tail iter/os)
+## 0A. CONTINUE HERE -- handoff snapshot 80 (updated 2026-10-21 20:10Z; **v0.64.8 PINNED + RELEASED, v0.64.9 NOT CUT**; global 95.2%, readiness 89.5%, floors196; doc_scan 100% with 0 misses; 0918 macOS witness verified by PULSE on 05673f8; next: stage v0.64.9 archive when cut, run the battery, verify 1626/1451/1242/2249/2249-2/m377, then tag stdlib-v0.64.9; coverage hard tail iter/os)
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-21, snapshot 79)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-21, snapshot 80)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
   git -C E:\xiom-lang\xiom-relays pull --ff-only origin main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 79 + blocks 269/270 (and this 0C block).
+Read docs/stdlib_session.md snapshot 80 + blocks 271/270 (and this 0C block).
 
-State: v0.64.8 is RELEASED and PINNED. COMPILER_VERSION=v0.64.8; staged
+State: v0.64.8 is RELEASED and PINNED; v0.64.9 is NOT cut yet (latest
+compiler release is v0.64.8, checked 2026-10-21 20:10Z). COMPILER_VERSION=v0.64.8; staged
 archive %TEMP%\kilo\stdlib_ws\v0.64.8-official (windows zip sha256
 c31d9c46..., linux tar.gz a8c003c0...). stdlib-v0.64.8 tag object 0bf5b75
 -> commit 112c5b6 (tag-time COMPILER_VERSION=candidate-v0.64.8-r2); release
@@ -37,16 +38,18 @@ run 39289746856; registry xiom-std 0.64.8 live (sha256 c4ab5c61..., run
 Coverage: global pub-with-clause 95.2% (6564/6897; clauses/fns 97.3%,
 9066 clauses), readiness 89.5% (gate 8 95.2%; floors196; gates 1-7/10
 met, gate 9 open). Waves 188-207 merged: num/num.xi 100%, string 100%,
-collect 99.8%, time 96.4%, async 95.5%, os 71.5%, thread 92.9%,
+collect 99.8%, time 96.4%, async 95.5%, os 71.5%, thread 91.1%,
 compress 100%, math 90.7%, bits 100%, iter 70.5%, core 99.2%, simd
 97.8%, ffi 94.5%, io 99.2%, test 97.7%. Worst dirs: iter 70.5%, os
-71.5%, math 90.7%, thread 92.9%, ffi 94.5%, serialize 94.7%, debug
-95.1%, format 95.2%.
+71.5%, math 90.7%, thread 91.1%, ffi 94.5%, serialize 94.7%, debug
+95.1%, format 95.2%. Thread is 91.1% after c4e057d removed the two
+contradictory sleep preconditions; snapshot 79's 92.9% predated that.
 
 Final battery on the merged tree (official v0.64.8): modules 533/533,
 smokes 963/963 (0 compilefail / 0 runfail), probes 396/396, barename
 0/533, coverage floors196 RATCHET OK, regex 17/17, doc_scan 100%
-(2 pre-existing net misses). Bug fixes on top: fraction_add cross-cancel
+(7474/7474, 0 misses after block 271 documented the two TLS step
+constants). Bug fixes on top: fraction_add cross-cancel
 (109afa1), io.rename directory-aware postcondition (19d86de), runtime
 __udivti3 (1555c93), Routh-Hurwitz recurrence (07a9619), weekday
 0=Sunday (d1ee6b3), AsyncExecutor.run receiver drain (fc8e2b6), Vec4f
@@ -71,20 +74,23 @@ Immediate housekeeping:
   worktrees only if safe. Keep wave/154 (foreign). Do not merge anything.
 
 Priority before more coverage: 1704 JSON retention (builder is a partial
-mitigation; drop elaboration is compiler-side) and the macOS witness for
-0918 (fix 05673f8). Then verify 1626/1451/1242/1520 on the next compiler
-candidate. Wave 205 confirmed iter/os have no non-tautological clauses
-left; do not run more clause waves there.
+mitigation; drop elaboration is compiler-side). The 0918 macOS witness is
+done: PULSE CI 39624153094 on 05673f8 is green (witness rc 0, migrations
+21/21, SQL 53/53); the item stays fixed until the reporter closes it after
+the next pin. Then verify 1626/1451/1242/2249/2249-2/m377 on the next
+compiler candidate; 1326/1550 remain open on compiler main and 1520 is
+open. Wave 205 confirmed iter/os have no non-tautological clauses left;
+do not run more clause waves there.
 
 Next waves (only if a new real path exists; 2-3 parallel, same rules):
 1. iter 70.5%: 54 remaining are opaque closure adapters; stop forcing.
 2. os 71.5%: 111 remaining are stubs/no-ops; no further clause work.
 3. math 90.7%: 94 remaining are BUG 20/23 stubs, Bool/table predicates,
    and opaque solver/closure joints; wait for compiler fixes.
-4. thread 92.9%, ffi 94.5%, serialize 94.7%, debug 95.1%, format 95.2%:
+4. thread 91.1%, ffi 94.5%, serialize 94.7%, debug 95.1%, format 95.2%:
    remaining are no-clause printers/getters/pass-throughs; do not add
    tautologies.
-Agent prompt: scope files; read snapshot 78 + block 269; real
+Agent prompt: scope files; read snapshot 80 + block 271; real
 requires/ensures only; clause-only/no body changes; pin
 C:\Users\lefte\AppData\Local\Temp\kilo\stdlib_ws\v0.64.8-official\bin\xiom.exe;
 check_modules with unique -OutDir; coverage_scan -RatchetFile
@@ -121,10 +127,13 @@ Relays, bugs, wishlist:
   and fixed (9bad232, p_io_read_at_into). 1704 JSON retention is acked
   with in-place builders (526fd96) as a partial mitigation; 0918 macOS
   list_dir is fixed in 05673f8 (runtime-owned names, dirent in one TU)
-  and awaits the macos-15-intel witness. 1626 is fixed on compiler main
-  (626dfbc65/8bfd4235d), pending the next release. REL-20261021-1520
-  (adapter specialization collision) is open. Re-test the rest on the
-  next candidate; the wave-196 probe excludes the AV combination.
+  and PULSE's macos-15-intel witness is green (CI 39624153094, migrations
+  21/21); the reporter closes it after the next pin. 1626 is fixed on
+  compiler main (626dfbc65/8bfd4235d) and 2249/2249-2/m377 (m376/m377)
+  plus 1451 (m372) are fixed there too, all pending the next release.
+  REL-20261021-1520 (adapter specialization collision) is open; 1326 and
+  1550 remain open on compiler main. Re-test the rest on the next
+  candidate; the wave-196 probe excludes the AV combination.
 - Wishlist row 33 (compiler/install) open; row 47 fixed pending xvector
   verify; thread-pool item 1834 no-arg path green, persistent fleet /
   Send-Sync remain. New stdlib fixes: fraction_add, io.rename,
@@ -3806,6 +3815,32 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-21 block 271 (relay triage: 0918 macOS witness verified by PULSE; doc_scan 0 misses; v0.64.9 still uncut)**
+- Compiler release check: no v0.64.9 tag or asset yet (latest is v0.64.8,
+  released 2026-10-19). Nothing to stage/hash-verify, so 1626/1451/1242/
+  2249/2249-2/m377 stay pending the next official archive. Compiler main
+  carries all six fixes (m1626/m372/m376/m377); 1326 and 1550 are still
+  open there and 1520 stays open.
+- REL-20261021-0918: PULSE's macos-15-intel witness is recorded in the
+  item (CI 39624153094 on 05673f8): `p_io_listdir_roundtrip` rc 0,
+  migrations 21/21, SQL 53/53, stream/suites green; the pre-fix pin still
+  fails. Status stays fixed per protocol (only the reporter moves
+  fixed -> verified/closed); note appended and relay commit `2b30e74`
+  pushed. The next pin will carry 05673f8.
+- doc_scan is now 100% with **0 misses** (7474/7474): added the two
+  missing `///` lines on `TLS_STEP_WANT_READ`/`TLS_STEP_WANT_WRITE`
+  (net/tls.xi 43/43). `check_modules` xiom.net.tls 1/1 clean; comments
+  only, no code change. Global coverage unchanged 6564/6897 = 95.2%.
+- Snapshot correction: thread pub coverage is 91.1% (51/56), not 92.9%;
+  the 92.9% figure predated `c4e057d` removing the two contradicting
+  sleep preconditions. Global/readiness figures are unchanged.
+- No new clause wave: iter/os/math/thread/ffi/serialize/format remain the
+  documented no-clause set. Checked the only non-listed candidates --
+  convert/overflow (tuple-Bool codegen bug, do not call), cstring
+  (malloc-failure unsound), log flush/rotate (empty/no-op), ANSI constants
+  (literal restatements) -- none has an honest non-tautological
+  postcondition.
 
 **SESSION 2026-10-21 block 270 (handoff snapshot 79 -- v0.64.8 pinned; 95.2%; floors196; relay 0918 fixed; next: compiler candidate + release)**
 - Main `c827960`; final battery: modules 533/533, smokes 963/963,
