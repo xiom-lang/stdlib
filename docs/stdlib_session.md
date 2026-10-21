@@ -3864,7 +3864,7 @@ registry pin, agent recon for the rest)**
 - REL-20261020-1704 stays acked for the parse half: stringify/pretty
   retention is now flat in the 10k capped probe, but parse still retains
   and needs the compiler m375 drop elaboration. CHANGELOG Unreleased
-  carries the fix; relay final note 8a02b4d.
+  carries the fix; relay final note 8a02b4d. Current parse witness: the 10k loop is killed near iteration 3500 at 512 MB (about 145 KB per parse) on Linux; relay bc5319.
 - Release prep for the next cut: `release-notes/v0.64.9.md` drafted with
   two highlights (contract coverage/readiness, JSON and IO retention) and
   validated with the compiler's `xiom-release-notes convert --tag
@@ -13815,6 +13815,7 @@ policy applied (`docs/CI.md`, attestations, dispatch-gated registry
 publish). The single-param sweep repro remains the one open
 stdlib->compiler handoff (fails/hangs on main R45 `483f283e`; repro and
 current evidence in `tools/known_failures/README.md`).
+
 
 
 
