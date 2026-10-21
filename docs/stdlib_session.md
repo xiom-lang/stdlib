@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 81 (updated 2026-10-21 23:20Z; **v0.64.8 PINNED + RELEASED, v0.64.9 NOT CUT**; global 95.2%, readiness 89.5%, floors196; doc_scan 100% with 0 misses; 0918 macOS witness verified; wave 208 JSON renderer flat at 10k renders/256MB (parse needs m375); battery modules 533/533, smokes 963/963, probes 398/398, barename 0/533; next: stage v0.64.9 archive when cut, run the battery, verify 1626/1451/1242/2249/2249-2/m377, then tag stdlib-v0.64.9; coverage hard tail iter/os)
+## 0A. CONTINUE HERE -- handoff snapshot 81 (updated 2026-10-21 23:20Z; **v0.64.8 PINNED + RELEASED, v0.64.9 NOT CUT**; global 95.2%, readiness 89.5%, floors196; doc_scan 100% with 0 misses; 0918 macOS witness verified; wave 208 JSON renderer flat at 10k renders/256MB (parse needs m375); battery modules 533/533, smokes 963/963, probes 398/398, barename 0/533; next: stage v0.64.9 archive when cut, run the battery, verify 1626/1451/1242/2249/2249-2/m377/1326, then tag stdlib-v0.64.9; coverage hard tail iter/os)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-21, snapshot 81)
 
@@ -84,9 +84,10 @@ Linux), but the parse tree still retains and needs the compiler m375
 drop elaboration. The 0918 macOS witness is
 done: PULSE CI 39624153094 on 05673f8 is green (witness rc 0, migrations
 21/21, SQL 53/53); the item stays fixed until the reporter closes it after
-the next pin. Then verify 1626/1451/1242/2249/2249-2/m377 on the next
-compiler candidate; 1326/1550 remain open on compiler main and 1520 is
-open. Wave 205 confirmed iter/os have no non-tautological clauses left;
+the next pin. Then verify 1626/1451/1242/2249/2249-2/m377/1326 on the
+next compiler candidate; 1550 remains open and 1520 is open. m1326 is
+fixed on compiler main (d50d1436e). Wave 205 confirmed iter/os have no
+non-tautological clauses left;
 do not run more clause waves there.
 
 Next waves (only if a new real path exists; 2-3 parallel, same rules):
@@ -127,8 +128,9 @@ Relays, bugs, wishlist:
   free helpers in one program AV 0xC0000005), -2 (Vec4f lane get/write
   miscompile), REL-20261020-1242 (Vec4f pointer scale; stdlib fixed in
   2e99c81, verify on m377), REL-20261020-1326 (log+serialize IR
-  `icmp eq %struct.LogLevel`), and REL-20261020-1550 (tuple-returning
-  fn-value ABI). xvector REL-20261020-1531 (shared HEAD breaks --check)
+  `icmp eq %struct.LogLevel`; fixed on compiler main d50d1436e), and
+  REL-20261020-1550 (tuple-returning fn-value ABI). xvector
+  REL-20261020-1531 (shared HEAD breaks --check)
   is acked as NOT REPRODUCED: probe_hello --check rc 0 on 87090ec,
   shared and bundled. REL-20261020-1302 io.read_at_into is implemented
   and fixed (9bad232, p_io_read_at_into). 1704 JSON retention is acked
@@ -138,9 +140,10 @@ Relays, bugs, wishlist:
   21/21); the reporter closes it after the next pin. 1626 is fixed on
   compiler main (626dfbc65/8bfd4235d) and 2249/2249-2/m377 (m376/m377)
   plus 1451 (m372) are fixed there too, all pending the next release.
-  REL-20261021-1520 (adapter specialization collision) is open; 1326 and
-  1550 remain open on compiler main. Re-test the rest on the next
-  candidate; the wave-196 probe excludes the AV combination.
+  REL-20261021-1520 (adapter specialization collision) is open; 1550
+  remains open on compiler main; m1326 is fixed there (d50d1436e).
+  Re-test the rest on the next candidate; the wave-196 probe excludes the
+  AV combination.
 - Wishlist row 33 (compiler/install) open; row 47 fixed pending xvector
   verify; thread-pool item 1834 no-arg path green, persistent fleet /
   Send-Sync remain. New stdlib fixes: fraction_add, io.rename,
@@ -13815,6 +13818,7 @@ policy applied (`docs/CI.md`, attestations, dispatch-gated registry
 publish). The single-param sweep repro remains the one open
 stdlib->compiler handoff (fails/hangs on main R45 `483f283e`; repro and
 current evidence in `tools/known_failures/README.md`).
+
 
 
 
