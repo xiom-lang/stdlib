@@ -3817,6 +3817,11 @@ registry pin, agent recon for the rest)**
   the next pin.
 
 **SESSION 2026-10-21 block 271 (relay triage: 0918 macOS witness verified by PULSE; doc_scan 0 misses; v0.64.9 still uncut)**
+- Main `52d001c` (pushed); relay note commit `2b30e74`. Tree clean
+  except the documented pre-existing `out/` and six `smoke_diag_f128_*`
+  leftovers; stale temp worktrees (`stdlib-9b88b46`, `stdlib-v0.64.8`,
+  `stdlib_wt2`) pruned, `wave/154` and the compiler/bench stdlib copies
+  kept.
 - Compiler release check: no v0.64.9 tag or asset yet (latest is v0.64.8,
   released 2026-10-19). Nothing to stage/hash-verify, so 1626/1451/1242/
   2249/2249-2/m377 stay pending the next official archive. Compiler main
