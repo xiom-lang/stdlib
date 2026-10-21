@@ -3845,7 +3845,7 @@ registry pin, agent recon for the rest)**
   fixed/scientific policy). New `p_json_number_format` checks 39 values
   (fixed/scientific thresholds, rounding, subnormals, signs) against
   `convert.float_to_string` byte for byte.
-- Same wave: `serialize.json_minify` and `serialize.json_pretty` (the
+- Same wave `ffa1310`: `serialize.json_minify` and `serialize.json_pretty` (the
   string APIs) now use the byte builder too. The old path allocated a
   `str_slice` plus a concat per character and crossed 256 MB near
   iteration 4,000-5,000; the builder path completes 10,000 under 256 MB.
