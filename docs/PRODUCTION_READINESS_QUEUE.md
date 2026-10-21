@@ -1,14 +1,14 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**89.5% -- 8 of 10 gates complete; gate 8 at 94.6% (partial credit) and
+**89.5% -- 8 of 10 gates complete; gate 8 at 95.2% (partial credit) and
 gate 9 discrete.** (Compiler pin: **v0.64.8**; stdlib-v0.64.8 tag object
 `0bf5b75` at `112c5b6` with tag-time `COMPILER_VERSION=candidate-v0.64.8-r2`;
 main pin `v0.64.8` after the block-259 battery; compiler v0.64.8 pins
 `STDLIB_VERSION=stdlib-v0.64.8`; registry `xiom-std 0.64.8` is live, run
 39298965606 re-ran green after the ops mapping fix.)
 **Gates: merged corpus 963/963 (0 compilefail / 0 runfail), modules
-533/533, probes 393/393, barename 0/533, floors194. Wave pin: v0.64.8
-(block 267).**
+533/533, probes 396/396, barename 0/533, floors196. Wave pin: v0.64.8
+(block 269).**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -17,23 +17,23 @@ gates flip:
 2. Smoke corpus green -- MET: merged 963/963 on v0.64.8 (0/0),
    including the directory-rename regression; plus 956/956 on both
    Windows and Ubuntu release gates, no carve-outs.
-3. Probe corpus green -- MET (393/393; waves 188-204, fraction-add,
+3. Probe corpus green -- MET (396/396; waves 188-207, fraction-add,
    io.rename, hash-shadow, async-select, Routh, executor, small-gap,
    math-os, long-tail, mid-gap, math, os/iter, final-gap, read_at_into,
-   JSON-builder, and list_dir-roundtrip probes are included and
-   individually green).
+   JSON-builder, list_dir-roundtrip, and residual-wave probes are
+   included and individually green).
 4. Strict bare-name scan clean -- MET (0/533).
-5. Coverage ratchet green -- MET (floors194).
+5. Coverage ratchet green -- MET (floors196).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (499/542 modules, 3501/6575 fns).
 8. Contract coverage 100% (every public fn carries clauses) -- OPEN
-   (94.6%, 6527/6897; clauses/fns 96.9%, 9023 clauses; floors194).
-   Waves 202-204 lifted math 83.4% -> 87.7%, iter 61.7% -> 70.5%,
-   async 86.6% -> 92.5%, ptr 100%, misc/compress/sync/text 100%, num
-   99.8%; string/collect/convert/bits/net/core/stats/regex and many
-   smaller dirs are 98-100%. Worst directories: iter 70.5%, os 71.5%,
-   math 87.7%, thread 91.1%, async 92.5%, ffi 93.2%, serialize 94.4%,
-   debug 95.1%, error 95.2%, format 95.2%.
+   (95.2%, 6564/6897; clauses/fns 97.3%, 9066 clauses; floors196).
+   Wave 206 lifted math 87.7% -> 90.7%, thread 91.1% -> 92.9%, async
+   92.5% -> 95.5%; wave 207 lifted ffi 93.2% -> 94.5%, io 97.5% ->
+   99.2%, test 95.5% -> 97.7%; wave 205 confirmed iter 70.5% and os
+   71.5% have no non-tautological clauses left. Worst directories:
+   iter 70.5%, os 71.5%, math 90.7%, thread 92.9%, ffi 94.5%, serialize
+   94.7%, debug 95.1%, format 95.2%.
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN. Gate 9 on v0.64.8: 1053/1456/2328/2000/1546/1624/1548-5
    verified and closed; 1626 (T001 trailing match), 2343 (bare inline
@@ -49,10 +49,12 @@ gates flip:
    REL-20261020-1302 `io.read_at_into` caller-buffer page reader is
    implemented and fixed. REL-20261020-1704 JSON builders are
    implemented as a partial mitigation (acked; drop elaboration remains
-   compiler-side). REL-20261021-0918 macOS list_dir is acked with a
-   portable witness, pending a macos-15-intel artifact. REL-20261011-1626
-   is fixed on compiler main (626dfbc65/8bfd4235d), pending the next
-   release.
+   compiler-side). REL-20261021-0918 `list_dir` is fixed in 05673f8
+   (runtime-owned names; dirent in one TU), awaiting the macOS witness.
+   REL-20261011-1626 is fixed on compiler main
+   (626dfbc65/8bfd4235d), pending the next release. New
+   REL-20261021-1520: MapIter.max/min + ZipIter.find/all/any/nth/last
+   generic specialization collision (tuple/i64 IR type).
    New stdlib fixes this cycle: fraction_add, io.rename directory
    postcondition, Routh-Hurwitz, weekday convention, AsyncExecutor.run
    receiver drain, Vec4f lane pointer arithmetic, read_at_into, JSON
@@ -81,15 +83,16 @@ pin v0.64.8** (tag object `0bf5b75` -> commit `112c5b6` with tag-time
 async 92.5%, os 71.5%, thread 91.1%, compress 100%, math 87.7%,
 bits 100%, iter 70.5%, core 99.2%, simd 97.8%, ffi 93.2%; collections/
 array/cell and many smaller modules at 100%. Gates: modules 533/533,
-smokes 963/963, probes 393/393, barename 0/533, floors194. Also fixed
+smokes 963/963, probes 396/396, barename 0/533, floors196. Also fixed
 this cycle: runtime `__udivti3`, `fraction_add`, `io.rename` directory
 postcondition, Routh-Hurwitz, weekday convention, `AsyncExecutor.run`
 receiver drain, Vec4f lane pointer arithmetic, the caller-buffer
-`io.read_at_into` page reader, and in-place JSON builders. New open
-items: 1704 JSON retention (partial builder mitigation; compiler drop
-elaboration remains) and 0918 macOS list_dir (witness pending). Gate 8 is 94.6%;
-readiness is 89.5%; gate 9 reds are 1626/2343/2100-W1 plus 1609.
-Historical state below is retained.
+`io.read_at_into` page reader, in-place JSON builders, and runtime-owned
+`list_dir` names. New open items: 1704 JSON retention (partial builder
+mitigation; compiler drop elaboration remains) and 0918 macOS list_dir
+(fixed, witness pending). Gate 8 is 95.2%; readiness is 89.5%; gate 9
+reds are 1626/2343/2100-W1 plus 1609. Historical state below is
+retained.
 
 Historical state (2026-10-11): compiler pin **v0.64.4** (released
 2026-10-12, tag f76fd47c on df493530; the lane battery runs the official

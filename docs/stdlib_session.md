@@ -17,15 +17,15 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 77 (updated 2026-10-21 17:50Z; **v0.64.8 PINNED + RELEASED**; list_dir owned names fixed; global 94.6%, readiness 89.5%, floors194; probes 393/393; next: PULSE macOS verification, 1704 compiler drop fix, next compiler candidate for 1626/1451/1242/2249/1326/1550; coverage hard tail iter/os/math)
+## 0A. CONTINUE HERE -- handoff snapshot 78 (updated 2026-10-21 19:05Z; **v0.64.8 PINNED + RELEASED**; waves 205-207 merged: global 95.2%, readiness 89.5%, floors196; probes 396/396; next: PULSE macOS verification, 1704 compiler drop fix, next compiler candidate for 1626/1451/1242/2249/1326/1550/1520; coverage hard tail iter/os)
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-20, snapshot 76)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-21, snapshot 78)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
   git -C E:\xiom-lang\xiom-relays pull --ff-only origin main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 77 + blocks 267/268 (and this 0C block).
+Read docs/stdlib_session.md snapshot 78 + blocks 268/269 (and this 0C block).
 
 State: v0.64.8 is RELEASED and PINNED. COMPILER_VERSION=v0.64.8; staged
 archive %TEMP%\kilo\stdlib_ws\v0.64.8-official (windows zip sha256
@@ -34,19 +34,18 @@ c31d9c46..., linux tar.gz a8c003c0...). stdlib-v0.64.8 tag object 0bf5b75
 run 39289746856; registry xiom-std 0.64.8 live (sha256 c4ab5c61..., run
 39298965606). Tags frozen; do NOT move/re-cut v0.64.8.
 
-Coverage: global pub-with-clause 94.6% (6518/6890; clauses/fns 96.8%,
-9008 clauses), readiness 89.5% (gate 8 94.6%; floors194; gates 1-7/10
-met, gate 9 open). Waves 188-204 merged: num/num.xi 100%, string 100%,
-collect 99.8%, time 96.4%, async 92.5%, os 71.5%, thread 91.1%,
-compress 100%, math 87.7%, bits 100%, iter 70.5%, core 99.2%, simd
-97.8%, ffi 93.2%; collections/array/cell and many smaller modules at
-100%. Worst dirs: iter 70.5%, os 71.5%, math 87.7%, thread 91.1%,
-async 92.5%, ffi 93.2%, serialize 94.4%, debug 95.1%, error 95.2%,
-format 95.2%.
+Coverage: global pub-with-clause 95.2% (6564/6897; clauses/fns 97.3%,
+9066 clauses), readiness 89.5% (gate 8 95.2%; floors196; gates 1-7/10
+met, gate 9 open). Waves 188-207 merged: num/num.xi 100%, string 100%,
+collect 99.8%, time 96.4%, async 95.5%, os 71.5%, thread 92.9%,
+compress 100%, math 90.7%, bits 100%, iter 70.5%, core 99.2%, simd
+97.8%, ffi 94.5%, io 99.2%, test 97.7%. Worst dirs: iter 70.5%, os
+71.5%, math 90.7%, thread 92.9%, ffi 94.5%, serialize 94.7%, debug
+95.1%, format 95.2%.
 
 Final battery on the merged tree (official v0.64.8): modules 533/533,
-smokes 963/963 (0 compilefail / 0 runfail), probes 393/393, barename
-0/533, coverage floors194 RATCHET OK, regex 17/17, doc_scan 100%
+smokes 963/963 (0 compilefail / 0 runfail), probes 396/396, barename
+0/533, coverage floors196 RATCHET OK, regex 17/17, doc_scan 100%
 (2 pre-existing net misses). Bug fixes on top: fraction_add cross-cancel
 (109afa1), io.rename directory-aware postcondition (19d86de), runtime
 __udivti3 (1555c93), Routh-Hurwitz recurrence (07a9619), weekday
@@ -57,40 +56,44 @@ Probes: p_fraction_add_reduce, p_routh_stability, p_async_executor_state,
 p_hash_shadow, p_async_select_closed_drain, p_wave196_small_gaps,
 p_wave197_math_os, p_wave198_long_tail, p_wave199_mid_gaps,
 p_wave200_math, p_wave201_os_iter, p_wave202_mid_final,
-p_wave203_limited_final, p_wave204_last_mile. Compiler items: 2249
-Map/Set AV, 2249-2 Vec4f lane, 1242 acked (stdlib fixed, verify on
-m377), 1326 log+serialize IR, 1550 tuple-returning fn ABI. 1531 xvector
-shared-HEAD claim acked as not reproducible.
+p_wave203_limited_final, p_wave204_last_mile, p_wave205_iter_os,
+p_wave206_math_thread_async, p_wave207_long_tail_residual,
+p_io_read_at_into, p_json_builder, p_io_listdir_roundtrip. Compiler
+items: 2249 Map/Set AV, 2249-2 Vec4f lane, 1242 acked (stdlib fixed,
+verify on m377), 1326 log+serialize IR, 1550 tuple-returning fn ABI,
+1520 adapter specialization collision. 1531 xvector shared-HEAD claim
+acked as not reproducible.
 
 Immediate housekeeping:
 - Stop/remove the merged Agent Manager sessions for
-  wave/202-mid-final-contracts, wave/203-limited-final-contracts, and
-  wave/204-last-mile-contracts; remove worktrees, delete the merged
+  wave/205-iter-os-residual, wave/206-math-thread-async, and
+  wave/207-long-tail-residual; remove worktrees, delete the merged
   branches. Keep wave/154 (foreign).
 - Agent Manager may list stale no-session worktrees for 179/180 and the
   merged wave worktrees; clean only if safe. Do not merge anything else.
 
-Priority before more coverage: triage 1704 JSON retention (builder is a
-partial mitigation; drop elaboration is compiler-side) and 0918 macOS
-list_dir (awaiting a macos-15-intel witness), then verify 1626/1451/1242
-on the next compiler candidate.
+Priority before more coverage: 1704 JSON retention (builder is a partial
+mitigation; drop elaboration is compiler-side) and the macOS witness for
+0918 (fix 05673f8). Then verify 1626/1451/1242/1520 on the next compiler
+candidate. Wave 205 confirmed iter/os have no non-tautological clauses
+left; do not run more clause waves there.
 
 Next waves (only if a new real path exists; 2-3 parallel, same rules):
 1. iter 70.5%: 54 remaining are opaque closure adapters; stop forcing.
 2. os 71.5%: 111 remaining are stubs/no-ops; no further clause work.
-3. math 87.7%: 125 remaining are BUG 20/23 stubs, Bool/table predicates,
+3. math 90.7%: 94 remaining are BUG 20/23 stubs, Bool/table predicates,
    and opaque solver/closure joints; wait for compiler fixes.
-4. thread 91.1%, ffi 93.2%, serialize 94.4%, debug 95.1%, error 95.2%,
-   format 95.2%: remaining are no-clause printers/getters/pass-throughs;
-   do not add tautologies.
-Agent prompt: scope files; read snapshot 76 + block 264; real
+4. thread 92.9%, ffi 94.5%, serialize 94.7%, debug 95.1%, format 95.2%:
+   remaining are no-clause printers/getters/pass-throughs; do not add
+   tautologies.
+Agent prompt: scope files; read snapshot 78 + block 269; real
 requires/ensures only; clause-only/no body changes; pin
 C:\Users\lefte\AppData\Local\Temp\kilo\stdlib_ws\v0.64.8-official\bin\xiom.exe;
 check_modules with unique -OutDir; coverage_scan -RatchetFile
-tools/coverage_floors194.json; doc_scan; targeted smokes/probes; add a
+tools/coverage_floors196.json; doc_scan; targeted smokes/probes; add a
 runner-compatible probe; do NOT edit floors/workflows/readiness/session
 docs/COMPILER_VERSION; commit on branch; no merge/push. Main session
-reviews, runs combined gates, merges --no-ff, dumps floors195, wires
+reviews, runs combined gates, merges --no-ff, dumps floors197, wires
 ci/heavy/release + tools/README, updates readiness/session.
 
 Relays, bugs, wishlist:
@@ -119,8 +122,9 @@ Relays, bugs, wishlist:
   with in-place builders (526fd96) as a partial mitigation; 0918 macOS
   list_dir is fixed in 05673f8 (runtime-owned names, dirent in one TU)
   and awaits the macos-15-intel witness. 1626 is fixed on compiler main
-  (626dfbc65/8bfd4235d), pending the next release. Re-test the rest on
-  the next candidate; the wave-196 probe excludes the AV combination.
+  (626dfbc65/8bfd4235d), pending the next release. REL-20261021-1520
+  (adapter specialization collision) is open. Re-test the rest on the
+  next candidate; the wave-196 probe excludes the AV combination.
 - Wishlist row 33 (compiler/install) open; row 47 fixed pending xvector
   verify; thread-pool item 1834 no-arg path green, persistent fleet /
   Send-Sync remain. New stdlib fixes: fraction_add, io.rename,
@@ -3795,6 +3799,32 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-21 block 269 (waves 205-207: global 95.2%; math 90.7%; ffi 94.5%; io 99.2%; floors196)**
+- Merged: wave 206 math/thread/async `4c6f856` (math 87.7% -> 90.7%,
+  thread 91.1% -> 92.9%, async 92.5% -> 95.5%); wave 207 long-tail
+  `7a2978b` (ffi 93.2% -> 94.5%, io 97.5% -> 99.2%, test 95.5% ->
+  97.7%); wave 205 iter/os `0832710` (no new honest clauses; exact
+  blocker list for all 165 uncovered fns).
+- Coverage: global 6564/6897 = 95.2%, clauses 9066 (97.3%); probes 396.
+  Worst dirs: iter 70.5, os 71.5, math 90.7, thread 92.9, ffi 94.5,
+  serialize 94.7, debug 95.1, format 95.2.
+- Floors196 dumped/wired; RATCHET OK. README/session updated.
+- Regression caught by final8: wave 206 added `requires: ms >= 0` to
+  `thread.spawn.sleep_ms` and `async.timer_sleep` even though both
+  document and implement clamping. `p_wave78_shapes` calls
+  `sleep_ms(-5)` and failed. Removed both preconditions (correctness
+  over the 2-clause metric); p_wave78, thread/async smokes pass.
+- Final9 probes 396/396; final8 modules 533/533, smokes 963/963,
+  barename 0/533 (before the two-line contract removal; removal is
+  type-safe). doc_scan 100% (2 pre-existing net misses).
+- New compiler bug `REL-20261021-1520-stdlib`: MapIter.max/min +
+  ZipIter.find/all/any/nth/last generic specialization collision
+  (`%struct.Tuple__T__U` vs i64 in `icmp`); Range.max + ZipIter.find
+  compiles. File under wave-205 evidence.
+- Relay: 0918 list_dir fixed (`05673f8`, macOS witness pending);
+  1704 JSON builders acked (partial, m375 remains); 1122/1807 acked;
+  1626 fixed on compiler main, pending the next release.
 
 **SESSION 2026-10-21 block 268 (list_dir owned names; macOS dirent ABI/lifetime fix)**
 - Fixed `REL-20261021-0918-pulse` in `05673f8`: new runtime
