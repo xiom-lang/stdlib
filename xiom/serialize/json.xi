@@ -1,4 +1,4 @@
-// XIOM - Serialize: JSON
+﻿// XIOM - Serialize: JSON
 // Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -514,9 +514,7 @@ fn _json_render_node(v: JsonValue, sb: &mut Vec[UInt8]) {
       if b { builder.sb_push_str(sb, "true"); } else { builder.sb_push_str(sb, "false"); }
     }
     JsonValue.Number(f) => {
-      if f != f { builder.sb_push_str(sb, "null"); }
-      elif f > 1.7976931348623157e308 || f < -1.7976931348623157e308 { builder.sb_push_str(sb, "null"); }
-      else { builder.sb_push_str(sb, convert.float_to_string(f)); }
+      _json_push_float(f, sb);
     }
     JsonValue.String(s) => {
       builder.sb_push_byte(sb, 34);
@@ -547,6 +545,167 @@ fn _json_render_node(v: JsonValue, sb: &mut Vec[UInt8]) {
       }
       builder.sb_push_byte(sb, 125);
     }
+  }
+}
+
+// Decimal helpers for the allocation-free number renderer. They mirror
+// convert.float_to_string's fixed/scientific policy and rounding exactly,
+// but push digits straight into the builder so no temporary Str is created
+// per number (the residual retention source in the PULSE probe).
+fn _json_scale10(p: Int) -> Int
+  requires: p >= 0 && p <= 18
+{
+  var s: Int = 1;
+  var k: Int = 0;
+  while k < p {
+    s = s * 10;
+    k = k + 1;
+  }
+  return s;
+}
+
+fn _json_exp10(v: Float64) -> Int
+  requires: v > 0.0
+  ensures: result >= -324 && result <= 308
+{
+  var e: Int = 0;
+  var t = v;
+  while t >= 10.0 {
+    t = t / 10.0;
+    e = e + 1;
+  }
+  while t < 1.0 {
+    t = t * 10.0;
+    e = e - 1;
+  }
+  return e;
+}
+
+fn _json_digits10(n: Int) -> Int
+  requires: n >= 0
+{
+  if n == 0 { return 1; }
+  var d = 0;
+  var x = n;
+  while x > 0 {
+    x = x / 10;
+    d = d + 1;
+  }
+  return d;
+}
+
+fn _json_trailing_zeros(n: Int) -> Int
+  requires: n >= 0
+{
+  var t = 0;
+  var x = n;
+  while x > 0 && x % 10 == 0 {
+    x = x / 10;
+    t = t + 1;
+  }
+  return t;
+}
+
+// Push ".ddd" for a non-zero fraction with `decimals` total fraction digits,
+// trailing zeros stripped (the same result as _f64_strip_frac).
+fn _json_push_frac(frac: Int, decimals: Int, sb: &mut Vec[UInt8])
+  requires: frac > 0 && decimals > 0
+{
+  builder.sb_push_byte(sb, 46);
+  var z = decimals - _json_digits10(frac);
+  while z > 0 {
+    builder.sb_push_byte(sb, 48);
+    z = z - 1;
+  }
+  let tz = _json_trailing_zeros(frac);
+  var x = frac;
+  var k = 0;
+  while k < tz {
+    x = x / 10;
+    k = k + 1;
+  }
+  builder.sb_push_int(sb, x);
+}
+
+fn _json_push_fixed(v: Float64, decimals: Int, sb: &mut Vec[UInt8])
+  requires: v >= 0.0 && decimals >= 0
+{
+  let scale = _json_scale10(decimals);
+  let scaled = convert.to_int(v * (scale as Float64) + 0.5);
+  let int_part = scaled / scale;
+  let frac = scaled % scale;
+  builder.sb_push_int(sb, int_part);
+  if frac > 0 && decimals > 0 {
+    _json_push_frac(frac, decimals, sb);
+  }
+}
+
+fn _json_push_sci(v: Float64, sb: &mut Vec[UInt8])
+  requires: v > 0.0
+{
+  var e = _json_exp10(v);
+  var m = v;
+  var k = 0;
+  while k < e {
+    m = m / 10.0;
+    k = k + 1;
+  }
+  while k > e {
+    m = m * 10.0;
+    k = k - 1;
+  }
+  let scale = _json_scale10(14);
+  var scaled = convert.to_int(m * (scale as Float64) + 0.5);
+  if scaled >= scale * 10 {
+    scaled = scaled / 10;
+    e = e + 1;
+  }
+  let int_d = scaled / scale;
+  let frac = scaled % scale;
+  builder.sb_push_int(sb, int_d);
+  if frac > 0 {
+    _json_push_frac(frac, 14, sb);
+  }
+  builder.sb_push_byte(sb, 101);
+  if e < 0 {
+    builder.sb_push_byte(sb, 45);
+    e = 0 - e;
+  } else {
+    builder.sb_push_byte(sb, 43);
+  }
+  if e < 10 { builder.sb_push_byte(sb, 48); }
+  builder.sb_push_int(sb, e);
+}
+
+fn _json_push_float(f: Float64, sb: &mut Vec[UInt8])
+  ensures: sb.len() >= 1
+{
+  if f != f {
+    builder.sb_push_str(sb, "null");
+    return;
+  }
+  if f > 1.7976931348623157e308 || f < -1.7976931348623157e308 {
+    builder.sb_push_str(sb, "null");
+    return;
+  }
+  var neg = false;
+  var v = f;
+  if f < 0.0 {
+    neg = true;
+    v = -f;
+  }
+  if neg { builder.sb_push_byte(sb, 45); }
+  if v == 0.0 {
+    builder.sb_push_byte(sb, 48);
+    return;
+  }
+  let e = _json_exp10(v);
+  if e >= 15 || e < -4 {
+    _json_push_sci(v, sb);
+  } else {
+    var dec = 14 - e;
+    if dec < 0 { dec = 0; }
+    _json_push_fixed(v, dec, sb);
   }
 }
 
@@ -629,9 +788,7 @@ fn _json_pretty_render(v: JsonValue, depth: Int, sb: &mut Vec[UInt8]) {
       if b { builder.sb_push_str(sb, "true"); } else { builder.sb_push_str(sb, "false"); }
     }
     JsonValue.Number(f) => {
-      if f != f { builder.sb_push_str(sb, "null"); }
-      elif f > 1.7976931348623157e308 || f < -1.7976931348623157e308 { builder.sb_push_str(sb, "null"); }
-      else { builder.sb_push_str(sb, convert.float_to_string(f)); }
+      _json_push_float(f, sb);
     }
     JsonValue.String(s) => {
       builder.sb_push_byte(sb, 34);
@@ -1516,3 +1673,4 @@ pub fn json_as_float(v: JsonValue) -> Option[Float64]
     _ => { return None; },
   }
 }
+

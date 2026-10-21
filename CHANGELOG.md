@@ -17,12 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Changed
 
 - `json_stringify` and `json_pretty` now render through one byte builder
-  instead of per-node string concatenation and a temporary escape
-  `Vec`/`Str` per string. Output is byte-identical and the retained
-  allocation chain is cut substantially: the pre-fix path hit a 256 MB
-  cap near iteration 500 in the PULSE probe, the builder path near 1800.
-  A residual owned-value copy/drop path remains until the compiler
-  drop-elaboration fix (9f933aa, REL-20261020-1704).
+  and allocation-free number digits instead of per-node string
+  concatenation, a temporary escape `Vec`/`Str` per string, and a
+  formatted `Str` per number. Output is byte-identical; 10,000 repeated
+  renders complete under a 256 MB cap on Windows and Linux (the pre-fix
+  path hit the cap near iteration 500). Parse-side retention remains
+  compiler drop-elaboration work (9f933aa, REL-20261020-1704).
 
 ### Fixed
 
