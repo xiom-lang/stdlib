@@ -21,8 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   concatenation, a temporary escape `Vec`/`Str` per string, and a
   formatted `Str` per number. Output is byte-identical; 10,000 repeated
   renders complete under a 256 MB cap on Windows and Linux (the pre-fix
-  path hit the cap near iteration 500). Build- and parse-side retention
+  path hit the cap near iteration 500).   Build- and parse-side retention
   remains compiler drop-elaboration work (9f933aa, REL-20261020-1704).
+- `serialize.json_minify` and `serialize.json_pretty` use the same byte
+  builder instead of a `str_slice`/concat allocation per character.
+  Output is byte-identical; 10,000 repeated calls complete under a
+  256 MB cap (both crossed it near iteration 4,000-5,000 before).
 
 ### Fixed
 

@@ -14,6 +14,7 @@ use xiom.serialize.yaml_lite;
 use xiom.collections;
 use xiom.convert;
 use xiom.encoding;
+use xiom.string.builder;
 
 /// === Serialize trait ===
 pub interface Serialize {
@@ -689,18 +690,24 @@ pub fn json_minify(s: Str) -> Result[Str, Str]
   ensures: (s.len() == 0) => (result.is_ok == true)
   ensures: result is Ok => result.len() <= s.len()
 {
-  var result = "";
+  // Wave 208: byte builder instead of one str_slice/concat per character.
+  var sb: Vec[UInt8] = builder.sb_new();
   let len = s.len();
+  let base: *UInt8 = s.c_str();
   var i: Int = 0;
   var in_string: Bool = false;
   while i < len {
     let c = get_char(s, i);
+    let b: UInt8;
+    unsafe { b = *(base + i); }
     if in_string {
-      result = result + xiom.string.str_slice(s, i, i + 1);
+      builder.sb_push_byte(sb, b);
       if c == '\\' {
         i = i + 1;
         if i < len {
-          result = result + xiom.string.str_slice(s, i, i + 1);
+          let b2: UInt8;
+          unsafe { b2 = *(base + i); }
+          builder.sb_push_byte(sb, b2);
         };
       } elif c == '\"' {
         in_string = false;
@@ -708,9 +715,9 @@ pub fn json_minify(s: Str) -> Result[Str, Str]
     } else {
       if c == '\"' {
         in_string = true;
-        result = result + "\"";
+        builder.sb_push_byte(sb, 34);
       } elif c != ' ' && c != '\t' && c != '\n' && c != '\r' {
-        result = result + xiom.string.str_slice(s, i, i + 1);
+        builder.sb_push_byte(sb, b);
       };
     };
     i = i + 1;
@@ -718,7 +725,7 @@ pub fn json_minify(s: Str) -> Result[Str, Str]
   if in_string {
     return Err("json_minify: unterminated string");
   };
-  return Ok(result);
+  return Ok(builder.sb_to_str(&sb));
 }
 
 // -- JSON pretty-print -------------------------------------------------------
@@ -729,22 +736,27 @@ pub fn json_minify(s: Str) -> Result[Str, Str]
 pub fn json_pretty(s: Str) -> Result[Str, Str]
   ensures: (s.len() == 0) => (result.is_ok == true)
 {
-  var result = "";
+  // Wave 208: byte builder instead of one str_slice/concat per character.
+  var sb: Vec[UInt8] = builder.sb_new();
   let len = s.len();
+  let base: *UInt8 = s.c_str();
   var i: Int = 0;
   var depth: Int = 0;
   var in_string: Bool = false;
   var need_newline: Bool = false;
   var need_indent: Bool = false;
-  var after_colon: Bool = false;
   while i < len {
     let c = get_char(s, i);
+    let b: UInt8;
+    unsafe { b = *(base + i); }
     if in_string {
-      result = result + xiom.string.str_slice(s, i, i + 1);
+      builder.sb_push_byte(sb, b);
       if c == '\\' {
         i = i + 1;
         if i < len {
-          result = result + xiom.string.str_slice(s, i, i + 1);
+          let b2: UInt8;
+          unsafe { b2 = *(base + i); }
+          builder.sb_push_byte(sb, b2);
         };
       } elif c == '\"' {
         in_string = false;
@@ -752,66 +764,66 @@ pub fn json_pretty(s: Str) -> Result[Str, Str]
     } else {
       if c == '\"' {
         if need_newline {
-          result = result + "\n";
+          builder.sb_push_byte(sb, 10);
           var di: Int = 0;
           while di < depth {
-            result = result + "  ";
+            builder.sb_push_byte(sb, 32);
+            builder.sb_push_byte(sb, 32);
             di = di + 1;
           };
           need_newline = false;
           need_indent = false;
         };
         in_string = true;
-        result = result + "\"";
+        builder.sb_push_byte(sb, 34);
       } elif c == '{' || c == '[' {
         if need_newline {
-          result = result + "\n";
+          builder.sb_push_byte(sb, 10);
           var di: Int = 0;
           while di < depth {
-            result = result + "  ";
+            builder.sb_push_byte(sb, 32);
+            builder.sb_push_byte(sb, 32);
             di = di + 1;
           };
           need_newline = false;
           need_indent = false;
         };
-        result = result + xiom.string.str_slice(s, i, i + 1);
+        builder.sb_push_byte(sb, b);
         depth = depth + 1;
         need_newline = true;
         need_indent = true;
       } elif c == '}' || c == ']' {
         depth = depth - 1;
         if need_newline {
-          result = result + "\n";
+          builder.sb_push_byte(sb, 10);
           var di: Int = 0;
           while di < depth {
-            result = result + "  ";
+            builder.sb_push_byte(sb, 32);
+            builder.sb_push_byte(sb, 32);
             di = di + 1;
           };
           need_newline = false;
           need_indent = false;
         };
-        result = result + xiom.string.str_slice(s, i, i + 1);
+        builder.sb_push_byte(sb, b);
         need_newline = false;
         need_indent = false;
       } elif c == ',' {
-        result = result + ",";
+        builder.sb_push_byte(sb, 44);
         need_newline = true;
         need_indent = true;
       } elif c == ':' {
-        if after_colon {
-          result = result + ": ";
-        } else {
-          result = result + ": ";
-        };
-        after_colon = true;
+        builder.sb_push_byte(sb, 58);
+        builder.sb_push_byte(sb, 32);
       } elif c == ' ' || c == '\t' || c == '\n' || c == '\r' {
         // skip whitespace
       } else {
         if need_newline {
-          result = result + "\n";
+          builder.sb_push_byte(sb, 10);
           var di: Int = 0;
           while di < depth {
-            result = result + "  ";
+            builder.sb_push_byte(sb, 32);
+            builder.sb_push_byte(sb, 32);
             di = di + 1;
           };
           need_newline = false;
@@ -820,12 +832,13 @@ pub fn json_pretty(s: Str) -> Result[Str, Str]
         if need_indent {
           var di2: Int = 0;
           while di2 < depth {
-            result = result + "  ";
+            builder.sb_push_byte(sb, 32);
+            builder.sb_push_byte(sb, 32);
             di2 = di2 + 1;
           };
           need_indent = false;
         };
-        result = result + xiom.string.str_slice(s, i, i + 1);
+        builder.sb_push_byte(sb, b);
       };
     };
     i = i + 1;
@@ -833,7 +846,7 @@ pub fn json_pretty(s: Str) -> Result[Str, Str]
   if in_string {
     return Err("json_pretty: unterminated string");
   };
-  return Ok(result);
+  return Ok(builder.sb_to_str(&sb));
 }
 
 // -- JSON path navigation ----------------------------------------------------

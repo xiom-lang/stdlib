@@ -1,4 +1,4 @@
-﻿<!--
+<!--
 Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 SPDX-License-Identifier: MIT OR Apache-2.0
 -->
@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 81 (updated 2026-10-21 23:20Z; **v0.64.8 PINNED + RELEASED, v0.64.9 NOT CUT**; global 95.2%, readiness 89.5%, floors196; doc_scan 100% with 0 misses; 0918 macOS witness verified; wave 208 JSON renderer flat at 10k renders/256MB (parse needs m375); battery modules 533/533, smokes 963/963, probes 398/398, barename 0/533; next: stage v0.64.9 archive when cut, run the battery, verify 1626/1451/1242/2249/2249-2/m377/1326, then tag stdlib-v0.64.9; coverage hard tail iter/os)
+## 0A. CONTINUE HERE -- handoff snapshot 81 (updated 2026-10-21 23:20Z; **v0.64.8 PINNED + RELEASED, v0.64.9 NOT CUT**; global 95.2%, readiness 89.5%, floors196; doc_scan 100% with 0 misses; 0918 macOS witness verified; wave 208 JSON renderer flat at 10k renders/256MB (parse needs m375); battery modules 533/533, smokes 963/963, probes 399/399, barename 0/533; next: stage v0.64.9 archive when cut, run the battery, verify 1626/1451/1242/2249/2249-2/m377/1326, then tag stdlib-v0.64.9; coverage hard tail iter/os)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-21, snapshot 81)
 
@@ -47,7 +47,7 @@ compress 100%, math 90.7%, bits 100%, iter 70.5%, core 99.2%, simd
 contradictory sleep preconditions; snapshot 79's 92.9% predated that.
 
 Final battery on the merged tree (official v0.64.8): modules 533/533,
-smokes 963/963 (0 compilefail / 0 runfail), probes 398/398, barename
+smokes 963/963 (0 compilefail / 0 runfail), probes 399/399, barename
 0/533, coverage floors196 RATCHET OK, regex 17/17, doc_scan 100%
 (7474/7474, 0 misses after block 271 documented the two TLS step
 constants). Bug fixes on top: fraction_add cross-cancel
@@ -65,7 +65,7 @@ p_wave200_math, p_wave201_os_iter, p_wave202_mid_final,
 p_wave203_limited_final, p_wave204_last_mile, p_wave205_iter_os,
 p_wave206_math_thread_async, p_wave207_long_tail_residual,
 p_io_read_at_into, p_json_builder, p_json_stringify_render,
-p_json_number_format,
+p_json_number_format, p_serialize_minify_pretty,
 p_io_listdir_roundtrip. Compiler
 items: 2249 Map/Set AV, 2249-2 Vec4f lane, 1242 acked (stdlib fixed,
 verify on m377), 1326 log+serialize IR, 1550 tuple-returning fn ABI,
@@ -3830,7 +3830,7 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
-**SESSION 2026-10-21 block 272 (wave 208: JSON builder renderer -- stringify retention fixed, 10k renders under 256MB; battery 398 probes; borrowed-match compiler item)**
+**SESSION 2026-10-21 block 272 (wave 208: JSON builder renderer -- stringify retention fixed, 10k renders under 256MB; battery 399 probes; borrowed-match compiler item)**
 - Wave 208 `9f933aa`: rewrote `json_stringify` and `json_pretty` in
   `xiom/serialize/json.xi` to render into one `Vec[UInt8]` byte builder
   (`xiom.string.builder`)
@@ -3842,9 +3842,15 @@ registry pin, agent recon for the rest)**
   `convert.float_to_string` (50 calls per sample, ~2.5 KB each). Number
   rendering is now allocation-free (`_json_push_float` plus digit helpers
   that push straight into the builder, mirroring float_to_string's
-  fixed/scientific policy). New `p_json_number_format` checks 32 values
+  fixed/scientific policy). New `p_json_number_format` checks 39 values
   (fixed/scientific thresholds, rounding, subnormals, signs) against
   `convert.float_to_string` byte for byte.
+- Same wave: `serialize.json_minify` and `serialize.json_pretty` (the
+  string APIs) now use the byte builder too. The old path allocated a
+  `str_slice` plus a concat per character and crossed 256 MB near
+  iteration 4,000-5,000; the builder path completes 10,000 under 256 MB.
+  Output is byte-identical (checked against a `c8e889c` worktree on eight
+  inputs and by the new `p_serialize_minify_pretty`).
 - Measured with PULSE's capped runner (official v0.64.8, 50-publication
   sample): **10,000/10,000 stringify iterations and 10,000/10,000 pretty iterations (t=51,540,000) under 256 MB on both
   Windows x64 and Linux x64 WSL**; the pre-fix path hit 256 MB near
@@ -3861,7 +3867,7 @@ registry pin, agent recon for the rest)**
   failure `tools/known_failures/p_match_borrowed_enum.xi`; filed
   REL-20261021-1731-stdlib to compiler (relay commit `a65fd0d`).
 - Full battery on the final tree (official v0.64.8): modules 533/533,
-  smokes 963/963, probes 398/398, barename 0/533, floors196 RATCHET OK,
+  smokes 963/963, probes 399/399, barename 0/533, floors196 RATCHET OK,
   doc_scan 100% (7474/7474, 0 misses), coverage 6564/6897 = 95.2%,
   clauses 9075 (fns 9325 after the render + number helpers; 97.3%).
 - REL-20261020-1704 stays acked for the build/parse halves:
@@ -13819,8 +13825,3 @@ policy applied (`docs/CI.md`, attestations, dispatch-gated registry
 publish). The single-param sweep repro remains the one open
 stdlib->compiler handoff (fails/hangs on main R45 `483f283e`; repro and
 current evidence in `tools/known_failures/README.md`).
-
-
-
-
-
