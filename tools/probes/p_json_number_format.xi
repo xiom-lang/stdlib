@@ -37,6 +37,12 @@ fn main() -> Int {
   vals.push(1.0e-4);
   vals.push(1.0e-5);
   vals.push(9.007199254740992e15);
+  vals.push(9.999999999999999e15);
+  vals.push(9.999999999999999e-5);
+  vals.push(1.234567890123456e15);
+  vals.push(1.234567890123456e-4);
+  vals.push(9.999999999999999);
+  vals.push(-9.999999999999999);
   vals.push(0.30000000000000004);
   vals.push(2.5);
   vals.push(2.5000000000000004);
