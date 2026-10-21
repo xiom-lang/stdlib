@@ -731,6 +731,49 @@ pub fn json_object_new() -> JsonValue
   return JsonValue.Object(Map[Str, JsonValue].new());
 }
 
+/// In-place object builder: one Map, no copy per key. Call `build()` to
+/// return a JsonValue. Avoids the O(n^2) copy churn of `json_set`.
+pub type JsonObjectBuilder = { entries: Map[Str, JsonValue]; }
+
+pub fn json_object_builder_new() -> JsonObjectBuilder
+  ensures: result.entries.len() == 0
+{
+  return JsonObjectBuilder{ entries: Map[Str, JsonValue].new() };
+}
+
+pub fn JsonObjectBuilder.put(&mut self, key: Str, value: JsonValue)
+  ensures: self.entries.contains(&key)
+{
+  self.entries.insert(key, value);
+}
+
+pub fn JsonObjectBuilder.build(self) -> JsonValue
+  ensures: json_type(result) == "object"
+{
+  return JsonValue.Object(self.entries);
+}
+
+/// In-place array builder: one Vec, no copy per item.
+pub type JsonArrayBuilder = { items: Vec[JsonValue]; }
+
+pub fn json_array_builder_new() -> JsonArrayBuilder
+  ensures: result.items.len() == 0
+{
+  return JsonArrayBuilder{ items: Vec[JsonValue].new() };
+}
+
+pub fn JsonArrayBuilder.push(&mut self, item: JsonValue)
+  ensures: self.items.len() >= 1
+{
+  self.items.push(item);
+}
+
+pub fn JsonArrayBuilder.build(self) -> JsonValue
+  ensures: json_type(result) == "array"
+{
+  return JsonValue.Array(self.items);
+}
+
 /// A new empty JSON array.
 /// Complexity: O(1).
 pub fn json_array_new() -> JsonValue
