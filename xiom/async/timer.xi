@@ -65,9 +65,7 @@ pub fn timer_new() -> Timer
 /// Cooperatively sleep `ms` milliseconds.
 /// Params: ms - the sleep duration (clamped to >= 0).
 /// Complexity: O(1) syscall.
-pub fn timer_sleep(ms: Int)
-  requires: ms >= 0
-{
+pub fn timer_sleep(ms: Int) {
   var m = ms;
   if m < 0 {
     m = 0;
