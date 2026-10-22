@@ -5,6 +5,7 @@
 module xiom.serialize.toml
 
 use xiom.string;
+use xiom.string.builder;
 use xiom.convert;
 
 /// TOML v1 reader (the subset a package manifest needs).
@@ -492,28 +493,34 @@ pub fn toml_keys(t: &TomlTable) -> Vec[Str]
 // TOML writer (emitter) -- mirrors the reader subset exactly.
 // ============================================================================
 
-fn _toml_escape(s: Str) -> Str {
-  var out = "";
-  let len = string.str_len(s);
+// Wave 209: push the writer into a byte builder (same retention family as
+// REL-20261020-1704; repeated toml_write crossed 256 MB near iteration 2,500).
+fn _toml_push_escape(s: Str, sb: &mut Vec[UInt8]) {
+  let base: *UInt8 = s.c_str();
   var i = 0;
-  while i < len {
-    let b = string.byte_at(s, i);
+  while i < s.len() {
+    let b: UInt8;
+    unsafe { b = *(base + i); }
     if b == 92 {
-      out = out + "\\\\";
+      builder.sb_push_byte(sb, 92);
+      builder.sb_push_byte(sb, 92);
     } elif b == 34 {
-      out = out + "\\\"";
+      builder.sb_push_byte(sb, 92);
+      builder.sb_push_byte(sb, 34);
     } elif b == 10 {
-      out = out + "\\n";
+      builder.sb_push_byte(sb, 92);
+      builder.sb_push_byte(sb, 110);
     } elif b == 9 {
-      out = out + "\\t";
+      builder.sb_push_byte(sb, 92);
+      builder.sb_push_byte(sb, 116);
     } elif b == 13 {
-      out = out + "\\r";
+      builder.sb_push_byte(sb, 92);
+      builder.sb_push_byte(sb, 114);
     } else {
-      out = out + string.str_slice(s, i, i + 1);
+      builder.sb_push_byte(sb, b);
     }
     i = i + 1;
   }
-  return out;
 }
 
 fn _toml_bare_byte(b: Int) -> Bool {
@@ -523,17 +530,26 @@ fn _toml_bare_byte(b: Int) -> Bool {
   return b == 95 || b == 45;
 }
 
-fn _toml_write_key(k: Str) -> Str {
+fn _toml_push_key(k: Str, sb: &mut Vec[UInt8]) {
   let len = string.str_len(k);
-  if len == 0 { return "\"\""; }
+  if len == 0 {
+    builder.sb_push_str(sb, "\"\"");
+    return;
+  }
+  let base: *UInt8 = k.c_str();
   var i = 0;
   while i < len {
-    if !_toml_bare_byte(string.byte_at(k, i)) {
-      return "\"" + _toml_escape(k) + "\"";
+    let b: UInt8;
+    unsafe { b = *(base + i); }
+    if !_toml_bare_byte(b as Int) {
+      builder.sb_push_byte(sb, 34);
+      _toml_push_escape(k, sb);
+      builder.sb_push_byte(sb, 34);
+      return;
     }
     i = i + 1;
   }
-  return k;
+  builder.sb_push_str(sb, k);
 }
 
 fn _toml_has_float_marker(s: Str) -> Bool {
@@ -555,46 +571,51 @@ fn _toml_write_float(f: Float64) -> Str {
   return s + ".0";
 }
 
-fn _toml_write_value(v: TomlValue) -> Str {
+fn _toml_push_value(v: TomlValue, sb: &mut Vec[UInt8]) {
   match v {
-    TomlValue.TStr(s) => { return "\"" + _toml_escape(s) + "\""; },
-    TomlValue.TInt(n) => { return convert.int_to_string(n); },
-    TomlValue.TFloat(f) => { return _toml_write_float(f); },
+    TomlValue.TStr(s) => {
+      builder.sb_push_byte(sb, 34);
+      _toml_push_escape(s, sb);
+      builder.sb_push_byte(sb, 34);
+    },
+    TomlValue.TInt(n) => { builder.sb_push_int(sb, n); },
+    TomlValue.TFloat(f) => { builder.sb_push_str(sb, _toml_write_float(f)); },
     TomlValue.TBool(b) => {
-      if b { return "true"; }
-      return "false";
+      if b { builder.sb_push_str(sb, "true"); } else { builder.sb_push_str(sb, "false"); }
     },
     TomlValue.TStrArray(items) => {
-      var out = "[";
+      builder.sb_push_byte(sb, 91);
       var i = 0;
       while i < items.len() {
-        if i > 0 { out = out + ", "; }
-        out = out + "\"" + _toml_escape(items[i]) + "\"";
+        if i > 0 { builder.sb_push_str(sb, ", "); }
+        builder.sb_push_byte(sb, 34);
+        _toml_push_escape(items[i], sb);
+        builder.sb_push_byte(sb, 34);
         i = i + 1;
       }
-      return out + "]";
+      builder.sb_push_byte(sb, 93);
     },
     TomlValue.TIntArray(items) => {
-      var out = "[";
+      builder.sb_push_byte(sb, 91);
       var i = 0;
       while i < items.len() {
-        if i > 0 { out = out + ", "; }
-        out = out + convert.int_to_string(items[i]);
+        if i > 0 { builder.sb_push_str(sb, ", "); }
+        builder.sb_push_int(sb, items[i]);
         i = i + 1;
       }
-      return out + "]";
+      builder.sb_push_byte(sb, 93);
     },
     TomlValue.TFloatArray(items) => {
-      var out = "[";
+      builder.sb_push_byte(sb, 91);
       var i = 0;
       while i < items.len() {
-        if i > 0 { out = out + ", "; }
-        out = out + _toml_write_float(items[i]);
+        if i > 0 { builder.sb_push_str(sb, ", "); }
+        builder.sb_push_str(sb, _toml_write_float(items[i]));
         i = i + 1;
       }
-      return out + "]";
+      builder.sb_push_byte(sb, 93);
     },
-    _ => { return ""; },
+    _ => {},
   }
 }
 
@@ -616,11 +637,14 @@ pub fn toml_write(t: &TomlTable) -> Str
   ensures: (t.keys.len() == 0) => (result == "")
   ensures: result.len() >= t.keys.len()
 {
-  var out = "";
+  var sb: Vec[UInt8] = builder.sb_new();
   var i = 0;
   while i < t.keys.len() {
     if !string.str_rindex_of(t.keys[i], ".").is_some {
-      out = out + _toml_write_key(t.keys[i]) + " = " + _toml_write_value(t.values[i]) + "\n";
+      _toml_push_key(t.keys[i], &mut sb);
+      builder.sb_push_str(sb, " = ");
+      _toml_push_value(t.values[i], &mut sb);
+      builder.sb_push_byte(sb, 10);
     }
     i = i + 1;
   }
@@ -633,14 +657,19 @@ pub fn toml_write(t: &TomlTable) -> Str
       let section = string.str_slice(t.keys[i], 0, dot);
       if !_toml_list_has(&sections, section) {
         sections.push(section);
-        out = out + "[" + section + "]\n";
+        builder.sb_push_byte(sb, 91);
+        builder.sb_push_str(sb, section);
+        builder.sb_push_str(sb, "]\n");
         var j = 0;
         while j < t.keys.len() {
           let dot2_opt = string.str_rindex_of(t.keys[j], ".");
           if dot2_opt.is_some {
             let dot2 = dot2_opt.value;
             if string.str_slice(t.keys[j], 0, dot2) == section {
-              out = out + _toml_write_key(string.str_slice(t.keys[j], dot2 + 1, string.str_len(t.keys[j]))) + " = " + _toml_write_value(t.values[j]) + "\n";
+              _toml_push_key(string.str_slice(t.keys[j], dot2 + 1, string.str_len(t.keys[j])), &mut sb);
+              builder.sb_push_str(sb, " = ");
+              _toml_push_value(t.values[j], &mut sb);
+              builder.sb_push_byte(sb, 10);
             }
           }
           j = j + 1;
@@ -649,5 +678,5 @@ pub fn toml_write(t: &TomlTable) -> Str
     }
     i = i + 1;
   }
-  return out;
+  return builder.sb_to_str(&sb);
 }

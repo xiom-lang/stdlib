@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 82 (updated 2026-10-22 14:40Z; **v0.64.8 PINNED + RELEASED, v0.64.9 NOT CUT**; global 95.2%, readiness 89.5%, floors196; doc_scan 100% with 0 misses; 0918 macOS witness verified; wave 208 JSON/YAML byte-builder paths flat at 10k calls (256MB or less; parse/build need m375); battery modules 533/533, smokes 963/963, probes 402/402, barename 0/533; pre-verified on main debug 1626/1451/1326/2249/2249-2/1731, 1242 fixed; 1550/1520/1609 open; next: stage v0.64.9 archive when cut, run the battery, close the verified items, then tag stdlib-v0.64.9; coverage hard tail iter/os)
+## 0A. CONTINUE HERE -- handoff snapshot 82 (updated 2026-10-22 14:40Z; **v0.64.8 PINNED + RELEASED, v0.64.9 NOT CUT**; global 95.2%, readiness 89.5%, floors196; doc_scan 100% with 0 misses; 0918 macOS witness verified; wave 208 JSON/YAML byte-builder paths flat at 10k calls (256MB or less; parse/build need m375); battery modules 533/533, smokes 963/963, probes 403/403, barename 0/533; pre-verified on main debug 1626/1451/1326/2249/2249-2/1731, 1242 fixed; 1550/1520/1609 open; next: stage v0.64.9 archive when cut, run the battery, close the verified items, then tag stdlib-v0.64.9; coverage hard tail iter/os)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-22, snapshot 82)
 
@@ -47,7 +47,7 @@ compress 100%, math 90.7%, bits 100%, iter 70.5%, core 99.2%, simd
 contradictory sleep preconditions; snapshot 79's 92.9% predated that.
 
 Final battery on the merged tree (official v0.64.8): modules 533/533,
-smokes 963/963 (0 compilefail / 0 runfail), probes 402/402, barename
+smokes 963/963 (0 compilefail / 0 runfail), probes 403/403, barename
 0/533, coverage floors196 RATCHET OK, regex 17/17, doc_scan 100%
 (7474/7474, 0 misses after block 271 documented the two TLS step
 constants). Bug fixes on top: fraction_add cross-cancel
@@ -66,7 +66,7 @@ p_wave203_limited_final, p_wave204_last_mile, p_wave205_iter_os,
 p_wave206_math_thread_async, p_wave207_long_tail_residual,
 p_io_read_at_into, p_json_builder, p_json_stringify_render,
 p_json_number_format, p_json_number_random, p_serialize_minify_pretty,
-p_simd_vec4f_lanes,
+p_simd_vec4f_lanes, p_toml_write_builder,
 p_yaml_emit_builder,
 p_io_listdir_roundtrip. Compiler
 items: 1626/1451/1326/2249/2249-2/1731 pre-verified on the main debug
@@ -3863,10 +3863,14 @@ registry pin, agent recon for the rest)**
   red and 1549 stays blocked (relay `e03edfa`). 1550 stays acked (the
   probe passes only because its tuple checks are count-limited; the
   generic-holder shape is still broken per the compiler diagnosis).
-- Probe battery: 402/402 with the new `p_simd_vec4f_lanes` (passes on
-  v0.64.8); modules 533/533, smokes 963/963, barename 0/533, floors196
-  RATCHET OK, doc_scan 100% (7474/7474), coverage 95.2% pub / 97.3%
-  clauses.
+- Same session: `toml_write` moved to the byte builder. Output is
+  byte-identical against `b6198cf` (20 golden lines); 10,000 writes of a
+  50-key table complete under 128 MB (the old path crossed 256 MB near
+  iteration 2,500). New probe `p_toml_write_builder`.
+- Probe battery: 403/403 with the new `p_simd_vec4f_lanes` and
+  `p_toml_write_builder` (both pass on v0.64.8); modules 533/533, smokes
+  963/963, barename 0/533, floors196 RATCHET OK, doc_scan 100%
+  (7474/7474), coverage 95.2% pub / 97.3% clauses.
 - Files: `tools/known_failures/p_map_set_mutating_combo.xi` (valid
   v0.64.8 AV witness), `tools/probes/p_simd_vec4f_lanes.xi` (normal
   probe). No clause waves.

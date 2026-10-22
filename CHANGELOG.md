@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   concatenation, a temporary escape `Vec`/`Str` per string, and a
   formatted `Str` per number. Output is byte-identical; 10,000 repeated
   renders complete under a 256 MB cap on Windows and Linux (the pre-fix
-  path hit the cap near iteration 500).   Build- and parse-side retention
+  path hit the cap near iteration 500). Build- and parse-side retention
   remains compiler drop-elaboration work (9f933aa, REL-20261020-1704).
 - `serialize.json_minify` and `serialize.json_pretty` use the same byte
   builder instead of a `str_slice`/concat allocation per character.
@@ -31,6 +31,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   quoted-scalar path render through the shared byte builder. Output is
   byte-identical; 10,000 repeated emits of a 50-entry mapping complete
   under a 128 MB cap (the old path crossed 128-512 MB late in the loop).
+- `toml_write` uses the byte builder instead of per-key, per-value and
+  per-escape concatenation. Output is byte-identical; 10,000 writes of a
+  50-key table complete under a 128 MB cap (the old path crossed 256 MB
+  near iteration 2,500).
 
 ### Fixed
 
