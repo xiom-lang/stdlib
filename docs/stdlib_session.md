@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 82 (updated 2026-10-22 14:40Z; **v0.64.8 PINNED + RELEASED, v0.64.9 NOT CUT**; global 95.2%, readiness 89.5%, floors196; doc_scan 100% with 0 misses; 0918 macOS witness verified; wave 208-209 JSON/YAML/TOML/CSV byte-builder paths flat at 10k calls (256MB or less; parse/build need m375); battery modules 533/533, smokes 963/963, probes 404/404, barename 0/533; pre-verified on main debug 1626/1451/1326/2249/2249-2/1731, 1242 fixed; 1550/1520/1609 open; next: stage v0.64.9 archive when cut, run the battery, close the verified items, then tag stdlib-v0.64.9; coverage hard tail iter/os)
+## 0A. CONTINUE HERE -- handoff snapshot 82 (updated 2026-10-22 14:40Z; **v0.64.8 PINNED + RELEASED, v0.64.9 NOT CUT**; global 95.2%, readiness 89.5%, floors196; doc_scan 100% with 0 misses; 0918 macOS witness verified; wave 208-209 JSON/YAML/TOML/CSV byte-builder paths flat at 10k calls (256MB or less; parse/build need m375); battery modules 533/533, smokes 963/963, probes 404/404, barename 0/533; pre-verified on main debug 1626/1451/1326/2249/2249-2/1731, 1242 fixed; 1550 coordinated, 1520/1609 open; next: stage v0.64.9 archive when cut, run the battery, close the verified items, then tag stdlib-v0.64.9; coverage hard tail iter/os)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-22, snapshot 82)
 
@@ -71,9 +71,11 @@ p_yaml_emit_builder,
 p_io_listdir_roundtrip. Compiler
 items: 1626/1451/1326/2249/2249-2/1731 pre-verified on the main debug
 build (relay `9310d3c`); 1242 fixed (stdlib `p_simd_vec4f_lanes` green);
-1550 tuple-returning ABI and 1520 adapter collision remain open; 1549
-stays blocked by 1609 (repro still red on main debug); 1531 xvector
-shared-HEAD claim acked as not reproducible. New witness
+1550 tuple-returning ABI is coordinated: the stdlib `EnumerateIter[Int]`
+specialization is applied and the compiler fix `d04cd3265` is pending;
+1520 adapter collision remains open; 1549 stays blocked by 1609 (repro
+still red on main debug); 1531 xvector shared-HEAD claim acked as not
+reproducible. New witness
 `tools/known_failures/p_map_set_mutating_combo.xi` (AV on v0.64.8, green
 on main) is the 2249 lock.
 
@@ -3860,9 +3862,15 @@ registry pin, agent recon for the rest)**
   v0.64.8 and main; the raw compiler shape is under m377's lock).
 - 1549/1609 refresh: io.list_dir itself is green on the main debug build,
   but `p_result_payload_index_concat.xi` is still rc 1, so 1609 remains
-  red and 1549 stays blocked (relay `e03edfa`). 1550 stays acked (the
-  probe passes only because its tuple checks are count-limited; the
-  generic-holder shape is still broken per the compiler diagnosis).
+  red and 1549 stays blocked (relay `e03edfa`).
+- REL-20261022-1152 (compiler -> stdlib): applied the requested
+  `EnumerateIter[Int].map` specialization in `xiom/iter/iter.xi`, so the
+  tuple payload stays typed through `MapIter`. The exact probe still
+  reads `em[1].0 = 0` on the stale 2026-10-22 debug build (it predates
+  compiler `d04cd3265`); the compiler will re-run the synced tree. New
+  witness `tools/known_failures/p_iter_enumerate_tuple.xi` (rc 3 on
+  v0.64.8, expected rc 0 after `d04cd3265`). 1550 stays acked until that
+  confirmation; 1152 moves open -> acked -> fixed with this commit.
 - Same session: `toml_write` moved to the byte builder. Output is
   byte-identical against `b6198cf` (20 golden lines); 10,000 writes of a
   50-key table complete under 128 MB (the old path crossed 256 MB near

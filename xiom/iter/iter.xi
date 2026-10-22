@@ -783,11 +783,14 @@ pub fn FilterIter[T].last(self) -> Option[T] {
 }
 
 /// Lazily apply `f` to each (index, element) pair.
-pub fn EnumerateIter[T].map[U](self, f: fn((Int, T)) -> U) -> MapIter[(Int, T), U]
+/// Concrete receiver: EnumerateIter is only produced by Range.enumerate
+/// (Int). The specialization keeps the tuple payload typed through
+/// MapIter for REL-20261022-1152 / REL-20261020-1550.
+pub fn EnumerateIter[Int].map[U](self, f: fn((Int, Int)) -> U) -> MapIter[(Int, Int), U]
   ensures: self.index == self.index@pre
 {
   var it = self;
-  MapIter[(Int, T), U]{ next_fn: fn() -> Option[(Int, T)] { return it.next(); }, f: f }
+  MapIter[(Int, Int), U]{ next_fn: fn() -> Option[(Int, Int)] { return it.next(); }, f: f }
 }
 
 /// Yield at most `n` (index, element) pairs.

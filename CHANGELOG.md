@@ -42,6 +42,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- `EnumerateIter[Int].map` is specialized so tuple-returning function
+  values keep their payload through `MapIter` (REL-20261022-1152 /
+  REL-20261020-1550). The compiler-side fix lands in v0.64.9.
 - `io.list_dir` returns runtime-owned entry names, so names stay valid
   after later allocations and the macOS dirent layout no longer leaks
   into stdlib code (05673f8).
