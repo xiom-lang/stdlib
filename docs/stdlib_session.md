@@ -50,9 +50,13 @@ GitHub digests):
   `idx_plus -> (Int,Int)`) still gives `len=3`, `em[1].0=0`, rc 3 on the
   official archive (shared and bundled lib). The e2e lock misses the
   tuple-returning return type.
-- Mode: debug default passes m372 with main stdlib; `--release` or any
-  `--opt-level 0..3` flips m372 and the tuple probe to the failing
-  results. The official default behaves like the failing mode.
+- Mode/root cause: debug default passes m372 with main stdlib; `--release`
+  or any `--opt-level 0..3` flips m372 and the tuple probe to the failing
+  results. The release workflow builds with `cargo build --release`
+  (dry-run 39785770942 headSha `2bcf58db5`), and the official default
+  behaves like the failing mode. The compiler gate/tests used the debug
+  build, so the release-mode codegen path was never gated. Both fix
+  commits are ancestors of the tag; the stdlib is not the variable.
 Blockers REL-20261022-1410-stdlib and REL-20261022-1414-stdlib.
 `COMPILER_VERSION` stays `v0.64.8`; 1451 stays verified-not-closed with a
 correction note. Controls 1626/2249/1731 pass on v0.64.9; 1609 is still
@@ -3895,8 +3899,12 @@ registry pin, agent recon for the rest)**
     and passes; the true tuple-returning shape (`p_iter_enumerate_tuple`)
     still gives `len=3`, `em[1].0=0`, rc 3 on the official archive. The
     e2e lock misses the tuple-returning return type.
-  - Mode: debug default passes m372 with main stdlib; `--release`/any
-    `--opt-level 0..3` flips both probes to the failing results.
+  - Mode/root cause: debug default passes m372 with main stdlib;
+    `--release`/any `--opt-level 0..3` flips both probes to the failing
+    results. The release workflow builds with `cargo build --release`
+    (dry-run 39785770942 headSha `2bcf58db5`) and the gate/tests used the
+    debug build, so the release-mode codegen path was not gated. Both fix
+    commits are ancestors of the tag; the stdlib is not the variable.
   Do not bump `COMPILER_VERSION`; 1451 stays open with a correction note.
   The stdlib 0.64.9 release pins v0.64.8 and is unaffected.
 - REL-20261021-1122-orbitdb-3: acked -> fixed at the release (read_at_into
