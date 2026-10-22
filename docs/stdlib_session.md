@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 81 (updated 2026-10-21 23:20Z; **v0.64.8 PINNED + RELEASED, v0.64.9 NOT CUT**; global 95.2%, readiness 89.5%, floors196; doc_scan 100% with 0 misses; 0918 macOS witness verified; wave 208 JSON/YAML byte-builder paths flat at 10k calls (256MB or less; parse/build need m375); battery modules 533/533, smokes 963/963, probes 401/401, barename 0/533; next: stage v0.64.9 archive when cut, run the battery, verify 1626/1451/1242/2249/2249-2/m377/1326, then tag stdlib-v0.64.9; coverage hard tail iter/os)
+## 0A. CONTINUE HERE -- handoff snapshot 81 (updated 2026-10-21 23:20Z; **v0.64.8 PINNED + RELEASED, v0.64.9 NOT CUT**; global 95.2%, readiness 89.5%, floors196; doc_scan 100% with 0 misses; 0918 macOS witness verified; wave 208 JSON/YAML byte-builder paths flat at 10k calls (256MB or less; parse/build need m375); battery modules 533/533, smokes 963/963, probes 401/401, barename 0/533; next: stage v0.64.9 archive when cut, run the battery, verify 1626/1451/1242/2249/2249-2/m377/1326/1731, then tag stdlib-v0.64.9; coverage hard tail iter/os)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-21, snapshot 81)
 
@@ -71,7 +71,8 @@ p_io_listdir_roundtrip. Compiler
 items: 2249 Map/Set AV, 2249-2 Vec4f lane, 1242 acked (stdlib fixed,
 verify on m377), 1326 log+serialize IR, 1550 tuple-returning fn ABI,
 1520 adapter specialization collision, and 1731 borrowed-enum match
-(invalid IR / garbage Str payloads). 1531 xvector shared-HEAD claim
+(fixed on main `ace095744`, verified on debug; close on v0.64.9).
+1531 xvector shared-HEAD claim
 acked as not reproducible.
 
 Immediate housekeeping:
@@ -85,9 +86,11 @@ Linux), but the parse tree and builder-built values still retain and need
 the compiler m375 drop elaboration. The 0918 macOS witness is
 done: PULSE CI 39624153094 on 05673f8 is green (witness rc 0, migrations
 21/21, SQL 53/53); the item stays fixed until the reporter closes it after
-the next pin. Then verify 1626/1451/1242/2249/2249-2/m377/1326 on the
-next compiler candidate; 1550 remains open and 1520 is open. m1326 is
-fixed on compiler main (d50d1436e). Wave 205 confirmed iter/os have no
+the next pin. Then verify 1626/1451/1242/2249/2249-2/m377/1326/1731 on
+the next compiler candidate; 1550 remains open and 1520 is open. m1326 is
+fixed on compiler main (d50d1436e); m1731 is fixed there (ace095744) and
+verified on the debug build, so it closes on the official pin. Wave 205
+confirmed iter/os have no
 non-tautological clauses left;
 do not run more clause waves there.
 
@@ -3863,12 +3866,16 @@ registry pin, agent recon for the rest)**
   control), empty containers, and 500 repeated renders. JSON smokes 17/17
   and JSON probes 8/8 stay green. Parse-side retention is untouched and
   remains compiler m375 work.
-- Borrowed-enum match is broken on v0.64.8 and was the reason the fix
-  keeps owned payloads: `match &v` passes `--check` then emits
-  `%tmp defined with type 'ptr' but expected 'i64'`; a larger borrowed
-  renderer compiles but binds every Str payload to garbage. New known
-  failure `tools/known_failures/p_match_borrowed_enum.xi`; filed
-  REL-20261021-1731-stdlib to compiler (relay commit `a65fd0d`).
+- Borrowed-enum match was broken on v0.64.8 and was the reason the fix
+  keeps owned payloads: `match &v` passed `--check` then emitted
+  `%tmp defined with type 'ptr' but expected 'i64'`, and a larger
+  borrowed renderer bound every Str payload to garbage. Fixed on compiler
+  main at `ace095744` (with the boxed-Str payload fix `9d31321df`) and
+  verified on the 2026-10-22 debug build: the repro prints "world" and the
+  larger borrowed renderer is byte-identical when Str payloads are passed
+  by value (passing `&Str` still misbinds). REL-20261021-1731-stdlib is
+  fixed -> verified (relay `4f2c1f5`); close after the official v0.64.9
+  re-check. Known failure kept as the v0.64.8 repro.
 - Full battery on the final tree (official v0.64.8): modules 533/533,
   smokes 963/963, probes 401/401, barename 0/533, floors196 RATCHET OK,
   doc_scan 100% (7474/7474, 0 misses), coverage 6564/6897 = 95.2%,
