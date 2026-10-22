@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.64.9] - 2026-10-22
+
 ### Added
 
 - `io.read_at_into(path, offset, &mut Vec[UInt8], len)` reuses a caller
