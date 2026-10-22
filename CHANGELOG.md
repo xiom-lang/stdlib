@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- JSON number rendering pushes digits with an allocation-free byte loop
+  instead of `builder.sb_push_int`, whose `[20]UInt8` stack buffer
+  miscompiles on the v0.64.8 pin inside the HTTP service call chain and
+  crashed `probe_http_service`/`probe_router_2shards`/`probe_scatter_gather`
+  (REL-20261022-1640-xvector).
+
 ## [0.64.9] - 2026-10-22
 
 ### Added

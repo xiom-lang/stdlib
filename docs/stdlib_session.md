@@ -3874,6 +3874,29 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
+**SESSION 2026-10-22 block 274 (xvector 1640: JSON number digit loop fixes the HTTP service crash; stdlib 0.64.9 needs a hotfix tag)**
+- REL-20261022-1640-xvector reproduced on compiler v0.64.8 with the
+  xvector lane toolchain: stdlib-v0.64.9 `aa8b656` crashes
+  `probe_http_service`, `probe_router_2shards`, `probe_scatter_gather`
+  (0xC0000005); 750384f is green.
+- Bisect: c8e889c green, 9f933aa green, **72b2b4c red**. Instrumentation
+  showed the number push completing and `json_stringify` returning; the
+  crash is after the 62-byte error body stringify. Replacing
+  `builder.sb_push_int` with `int_to_string` made it green, and keeping
+  only `_json_push_fixed`'s `sb_push_int(int_part)` made it red again:
+  the `[20]UInt8` stack buffer in `sb_push_int` miscompiles on the
+  v0.64.8 pin in this call chain.
+- Fix on main: `_json_push_uint_digits` (allocation-free byte loop,
+  n <= 1e18) replaces all four `sb_push_int` calls in the JSON number
+  helpers. With the fix: all three xvector L-6 probes 0 failed checks,
+  `p_json_number_format`/`p_json_number_random` rc 0, 10k stringify under
+  256 MB, JSON smokes 17/17, serialize smokes 24/24. Full smoke run
+  reached 847/963 with 0 failures before a 40-minute timeout caused by
+  100% host load; the hotfix release CI must complete the full gate.
+- stdlib-v0.64.9 is affected; a hotfix tag (0.64.10) pinning v0.64.8 is
+  needed. The compiler v0.64.9 HOLD (1451/1550) is separate. Do not move
+  the 0.64.9 tag.
+
 **SESSION 2026-10-22 block 273 (relay triage: 1731 + 1626/1451/1326/2249/2249-2 verified on main debug; 1242 fixed; 1549 still blocked; stdlib-v0.64.9 tagged)**
 - Compiler release check: still v0.64.8 (latest), no v0.64.9 tag or
   branch. Compiler main is ahead 7 with m376/m377/m1326/m1731 etc.; owner

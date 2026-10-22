@@ -606,6 +606,29 @@ fn _json_trailing_zeros(n: Int) -> Int
   return t;
 }
 
+// Push the decimal digits of n >= 0 without builder.sb_push_int. The
+// [20]UInt8 stack buffer in sb_push_int miscompiles on the v0.64.8 pin in
+// the HTTP service call chain (REL-20261022-1640-xvector); this loop is
+// allocation-free and uses only sb_push_byte.
+fn _json_push_uint_digits(n: Int, sb: &mut Vec[UInt8])
+  requires: n >= 0 && n <= 1000000000000000000
+{
+  if n == 0 {
+    builder.sb_push_byte(sb, 48);
+    return;
+  }
+  var d: Int = 1;
+  var x = n;
+  while x >= 10 {
+    x = x / 10;
+    d = d * 10;
+  }
+  while d > 0 {
+    builder.sb_push_byte(sb, 48 + ((n / d) % 10) as UInt8);
+    d = d / 10;
+  }
+}
+
 // Push ".ddd" for a non-zero fraction with `decimals` total fraction digits,
 // trailing zeros stripped (the same result as _f64_strip_frac).
 fn _json_push_frac(frac: Int, decimals: Int, sb: &mut Vec[UInt8])
@@ -624,7 +647,7 @@ fn _json_push_frac(frac: Int, decimals: Int, sb: &mut Vec[UInt8])
     x = x / 10;
     k = k + 1;
   }
-  builder.sb_push_int(sb, x);
+  _json_push_uint_digits(x, sb);
 }
 
 fn _json_push_fixed(v: Float64, decimals: Int, sb: &mut Vec[UInt8])
@@ -634,7 +657,7 @@ fn _json_push_fixed(v: Float64, decimals: Int, sb: &mut Vec[UInt8])
   let scaled = convert.to_int(v * (scale as Float64) + 0.5);
   let int_part = scaled / scale;
   let frac = scaled % scale;
-  builder.sb_push_int(sb, int_part);
+  _json_push_uint_digits(int_part, sb);
   if frac > 0 && decimals > 0 {
     _json_push_frac(frac, decimals, sb);
   }
@@ -662,7 +685,7 @@ fn _json_push_sci(v: Float64, sb: &mut Vec[UInt8])
   }
   let int_d = scaled / scale;
   let frac = scaled % scale;
-  builder.sb_push_int(sb, int_d);
+  _json_push_uint_digits(int_d, sb);
   if frac > 0 {
     _json_push_frac(frac, 14, sb);
   }
@@ -674,7 +697,7 @@ fn _json_push_sci(v: Float64, sb: &mut Vec[UInt8])
     builder.sb_push_byte(sb, 43);
   }
   if e < 10 { builder.sb_push_byte(sb, 48); }
-  builder.sb_push_int(sb, e);
+  _json_push_uint_digits(e, sb);
 }
 
 fn _json_push_float(f: Float64, sb: &mut Vec[UInt8])
