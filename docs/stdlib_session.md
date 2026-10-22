@@ -127,7 +127,9 @@ Relays, bugs, wishlist:
   by-ref/slice), and 2331 runtime residual. Superseded stdlib status
   addenda were closed. 1451 (nested generic ptr.read) is fixed on
   compiler main 0acbbdc8b, pending the next candidate; 1549 list_dir
-  stays blocked by 1609.
+  stays blocked by 1609. Main debug build 2026-10-22: list_dir itself is
+  green, but the 1609 inline-payload-index repro is still rc 1 (relay
+  `e03edfa`).
 - New compiler items: REL-20261019-2249-stdlib (multiple generic Map/Set
   free helpers in one program AV 0xC0000005), -2 (Vec4f lane get/write
   miscompile), REL-20261020-1242 (Vec4f pointer scale; stdlib fixed in
