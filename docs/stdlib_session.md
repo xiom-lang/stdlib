@@ -17,9 +17,9 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 87 (updated 2026-10-22 22:50Z; **stdlib-v0.64.9 RELEASED but HELD -- 1640 HTTP/JSON crash fixed on main f436a5d; hotfix stdlib-v0.64.10 (pin v0.64.8) next, owner GO required; compiler v0.64.9 PUBLISHED BUT RED -- 1451/m372 and tuple-returning 1550, blockers REL-20261022-1410/1414-stdlib open, do NOT pin/announce**; package 0.64.9, COMPILER_VERSION v0.64.8; gates: modules 533/533, smokes 847/963 (0 fails, host-load cut; JSON 17/17, serialize 24/24, L-6 probes green), probes 404/404, barename 0/533, floors196 OK, doc_scan 100%, coverage 95.2% pub / 97.3% clauses; next: hotfix 0.64.10, then green compiler re-cut -> pin/verify/close; coverage hard tail iter/os)
+## 0A. CONTINUE HERE -- handoff snapshot 88 (updated 2026-10-22; **stdlib-v0.64.10 PREPARED but NOT TAGGED -- owner directive "full hotfix prep, do not cut release"; package 0.64.10, COMPILER_VERSION v0.64.8; 1640 HTTP/JSON fix on main f436a5d; full battery GREEN on official v0.64.8: modules 533/533, smokes 963/963 (957 tracked + 6 documented diag), probes 404/404, barename 0/533, floors196 OK, doc_scan 100%**; stdlib-v0.64.9 stays tagged/released but HELD, do not move; compiler v0.64.9 still RED for 1451/m372 and tuple-returning 1550, blockers REL-20261022-1410/1414-stdlib open, do NOT pin/announce; next: owner GO for the 0.64.10 tag/publish, then a green compiler re-cut -> pin/verify/close)
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-22, snapshot 87)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-22, snapshot 88)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
@@ -27,45 +27,42 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 87 + blocks 275/274 + this 0C block.
+Read docs/stdlib_session.md snapshot 88 + blocks 276/275 + this 0C block.
 
-STATE (2026-10-22 22:50Z):
-- Main 3beaee4. stdlib-v0.64.9 is TAGGED at aa8b656 and RELEASED
-  (GitHub Release xiom-std-0.64.9.tar.gz sha256 eab0b80d..., registry
-  xiom-std 0.64.9 sha256 6f0d3b15..., pin decision
-  REL-20261022-1327-stdlib, compiler pin v0.64.8 by design). BUT it is
-  HELD: REL-20261022-1640-xvector found HTTP/JSON probes crashing
-  0xC0000005 on v0.64.8.
-- 1640 is FIXED on main f436a5d: JSON number digits use
-  _json_push_uint_digits instead of builder.sb_push_int (its [20]UInt8
-  stack buffer miscompiles on the v0.64.8 pin in the HTTP service call
-  chain). Verified: xvector probe_http_service/probe_router_2shards/
-  probe_scatter_gather 0 failed checks; p_json_number_format and
-  p_json_number_random rc 0; 10k stringify under 256 MB; JSON smokes
-  17/17; serialize 24/24. Full smoke reached 847/963 with 0 failures
-  before a 40-min host-load timeout; the hotfix CI must complete it.
+STATE (2026-10-22):
+- 0.64.10 IS PREPARED ON MAIN BUT NOT TAGGED/RELEASED (owner directive:
+  full hotfix prep, do not cut the release). package.xi 0.64.10;
+  CHANGELOG [0.64.10] - 2026-10-22; release-notes/v0.64.10.md validated
+  (2 highlights); COMPILER_VERSION stays v0.64.8. There is no
+  stdlib-v0.64.10 tag, no release workflow run and no registry publish.
+- 1640 fix is on main f436a5d: _json_push_uint_digits replaces
+  builder.sb_push_int in the JSON number helpers. Full battery on the
+  OFFICIAL v0.64.8 archive is GREEN: modules 533/533 (1158.8s), smokes
+  963/963 (957 tracked + 6 documented untracked diag; 3166.9s), probes
+  404/404 (1910.4s), barename 0/533 (1596.8s), coverage floors196
+  RATCHET OK (95.2% pub / 97.3% clauses), doc_scan 100% (7474/7474)
+  RATCHET OK. All rc 0. Host was ~100% loaded; 6 workers used.
+- stdlib-v0.64.9 stays tagged at aa8b656 and RELEASED (registry
+  xiom-std 0.64.9 sha256 6f0d3b15...), but HELD; do NOT move the tag.
 - Compiler v0.64.9 is PUBLISHED BUT RED: official archives fail
-  1451/m372 (nested=0) and the TRUE tuple-returning 1550 shape
-  (p_iter_enumerate_tuple: len=3, em[1].0=0). The compiler gate/tests used
-  debug builds; the release path is cargo build --release. Blockers
+  1451/m372 (nested=0) and the true tuple-returning 1550 shape
+  (p_iter_enumerate_tuple: len=3, em[1].0=0). Blockers
   REL-20261022-1410/1414-stdlib are OPEN with compiler. Do NOT bump
-  COMPILER_VERSION or announce. COMPILER_VERSION stays v0.64.8.
-- Staged v0.64.9 archives hash-verified in
-  %TEMP%\kilo\stdlib_ws\v0.64.9-official (windows zip 1b759541...,
-  linux b331dd4d...). Controls on v0.64.9: 1626/2249/1731 pass; 1609
-  still rc 1.
+  COMPILER_VERSION or announce. Compiler v0.64.9 was withdrawn and a
+  v0.65.0 production gate opened (REL-20261022-1826-compiler).
 
-PRIORITY 1 -- HOTFIX stdlib-v0.64.10 (owner GO required):
-- package.xi -> 0.64.10; move CHANGELOG Unreleased -> [0.64.10]; write
-  release-notes/v0.64.10.md with <=2 stdlib highlights; validate:
-  E:\xiom-lang\xiom\target\debug\xiom-release-notes.exe convert --tag
-  v0.64.10 --stdlib E:\xiom-lang\stdlib
-- COMPILER_VERSION = v0.64.8 (last good; do NOT pin red v0.64.9).
-- Full battery: modules 533/533, smokes 963/963, probes 404/404,
-  barename 0/533, floors196, doc_scan; then tag/push stdlib-v0.64.10,
-  run the release workflow, publish registry with compiler pin v0.64.8,
-  and update xvector/1640 and 1122.
-- Do NOT move stdlib-v0.64.9.
+PRIORITY 1 -- RELEASE 0.64.10 (owner GO required; prep is done):
+- On GO: tag/push stdlib-v0.64.10 at the prep commit, run
+  .github/workflows/release.yml, publish registry with compiler pin
+  v0.64.8, and update xvector/1640 and 1122.
+- Do NOT move stdlib-v0.64.9. The full battery is already green; the
+  release CI re-runs it (957 tracked smokes in a clean checkout).
+- release-notes gotcha: running `xiom-release-notes convert --tag
+  v0.64.10 --stdlib <repo>` from the stdlib root reads <notes-dir>/
+  v0.64.10.md and <stdlib>/release-notes/v0.64.10.md, which are the same
+  file, and duplicates every highlight (4 instead of 2). Validate from a
+  temp notes dir with an empty --stdlib. Do not commit
+  release-notes/*.json (prior releases commit only .md).
 
 PRIORITY 2 -- COMPILER RE-CUT (not the current v0.64.9):
 - Wait for a green patch/re-cut. Stage/hash-verify the official
@@ -93,8 +90,8 @@ RULES:
   1550 compiler-side; 1410/1414 with compiler.
 - Untracked out/ + smoke_diag_f128_* are documented leftovers.
 
-DELIVERABLE: hotfix first (if GO), then compiler-pin verification; leave
-docs/session current and push.
+DELIVERABLE: 0.64.10 tag/publish on owner GO, then compiler-pin
+verification; leave docs/session current and push.
 ```
 ---
 
@@ -3730,6 +3727,39 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-22 block 276 (0.64.10 hotfix prepared but NOT released per owner; full battery green on official v0.64.8)**
+- Owner directive: run the full 0.64.10 hotfix prep and battery, but do
+  NOT cut the release (no tag, no release workflow, no registry
+  publish). stdlib-v0.64.9 stays tagged/released but HELD; its tag was
+  not moved.
+- Prep on main: `package.xi` 0.64.10; `CHANGELOG.md` Unreleased ->
+  `[0.64.10] - 2026-10-22`; `release-notes/v0.64.10.md` (2 highlights,
+  validated rc 0); `COMPILER_VERSION` stays v0.64.8.
+- Full battery on the OFFICIAL v0.64.8 archive
+  (`%TEMP%\kilo\stdlib_ws\v0.64.8-official\bin\xiom.exe`; `--version`
+  reports XIOM Compiler v0.64.8): modules **533/533** (1158.8s), smokes
+  **963/963** (957 tracked + the 6 documented untracked `smoke_diag_f128_*`
+  files; 3166.9s), probes **404/404** (1910.4s), barename **0/533**
+  (1596.8s), coverage floors196 **RATCHET OK** (95.2% pub / 97.3%
+  clauses), doc_scan **100%** (7474/7474) **RATCHET OK**. All rc 0.
+  The host was ~100% loaded by editor/agent processes, so the runs used
+  6 workers instead of the CI's 8; no failures and no retries needed.
+- 1640 remains fixed on main `f436a5d` (`_json_push_uint_digits`
+  replaces `builder.sb_push_int` in the JSON number helpers); the JSON
+  probes and smokes are green in this battery.
+- release-notes tool gotcha: `xiom-release-notes convert --tag v0.64.10
+  --stdlib <repo>` run from the stdlib root reads
+  `<notes-dir>/v0.64.10.md` and `<stdlib>/release-notes/v0.64.10.md`,
+  which are the same file, and duplicates every highlight (4 instead of
+  2). Validate from a temp notes dir with an empty `--stdlib`. The
+  generated `release-notes/*.json` is not committed (prior releases
+  commit only the `.md`).
+- Next: owner GO -> tag/push `stdlib-v0.64.10` at the prep commit, run
+  `.github/workflows/release.yml`, publish the registry with compiler
+  pin v0.64.8, and update xvector/1640 and 1122. Compiler v0.64.9
+  remains red (1451/m372 + tuple-returning 1550); do not pin or
+  announce it.
 
 **SESSION 2026-10-22 block 275 (handoff: 1640 HTTP/JSON crash fixed on main; stdlib 0.64.9 held; hotfix 0.64.10 next; compiler v0.64.9 still red)**
 - REL-20261022-1640-xvector: reproduced with the xvector lane toolchain
