@@ -36,27 +36,33 @@ decision is REL-20261022-1327-stdlib (compiler v0.64.8). The
 `STDLIB_VERSION pin PR` job failed benignly because compiler main already
 had `STDLIB_VERSION=stdlib-v0.64.9` (2bcf58db5).
 
-**COMPILER v0.64.9 IS RED -- DO NOT PIN OR ANNOUNCE.** The published
-archives fail two fixes that pass on the debug build, on both Windows x64
-and Linux x64, with the bundled stdlib:
-- 1451 `p_nested_generic_ptr_read`: `nested=0 local=0`, rc 1 (debug:
-  `nested=42 local=42`, rc 0).
-- 1550 `p_iter_enumerate_tuple`: `len=3` but `em[1].0=0`, rc 3 (debug /
-  compiler `d04cd3265`: `em 10/12/14`, rc 0).
-The tag `2bcf58db5` contains `d04cd3265`/`0acbbdc8b`, and the bundled
-`lib/xiom/iter/iter.xi` has the specialization; this looks like a
-release-only miscompile or a package built from the wrong tree. Blocker:
-REL-20261022-1410-stdlib (Windows zip `1b759541...`, Linux
-`b331dd4d...`). `COMPILER_VERSION` stays `v0.64.8`; 1451 stays
-verified-but-not-closed with the correction note. Controls 1626/2249/1731
-pass on v0.64.9; 1609 is still rc 1 as expected. Next: wait for the
-compiler re-cut/patch, then stage/hash-verify, bump the pin, run the
-battery, close the verified items, and verify the 1550 e2e lock. COMPILER_VERSION=v0.64.8; staged
-archive %TEMP%\kilo\stdlib_ws\v0.64.8-official (windows zip sha256
-c31d9c46..., linux tar.gz a8c003c0...). stdlib-v0.64.8 tag object 0bf5b75
--> commit 112c5b6 (tag-time COMPILER_VERSION=candidate-v0.64.8-r2); release
-run 39289746856; registry xiom-std 0.64.8 live (sha256 c4ab5c61..., run
-39298965606). Tags frozen; do NOT move/re-cut v0.64.8.
+**COMPILER v0.64.9 IS RED -- DO NOT PIN OR ANNOUNCE.** Two distinct
+problems on both Windows x64 and Linux x64 (released archives match the
+GitHub digests):
+- 1451: the compiler's own `tests/regression/m372_nested_generic_ptr_read.xi`
+  prints `nested=0 local=0`, rc 1 on the official binary (default and
+  `--release`). The same fixture prints `42/42` rc 0 on
+  `target/debug/xiom.exe` with `XIOM_STDLIB=E:\xiom-lang\stdlib`. The
+  archive `lib` is byte-identical to stdlib main (ptr/iter/alloc/core
+  SHA256), so this is the release binary/build path, not a stale stdlib.
+- 1550: the compiler's `m1550` fixture uses an Int-returning `idx_plus`
+  and passes; the true tuple-returning shape (`p_iter_enumerate_tuple`,
+  `idx_plus -> (Int,Int)`) still gives `len=3`, `em[1].0=0`, rc 3 on the
+  official archive (shared and bundled lib). The e2e lock misses the
+  tuple-returning return type.
+- Mode: debug default passes m372 with main stdlib; `--release` or any
+  `--opt-level 0..3` flips m372 and the tuple probe to the failing
+  results. The official default behaves like the failing mode.
+Blockers REL-20261022-1410-stdlib and REL-20261022-1414-stdlib.
+`COMPILER_VERSION` stays `v0.64.8`; 1451 stays verified-not-closed with a
+correction note. Controls 1626/2249/1731 pass on v0.64.9; 1609 is still
+rc 1. Staged archives: %TEMP%\kilo\stdlib_ws\v0.64.9-official (windows zip
+sha256 `1b759541...`, linux x64 `b331dd4d...`), hashes matched.
+stdlib-v0.64.9 is released at `aa8b656` (GitHub Release + registry
+`xiom-std 0.64.9` live); its tag pins v0.64.8 and is unaffected. Next:
+wait for a green compiler re-cut/patch, then re-run the probes, bump the
+pin, run the battery, close the verified items, and verify the 1550 e2e
+lock.
 
 Coverage: global pub-with-clause 95.2% (6564/6897; clauses/fns 97.3%,
 9075 clauses; 9325 fns after the wave-208 render/number helpers), readiness
@@ -3877,16 +3883,22 @@ registry pin, agent recon for the rest)**
   job failed benignly: compiler main already had the pin
   (`2bcf58db5`), so there was nothing to commit. Compiler v0.64.9 tag is
   pushed at `2bcf58db5`; its `XIOM Release` workflow is in progress.
-- **v0.64.9 RELEASE BLOCKER (REL-20261022-1410-stdlib)**: the published
-  archives (Windows zip `1b759541...`, Linux `b331dd4d...`, both digests
-  matched) fail 1451 and 1550 on both platforms with the bundled stdlib.
-  1451 `p_nested_generic_ptr_read` gives `nested=0 local=0` rc 1 (debug:
-  42/42 rc 0). 1550 `p_iter_enumerate_tuple` gives `len=3`, `em[1].0=0`,
-  rc 3 (debug/d04cd3265: 10/12/14 rc 0). The tag `2bcf58db5` has both
-  fix commits as ancestors and the bundled iter.xi has the
-  specialization, so this is release-only or a wrong-tree package. Do not
-  bump `COMPILER_VERSION`; 1451 stays open with a correction note. The
-  stdlib 0.64.9 release pins v0.64.8 and is unaffected.
+- **v0.64.9 RELEASE BLOCKER (REL-20261022-1410 + 1414-stdlib)**: the
+  published archives (Windows zip `1b759541...`, Linux `b331dd4d...`,
+  digests matched) are red on both platforms.
+  - 1451: the compiler's own `m372_nested_generic_ptr_read.xi` gives
+    `nested=0 local=0` rc 1 on the official binary (default and
+    `--release`), while `target/debug/xiom.exe` with main stdlib gives
+    42/42 rc 0. The archive `lib` is byte-identical to stdlib main
+    (ptr/iter/alloc/core), so the release binary/build path is at fault.
+  - 1550: the compiler's `m1550` fixture uses an Int-returning `idx_plus`
+    and passes; the true tuple-returning shape (`p_iter_enumerate_tuple`)
+    still gives `len=3`, `em[1].0=0`, rc 3 on the official archive. The
+    e2e lock misses the tuple-returning return type.
+  - Mode: debug default passes m372 with main stdlib; `--release`/any
+    `--opt-level 0..3` flips both probes to the failing results.
+  Do not bump `COMPILER_VERSION`; 1451 stays open with a correction note.
+  The stdlib 0.64.9 release pins v0.64.8 and is unaffected.
 - REL-20261021-1122-orbitdb-3: acked -> fixed at the release (read_at_into
   in stdlib-v0.64.9). REL-20261020-1704 refreshed: the release includes
   the JSON/YAML/TOML/CSV byte-builder fixes; parse/build still m375.
