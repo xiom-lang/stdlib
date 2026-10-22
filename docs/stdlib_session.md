@@ -17,238 +17,85 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 86 (updated 2026-10-22 22:40Z; **stdlib-v0.64.9 RELEASED but HELD for xvector -- 1640 fixed on main f436a5d, hotfix 0.64.10 pending; compiler v0.64.9 PUBLISHED BUT RED -- 1451/1550, blocker REL-20261022-1410/1414-stdlib, do NOT pin/announce**; package 0.64.9, COMPILER_VERSION v0.64.8; global 95.2%, readiness 89.5%, floors196; doc_scan 100%; wave 208-209 JSON/YAML/TOML/CSV byte-builder paths flat at 10k; battery modules 533/533, smokes 847/963 (0 fails, run cut at 40 min by host load; JSON 17/17, serialize 24/24, L-6 probes green), probes 404/404, barename 0/533; 1640 fix verified on all three xvector probes; 1550 specialization in the release, confirmed on d04cd3265 (synced-pin e2e remains); 1520/1609 open; next: cut hotfix stdlib-v0.64.10 pinning v0.64.8, then wait for a green compiler re-cut/patch, bump the pin, close the verified items, verify the 1550 e2e; coverage hard tail iter/os)
+## 0A. CONTINUE HERE -- handoff snapshot 87 (updated 2026-10-22 22:50Z; **stdlib-v0.64.9 RELEASED but HELD -- 1640 HTTP/JSON crash fixed on main f436a5d; hotfix stdlib-v0.64.10 (pin v0.64.8) next, owner GO required; compiler v0.64.9 PUBLISHED BUT RED -- 1451/m372 and tuple-returning 1550, blockers REL-20261022-1410/1414-stdlib open, do NOT pin/announce**; package 0.64.9, COMPILER_VERSION v0.64.8; gates: modules 533/533, smokes 847/963 (0 fails, host-load cut; JSON 17/17, serialize 24/24, L-6 probes green), probes 404/404, barename 0/533, floors196 OK, doc_scan 100%, coverage 95.2% pub / 97.3% clauses; next: hotfix 0.64.10, then green compiler re-cut -> pin/verify/close; coverage hard tail iter/os)
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-22, snapshot 82)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-22, snapshot 87)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
-  git -C E:\xiom-lang\xiom-relays pull --ff-only origin main
+  git pull --ff-only origin main
+  git -C E:\xiom-lang\xiom-relays fetch origin
+  git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 86 + blocks 274/273 (and this 0C block).
+Read docs/stdlib_session.md snapshot 87 + blocks 275/274 + this 0C block.
 
-State: **stdlib-v0.64.9 is RELEASED** at aa8b656 (package.xi 0.64.9;
-COMPILER_VERSION v0.64.8 by design -- the stdlib release pins the last
-released compiler). Release run 39785430606 succeeded: GitHub Release
-`stdlib-v0.64.9` is live (xiom-std-0.64.9.tar.gz sha256 eab0b80d...),
-registry `xiom-std 0.64.9` is live (sha256 6f0d3b15...), and the pin
-decision is REL-20261022-1327-stdlib (compiler v0.64.8). The
-`STDLIB_VERSION pin PR` job failed benignly because compiler main already
-had `STDLIB_VERSION=stdlib-v0.64.9` (2bcf58db5).
+STATE (2026-10-22 22:50Z):
+- Main 3beaee4. stdlib-v0.64.9 is TAGGED at aa8b656 and RELEASED
+  (GitHub Release xiom-std-0.64.9.tar.gz sha256 eab0b80d..., registry
+  xiom-std 0.64.9 sha256 6f0d3b15..., pin decision
+  REL-20261022-1327-stdlib, compiler pin v0.64.8 by design). BUT it is
+  HELD: REL-20261022-1640-xvector found HTTP/JSON probes crashing
+  0xC0000005 on v0.64.8.
+- 1640 is FIXED on main f436a5d: JSON number digits use
+  _json_push_uint_digits instead of builder.sb_push_int (its [20]UInt8
+  stack buffer miscompiles on the v0.64.8 pin in the HTTP service call
+  chain). Verified: xvector probe_http_service/probe_router_2shards/
+  probe_scatter_gather 0 failed checks; p_json_number_format and
+  p_json_number_random rc 0; 10k stringify under 256 MB; JSON smokes
+  17/17; serialize 24/24. Full smoke reached 847/963 with 0 failures
+  before a 40-min host-load timeout; the hotfix CI must complete it.
+- Compiler v0.64.9 is PUBLISHED BUT RED: official archives fail
+  1451/m372 (nested=0) and the TRUE tuple-returning 1550 shape
+  (p_iter_enumerate_tuple: len=3, em[1].0=0). The compiler gate/tests used
+  debug builds; the release path is cargo build --release. Blockers
+  REL-20261022-1410/1414-stdlib are OPEN with compiler. Do NOT bump
+  COMPILER_VERSION or announce. COMPILER_VERSION stays v0.64.8.
+- Staged v0.64.9 archives hash-verified in
+  %TEMP%\kilo\stdlib_ws\v0.64.9-official (windows zip 1b759541...,
+  linux b331dd4d...). Controls on v0.64.9: 1626/2249/1731 pass; 1609
+  still rc 1.
 
-**STDLIB-v0.64.9 IS HELD FOR XVECTOR (REL-20261022-1640-xvector).** The
-released tag crashes `probe_http_service`/`probe_router_2shards`/
-`probe_scatter_gather` on v0.64.8. Fixed on main `f436a5d`: JSON number
-digits use `_json_push_uint_digits` instead of `builder.sb_push_int`,
-whose `[20]UInt8` stack buffer miscompiles on the v0.64.8 pin in the HTTP
-service call chain. All three probes are green on the fixed main; number
-parity and 10k memory are green; JSON smokes 17/17, serialize 24/24. A
-hotfix tag (**stdlib-v0.64.10**, pin v0.64.8) is needed; xvector keeps
-750384f until it lands. Do not move the 0.64.9 tag.
+PRIORITY 1 -- HOTFIX stdlib-v0.64.10 (owner GO required):
+- package.xi -> 0.64.10; move CHANGELOG Unreleased -> [0.64.10]; write
+  release-notes/v0.64.10.md with <=2 stdlib highlights; validate:
+  E:\xiom-lang\xiom\target\debug\xiom-release-notes.exe convert --tag
+  v0.64.10 --stdlib E:\xiom-lang\stdlib
+- COMPILER_VERSION = v0.64.8 (last good; do NOT pin red v0.64.9).
+- Full battery: modules 533/533, smokes 963/963, probes 404/404,
+  barename 0/533, floors196, doc_scan; then tag/push stdlib-v0.64.10,
+  run the release workflow, publish registry with compiler pin v0.64.8,
+  and update xvector/1640 and 1122.
+- Do NOT move stdlib-v0.64.9.
 
-**COMPILER v0.64.9 IS RED -- DO NOT PIN OR ANNOUNCE.** Two distinct
-problems on both Windows x64 and Linux x64 (released archives match the
-GitHub digests):
-- 1451: the compiler's own `tests/regression/m372_nested_generic_ptr_read.xi`
-  prints `nested=0 local=0`, rc 1 on the official binary (default and
-  `--release`). The same fixture prints `42/42` rc 0 on
-  `target/debug/xiom.exe` with `XIOM_STDLIB=E:\xiom-lang\stdlib`. The
-  archive `lib` is byte-identical to stdlib main (ptr/iter/alloc/core
-  SHA256), so this is the release binary/build path, not a stale stdlib.
-- 1550: the compiler's `m1550` fixture uses an Int-returning `idx_plus`
-  and passes; the true tuple-returning shape (`p_iter_enumerate_tuple`,
-  `idx_plus -> (Int,Int)`) still gives `len=3`, `em[1].0=0`, rc 3 on the
-  official archive (shared and bundled lib). The e2e lock misses the
-  tuple-returning return type.
-- Mode/root cause: debug default passes m372 with main stdlib; `--release`
-  or any `--opt-level 0..3` flips m372 and the tuple probe to the failing
-  results. The release workflow builds with `cargo build --release`
-  (dry-run 39785770942 headSha `2bcf58db5`), and the official default
-  behaves like the failing mode. The compiler gate/tests used the debug
-  build, so the release-mode codegen path was never gated. Both fix
-  commits are ancestors of the tag; the stdlib is not the variable.
-Blockers REL-20261022-1410-stdlib and REL-20261022-1414-stdlib.
-`COMPILER_VERSION` stays `v0.64.8`; 1451 stays verified-not-closed with a
-correction note. Controls 1626/2249/1731 pass on v0.64.9; 1609 is still
-rc 1. Staged archives: %TEMP%\kilo\stdlib_ws\v0.64.9-official (windows zip
-sha256 `1b759541...`, linux x64 `b331dd4d...`), hashes matched.
-stdlib-v0.64.9 is released at `aa8b656` (GitHub Release + registry
-`xiom-std 0.64.9` live); its tag pins v0.64.8 and is unaffected. Next:
-wait for a green compiler re-cut/patch, then re-run the probes, bump the
-pin, run the battery, close the verified items, and verify the 1550 e2e
-lock.
+PRIORITY 2 -- COMPILER RE-CUT (not the current v0.64.9):
+- Wait for a green patch/re-cut. Stage/hash-verify the official
+  Windows+Linux archives; re-run p_nested_generic_ptr_read (m372) and
+  p_iter_enumerate_tuple on both. Both must be rc 0.
+- Then bump COMPILER_VERSION, run the battery, close the verified items
+  1626/1451/1326/2249/2249-2/1731, verify the compiler 1550 e2e lock,
+  update 0918/1704, and update the session.
+- The current 1550 compiler lock uses an Int-returning idx_plus; it does
+  NOT cover the tuple-returning shape. Insist on the tuple-returning
+  witness.
 
-Coverage: global pub-with-clause 95.2% (6564/6897; clauses/fns 97.3%,
-9075 clauses; 9325 fns after the wave-208 render/number helpers), readiness
-89.5% (gate 8 95.2%; floors196; gates 1-7/10 met, gate 9 open).
-Waves 188-208 merged: num/num.xi 100%, string 100%,
-collect 99.8%, time 96.4%, async 95.5%, os 71.5%, thread 91.1%,
-compress 100%, math 90.7%, bits 100%, iter 70.5%, core 99.2%, simd
-97.8%, ffi 94.5%, io 99.2%, test 97.7%. Worst dirs: iter 70.5%, os
-71.5%, math 90.7%, thread 91.1%, ffi 94.5%, serialize 94.7%, debug
-95.1%, format 95.2%. Thread is 91.1% after c4e057d removed the two
-contradictory sleep preconditions; snapshot 79's 92.9% predated that.
+RULES:
+- No clause waves: iter/os/math/thread/ffi/serialize/format are the
+  documented no-clause tail.
+- Keep io.list_dir runtime-owned (xiom_list_dir_names); no preconditions
+  that contradict documented clamping (thread.sleep_ms/timer_sleep);
+  json_clear(&mut) still hangs; no mutable-enum recursion.
+- Agent waves: Agent Manager worktrees, official pin, unique
+  check_modules OutDir, floors196, no floors/workflows/readiness/session
+  edits, commit on branch, no merge/push; main merges --no-ff.
+- Relay pulls: fetch + merge --ff-only (pull --ff-only fails with
+  multiple branches).
+- 1609 still blocks 1549; 1704 parse/build still m375; 1520 open;
+  1550 compiler-side; 1410/1414 with compiler.
+- Untracked out/ + smoke_diag_f128_* are documented leftovers.
 
-Final battery on the merged tree (official v0.64.8): modules 533/533,
-smokes 963/963 (0 compilefail / 0 runfail), probes 404/404, barename
-0/533, coverage floors196 RATCHET OK, regex 17/17, doc_scan 100%
-(7474/7474, 0 misses after block 271 documented the two TLS step
-constants). Bug fixes on top: fraction_add cross-cancel
-(109afa1), io.rename directory-aware postcondition (19d86de), runtime
-__udivti3 (1555c93), Routh-Hurwitz recurrence (07a9619), weekday
-0=Sunday (d1ee6b3), AsyncExecutor.run receiver drain (fc8e2b6), Vec4f
-lane pointer scale (2e99c81; verify on m377), io.read_at_into
-caller-buffer page reader (9bad232), in-place JSON builders (526fd96),
-runtime-owned list_dir names (05673f8), and the builder-based
-json_stringify/json_pretty renderer (wave 208).
-Probes: p_fraction_add_reduce, p_routh_stability, p_async_executor_state,
-p_hash_shadow, p_async_select_closed_drain, p_wave196_small_gaps,
-p_wave197_math_os, p_wave198_long_tail, p_wave199_mid_gaps,
-p_wave200_math, p_wave201_os_iter, p_wave202_mid_final,
-p_wave203_limited_final, p_wave204_last_mile, p_wave205_iter_os,
-p_wave206_math_thread_async, p_wave207_long_tail_residual,
-p_io_read_at_into, p_json_builder, p_json_stringify_render,
-p_json_number_format, p_json_number_random, p_serialize_minify_pretty,
-p_simd_vec4f_lanes, p_toml_write_builder, p_csv_write_builder,
-p_yaml_emit_builder,
-p_io_listdir_roundtrip. Compiler
-items: 1626/1451/1326/2249/2249-2/1731 pre-verified on the main debug
-build (relay `9310d3c`); 1242 fixed (stdlib `p_simd_vec4f_lanes` green);
-1550 tuple-returning ABI is confirmed: the stdlib `EnumerateIter[Int]`
-specialization is applied and the compiler `d04cd3265` run gives len=3,
-em 10/12/14, rc 0; the e2e lock on the synced pin remains. 1520 adapter
-collision remains open; 1549 stays blocked by 1609 (repro
-still red on main debug); 1531 xvector shared-HEAD claim acked as not
-reproducible. New witness
-`tools/known_failures/p_map_set_mutating_combo.xi` (AV on v0.64.8, green
-on main) is the 2249 lock.
-
-Immediate housekeeping:
-- The 205-207 sessions are already stopped and their branches deleted;
-  prune stale no-session worktree entries for 179/180 and the merged
-  worktrees only if safe. Keep wave/154 (foreign). Do not merge anything.
-
-Priority before more coverage: 1704 JSON retention. Wave 208 fixed the
-stringify/pretty/minify retention (10k loops under 256 MB on Windows and
-Linux), but the parse tree and builder-built values still retain and need
-the compiler m375 drop elaboration. The 0918 macOS witness is
-done: PULSE CI 39624153094 on 05673f8 is green (witness rc 0, migrations
-21/21, SQL 53/53); the item stays fixed until the reporter closes it after
-the next pin. The main-debug pre-verifications for
-1626/1451/1326/2249/2249-2/1731 are recorded (relay `9310d3c`); the
-v0.64.9 archive re-check still gates the tag. 1242 is fixed on the stdlib
-side (`p_simd_vec4f_lanes` green on v0.64.8 and main); 1550/1520/1609
-remain open. Wave 205 confirmed iter/os have no
-non-tautological clauses left;
-do not run more clause waves there.
-
-Next waves (only if a new real path exists; 2-3 parallel, same rules):
-1. iter 70.5%: 54 remaining are opaque closure adapters; stop forcing.
-2. os 71.5%: 111 remaining are stubs/no-ops; no further clause work.
-3. math 90.7%: 94 remaining are BUG 20/23 stubs, Bool/table predicates,
-   and opaque solver/closure joints; wait for compiler fixes.
-4. thread 91.1%, ffi 94.5%, serialize 94.7%, debug 95.1%, format 95.2%:
-   remaining are no-clause printers/getters/pass-throughs; do not add
-   tautologies.
-Agent prompt: scope files; read snapshot 81 + block 272; real
-requires/ensures only; clause-only/no body changes; pin
-C:\Users\lefte\AppData\Local\Temp\kilo\stdlib_ws\v0.64.8-official\bin\xiom.exe;
-check_modules with unique -OutDir; coverage_scan -RatchetFile
-tools/coverage_floors196.json; doc_scan; targeted smokes/probes; add a
-runner-compatible probe; do NOT edit floors/workflows/readiness/session
-docs/COMPILER_VERSION; commit on branch; no merge/push. Main session
-reviews, runs combined gates, merges --no-ff, dumps floors197, wires
-ci/heavy/release + tools/README, updates readiness/session.
-
-Relays, bugs, wishlist:
-- Pull with explicit origin main; relay commits via python tools/relay.py
-  commit --lane stdlib -m "..."; never edit another lane's item.
-- Gate 9 on v0.64.8: still red REL-20261015-2343-stdlib (bare inline
-  i32 -1 read as >=0), REL-20261016-2100-stdlib W1 (alias/full-path
-  field + close C001), and REL-20261010-1609-stdlib (inline
-  Result.value[i]; still blocks PULSE list_dir). REL-20261011-1626 is
-  fixed on compiler main (626dfbc65/8bfd4235d), and REL-20261018-1451
-  is fixed on compiler main (0acbbdc8b); verify both on the next
-  candidate. Keep 1549 blocked until 1609 is green.
-- Verified/closed on v0.64.8: 1053 (p_hash_shadow), 1456, 2328, 2000,
-  1546 (m370 + p_async_select_closed_drain), 1624, 1548-5 (generic
-  by-ref/slice), and 2331 runtime residual. Superseded stdlib status
-  addenda were closed. 1451 (nested generic ptr.read) is fixed on
-  compiler main 0acbbdc8b, pending the next candidate; 1549 list_dir
-  stays blocked by 1609. Main debug build 2026-10-22: list_dir itself is
-  green, but the 1609 inline-payload-index repro is still rc 1 (relay
-  `e03edfa`).
-- New compiler items: REL-20261019-2249-stdlib (multiple generic Map/Set
-  free helpers in one program AV 0xC0000005), -2 (Vec4f lane get/write
-  miscompile), REL-20261020-1242 (Vec4f pointer scale; stdlib fixed in
-  2e99c81, verify on m377), REL-20261020-1326 (log+serialize IR
-  `icmp eq %struct.LogLevel`; fixed on compiler main d50d1436e), and
-  REL-20261020-1550 (tuple-returning fn-value ABI). xvector
-  REL-20261020-1531 (shared HEAD breaks --check)
-  is acked as NOT REPRODUCED: probe_hello --check rc 0 on 87090ec,
-  shared and bundled. REL-20261020-1302 io.read_at_into is implemented
-  and fixed (9bad232, p_io_read_at_into). 1704 JSON retention is acked
-  with in-place builders (526fd96) as a partial mitigation; 0918 macOS
-  list_dir is fixed in 05673f8 (runtime-owned names, dirent in one TU)
-  and PULSE's macos-15-intel witness is green (CI 39624153094, migrations
-  21/21); the reporter closes it after the next pin. 1626 is fixed on
-  compiler main (626dfbc65/8bfd4235d) and 2249/2249-2/m377 (m376/m377)
-  plus 1451 (m372) are fixed there too, all pending the next release.
-  REL-20261021-1520 (adapter specialization collision) is open; 1550
-  remains open on compiler main; m1326 is fixed there (d50d1436e).
-  Re-test the rest on the next candidate; the wave-196 probe excludes the
-  AV combination.
-- Wishlist row 33 (compiler/install) open; row 47 fixed pending xvector
-  verify; thread-pool item 1834 no-arg path green, persistent fleet /
-  Send-Sync remain. New stdlib fixes: fraction_add, io.rename,
-  Routh-Hurwitz, weekday, AsyncExecutor.run.
-
-Pitfalls:
-- check_modules/barename parallel runs need distinct -OutDir (timestamp
-  collisions corrupt results).
-- Combined stats/contract probes can hit the 300s compiler limit; split
-  probes or use --timeout 900, but only promote runner-compatible probes.
-- The compiler links every runtime/*.c into each program; keep test mains
-  out of runtime/ (tests/runtime/test_udivti3.c).
-- `@pre` on an ensures that calls a contracted helper or an AtomicInt
-  method is evaluated against post-state on v0.64.8 (spurious contract
-  violation); use post-state invariants instead.
-- Module-global references inside contracts crash codegen (0xC000001D);
-  the async free functions stay unclaused for now.
-- Channel generic call forms: `Channel.bounded(2)` plus
-  `Channel.send[Int](...)` / `try_recv[Int](...)` / `close[Int](...)`;
-  `Channel[Int].bounded` is rejected.
-- Multiple generic Map/Set free helpers in one program AV on v0.64.8
-  (see 2249); keep only the read-only combos in p_wave196_small_gaps.
-- Top-level `xiom.simd.Vec4f` lane get/write miscompiles on v0.64.8
-  (`*Float32` defaulted to i64; see 2249-2). The stdlib double-scale is
-  fixed in 2e99c81, but lane clauses/verification wait for m377.
-- Tuple-returning fn values lose payloads through iter adapters on
-  v0.64.8 (REL-20261020-1550; count is correct, fields are garbage).
-- Do not add preconditions that contradict documented clamping
-  (`thread.spawn.sleep_ms`/`async.timer_sleep`); wave 206 did and
-  p_wave78 caught the regression.
-- `json_clear(&mut JsonValue)` type-checks but hangs at runtime on
-  v0.64.8; do not ship mutable-enum recursion.
-- `match &enum` is broken on v0.64.8 (REL-20261021-1731): the minimal
-  shape fails codegen with `ptr` vs `i64`, and a larger borrowed renderer
-  compiles but binds Str payloads to garbage. Keep enum payloads owned;
-  `json_stringify`/`json_pretty` use owned match + one builder.
-- `io.list_dir` now returns runtime-owned copies; keep the runtime
-  `xiom_list_dir_names` path (dirent stays in one TU).
-- Release ruleset bypass is expected; do not move tags.
-- agent_manager list to review reports; idle = done; merge --no-ff; clean
-  worktrees/branches.
-
-Deliver: per wave report coverage before/after, gate outputs, probes,
-commit; keep docs/session current and post material findings on the relay
-bus.
+DELIVERABLE: hotfix first (if GO), then compiler-pin verification; leave
+docs/session current and push.
 ```
-
-### Snapshot 37 (paste-ready)
-
-**PASTE-READY PROMPT FOR THE NEXT SESSION (copy this block):**
-
 ---
 
 You are continuing the XIOM stdlib lane. Worktree `E:\xiom-lang\stdlib`,
@@ -3883,6 +3730,32 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-22 block 275 (handoff: 1640 HTTP/JSON crash fixed on main; stdlib 0.64.9 held; hotfix 0.64.10 next; compiler v0.64.9 still red)**
+- REL-20261022-1640-xvector: reproduced with the xvector lane toolchain
+  on v0.64.8 (aa8b656 crashes probe_http_service/router_2shards/
+  scatter_gather; 750384f green). Bisect: c8e889c green, 9f933aa green,
+  72b2b4c red. Instrumentation: the number push and json_stringify
+  complete; the crash is after the 62-byte body. Replacing sb_push_int
+  with int_to_string was green; re-adding only _json_push_fixed's
+  sb_push_int(int_part) was red. Root cause: builder.sb_push_int's
+  [20]UInt8 stack buffer miscompiles on the v0.64.8 pin in the HTTP
+  service call chain.
+- Fix main `f436a5d`: `_json_push_uint_digits` (allocation-free byte
+  loop, n <= 1e18) replaces all four sb_push_int calls in the JSON number
+  helpers. Verified on v0.64.8 + fixed main: all three xvector L-6 probes
+  0 failed checks; p_json_number_format/p_json_number_random rc 0; 10k
+  stringify under 256 MB; JSON smokes 17/17; serialize 24/24. Full smoke
+  847/963 with 0 failures before a 40-min host-load timeout; the hotfix
+  CI must finish the gate.
+- stdlib-v0.64.9 stays tagged/released but HELD; do not move it. Hotfix
+  **stdlib-v0.64.10** (pin v0.64.8) is the next release. Compiler v0.64.9
+  remains red for 1451/1550; do not pin. Relay 1640 fixed, 1702 acked,
+  1410/1414 open (compiler), 1501 orbitdb HOLD, 1122-orbitdb-3 fixed at
+  release, 1327 registry decision open (publish done), 1704 acked (m375),
+  1549 blocked by 1609, 1550 acked.
+- Main `3beaee4`; relay `5b69cd4`; bisect worktrees and the temp xvector
+  probe removed.
 
 **SESSION 2026-10-22 block 274 (xvector 1640: JSON number digit loop fixes the HTTP service crash; stdlib 0.64.9 needs a hotfix tag)**
 - REL-20261022-1640-xvector reproduced on compiler v0.64.8 with the
