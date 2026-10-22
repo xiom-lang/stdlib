@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 83 (updated 2026-10-22 16:35Z; **stdlib-v0.64.9 TAGGED at aa8b656; compiler v0.64.9 tag PENDING**; package 0.64.9, COMPILER_VERSION v0.64.8 by design; release run 39785430606 in progress, registry run 39785430612 waiting, pin decision REL-20261022-1327-stdlib; global 95.2%, readiness 89.5%, floors196; doc_scan 100%; 0918 macOS witness verified; wave 208-209 JSON/YAML/TOML/CSV byte-builder paths flat at 10k calls; battery modules 533/533, smokes 963/963, probes 404/404, barename 0/533; pre-verified on main debug 1626/1451/1326/2249/2249-2/1731, 1242 fixed; 1550 specialization in the tag, compiler d04cd3265 pending; 1520/1609 open; next: finish the release workflow + registry publish, then verify 1550 on the compiler v0.64.9 pin; coverage hard tail iter/os)
+## 0A. CONTINUE HERE -- handoff snapshot 83 (updated 2026-10-22 16:35Z; **stdlib-v0.64.9 TAGGED at aa8b656; compiler v0.64.9 tag PENDING**; package 0.64.9, COMPILER_VERSION v0.64.8 by design; release run 39785430606 in progress, registry run 39785430612 waiting, pin decision REL-20261022-1327-stdlib; global 95.2%, readiness 89.5%, floors196; doc_scan 100%; 0918 macOS witness verified; wave 208-209 JSON/YAML/TOML/CSV byte-builder paths flat at 10k calls; battery modules 533/533, smokes 963/963, probes 404/404, barename 0/533; pre-verified on main debug 1626/1451/1326/2249/2249-2/1731, 1242 fixed; 1550 specialization in the tag, confirmed on compiler d04cd3265 (synced-pin e2e remains); 1520/1609 open; next: finish the release workflow + registry publish, then verify 1550 on the compiler v0.64.9 pin; coverage hard tail iter/os)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-22, snapshot 82)
 
@@ -77,9 +77,10 @@ p_yaml_emit_builder,
 p_io_listdir_roundtrip. Compiler
 items: 1626/1451/1326/2249/2249-2/1731 pre-verified on the main debug
 build (relay `9310d3c`); 1242 fixed (stdlib `p_simd_vec4f_lanes` green);
-1550 tuple-returning ABI is coordinated: the stdlib `EnumerateIter[Int]`
-specialization is applied and the compiler fix `d04cd3265` is pending;
-1520 adapter collision remains open; 1549 stays blocked by 1609 (repro
+1550 tuple-returning ABI is confirmed: the stdlib `EnumerateIter[Int]`
+specialization is applied and the compiler `d04cd3265` run gives len=3,
+em 10/12/14, rc 0; the e2e lock on the synced pin remains. 1520 adapter
+collision remains open; 1549 stays blocked by 1609 (repro
 still red on main debug); 1531 xvector shared-HEAD claim acked as not
 reproducible. New witness
 `tools/known_failures/p_map_set_mutating_combo.xi` (AV on v0.64.8, green
@@ -3883,8 +3884,14 @@ registry pin, agent recon for the rest)**
   reads `em[1].0 = 0` on the stale 2026-10-22 debug build (it predates
   compiler `d04cd3265`); the compiler will re-run the synced tree. New
   witness `tools/known_failures/p_iter_enumerate_tuple.xi` (rc 3 on
-  v0.64.8, expected rc 0 after `d04cd3265`). 1550 stays acked until that
-  confirmation; 1152 moves open -> acked -> fixed with this commit.
+  v0.64.8, expected rc 0 after `d04cd3265`). The compiler confirmed 1550
+  on `d04cd3265`: len=3, em 10/12/14, rc 0. 1152 moved open -> acked ->
+  fixed at `d53f93a`; the 1550 item stays acked on the relay (the
+  compiler owns its transition) and the e2e lock runs on the synced pin.
+- REL-20261022-1302 (compiler -> stdlib release-check): acked -> fixed.
+  Replied with the tag `stdlib-v0.64.9`, commit `aa8b656`, the full gate
+  summary, release run 39785430606 and registry run 39785430612. The
+  compiler can now bump `STDLIB_VERSION` and tag compiler v0.64.9.
 - Same session: `toml_write` moved to the byte builder. Output is
   byte-identical against `b6198cf` (20 golden lines); 10,000 writes of a
   50-key table complete under 128 MB (the old path crossed 256 MB near
