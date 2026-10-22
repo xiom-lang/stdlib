@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 84 (updated 2026-10-22 17:20Z; **stdlib-v0.64.9 RELEASED (GitHub Release + registry 0.64.9 live); compiler v0.64.9 tag at 2bcf58db5, release workflow in progress**; package 0.64.9, COMPILER_VERSION v0.64.8 by design; global 95.2%, readiness 89.5%, floors196; doc_scan 100%; 0918 macOS witness verified; wave 208-209 JSON/YAML/TOML/CSV byte-builder paths flat at 10k calls; battery modules 533/533, smokes 963/963, probes 404/404, barename 0/533; pre-verified on main debug 1626/1451/1326/2249/2249-2/1731, 1242 fixed; 1550 specialization in the release, confirmed on compiler d04cd3265 (synced-pin e2e remains); 1520/1609 open; next: stage/hash-verify the compiler v0.64.9 archive when published, bump COMPILER_VERSION on main, run the battery, close the verified items, verify the 1550 e2e lock; coverage hard tail iter/os)
+## 0A. CONTINUE HERE -- handoff snapshot 85 (updated 2026-10-22 17:45Z; **stdlib-v0.64.9 RELEASED (GitHub Release + registry 0.64.9 live); compiler v0.64.9 PUBLISHED BUT RED -- official archives fail 1451/1550, blocker REL-20261022-1410-stdlib, do NOT bump COMPILER_VERSION/announce**; package 0.64.9, COMPILER_VERSION v0.64.8 by design; global 95.2%, readiness 89.5%, floors196; doc_scan 100%; 0918 macOS witness verified; wave 208-209 JSON/YAML/TOML/CSV byte-builder paths flat at 10k calls; battery modules 533/533, smokes 963/963, probes 404/404, barename 0/533; pre-verified on main debug 1626/1451/1326/2249/2249-2/1731, 1242 fixed; 1550 specialization in the release, confirmed on compiler d04cd3265 (synced-pin e2e remains); 1520/1609 open; next: stage/hash-verify the compiler v0.64.9 archive when published, bump COMPILER_VERSION on main, run the battery, close the verified items, verify the 1550 e2e lock; coverage hard tail iter/os)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-22, snapshot 82)
 
@@ -34,11 +34,24 @@ released compiler). Release run 39785430606 succeeded: GitHub Release
 registry `xiom-std 0.64.9` is live (sha256 6f0d3b15...), and the pin
 decision is REL-20261022-1327-stdlib (compiler v0.64.8). The
 `STDLIB_VERSION pin PR` job failed benignly because compiler main already
-had `STDLIB_VERSION=stdlib-v0.64.9` (2bcf58db5). The compiler v0.64.9 tag
-is pushed; its `XIOM Release` workflow is in progress and the GitHub
-Release assets are not published yet. Next: stage/hash-verify those
-assets, bump COMPILER_VERSION on main, run the battery, verify 1550 on
-the synced pin, close 1626/1451/1326/2249/2249-2/1731. COMPILER_VERSION=v0.64.8; staged
+had `STDLIB_VERSION=stdlib-v0.64.9` (2bcf58db5).
+
+**COMPILER v0.64.9 IS RED -- DO NOT PIN OR ANNOUNCE.** The published
+archives fail two fixes that pass on the debug build, on both Windows x64
+and Linux x64, with the bundled stdlib:
+- 1451 `p_nested_generic_ptr_read`: `nested=0 local=0`, rc 1 (debug:
+  `nested=42 local=42`, rc 0).
+- 1550 `p_iter_enumerate_tuple`: `len=3` but `em[1].0=0`, rc 3 (debug /
+  compiler `d04cd3265`: `em 10/12/14`, rc 0).
+The tag `2bcf58db5` contains `d04cd3265`/`0acbbdc8b`, and the bundled
+`lib/xiom/iter/iter.xi` has the specialization; this looks like a
+release-only miscompile or a package built from the wrong tree. Blocker:
+REL-20261022-1410-stdlib (Windows zip `1b759541...`, Linux
+`b331dd4d...`). `COMPILER_VERSION` stays `v0.64.8`; 1451 stays
+verified-but-not-closed with the correction note. Controls 1626/2249/1731
+pass on v0.64.9; 1609 is still rc 1 as expected. Next: wait for the
+compiler re-cut/patch, then stage/hash-verify, bump the pin, run the
+battery, close the verified items, and verify the 1550 e2e lock. COMPILER_VERSION=v0.64.8; staged
 archive %TEMP%\kilo\stdlib_ws\v0.64.8-official (windows zip sha256
 c31d9c46..., linux tar.gz a8c003c0...). stdlib-v0.64.8 tag object 0bf5b75
 -> commit 112c5b6 (tag-time COMPILER_VERSION=candidate-v0.64.8-r2); release
@@ -3864,6 +3877,16 @@ registry pin, agent recon for the rest)**
   job failed benignly: compiler main already had the pin
   (`2bcf58db5`), so there was nothing to commit. Compiler v0.64.9 tag is
   pushed at `2bcf58db5`; its `XIOM Release` workflow is in progress.
+- **v0.64.9 RELEASE BLOCKER (REL-20261022-1410-stdlib)**: the published
+  archives (Windows zip `1b759541...`, Linux `b331dd4d...`, both digests
+  matched) fail 1451 and 1550 on both platforms with the bundled stdlib.
+  1451 `p_nested_generic_ptr_read` gives `nested=0 local=0` rc 1 (debug:
+  42/42 rc 0). 1550 `p_iter_enumerate_tuple` gives `len=3`, `em[1].0=0`,
+  rc 3 (debug/d04cd3265: 10/12/14 rc 0). The tag `2bcf58db5` has both
+  fix commits as ancestors and the bundled iter.xi has the
+  specialization, so this is release-only or a wrong-tree package. Do not
+  bump `COMPILER_VERSION`; 1451 stays open with a correction note. The
+  stdlib 0.64.9 release pins v0.64.8 and is unaffected.
 - REL-20261021-1122-orbitdb-3: acked -> fixed at the release (read_at_into
   in stdlib-v0.64.9). REL-20261020-1704 refreshed: the release includes
   the JSON/YAML/TOML/CSV byte-builder fixes; parse/build still m375.
