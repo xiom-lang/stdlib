@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 83 (updated 2026-10-22 16:35Z; **stdlib-v0.64.9 TAGGED at aa8b656; compiler v0.64.9 tag PENDING**; package 0.64.9, COMPILER_VERSION v0.64.8 by design; release run 39785430606 in progress, registry run 39785430612 waiting, pin decision REL-20261022-1327-stdlib; global 95.2%, readiness 89.5%, floors196; doc_scan 100%; 0918 macOS witness verified; wave 208-209 JSON/YAML/TOML/CSV byte-builder paths flat at 10k calls; battery modules 533/533, smokes 963/963, probes 404/404, barename 0/533; pre-verified on main debug 1626/1451/1326/2249/2249-2/1731, 1242 fixed; 1550 specialization in the tag, confirmed on compiler d04cd3265 (synced-pin e2e remains); 1520/1609 open; next: finish the release workflow + registry publish, then verify 1550 on the compiler v0.64.9 pin; coverage hard tail iter/os)
+## 0A. CONTINUE HERE -- handoff snapshot 84 (updated 2026-10-22 17:20Z; **stdlib-v0.64.9 RELEASED (GitHub Release + registry 0.64.9 live); compiler v0.64.9 tag at 2bcf58db5, release workflow in progress**; package 0.64.9, COMPILER_VERSION v0.64.8 by design; global 95.2%, readiness 89.5%, floors196; doc_scan 100%; 0918 macOS witness verified; wave 208-209 JSON/YAML/TOML/CSV byte-builder paths flat at 10k calls; battery modules 533/533, smokes 963/963, probes 404/404, barename 0/533; pre-verified on main debug 1626/1451/1326/2249/2249-2/1731, 1242 fixed; 1550 specialization in the release, confirmed on compiler d04cd3265 (synced-pin e2e remains); 1520/1609 open; next: stage/hash-verify the compiler v0.64.9 archive when published, bump COMPILER_VERSION on main, run the battery, close the verified items, verify the 1550 e2e lock; coverage hard tail iter/os)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-22, snapshot 82)
 
@@ -27,14 +27,18 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
 Read docs/stdlib_session.md snapshot 82 + blocks 273/272 (and this 0C block).
 
-State: **stdlib-v0.64.9 is TAGGED at aa8b656** (package.xi 0.64.9;
+State: **stdlib-v0.64.9 is RELEASED** at aa8b656 (package.xi 0.64.9;
 COMPILER_VERSION v0.64.8 by design -- the stdlib release pins the last
-released compiler). Stdlib release run 39785430606 is in progress;
-registry run 39785430612 is waiting; the registry pin decision is
-REL-20261022-1327-stdlib (xiom-std 0.64.9 -> compiler v0.64.8). The
-compiler v0.64.9 tag is NOT cut yet; its release prep pins
-STDLIB_VERSION=stdlib-v0.64.9 (compiler 2bcf58db5) and its tag is the
-next external gate. COMPILER_VERSION=v0.64.8; staged
+released compiler). Release run 39785430606 succeeded: GitHub Release
+`stdlib-v0.64.9` is live (xiom-std-0.64.9.tar.gz sha256 eab0b80d...),
+registry `xiom-std 0.64.9` is live (sha256 6f0d3b15...), and the pin
+decision is REL-20261022-1327-stdlib (compiler v0.64.8). The
+`STDLIB_VERSION pin PR` job failed benignly because compiler main already
+had `STDLIB_VERSION=stdlib-v0.64.9` (2bcf58db5). The compiler v0.64.9 tag
+is pushed; its `XIOM Release` workflow is in progress and the GitHub
+Release assets are not published yet. Next: stage/hash-verify those
+assets, bump COMPILER_VERSION on main, run the battery, verify 1550 on
+the synced pin, close 1626/1451/1326/2249/2249-2/1731. COMPILER_VERSION=v0.64.8; staged
 archive %TEMP%\kilo\stdlib_ws\v0.64.8-official (windows zip sha256
 c31d9c46..., linux tar.gz a8c003c0...). stdlib-v0.64.8 tag object 0bf5b75
 -> commit 112c5b6 (tag-time COMPILER_VERSION=candidate-v0.64.8-r2); release
@@ -3851,14 +3855,18 @@ registry pin, agent recon for the rest)**
 - Compiler release check: still v0.64.8 (latest), no v0.64.9 tag or
   branch. Compiler main is ahead 7 with m376/m377/m1326/m1731 etc.; owner
   GO still gates the cut.
-- RELEASE CUT: `stdlib-v0.64.9` annotated tag pushed at `aa8b656`
-  (package.xi 0.64.9; CHANGELOG [0.64.9]; COMPILER_VERSION stays v0.64.8
-  by design). Release run 39785430606 is in progress (Windows/Ubuntu
-  gates); registry run 39785430612 is waiting. Registry decision filed
-  REL-20261022-1327-stdlib: publish `xiom-std 0.64.9` with compiler pin
-  `v0.64.8` (publish-registry.yml passes the tag's COMPILER_VERSION).
-  Compiler v0.64.9 prep pins `STDLIB_VERSION=stdlib-v0.64.9`
-  (`2bcf58db5`); its tag is the next external gate.
+- RELEASE COMPLETE: `stdlib-v0.64.9` annotated tag at `aa8b656`
+  (package.xi 0.64.9; COMPILER_VERSION v0.64.8 by design). Release run
+  39785430606 succeeded: GitHub Release live
+  (xiom-std-0.64.9.tar.gz sha256 eab0b80d...), registry `xiom-std 0.64.9`
+  live (sha256 6f0d3b15...), registry pin decision
+  REL-20261022-1327-stdlib (compiler v0.64.8). The `STDLIB_VERSION pin PR`
+  job failed benignly: compiler main already had the pin
+  (`2bcf58db5`), so there was nothing to commit. Compiler v0.64.9 tag is
+  pushed at `2bcf58db5`; its `XIOM Release` workflow is in progress.
+- REL-20261021-1122-orbitdb-3: acked -> fixed at the release (read_at_into
+  in stdlib-v0.64.9). REL-20261020-1704 refreshed: the release includes
+  the JSON/YAML/TOML/CSV byte-builder fixes; parse/build still m375.
 - REL-20261021-1731: fixed at `ace095744` (+`9d31321df`) and verified on
   the main debug build: the exact repro prints "world" rc 0, and the
   larger borrowed JsonValue renderer is byte-identical when Str payloads
