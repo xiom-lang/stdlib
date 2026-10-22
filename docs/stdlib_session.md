@@ -17,15 +17,15 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 81 (updated 2026-10-21 23:20Z; **v0.64.8 PINNED + RELEASED, v0.64.9 NOT CUT**; global 95.2%, readiness 89.5%, floors196; doc_scan 100% with 0 misses; 0918 macOS witness verified; wave 208 JSON/YAML byte-builder paths flat at 10k calls (256MB or less; parse/build need m375); battery modules 533/533, smokes 963/963, probes 401/401, barename 0/533; next: stage v0.64.9 archive when cut, run the battery, verify 1626/1451/1242/2249/2249-2/m377/1326/1731, then tag stdlib-v0.64.9; coverage hard tail iter/os)
+## 0A. CONTINUE HERE -- handoff snapshot 82 (updated 2026-10-22 14:40Z; **v0.64.8 PINNED + RELEASED, v0.64.9 NOT CUT**; global 95.2%, readiness 89.5%, floors196; doc_scan 100% with 0 misses; 0918 macOS witness verified; wave 208 JSON/YAML byte-builder paths flat at 10k calls (256MB or less; parse/build need m375); battery modules 533/533, smokes 963/963, probes 402/402, barename 0/533; pre-verified on main debug 1626/1451/1326/2249/2249-2/1731, 1242 fixed; 1550/1520/1609 open; next: stage v0.64.9 archive when cut, run the battery, close the verified items, then tag stdlib-v0.64.9; coverage hard tail iter/os)
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-21, snapshot 81)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-22, snapshot 82)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
   git -C E:\xiom-lang\xiom-relays pull --ff-only origin main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 81 + blocks 272/271 (and this 0C block).
+Read docs/stdlib_session.md snapshot 82 + blocks 273/272 (and this 0C block).
 
 State: v0.64.8 is RELEASED and PINNED; v0.64.9 is NOT cut yet (latest
 compiler release is v0.64.8, checked 2026-10-21 20:10Z). COMPILER_VERSION=v0.64.8; staged
@@ -47,7 +47,7 @@ compress 100%, math 90.7%, bits 100%, iter 70.5%, core 99.2%, simd
 contradictory sleep preconditions; snapshot 79's 92.9% predated that.
 
 Final battery on the merged tree (official v0.64.8): modules 533/533,
-smokes 963/963 (0 compilefail / 0 runfail), probes 401/401, barename
+smokes 963/963 (0 compilefail / 0 runfail), probes 402/402, barename
 0/533, coverage floors196 RATCHET OK, regex 17/17, doc_scan 100%
 (7474/7474, 0 misses after block 271 documented the two TLS step
 constants). Bug fixes on top: fraction_add cross-cancel
@@ -66,14 +66,16 @@ p_wave203_limited_final, p_wave204_last_mile, p_wave205_iter_os,
 p_wave206_math_thread_async, p_wave207_long_tail_residual,
 p_io_read_at_into, p_json_builder, p_json_stringify_render,
 p_json_number_format, p_json_number_random, p_serialize_minify_pretty,
+p_simd_vec4f_lanes,
 p_yaml_emit_builder,
 p_io_listdir_roundtrip. Compiler
-items: 2249 Map/Set AV, 2249-2 Vec4f lane, 1242 acked (stdlib fixed,
-verify on m377), 1326 log+serialize IR, 1550 tuple-returning fn ABI,
-1520 adapter specialization collision, and 1731 borrowed-enum match
-(fixed on main `ace095744`, verified on debug; close on v0.64.9).
-1531 xvector shared-HEAD claim
-acked as not reproducible.
+items: 1626/1451/1326/2249/2249-2/1731 pre-verified on the main debug
+build (relay `9310d3c`); 1242 fixed (stdlib `p_simd_vec4f_lanes` green);
+1550 tuple-returning ABI and 1520 adapter collision remain open; 1549
+stays blocked by 1609 (repro still red on main debug); 1531 xvector
+shared-HEAD claim acked as not reproducible. New witness
+`tools/known_failures/p_map_set_mutating_combo.xi` (AV on v0.64.8, green
+on main) is the 2249 lock.
 
 Immediate housekeeping:
 - The 205-207 sessions are already stopped and their branches deleted;
@@ -86,11 +88,11 @@ Linux), but the parse tree and builder-built values still retain and need
 the compiler m375 drop elaboration. The 0918 macOS witness is
 done: PULSE CI 39624153094 on 05673f8 is green (witness rc 0, migrations
 21/21, SQL 53/53); the item stays fixed until the reporter closes it after
-the next pin. Then verify 1626/1451/1242/2249/2249-2/m377/1326/1731 on
-the next compiler candidate; 1550 remains open and 1520 is open. m1326 is
-fixed on compiler main (d50d1436e); m1731 is fixed there (ace095744) and
-verified on the debug build, so it closes on the official pin. Wave 205
-confirmed iter/os have no
+the next pin. The main-debug pre-verifications for
+1626/1451/1326/2249/2249-2/1731 are recorded (relay `9310d3c`); the
+v0.64.9 archive re-check still gates the tag. 1242 is fixed on the stdlib
+side (`p_simd_vec4f_lanes` green on v0.64.8 and main); 1550/1520/1609
+remain open. Wave 205 confirmed iter/os have no
 non-tautological clauses left;
 do not run more clause waves there.
 
@@ -3836,6 +3838,39 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
+**SESSION 2026-10-22 block 273 (relay triage: 1731 + 1626/1451/1326/2249/2249-2 verified on main debug; 1242 fixed; 1549 still blocked; v0.64.9 not cut)**
+- Compiler release check: still v0.64.8 (latest), no v0.64.9 tag or
+  branch. Compiler main is ahead 7 with m376/m377/m1326/m1731 etc.; owner
+  GO still gates the cut.
+- REL-20261021-1731: fixed at `ace095744` (+`9d31321df`) and verified on
+  the main debug build: the exact repro prints "world" rc 0, and the
+  larger borrowed JsonValue renderer is byte-identical when Str payloads
+  are passed by value (passing `&Str` still misbinds, matching the
+  compiler's "bind by value" note). Item fixed -> verified (relay
+  `4f2c1f5`); close after the official v0.64.9 re-check. Known failure
+  kept as the v0.64.8 repro.
+- Pre-release verifications on the 2026-10-22 main debug build (relay
+  `9310d3c`): 1626 (`p_trailing_match_after_push` rc 0), 1451
+  (`p_nested_generic_ptr_read` nested=42 local=42), 1326
+  (`p_wave198_long_tail` rc 0), 2249 (new `p_map_set_mutating_combo` AVs
+  on v0.64.8 0xC0000005, rc 0 on main), 2249-2 (new
+  `p_simd_vec4f_lanes` rc 0). All moved fixed -> verified; the official
+  archive re-check still gates the tag. 1242 acked -> fixed on the stdlib
+  side (element-based `(data + index) as *Float32`, probe green on
+  v0.64.8 and main; the raw compiler shape is under m377's lock).
+- 1549/1609 refresh: io.list_dir itself is green on the main debug build,
+  but `p_result_payload_index_concat.xi` is still rc 1, so 1609 remains
+  red and 1549 stays blocked (relay `e03edfa`). 1550 stays acked (the
+  probe passes only because its tuple checks are count-limited; the
+  generic-holder shape is still broken per the compiler diagnosis).
+- Probe battery: 402/402 with the new `p_simd_vec4f_lanes` (passes on
+  v0.64.8); modules 533/533, smokes 963/963, barename 0/533, floors196
+  RATCHET OK, doc_scan 100% (7474/7474), coverage 95.2% pub / 97.3%
+  clauses.
+- Files: `tools/known_failures/p_map_set_mutating_combo.xi` (valid
+  v0.64.8 AV witness), `tools/probes/p_simd_vec4f_lanes.xi` (normal
+  probe). No clause waves.
+
 **SESSION 2026-10-21 block 272 (wave 208: JSON builder renderer -- stringify retention fixed, 10k renders under 256MB; battery 401 probes; borrowed-match compiler item)**
 - Wave 208 `9f933aa`: rewrote `json_stringify` and `json_pretty` in
   `xiom/serialize/json.xi` to render into one `Vec[UInt8]` byte builder
@@ -3879,7 +3914,7 @@ registry pin, agent recon for the rest)**
   fixed -> verified (relay `4f2c1f5`); close after the official v0.64.9
   re-check. Known failure kept as the v0.64.8 repro.
 - Full battery on the final tree (official v0.64.8): modules 533/533,
-  smokes 963/963, probes 401/401, barename 0/533, floors196 RATCHET OK,
+  smokes 963/963, probes 402/402, barename 0/533, floors196 RATCHET OK,
   doc_scan 100% (7474/7474, 0 misses), coverage 6564/6897 = 95.2%,
   clauses 9075 (fns 9325 after the render + number helpers; 97.3%).
 - REL-20261020-1704 stays acked for the build/parse halves:
