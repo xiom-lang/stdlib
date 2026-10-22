@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 85 (updated 2026-10-22 17:45Z; **stdlib-v0.64.9 RELEASED (GitHub Release + registry 0.64.9 live); compiler v0.64.9 PUBLISHED BUT RED -- official archives fail 1451/1550, blocker REL-20261022-1410-stdlib, do NOT bump COMPILER_VERSION/announce**; package 0.64.9, COMPILER_VERSION v0.64.8 by design; global 95.2%, readiness 89.5%, floors196; doc_scan 100%; 0918 macOS witness verified; wave 208-209 JSON/YAML/TOML/CSV byte-builder paths flat at 10k calls; battery modules 533/533, smokes 963/963, probes 404/404, barename 0/533; pre-verified on main debug 1626/1451/1326/2249/2249-2/1731, 1242 fixed; 1550 specialization in the release, confirmed on compiler d04cd3265 (synced-pin e2e remains); 1520/1609 open; next: stage/hash-verify the compiler v0.64.9 archive when published, bump COMPILER_VERSION on main, run the battery, close the verified items, verify the 1550 e2e lock; coverage hard tail iter/os)
+## 0A. CONTINUE HERE -- handoff snapshot 86 (updated 2026-10-22 22:40Z; **stdlib-v0.64.9 RELEASED but HELD for xvector -- 1640 fixed on main f436a5d, hotfix 0.64.10 pending; compiler v0.64.9 PUBLISHED BUT RED -- 1451/1550, blocker REL-20261022-1410/1414-stdlib, do NOT pin/announce**; package 0.64.9, COMPILER_VERSION v0.64.8; global 95.2%, readiness 89.5%, floors196; doc_scan 100%; wave 208-209 JSON/YAML/TOML/CSV byte-builder paths flat at 10k; battery modules 533/533, smokes 847/963 (0 fails, run cut at 40 min by host load; JSON 17/17, serialize 24/24, L-6 probes green), probes 404/404, barename 0/533; 1640 fix verified on all three xvector probes; 1550 specialization in the release, confirmed on d04cd3265 (synced-pin e2e remains); 1520/1609 open; next: cut hotfix stdlib-v0.64.10 pinning v0.64.8, then wait for a green compiler re-cut/patch, bump the pin, close the verified items, verify the 1550 e2e; coverage hard tail iter/os)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-22, snapshot 82)
 
@@ -25,7 +25,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
   git -C E:\xiom-lang\xiom-relays pull --ff-only origin main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 82 + blocks 273/272 (and this 0C block).
+Read docs/stdlib_session.md snapshot 86 + blocks 274/273 (and this 0C block).
 
 State: **stdlib-v0.64.9 is RELEASED** at aa8b656 (package.xi 0.64.9;
 COMPILER_VERSION v0.64.8 by design -- the stdlib release pins the last
@@ -35,6 +35,16 @@ registry `xiom-std 0.64.9` is live (sha256 6f0d3b15...), and the pin
 decision is REL-20261022-1327-stdlib (compiler v0.64.8). The
 `STDLIB_VERSION pin PR` job failed benignly because compiler main already
 had `STDLIB_VERSION=stdlib-v0.64.9` (2bcf58db5).
+
+**STDLIB-v0.64.9 IS HELD FOR XVECTOR (REL-20261022-1640-xvector).** The
+released tag crashes `probe_http_service`/`probe_router_2shards`/
+`probe_scatter_gather` on v0.64.8. Fixed on main `f436a5d`: JSON number
+digits use `_json_push_uint_digits` instead of `builder.sb_push_int`,
+whose `[20]UInt8` stack buffer miscompiles on the v0.64.8 pin in the HTTP
+service call chain. All three probes are green on the fixed main; number
+parity and 10k memory are green; JSON smokes 17/17, serialize 24/24. A
+hotfix tag (**stdlib-v0.64.10**, pin v0.64.8) is needed; xvector keeps
+750384f until it lands. Do not move the 0.64.9 tag.
 
 **COMPILER v0.64.9 IS RED -- DO NOT PIN OR ANNOUNCE.** Two distinct
 problems on both Windows x64 and Linux x64 (released archives match the
