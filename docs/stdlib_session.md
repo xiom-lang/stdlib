@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 82 (updated 2026-10-22 14:40Z; **v0.64.8 PINNED + RELEASED, v0.64.9 NOT CUT**; global 95.2%, readiness 89.5%, floors196; doc_scan 100% with 0 misses; 0918 macOS witness verified; wave 208-209 JSON/YAML/TOML/CSV byte-builder paths flat at 10k calls (256MB or less; parse/build need m375); battery modules 533/533, smokes 963/963, probes 404/404, barename 0/533; pre-verified on main debug 1626/1451/1326/2249/2249-2/1731, 1242 fixed; 1550 coordinated, 1520/1609 open; next: stage v0.64.9 archive when cut, run the battery, close the verified items, then tag stdlib-v0.64.9; coverage hard tail iter/os)
+## 0A. CONTINUE HERE -- handoff snapshot 83 (updated 2026-10-22 16:35Z; **stdlib-v0.64.9 TAGGED at aa8b656; compiler v0.64.9 tag PENDING**; package 0.64.9, COMPILER_VERSION v0.64.8 by design; release run 39785430606 in progress, registry run 39785430612 waiting, pin decision REL-20261022-1327-stdlib; global 95.2%, readiness 89.5%, floors196; doc_scan 100%; 0918 macOS witness verified; wave 208-209 JSON/YAML/TOML/CSV byte-builder paths flat at 10k calls; battery modules 533/533, smokes 963/963, probes 404/404, barename 0/533; pre-verified on main debug 1626/1451/1326/2249/2249-2/1731, 1242 fixed; 1550 specialization in the tag, compiler d04cd3265 pending; 1520/1609 open; next: finish the release workflow + registry publish, then verify 1550 on the compiler v0.64.9 pin; coverage hard tail iter/os)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-22, snapshot 82)
 
@@ -27,8 +27,14 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
 Read docs/stdlib_session.md snapshot 82 + blocks 273/272 (and this 0C block).
 
-State: v0.64.8 is RELEASED and PINNED; v0.64.9 is NOT cut yet (latest
-compiler release is v0.64.8, checked 2026-10-21 20:10Z). COMPILER_VERSION=v0.64.8; staged
+State: **stdlib-v0.64.9 is TAGGED at aa8b656** (package.xi 0.64.9;
+COMPILER_VERSION v0.64.8 by design -- the stdlib release pins the last
+released compiler). Stdlib release run 39785430606 is in progress;
+registry run 39785430612 is waiting; the registry pin decision is
+REL-20261022-1327-stdlib (xiom-std 0.64.9 -> compiler v0.64.8). The
+compiler v0.64.9 tag is NOT cut yet; its release prep pins
+STDLIB_VERSION=stdlib-v0.64.9 (compiler 2bcf58db5) and its tag is the
+next external gate. COMPILER_VERSION=v0.64.8; staged
 archive %TEMP%\kilo\stdlib_ws\v0.64.8-official (windows zip sha256
 c31d9c46..., linux tar.gz a8c003c0...). stdlib-v0.64.8 tag object 0bf5b75
 -> commit 112c5b6 (tag-time COMPILER_VERSION=candidate-v0.64.8-r2); release
@@ -3840,10 +3846,18 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
-**SESSION 2026-10-22 block 273 (relay triage: 1731 + 1626/1451/1326/2249/2249-2 verified on main debug; 1242 fixed; 1549 still blocked; v0.64.9 not cut)**
+**SESSION 2026-10-22 block 273 (relay triage: 1731 + 1626/1451/1326/2249/2249-2 verified on main debug; 1242 fixed; 1549 still blocked; stdlib-v0.64.9 tagged)**
 - Compiler release check: still v0.64.8 (latest), no v0.64.9 tag or
   branch. Compiler main is ahead 7 with m376/m377/m1326/m1731 etc.; owner
   GO still gates the cut.
+- RELEASE CUT: `stdlib-v0.64.9` annotated tag pushed at `aa8b656`
+  (package.xi 0.64.9; CHANGELOG [0.64.9]; COMPILER_VERSION stays v0.64.8
+  by design). Release run 39785430606 is in progress (Windows/Ubuntu
+  gates); registry run 39785430612 is waiting. Registry decision filed
+  REL-20261022-1327-stdlib: publish `xiom-std 0.64.9` with compiler pin
+  `v0.64.8` (publish-registry.yml passes the tag's COMPILER_VERSION).
+  Compiler v0.64.9 prep pins `STDLIB_VERSION=stdlib-v0.64.9`
+  (`2bcf58db5`); its tag is the next external gate.
 - REL-20261021-1731: fixed at `ace095744` (+`9d31321df`) and verified on
   the main debug build: the exact repro prints "world" rc 0, and the
   larger borrowed JsonValue renderer is byte-identical when Str payloads
