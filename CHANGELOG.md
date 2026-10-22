@@ -35,6 +35,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   per-escape concatenation. Output is byte-identical; 10,000 writes of a
   50-key table complete under a 128 MB cap (the old path crossed 256 MB
   near iteration 2,500).
+- `csv_write`/`csv_write_row` use the byte builder instead of per-field
+  concatenation. Output is byte-identical; 10,000 writes of a 50-row
+  table complete under a 128 MB cap (the old path crossed 256 MB near
+  iteration 3,500).
 
 ### Fixed
 
