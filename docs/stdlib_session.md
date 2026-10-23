@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 90 (updated 2026-10-23; **stdlib-v0.65.0 RELEASED: tag 3eb9c05, GitHub Release live (xiom-std-0.65.0.tar.gz + SHA256SUMS, published 22:37:14Z), release run 40030168256 green on Windows+Ubuntu (gates 41m24s / 39m44s); package 0.65.0, COMPILER_VERSION v0.64.8; the owner's pre-release fix 3eb9c05 adds `use xiom.string;` to xiom.path/xiom.time for the all-modules gate and folds the stdlib notes to one highlight**; registry publish runs 40030168194 (tag) and 40034799532 (dispatch) are WAITING for the registry-publish environment approval; STDLIB_VERSION pin PR was not auto-created (open https://github.com/xiom-lang/xiom/pull/new/chore/pin-stdlib-v0.65.0); stdlib-v0.64.9 stays tagged/released but HELD; compiler v0.64.9 withdrawn, v0.65.0 gate open, do NOT pin; next: approve the registry publish, open the pin PR, then a green compiler re-cut -> pin/verify/close)
+## 0A. CONTINUE HERE -- handoff snapshot 90 (updated 2026-10-23; **stdlib-v0.65.0 RELEASED: tag 3eb9c05, GitHub Release live (xiom-std-0.65.0.tar.gz + SHA256SUMS, published 22:37:14Z), release run 40030168256 green on Windows+Ubuntu (gates 41m24s / 39m44s); package 0.65.0, COMPILER_VERSION v0.64.8; the owner's pre-release fix 3eb9c05 adds `use xiom.string;` to xiom.path/xiom.time for the all-modules gate and folds the stdlib notes to one highlight**; registry publish runs 40030168194 (tag) and 40034799532 (dispatch) are WAITING for the registry-publish environment approval; the STDLIB_VERSION pin PR was not auto-created, but compiler main already carries `stdlib-v0.65.0` in `a0dc452dc` ("chore(release): pin stdlib-v0.65.0 and drop the C07 shim"), so that job failure is benign; stdlib-v0.64.9 stays tagged/released but HELD; compiler v0.64.9 withdrawn, v0.65.0 gate open, do NOT pin; next: approve the registry publish, open the pin PR, then a green compiler re-cut -> pin/verify/close)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-23, snapshot 90)
 
@@ -48,9 +48,10 @@ STATE (2026-10-23):
   40034799532 (release-workflow dispatch) are WAITING on the
   registry-publish environment approval. Approve one, then verify the
   registry entry (xiom-std 0.65.0, compiler pin v0.64.8).
-- STDLIB_VERSION pin PR was NOT auto-created (token scope); the run
-  printed https://github.com/xiom-lang/xiom/pull/new/chore/pin-stdlib-v0.65.0.
-  Open it if the compiler lane has not.
+- STDLIB_VERSION pin PR was NOT auto-created (token scope), but compiler
+  main already carries stdlib-v0.65.0 in a0dc452dc ("chore(release): pin
+  stdlib-v0.65.0 and drop the C07 shim"), so the failure is benign. No
+  manual PR is needed unless the compiler lane re-cuts.
 - Full battery at code commit 15cafd4 on the official v0.64.8 archive:
   modules 533/533, smokes 963/963, probes 406/406, barename 0/533,
   floors196 RATCHET OK (95.2% pub / 97.3% clauses), doc_scan 100%
@@ -62,7 +63,8 @@ STATE (2026-10-23):
 
 PRIORITY 1 -- FINISH THE 0.65.0 RELEASE BOOKKEEPING:
 - Approve the registry publish (environment registry-publish) and verify
-  the published entry; open/submit the STDLIB_VERSION pin PR if needed.
+  the published entry; confirm the compiler pin (already a0dc452dc on
+  xiom main).
 - Update relay 2049 (recv-into) and 0242 (C07) to fixed with the tag and
   release refs; 1640 stays fixed pending xvector's re-verify on 0.65.0;
   1122 is verified.
@@ -3754,8 +3756,9 @@ registry pin, agent recon for the rest)**
   (release-workflow dispatch) are **waiting** on the `registry-publish`
   environment approval; the registry entry is not yet verified.
 - The `STDLIB_VERSION pin PR` job completed but could not create the PR
-  (token scope); it printed
-  https://github.com/xiom-lang/xiom/pull/new/chore/pin-stdlib-v0.65.0.
+  (token scope). Compiler main already carries `stdlib-v0.65.0` in
+  `a0dc452dc` ("chore(release): pin stdlib-v0.65.0 and drop the C07
+  shim"), so the job failure is benign and no manual PR is needed.
 - Release contents: 1640 JSON number fix (`_json_push_uint_digits`),
   `socket_recv_into`/`socket_recv_timeout_into` (2049), and
   `xiom_guard_copy_out_if_arena` (0242). The full battery at `15cafd4`
