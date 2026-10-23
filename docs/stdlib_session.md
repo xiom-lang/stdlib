@@ -17,9 +17,9 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 89 (updated 2026-10-23; **new work landed on main: C07 runtime helper (REL-20261023-0242-compiler) + socket_recv_into/timeout_into (REL-20261022-2049-pulse), each with a green probe; full battery on official v0.64.8: modules 533/533, smokes 963/963, probes 406/406, barename 0/533, floors196 OK, doc_scan 100%**; release target is UNDECIDED and NOT CUT -- the 0.64.10 markers are staged (package 0.64.10) but the compiler asks for stdlib v0.65.0 to carry C07, owner GO required; stdlib-v0.64.9 stays tagged/released but HELD, do not move; compiler v0.64.9 withdrawn, v0.65.0 gate open, do NOT pin; next: owner decides 0.64.10 vs 0.65.0, then tag/publish, then a green compiler re-cut -> pin/verify/close)
+## 0A. CONTINUE HERE -- handoff snapshot 90 (updated 2026-10-23; **stdlib-v0.65.0 RELEASED: tag 3eb9c05, GitHub Release live (xiom-std-0.65.0.tar.gz + SHA256SUMS, published 22:37:14Z), release run 40030168256 green on Windows+Ubuntu (gates 41m24s / 39m44s); package 0.65.0, COMPILER_VERSION v0.64.8; the owner's pre-release fix 3eb9c05 adds `use xiom.string;` to xiom.path/xiom.time for the all-modules gate and folds the stdlib notes to one highlight**; registry publish runs 40030168194 (tag) and 40034799532 (dispatch) are WAITING for the registry-publish environment approval; STDLIB_VERSION pin PR was not auto-created (open https://github.com/xiom-lang/xiom/pull/new/chore/pin-stdlib-v0.65.0); stdlib-v0.64.9 stays tagged/released but HELD; compiler v0.64.9 withdrawn, v0.65.0 gate open, do NOT pin; next: approve the registry publish, open the pin PR, then a green compiler re-cut -> pin/verify/close)
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-23, snapshot 89)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-23, snapshot 90)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
@@ -27,44 +27,46 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 89 + blocks 277/276/275 + this 0C block.
+Read docs/stdlib_session.md snapshot 90 + blocks 278/277/276 + this 0C block.
 
 STATE (2026-10-23):
-- Code on main is UNTAGGED. It carries the 1640 JSON fix plus two new
-  items: the C07 runtime helper xiom_guard_copy_out_if_arena
-  (REL-20261023-0242-compiler) and socket_recv_into /
-  socket_recv_timeout_into (REL-20261022-2049-pulse). Both have green
-  probes: p_guard_copy_out_if_arena (NULL, main-heap passthrough, arena
-  copy+free) and p_socket_recv_into (contracts, content, capacity reuse,
-  timeout Err, EOF Ok(0)).
-- Full battery on the OFFICIAL v0.64.8 archive is GREEN: modules
-  533/533 (1273.6s), smokes 963/963 (957 tracked + 6 documented untracked
-  diag; 2411.2s), probes 406/406 (1499.3s), barename 0/533 (1122s),
-  coverage floors196 RATCHET OK (95.2% pub / 97.3% clauses), doc_scan
-  100% (7474/7474) RATCHET OK. All rc 0.
-- Release target is UNDECIDED and NOT CUT. package.xi is still 0.64.10
-  from block 276 (CHANGELOG [0.64.10], release-notes/v0.64.10.md). The
-  compiler's REL-20261023-0242 says it will pin stdlib-v0.65.0, so the
-  clean option is to retarget the markers to 0.65.0 (1640 fix +
-  recv_into + C07) and tag that on GO. Owner GO is required; there is no
-  stdlib-v0.64.10 or stdlib-v0.65.0 tag and no registry publish.
-- stdlib-v0.64.9 stays tagged at aa8b656 and RELEASED (registry
-  xiom-std 0.64.9 sha256 6f0d3b15...), but HELD; do NOT move the tag.
-- Compiler v0.64.9 is WITHDRAWN (REL-20261022-1826-compiler) and a
+- stdlib-v0.65.0 IS RELEASED. Tag 3eb9c05 (the owner force-moved it
+  from f25a9a6 to add the all-modules fix); package 0.65.0;
+  COMPILER_VERSION v0.64.8. GitHub Release published 2026-10-23T22:37:14Z
+  with xiom-std-0.65.0.tar.gz + SHA256SUMS. Release run 40030168256 is
+  green: validate 5s, Windows gates 41m24s, Ubuntu gates 39m44s,
+  package + GitHub Release 24s. The code carries the 1640 JSON fix,
+  socket_recv_into/timeout_into, and the C07
+  xiom_guard_copy_out_if_arena helper.
+- The first release run 40028023850 was canceled by the owner
+  (@Lefteris-Notas) twice. The owner then fixed the all-modules gate in
+  3eb9c05 (explicit `use xiom.string;` in xiom.path and xiom.time; the
+  stdlib notes fragment folded to one highlight so the compiler's five
+  plus the stdlib fragment stay within the six-highlight cap) and
+  re-tagged/re-ran. Do not re-run or move the tag without the owner.
+- REGISTRY PUBLISH IS PENDING: runs 40030168194 (tag push) and
+  40034799532 (release-workflow dispatch) are WAITING on the
+  registry-publish environment approval. Approve one, then verify the
+  registry entry (xiom-std 0.65.0, compiler pin v0.64.8).
+- STDLIB_VERSION pin PR was NOT auto-created (token scope); the run
+  printed https://github.com/xiom-lang/xiom/pull/new/chore/pin-stdlib-v0.65.0.
+  Open it if the compiler lane has not.
+- Full battery at code commit 15cafd4 on the official v0.64.8 archive:
+  modules 533/533, smokes 963/963, probes 406/406, barename 0/533,
+  floors196 RATCHET OK (95.2% pub / 97.3% clauses), doc_scan 100%
+  (7474/7474) RATCHET OK. The release CI re-ran all gates green.
+- stdlib-v0.64.9 stays tagged at aa8b656 and HELD; do not move it.
+- Compiler v0.64.9 is WITHDRAWN (REL-20261022-1826-compiler); the
   v0.65.0 production gate is open. Official v0.64.9 archives remain red
   for 1451/m372 and tuple-returning 1550; do NOT pin or announce.
 
-PRIORITY 1 -- RELEASE TARGET (owner decision, then tag):
-- Decide 0.65.0 (recommended: one line carrying 1640 + recv_into + C07,
-  matching the compiler's pin) vs 0.64.10 first plus 0.65.0 later.
-- On GO: write/retarget package.xi, CHANGELOG and release-notes, validate
-  the notes, tag/push, run .github/workflows/release.yml, publish the
-  registry with compiler pin v0.64.8, and update relay 2049/0242/1640/
-  1122. Do NOT move stdlib-v0.64.9.
-- release-notes gotcha: running `xiom-release-notes convert --tag <tag>
-  --stdlib <repo>` from the stdlib root reads the same .md twice and
-  duplicates highlights. Validate from a temp notes dir with an empty
-  --stdlib. Do not commit release-notes/*.json.
+PRIORITY 1 -- FINISH THE 0.65.0 RELEASE BOOKKEEPING:
+- Approve the registry publish (environment registry-publish) and verify
+  the published entry; open/submit the STDLIB_VERSION pin PR if needed.
+- Update relay 2049 (recv-into) and 0242 (C07) to fixed with the tag and
+  release refs; 1640 stays fixed pending xvector's re-verify on 0.65.0;
+  1122 is verified.
+- Do not move stdlib-v0.65.0 or stdlib-v0.64.9.
 
 PRIORITY 2 -- COMPILER RE-CUT (not the current v0.64.9):
 - Wait for a green patch/re-cut. Stage/hash-verify the official
@@ -92,7 +94,7 @@ RULES:
   1550 compiler-side; 1410/1414 with compiler.
 - Untracked out/ + smoke_diag_f128_* are documented leftovers.
 
-DELIVERABLE: release target decision + tag/publish on owner GO, then
+DELIVERABLE: finish the 0.65.0 registry/pin bookkeeping, then
 compiler-pin verification; leave docs/session current and push.
 ```
 ---
@@ -3729,6 +3731,39 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-23 block 278 (stdlib-v0.65.0 RELEASED: tag 3eb9c05, GitHub Release live; registry publish waiting on environment approval)**
+- Release: `stdlib-v0.65.0` at `3eb9c05`; package.xi 0.65.0;
+  CHANGELOG `[0.65.0]`; `release-notes/v0.65.0.md`;
+  `COMPILER_VERSION` v0.64.8. The owner force-moved the tag from
+  `f25a9a6` to `3eb9c05` before the successful run.
+- The first release run `40028023850` (tag at f25a9a6) was **canceled by
+  the owner `@Lefteris-Notas`** twice (initial and rerun) after the
+  all-modules gate failed. The owner then committed `3eb9c05`:
+  explicit `use xiom.string;` in `xiom/os/path.xi` and
+  `xiom/time/time.xi` (the all-modules gate builds `xiom.X` from a
+  HashSet, so module order varies and the bare `str_*` calls could bind
+  the Array overload), and folded the stdlib release-notes fragment to
+  one highlight so the compiler's five highlights plus the stdlib
+  fragment stay within the six-highlight schema cap.
+- Release run `40030168256` at `3eb9c05` is green: validate 5s; Windows
+  gates 41m24s; Ubuntu gates 39m44s; package + GitHub Release 24s.
+  GitHub Release `stdlib-v0.65.0` published 2026-10-23T22:37:14Z with
+  `xiom-std-0.65.0.tar.gz` and `SHA256SUMS`.
+- Registry publish runs `40030168194` (tag push) and `40034799532`
+  (release-workflow dispatch) are **waiting** on the `registry-publish`
+  environment approval; the registry entry is not yet verified.
+- The `STDLIB_VERSION pin PR` job completed but could not create the PR
+  (token scope); it printed
+  https://github.com/xiom-lang/xiom/pull/new/chore/pin-stdlib-v0.65.0.
+- Release contents: 1640 JSON number fix (`_json_push_uint_digits`),
+  `socket_recv_into`/`socket_recv_timeout_into` (2049), and
+  `xiom_guard_copy_out_if_arena` (0242). The full battery at `15cafd4`
+  was green; the release CI re-ran every gate green.
+- Relay: 2049/0242 were acked at `15cafd4`; move them to fixed with the
+  tag/release refs now that the asset is live. 1640 stays fixed pending
+  xvector's re-verify on 0.65.0; 1122 is verified. Do not move either
+  tag.
 
 **SESSION 2026-10-23 block 277 (C07 runtime helper + socket_recv_into pair; probes 406/406; release target pending owner decision)**
 - REL-20261023-0242-compiler (C07): added
