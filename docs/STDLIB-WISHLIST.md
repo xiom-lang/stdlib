@@ -319,8 +319,11 @@ PULSE (`E:\xiom-projects\xiom-pulse\docs\STDLIB-WISHLIST-PULSE.md`,
   `#ifdef __APPLE__`) and `runtime/fp128_helpers.c` compiles x86 inline
   asm (`leaq`/`movq`) on arm64 (needs a `__x86_64__` guard). Runtime-C
   fix-first (macOS lane).
-- **NEW ASK (wrap 4b, 2026-10-08): `socket_recv_into(fd, &mut
-  Vec[UInt8], max)`** for reusable caller buffers.
+- **RESOLVED (2026-10-23, block 277): `socket_recv_into(fd, &mut
+  Vec[UInt8], max)`** for reusable caller buffers; the same wave adds
+  `socket_recv_timeout_into(fd, &mut Vec[UInt8], max, ms)`. Capacity is
+  reserved once and reused, 0 = clean EOF, and timeout/error is Err
+  (REL-20261022-2049-pulse).
 - Defect (wrap 4b): `read_file_lines("/proc/self/status")` trips its own
   `ensures: result.len() >= 1` because /proc files stat as size 0 -- read
   until EOF for the non-regular case or document regular-files-only (same
@@ -358,7 +361,8 @@ bugs FIXED in compiler v0.64.2 -- no stdlib action; byte-file APIs are
 byte-exact/CRLF-clean since 0.64.2.
 
 Consolidated new actionables from this sweep: stdlib features -- address-
-aware socket bind, `socket_recv_into`, `Vec[UInt8].with_len`; runtime-C --
+aware socket bind and `Vec[UInt8].with_len` (`socket_recv_into` landed
+2026-10-23, block 277); runtime-C --
 macOS guards (`_SC_AVPHYS_PAGES`, fp128 asm), B-05 guard-heap spin,
 fsync/append-bytes; defects (fix-first, wave 98) -- `read_file_lines`
 empty-file ensures (io.xi:1076), `to_string_char(Char(0))` (packages row

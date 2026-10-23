@@ -17,9 +17,9 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 88 (updated 2026-10-22; **stdlib-v0.64.10 PREPARED but NOT TAGGED -- owner directive "full hotfix prep, do not cut release"; package 0.64.10, COMPILER_VERSION v0.64.8; 1640 HTTP/JSON fix on main f436a5d; full battery GREEN on official v0.64.8: modules 533/533, smokes 963/963 (957 tracked + 6 documented diag), probes 404/404, barename 0/533, floors196 OK, doc_scan 100%**; stdlib-v0.64.9 stays tagged/released but HELD, do not move; compiler v0.64.9 still RED for 1451/m372 and tuple-returning 1550, blockers REL-20261022-1410/1414-stdlib open, do NOT pin/announce; next: owner GO for the 0.64.10 tag/publish, then a green compiler re-cut -> pin/verify/close)
+## 0A. CONTINUE HERE -- handoff snapshot 89 (updated 2026-10-23; **new work landed on main: C07 runtime helper (REL-20261023-0242-compiler) + socket_recv_into/timeout_into (REL-20261022-2049-pulse), each with a green probe; full battery on official v0.64.8: modules 533/533, smokes 963/963, probes 406/406, barename 0/533, floors196 OK, doc_scan 100%**; release target is UNDECIDED and NOT CUT -- the 0.64.10 markers are staged (package 0.64.10) but the compiler asks for stdlib v0.65.0 to carry C07, owner GO required; stdlib-v0.64.9 stays tagged/released but HELD, do not move; compiler v0.64.9 withdrawn, v0.65.0 gate open, do NOT pin; next: owner decides 0.64.10 vs 0.65.0, then tag/publish, then a green compiler re-cut -> pin/verify/close)
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-22, snapshot 88)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-23, snapshot 89)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
@@ -27,42 +27,44 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 88 + blocks 276/275 + this 0C block.
+Read docs/stdlib_session.md snapshot 89 + blocks 277/276/275 + this 0C block.
 
-STATE (2026-10-22):
-- 0.64.10 IS PREPARED ON MAIN BUT NOT TAGGED/RELEASED (owner directive:
-  full hotfix prep, do not cut the release). package.xi 0.64.10;
-  CHANGELOG [0.64.10] - 2026-10-22; release-notes/v0.64.10.md validated
-  (2 highlights); COMPILER_VERSION stays v0.64.8. There is no
-  stdlib-v0.64.10 tag, no release workflow run and no registry publish.
-- 1640 fix is on main f436a5d: _json_push_uint_digits replaces
-  builder.sb_push_int in the JSON number helpers. Full battery on the
-  OFFICIAL v0.64.8 archive is GREEN: modules 533/533 (1158.8s), smokes
-  963/963 (957 tracked + 6 documented untracked diag; 3166.9s), probes
-  404/404 (1910.4s), barename 0/533 (1596.8s), coverage floors196
-  RATCHET OK (95.2% pub / 97.3% clauses), doc_scan 100% (7474/7474)
-  RATCHET OK. All rc 0. Host was ~100% loaded; 6 workers used.
+STATE (2026-10-23):
+- Code on main is UNTAGGED. It carries the 1640 JSON fix plus two new
+  items: the C07 runtime helper xiom_guard_copy_out_if_arena
+  (REL-20261023-0242-compiler) and socket_recv_into /
+  socket_recv_timeout_into (REL-20261022-2049-pulse). Both have green
+  probes: p_guard_copy_out_if_arena (NULL, main-heap passthrough, arena
+  copy+free) and p_socket_recv_into (contracts, content, capacity reuse,
+  timeout Err, EOF Ok(0)).
+- Full battery on the OFFICIAL v0.64.8 archive is GREEN: modules
+  533/533 (1273.6s), smokes 963/963 (957 tracked + 6 documented untracked
+  diag; 2411.2s), probes 406/406 (1499.3s), barename 0/533 (1122s),
+  coverage floors196 RATCHET OK (95.2% pub / 97.3% clauses), doc_scan
+  100% (7474/7474) RATCHET OK. All rc 0.
+- Release target is UNDECIDED and NOT CUT. package.xi is still 0.64.10
+  from block 276 (CHANGELOG [0.64.10], release-notes/v0.64.10.md). The
+  compiler's REL-20261023-0242 says it will pin stdlib-v0.65.0, so the
+  clean option is to retarget the markers to 0.65.0 (1640 fix +
+  recv_into + C07) and tag that on GO. Owner GO is required; there is no
+  stdlib-v0.64.10 or stdlib-v0.65.0 tag and no registry publish.
 - stdlib-v0.64.9 stays tagged at aa8b656 and RELEASED (registry
   xiom-std 0.64.9 sha256 6f0d3b15...), but HELD; do NOT move the tag.
-- Compiler v0.64.9 is PUBLISHED BUT RED: official archives fail
-  1451/m372 (nested=0) and the true tuple-returning 1550 shape
-  (p_iter_enumerate_tuple: len=3, em[1].0=0). Blockers
-  REL-20261022-1410/1414-stdlib are OPEN with compiler. Do NOT bump
-  COMPILER_VERSION or announce. Compiler v0.64.9 was withdrawn and a
-  v0.65.0 production gate opened (REL-20261022-1826-compiler).
+- Compiler v0.64.9 is WITHDRAWN (REL-20261022-1826-compiler) and a
+  v0.65.0 production gate is open. Official v0.64.9 archives remain red
+  for 1451/m372 and tuple-returning 1550; do NOT pin or announce.
 
-PRIORITY 1 -- RELEASE 0.64.10 (owner GO required; prep is done):
-- On GO: tag/push stdlib-v0.64.10 at the prep commit, run
-  .github/workflows/release.yml, publish registry with compiler pin
-  v0.64.8, and update xvector/1640 and 1122.
-- Do NOT move stdlib-v0.64.9. The full battery is already green; the
-  release CI re-runs it (957 tracked smokes in a clean checkout).
-- release-notes gotcha: running `xiom-release-notes convert --tag
-  v0.64.10 --stdlib <repo>` from the stdlib root reads <notes-dir>/
-  v0.64.10.md and <stdlib>/release-notes/v0.64.10.md, which are the same
-  file, and duplicates every highlight (4 instead of 2). Validate from a
-  temp notes dir with an empty --stdlib. Do not commit
-  release-notes/*.json (prior releases commit only .md).
+PRIORITY 1 -- RELEASE TARGET (owner decision, then tag):
+- Decide 0.65.0 (recommended: one line carrying 1640 + recv_into + C07,
+  matching the compiler's pin) vs 0.64.10 first plus 0.65.0 later.
+- On GO: write/retarget package.xi, CHANGELOG and release-notes, validate
+  the notes, tag/push, run .github/workflows/release.yml, publish the
+  registry with compiler pin v0.64.8, and update relay 2049/0242/1640/
+  1122. Do NOT move stdlib-v0.64.9.
+- release-notes gotcha: running `xiom-release-notes convert --tag <tag>
+  --stdlib <repo>` from the stdlib root reads the same .md twice and
+  duplicates highlights. Validate from a temp notes dir with an empty
+  --stdlib. Do not commit release-notes/*.json.
 
 PRIORITY 2 -- COMPILER RE-CUT (not the current v0.64.9):
 - Wait for a green patch/re-cut. Stage/hash-verify the official
@@ -90,8 +92,8 @@ RULES:
   1550 compiler-side; 1410/1414 with compiler.
 - Untracked out/ + smoke_diag_f128_* are documented leftovers.
 
-DELIVERABLE: 0.64.10 tag/publish on owner GO, then compiler-pin
-verification; leave docs/session current and push.
+DELIVERABLE: release target decision + tag/publish on owner GO, then
+compiler-pin verification; leave docs/session current and push.
 ```
 ---
 
@@ -3727,6 +3729,42 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-23 block 277 (C07 runtime helper + socket_recv_into pair; probes 406/406; release target pending owner decision)**
+- REL-20261023-0242-compiler (C07): added
+  `xiom_guard_copy_out_if_arena(src, copy_len, alloc_len)` to
+  `runtime/xiom_runtime.c`, exactly the requested patch. It returns a
+  main-heap pointer unchanged (no allocate/copy) and copies an
+  arena-owned buffer to the main heap. This is the symbol the v0.65.0
+  codegen calls before a confined-block Vec Copy-Out; without it, such
+  programs fail to link. Probe `p_guard_copy_out_if_arena` covers NULL,
+  the main-heap passthrough (same pointer, source intact), and the
+  arena-owned copy+free; rc 0 on the official v0.64.8 runtime.
+  Gotcha: direct raw-pointer comparisons (`same != p`) in XIOM crash
+  (0xC0000005); cast both to Int inside one `unsafe` block and compare
+  the Ints.
+- REL-20261022-2049-pulse: added `socket_recv_into(fd, &mut buf, max)`
+  and `socket_recv_timeout_into(fd, &mut buf, max, ms)` in
+  `xiom/net/socket.xi`. They clear the caller's buffer, receive up to
+  max bytes (clamped to 65536 like `socket_recv`), return the count with
+  0 = clean EOF, and leave an Err buffer empty. Capacity is reserved
+  once and reused; the per-connection buffer no longer allocates per
+  call. Probe `p_socket_recv_into` (loopback 127.0.0.1:39743) covers the
+  invalid-fd/max contracts, exact bytes, same-size capacity reuse, a
+  larger receive that grows once and then reuses, the timeout Err with
+  an empty buffer, and shutdown as Ok(0); rc 0.
+- Full battery on the OFFICIAL v0.64.8 archive after both changes:
+  modules **533/533** (1273.6s), smokes **963/963** (957 tracked + 6
+  documented untracked diag; 2411.2s), probes **406/406** (404 + the two
+  new probes; 1499.3s), barename **0/533** (1122s), coverage floors196
+  **RATCHET OK** (95.2% pub / 97.3% clauses; net 563 pub / 420 clauses),
+  doc_scan **100%** (7474/7474) **RATCHET OK**. All rc 0.
+- Release target is pending: the working tree still has the block-276
+  0.64.10 markers, but the compiler expects stdlib-v0.65.0 for C07.
+  Nothing was tagged or published. Relay 2049 and 0242 are acked; they
+  move to fixed when the carrying tag is cut.
+- Compiler status unchanged: v0.64.9 withdrawn, v0.65.0 gate open, no
+  green re-cut tag; 1451/m372 and the tuple-returning 1550 remain red.
 
 **SESSION 2026-10-22 block 276 (0.64.10 hotfix prepared but NOT released per owner; full battery green on official v0.64.8)**
 - Owner directive: run the full 0.64.10 hotfix prep and battery, but do

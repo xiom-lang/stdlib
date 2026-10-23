@@ -570,6 +570,20 @@ static int xiom_guard_arena_contains(XiomGuardArena* a, const void* p) {
     return 0;
 }
 
+/* C07 (v0.65.0): promote a Vec buffer only when it is actually arena-owned.
+   A Vec created OUTSIDE the confined block (e.g. an output buffer mutated in
+   a loop body) already lives on the main heap; the unconditional copy-out
+   allocated and leaked a full copy on every block entry (1.4 GB in the
+   engine capture readback). Return the original pointer for main-heap data. */
+void* xiom_guard_copy_out_if_arena(const void* src, long long copy_len, long long alloc_len) {
+    if (!src) return NULL;
+    if (!xiom_guard_arena_contains(&xiom_guard_arena, src)) return (void*)src;
+    if (alloc_len <= 0) return NULL;
+    void* p = malloc((size_t)alloc_len);
+    if (p && copy_len > 0) memcpy(p, src, (size_t)copy_len);
+    return p;
+}
+
 /* Guard-aware free (B-05 runtime half; surfaced by the wave-124 runtime
    rebuild). The codegen emits xiom_guard_free for frees inside confined
    (unsafe) blocks: pointers inside the active guard arena are no-ops (the

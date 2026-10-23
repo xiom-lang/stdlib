@@ -403,6 +403,43 @@ pub fn socket_recv(fd: Int, max: Int) -> Result[Vec[UInt8], Str]
   Ok(result)
 }
 
+/// socket_recv_into receives up to max bytes into a caller-owned buffer:
+/// it clears buf, fills it with the bytes received, and returns the count
+/// (0 = clean EOF). Err on a socket failure; buf is left empty. The
+/// buffer's capacity is reused, so a per-connection buffer allocates at
+/// most once instead of once per call (REL-20261022-2049-pulse).
+/// Complexity: O(n) blocking syscall.
+pub fn socket_recv_into(fd: Int, buf: &mut Vec[UInt8], max: Int) -> Result[Int, Str]
+  ensures: (result.is_ok == false) || (fd >= 0 && max > 0)
+{
+  if fd < 0 {
+    return Err("socket_recv_into: invalid fd");
+  }
+  if max <= 0 {
+    return Err("socket_recv_into: non-positive max");
+  }
+  var cap = max;
+  if cap > 65536 {
+    cap = 65536;
+  }
+  var raw_buf: [65536]UInt8;
+  let n32: Int32 = unsafe { xiom_socket_recv(fd, &raw_buf as *UInt8, cap) };
+  let n = n32 as Int;
+  buf.clear();
+  if n < 0 {
+    return Err("socket_recv_into: recv failed");
+  }
+  if buf.cap < n {
+    buf.reserve(n);
+  }
+  var i = 0;
+  while i < n {
+    buf.push(raw_buf[i]);
+    i = i + 1;
+  }
+  Ok(n)
+}
+
 /// socket_send_to sends a datagram to addr:port; returns the count
 /// written. Complexity: O(n) syscall.
 pub fn socket_send_to(fd: Int, data: &Vec[UInt8], addr: Str, port: Int) -> Result[Int, Str]
@@ -504,6 +541,35 @@ pub fn socket_recv_timeout(fd: Int, max: Int, ms: Int) -> Result[Vec[UInt8], Str
     },
   };
   let r = socket_recv(fd, max);
+  let sr = socket_set_timeout(fd, 0);
+  let _ = sr;
+  return r;
+}
+
+/// socket_recv_timeout_into is socket_recv_into with a per-call receive
+/// deadline: it sets the receive timeout to ms, receives into buf, then
+/// restores no-timeout (0). Ok(0) is a clean EOF; Err is a timeout or
+/// socket failure (the 408 path) and leaves buf empty. Buffer capacity is
+/// reused across calls (REL-20261022-2049-pulse).
+/// Complexity: O(n) syscall.
+pub fn socket_recv_timeout_into(fd: Int, buf: &mut Vec[UInt8], max: Int, ms: Int) -> Result[Int, Str]
+  ensures: (fd < 0) => (result is Err)
+  ensures: (ms < 0) => (result is Err)
+{
+  if fd < 0 {
+    return Err("socket_recv_timeout_into: invalid fd");
+  }
+  if ms < 0 {
+    return Err("socket_recv_timeout_into: negative timeout");
+  }
+  let st = socket_set_timeout(fd, ms);
+  match st {
+    Ok(_) => {},
+    Err(_) => {
+      return Err("socket_recv_timeout_into: set timeout failed");
+    },
+  };
+  let r = socket_recv_into(fd, buf, max);
   let sr = socket_set_timeout(fd, 0);
   let _ = sr;
   return r;
