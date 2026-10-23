@@ -4,7 +4,20 @@ All notable changes to the XIOM standard library are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [0.64.10] - 2026-10-22
+## [0.65.0] - 2026-10-23
+
+### Added
+
+- `socket_recv_into(fd, &mut Vec[UInt8], max)` and
+  `socket_recv_timeout_into(fd, &mut Vec[UInt8], max, ms)` receive into a
+  caller-owned buffer: capacity is reserved once and reused, 0 is a clean
+  EOF, and a timeout or socket error is an `Err` with the buffer empty
+  (REL-20261022-2049-pulse).
+- `xiom_guard_copy_out_if_arena` in the runtime copies a confined-block
+  `Vec` out only when the source is arena-owned; main-heap output buffers
+  are returned in place, removing the per-iteration copy that reached
+  1.4 GB in the engine capture readback
+  (REL-20261023-0242-compiler).
 
 ### Fixed
 
