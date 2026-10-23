@@ -26,6 +26,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   miscompiles on the v0.64.8 pin inside the HTTP service call chain and
   crashed `probe_http_service`/`probe_router_2shards`/`probe_scatter_gather`
   (REL-20261022-1640-xvector).
+- `xiom.time` and `xiom.path` import `xiom.string` explicitly, so their
+  unqualified `str_slice`/`str_*`/`is_empty` calls resolve deterministically
+  when every module compiles in one unit (the all-modules order gate).
 
 ## [0.64.9] - 2026-10-22
 

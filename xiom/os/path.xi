@@ -5,6 +5,7 @@
 module xiom.path
 
 use xiom.env;
+use xiom.string;
 
 /// Borrowed path (wraps a Str); construct with `Path.new`.
 pub type Path = { inner: Str; } derive[Eq, Clone, Hash, Ord]

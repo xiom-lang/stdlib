@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 module xiom.time
+use xiom.string;
 use xiom.time.duration;
 use xiom.time.instant;
 use xiom.time.date;
