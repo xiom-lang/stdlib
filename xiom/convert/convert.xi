@@ -25,7 +25,10 @@ pub interface FromStr {
 
 /// Identity conversion
 pub fn identity[T](x: T) -> T
-{ x }
+  ensures: result == x
+{
+  x
+}
 
 /// Common conversions
 pub fn int_to_float(n: Int) -> Float64

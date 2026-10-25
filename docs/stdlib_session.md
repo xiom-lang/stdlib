@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 91 (updated 2026-10-25; **gate 8 MET: clause wave 208 covers every non-tail public fn (non-tail 100%, global 95.9%, 6614/6899, 9128 clauses); readiness 90% (9/10); battery on official v0.64.8: modules 533/533, smokes 963/963, probes 406/406, barename 0/533, floors196 OK, doc_scan 100%**; stdlib-v0.65.0 tag 3eb9c05 is released and the registry is live (xiom-std 0.65.0 sha256 c3629878..., compiler pin v0.64.8); compiler v0.65.0 is released but NOT pinned (owner will signal the next candidate); gate 9 (zero open findings) is the last gate: 1609/1626/2343/2100-W1/1704; the v0.65.0 Windows archive re-check passes m372 (nested=42 local=42) and tuple-returning 1550 (enumerate tuple ok), the Linux leg is not re-run; do not move tags, do not bump COMPILER_VERSION yet)
+## 0A. CONTINUE HERE -- handoff snapshot 91 (updated 2026-10-25; **gate 8 MET: clause wave 208 covers every non-tail public fn (non-tail 100%, global 95.9%, 6631/6916, 9145 clauses); readiness 90% (9/10); battery on official v0.64.8: modules 533/533, smokes 963/963, probes 406/406, barename 0/533, floors196 OK, doc_scan 100%**; stdlib-v0.65.0 tag 3eb9c05 is released and the registry is live (xiom-std 0.65.0 sha256 c3629878..., compiler pin v0.64.8); compiler v0.65.0 is released but NOT pinned (owner will signal the next candidate); gate 9 (zero open findings) is the last gate: 1609/1626/2343/2100-W1/1704; the v0.65.0 Windows archive re-check passes m372 (nested=42 local=42) and tuple-returning 1550 (enumerate tuple ok), the Linux leg is not re-run; do not move tags, do not bump COMPILER_VERSION yet)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-25, snapshot 91)
 
@@ -32,7 +32,7 @@ Read docs/stdlib_session.md snapshot 91 + blocks 279/278/277 + this 0C block.
 STATE (2026-10-25):
 - Readiness is 90% (9/10). Gate 8 is MET by clause wave 208: every
   non-tail public fn carries a clause (non-tail 100%, global 95.9%,
-  6614/6899, 9128 clauses, 97.8% clauses/fns). The 288 fns in
+  6631/6916, 9145 clauses, 97.8% clauses/fns). The 285 fns in
   iter/os/math/thread/ffi/serialize/format are the documented no-clause
   tail; do not add clause waves there.
 - Battery on the OFFICIAL v0.64.8 archive: modules 533/533 (1579.6s),
@@ -3726,20 +3726,28 @@ registry pin, agent recon for the rest)**
   the next pin.
 
 **SESSION 2026-10-25 block 279 (readiness clause wave 208: non-tail contract coverage 100%, gate 8 MET, readiness 90%; battery green)**
-- Clause wave 208 covers every remaining non-tail public fn: **49
-  functions across 29 modules**. Every non-tail directory is now
+- Clause wave 208 covers every remaining non-tail public fn: **66
+  functions across 30 modules**. Every non-tail directory is now
   **100% pub-with-clause** (alloc, async, collect, convert, core, crypto,
   debug, hash, io, log, net, num, rand, regex, simd, stats, test, time).
-  Global is **95.9%** (6614/6899; 9128 clauses; 97.8% clauses/fns). The
-  remaining 288 fns are the documented no-clause tail
+  Global is **95.9%** (6631/6916; 9145 clauses; 97.8% clauses/fns). The
+  remaining 285 fns are the documented no-clause tail
   (iter/os/math/thread/ffi/serialize/format); no clause wave was added
   there.
+- The official coverage scanner still merges one-line `pub fn`
+  declarations (it breaks on `endsWith('{')`, not on a contained `{`),
+  undercounting ~40 pub fns. The 18 non-tail fns it missed were found
+  with a corrected parser; 16 got real clauses (SHA-256/512 H1-H7 and
+  the k tables, `convert.identity`) and the two compiler intrinsics
+  (`size_of`/`align_of`) stay out of the clause metric. A scanner
+  parser fix is a separate tooling wave.
 - Real contracts added: `Duration.as_secs`, `DateTime.year`, `date_year`,
   `SystemTime.unix_epoch`, `SystemTime.secs_since_epoch`;
   `bigfloat_get_round_mode == _default_round`; `https_default_port ==
   443`; `https_status_text.len() > 0`; `histogram_add` keeps the bin
-  count; `crypto_random_u32` stays in UInt32 range; SHA-256/512 H0
-  constants; `log_sink_rotate` keeps the byte counter. Wrappers and
+  count; `crypto_random_u32` stays in UInt32 range; SHA-256/512 H0-H7
+  constants and the k-table out-of-range zero; `convert.identity`;
+  `log_sink_rotate` keeps the byte counter. Wrappers and
   runtime/unit-returning functions use an explicit `requires: true`
   (no precondition), matching the codebase's existing convention.
 - The first full smoke run caught one over-strong contract:
@@ -3755,6 +3763,10 @@ registry pin, agent recon for the rest)**
   - barename **0/533** (981s)
   - coverage **floors196 RATCHET OK**
   - doc_scan **100% (7474/7474) RATCHET OK**
+- Post-wave recheck after the extra SHA H1-H7/k-table and
+  `convert.identity` clauses: `xiom.crypto.sha` + `xiom.convert` 2/2
+  modules, SHA smokes 11/11, convert smokes 66/66, barename 0/533
+  (1056s).
 - Readiness queue updated: gate 8 is MET via the documented non-tail
   rule; the meter is **90% (9/10)**. Gate 9 (zero open findings) is the
   last gate: 1609/1626/2343/2100-W1/1704, all compiler-side.

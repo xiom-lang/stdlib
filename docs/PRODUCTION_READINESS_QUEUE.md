@@ -28,8 +28,8 @@ gates flip:
 7. Module-smoke ratchet green -- MET (499/542 modules, 3501/6575 fns).
 8. Contract coverage 100% outside the documented no-clause tail -- MET
    (wave 208, 2026-10-25: every non-tail public fn carries a clause;
-   non-tail 100%, global 95.9%, 6614/6899; clauses/fns 97.8%, 9128
-   clauses; floors196). The remaining 288 public fns are the documented
+   non-tail 100%, global 95.9%, 6631/6916; clauses/fns 97.8%, 9145
+   clauses; floors196). The remaining 285 public fns are the documented
    no-clause tail: iter 70.5%, os 71.5%, math 90.7%, thread 91.1%, ffi
    94.5%, serialize 94.7%, format 95.2% (no non-tautological clauses
    left; no clause waves in the tail).
@@ -71,14 +71,16 @@ above; the documented no-clause tail does not count against the meter.
 Authoritative order: the gates above, then the updates below newest-first.
 
 Current state 2026-10-25: **clause wave 208 closes gate 8 (non-tail).**
-Every non-tail public fn now carries a clause (49 functions across 29
-modules); the tail (iter/os/math/thread/ffi/serialize/format, 288 fns)
+Every non-tail public fn now carries a clause (66 functions across 30
+modules); the tail (iter/os/math/thread/ffi/serialize/format, 285 fns)
 remains the documented no-clause tail. Global pub-with-clause is 95.9%
-(6614/6899; 9128 clauses, 97.8% clauses/fns). Battery on the official
+(6631/6916; 9145 clauses, 97.8% clauses/fns). Battery on the official
 v0.64.8 archive: modules 533/533 (1579.6s), smokes 963/963 (the first
 run caught one over-strong `test_register` @pre-on-global contract,
 replaced with an explicit no-precondition clause; the rerun is clean),
 probes 406/406 (2254.4s), barename 0/533, floors196 OK, doc_scan 100%.
+Post-wave SHA/convert clauses: 2/2 modules, SHA smokes 11/11, convert
+smokes 66/66, barename 0/533.
 Readiness is 90% (9/10); gate 9 (zero open findings) is the remaining
 gate and stays with the compiler-side findings
 (1609/1626/2343/2100-W1/1704). Compiler pin stays v0.64.8; v0.65.0 is

@@ -28,24 +28,56 @@ type IntW = { v: Int; }
 /// SHA-256 initial hash value H0 (FIPS 180-4).
 pub fn sha256_initial_h0() -> Int
   ensures: result == 0x6a09e667
-{ return 0x6a09e667; }
+{
+  return 0x6a09e667;
+}
 /// SHA-256 initial hash value H1 (FIPS 180-4).
-pub fn sha256_initial_h1() -> Int { return 0xbb67ae85; }
+pub fn sha256_initial_h1() -> Int
+  ensures: result == 0xbb67ae85
+{
+  return 0xbb67ae85;
+}
 /// SHA-256 initial hash value H2 (FIPS 180-4).
-pub fn sha256_initial_h2() -> Int { return 0x3c6ef372; }
+pub fn sha256_initial_h2() -> Int
+  ensures: result == 0x3c6ef372
+{
+  return 0x3c6ef372;
+}
 /// SHA-256 initial hash value H3 (FIPS 180-4).
-pub fn sha256_initial_h3() -> Int { return 0xa54ff53a; }
+pub fn sha256_initial_h3() -> Int
+  ensures: result == 0xa54ff53a
+{
+  return 0xa54ff53a;
+}
 /// SHA-256 initial hash value H4 (FIPS 180-4).
-pub fn sha256_initial_h4() -> Int { return 0x510e527f; }
+pub fn sha256_initial_h4() -> Int
+  ensures: result == 0x510e527f
+{
+  return 0x510e527f;
+}
 /// SHA-256 initial hash value H5 (FIPS 180-4).
-pub fn sha256_initial_h5() -> Int { return 0x9b05688c; }
+pub fn sha256_initial_h5() -> Int
+  ensures: result == 0x9b05688c
+{
+  return 0x9b05688c;
+}
 /// SHA-256 initial hash value H6 (FIPS 180-4).
-pub fn sha256_initial_h6() -> Int { return 0x1f83d9ab; }
+pub fn sha256_initial_h6() -> Int
+  ensures: result == 0x1f83d9ab
+{
+  return 0x1f83d9ab;
+}
 /// SHA-256 initial hash value H7 (FIPS 180-4).
-pub fn sha256_initial_h7() -> Int { return 0x5be0cd19; }
+pub fn sha256_initial_h7() -> Int
+  ensures: result == 0x5be0cd19
+{
+  return 0x5be0cd19;
+}
 
 /// SHA-256 round constant K[index] (0..63).
-pub fn sha256_k(index: Int) -> Int {
+pub fn sha256_k(index: Int) -> Int
+  ensures: (index < 0 || index > 63) => (result == 0)
+{
   var idx = IntW{ v: index; };
   if idx.v == 0 { return 0x428a2f98; };
   if idx.v == 1 { return 0x71374491; };
@@ -337,24 +369,56 @@ pub fn sha256_hmac(data: &Vec[Int], key: &Vec[Int]) -> Vec[Int]
 /// SHA-512 initial hash value H0 (FIPS 180-4).
 pub fn sha512_initial_h0() -> Int
   ensures: result == 0x6a09e667f3bcc908
-{ return 0x6a09e667f3bcc908; }
+{
+  return 0x6a09e667f3bcc908;
+}
 /// SHA-512 initial hash value H1 (FIPS 180-4).
-pub fn sha512_initial_h1() -> Int { return 0xbb67ae8584caa73b; }
+pub fn sha512_initial_h1() -> Int
+  ensures: result == 0xbb67ae8584caa73b
+{
+  return 0xbb67ae8584caa73b;
+}
 /// SHA-512 initial hash value H2 (FIPS 180-4).
-pub fn sha512_initial_h2() -> Int { return 0x3c6ef372fe94f82b; }
+pub fn sha512_initial_h2() -> Int
+  ensures: result == 0x3c6ef372fe94f82b
+{
+  return 0x3c6ef372fe94f82b;
+}
 /// SHA-512 initial hash value H3 (FIPS 180-4).
-pub fn sha512_initial_h3() -> Int { return 0xa54ff53a5f1d36f1; }
+pub fn sha512_initial_h3() -> Int
+  ensures: result == 0xa54ff53a5f1d36f1
+{
+  return 0xa54ff53a5f1d36f1;
+}
 /// SHA-512 initial hash value H4 (FIPS 180-4).
-pub fn sha512_initial_h4() -> Int { return 0x510e527fade682d1; }
+pub fn sha512_initial_h4() -> Int
+  ensures: result == 0x510e527fade682d1
+{
+  return 0x510e527fade682d1;
+}
 /// SHA-512 initial hash value H5 (FIPS 180-4).
-pub fn sha512_initial_h5() -> Int { return 0x9b05688c2b3e6c1f; }
+pub fn sha512_initial_h5() -> Int
+  ensures: result == 0x9b05688c2b3e6c1f
+{
+  return 0x9b05688c2b3e6c1f;
+}
 /// SHA-512 initial hash value H6 (FIPS 180-4).
-pub fn sha512_initial_h6() -> Int { return 0x1f83d9abfb41bd6b; }
+pub fn sha512_initial_h6() -> Int
+  ensures: result == 0x1f83d9abfb41bd6b
+{
+  return 0x1f83d9abfb41bd6b;
+}
 /// SHA-512 initial hash value H7 (FIPS 180-4).
-pub fn sha512_initial_h7() -> Int { return 0x5be0cd19137e2179; }
+pub fn sha512_initial_h7() -> Int
+  ensures: result == 0x5be0cd19137e2179
+{
+  return 0x5be0cd19137e2179;
+}
 
 /// SHA-512 round constant K[index] (0..79).
-pub fn sha512_k(index: Int) -> Int {
+pub fn sha512_k(index: Int) -> Int
+  ensures: (index < 0 || index > 79) => (result == 0)
+{
   var idx = IntW{ v: index; };
   if idx.v == 0 { return 0x428a2f98d728ae22; };
   if idx.v == 1 { return 0x7137449123ef65cd; };
