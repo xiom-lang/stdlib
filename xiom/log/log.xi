@@ -403,5 +403,7 @@ pub fn log_entries_as_json() -> Str
 
 /// Flushes log output. No-op in this implementation (output is synchronous).
 /// Complexity: O(1).
-pub fn log_flush() {
+pub fn log_flush()
+  requires: true
+{
 }

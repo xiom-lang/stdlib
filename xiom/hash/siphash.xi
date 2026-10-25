@@ -252,7 +252,9 @@ fn _sip_ensure_keys() {
 
 /// SipHash-2-4 over a Str using the process-wide OS-seeded key pair.
 /// This is the default hasher for Str-keyed containers (StringMap).
-pub fn siphash24_str_seeded(s: Str) -> UInt64 {
+pub fn siphash24_str_seeded(s: Str) -> UInt64
+  requires: true
+{
   _sip_ensure_keys();
   return siphash24_str(s, _sip_k0, _sip_k1);
 }

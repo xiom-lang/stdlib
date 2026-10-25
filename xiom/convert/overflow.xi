@@ -21,7 +21,9 @@ use xiom.num;
 use xiom.core.INT_MIN;
 
 /// a + b, returning (wrapped_value, overflowed). Complexity: O(1).
-pub fn overflowing_add(a: Int, b: Int) -> (Int, Bool) {
+pub fn overflowing_add(a: Int, b: Int) -> (Int, Bool)
+  requires: true
+{
   var r = num.i64_add_checked(a, b);
   if r.is_some {
     var fl: Bool = false;
@@ -32,7 +34,9 @@ pub fn overflowing_add(a: Int, b: Int) -> (Int, Bool) {
 }
 
 /// a - b, returning (wrapped_value, overflowed). Complexity: O(1).
-pub fn overflowing_sub(a: Int, b: Int) -> (Int, Bool) {
+pub fn overflowing_sub(a: Int, b: Int) -> (Int, Bool)
+  requires: true
+{
   var r = num.i64_sub_checked(a, b);
   if r.is_some {
     var fl: Bool = false;
@@ -43,7 +47,9 @@ pub fn overflowing_sub(a: Int, b: Int) -> (Int, Bool) {
 }
 
 /// a * b, returning (wrapped_value, overflowed). Complexity: O(1).
-pub fn overflowing_mul(a: Int, b: Int) -> (Int, Bool) {
+pub fn overflowing_mul(a: Int, b: Int) -> (Int, Bool)
+  requires: true
+{
   var r = num.i64_mul_checked(a, b);
   if r.is_some {
     var fl: Bool = false;
@@ -55,7 +61,9 @@ pub fn overflowing_mul(a: Int, b: Int) -> (Int, Bool) {
 
 /// -a, returning (wrapped_value, overflowed). INT_MIN negates to itself.
 /// Complexity: O(1).
-pub fn overflowing_neg(a: Int) -> (Int, Bool) {
+pub fn overflowing_neg(a: Int) -> (Int, Bool)
+  requires: true
+{
   if a == INT_MIN {
     var ok: Bool = true;
     return (a, ok);

@@ -291,7 +291,9 @@ pub fn ed25519_sign(message: &Vec[Int], keypair: &Ed25519KeyPair) -> Ed25519Sign
 }
 
 /// True when the signature verifies under the public key.
-pub fn ed25519_verify(message: &Vec[Int], signature: &Ed25519Signature, public_key: &Vec[UInt8]) -> Bool {
+pub fn ed25519_verify(message: &Vec[Int], signature: &Ed25519Signature, public_key: &Vec[UInt8]) -> Bool
+  requires: true
+{
   var msg_bytes = _ints_to_bytes(message);
   var h_input1 = _concat(&signature.r, public_key);
   var h_input = _concat(&h_input1, &msg_bytes);

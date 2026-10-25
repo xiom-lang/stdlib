@@ -213,7 +213,9 @@ pub fn bigfloat_set_round_mode(mode: RoundMode)
 }
 
 /// Current global rounding mode.
-pub fn bigfloat_get_round_mode() -> RoundMode {
+pub fn bigfloat_get_round_mode() -> RoundMode
+  ensures: result == _default_round
+{
   return _default_round;
 }
 

@@ -1325,7 +1325,9 @@ pub fn file_size(path: Str) -> Option[Int]
 
 /// file_modified_time returns the last modification time of a file
 /// as a Unix timestamp, or None if the path cannot be stated.
-pub fn file_modified_time(path: Str) -> Option[Int] {
+pub fn file_modified_time(path: Str) -> Option[Int]
+  requires: true
+{
   let m = metadata(path);
   match m {
     Ok(meta) => Some(meta.modified);

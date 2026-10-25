@@ -40,14 +40,18 @@ pub fn gather_load[T](base: Int, indices: &Vec[Int]) -> Vec[T]
 /// Load four `T` values; the tuple is the four gathered values. Scalar
 /// fallback: returns default `T()` values (documented).
 /// Complexity: O(1).
-pub fn gather_load4[T](base: Int, i0: Int, i1: Int, i2: Int, i3: Int) -> (T, T, T, T) {
+pub fn gather_load4[T](base: Int, i0: Int, i1: Int, i2: Int, i3: Int) -> (T, T, T, T)
+  requires: true
+{
   (T(), T(), T(), T())
 }
 
 /// Store `values` to `base + index`. Scalar fallback: generic memory stores
 /// are unavailable -- no-op (documented).
 /// Complexity: O(1).
-pub fn scatter_store[T](base: Int, indices: &Vec[Int], values: &Vec[T]) {
+pub fn scatter_store[T](base: Int, indices: &Vec[Int], values: &Vec[T])
+  requires: true
+{
 }
 
 /// Gather only the lanes where the mask is set. Scalar fallback: generic

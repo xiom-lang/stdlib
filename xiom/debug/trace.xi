@@ -157,7 +157,9 @@ pub fn trace_current_line() -> Int
 /// Print the current backtrace to the console (io.println; a raw stderr
 /// writer is not exposed in this build).
 /// Complexity: O(scope depth).
-pub fn trace_print() {
+pub fn trace_print()
+  requires: true
+{
   let frames = trace_backtrace();
   var i: Int = 0;
   while i < frames.len() {
@@ -169,7 +171,9 @@ pub fn trace_print() {
 
 /// Emit a trace log line when tracing is enabled.
 /// Complexity: O(1).
-pub fn trace_log(msg: Str) {
+pub fn trace_log(msg: Str)
+  requires: true
+{
   if tracing_enabled {
     io.println("[trace] " + msg);
   };

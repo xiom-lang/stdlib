@@ -25,7 +25,9 @@ use xiom.string;
 
 /// https_default_port returns the default HTTPS port (443).
 /// Complexity: O(1). Pure.
-pub fn https_default_port() -> Int {
+pub fn https_default_port() -> Int
+  ensures: result == 443
+{
   443
 }
 
@@ -107,7 +109,9 @@ fn https_parse_status_line(line: Str) -> Int {
 
 /// https_status_text returns the standard reason phrase for a status
 /// code, or "Unknown" for codes not in the table. Complexity: O(1).
-pub fn https_status_text(code: Int) -> Str {
+pub fn https_status_text(code: Int) -> Str
+  ensures: result.len() > 0
+{
   if code == 200 { return "OK"; }
   if code == 201 { return "Created"; }
   if code == 202 { return "Accepted"; }

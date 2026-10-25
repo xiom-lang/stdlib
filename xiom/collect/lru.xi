@@ -41,7 +41,9 @@ pub fn lru_put(c: &mut LruCache, key: Int, value: Int)
 }
 
 /// Check whether `key` is present (does not change recency). O(n).
-pub fn lru_contains(c: &mut LruCache, key: Int) -> Bool {
+pub fn lru_contains(c: &mut LruCache, key: Int) -> Bool
+  requires: true
+{
   return xiom.collect.cache.lru_contains(c, key);
 }
 

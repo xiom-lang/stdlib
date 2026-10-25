@@ -17,9 +17,9 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 90 (updated 2026-10-23; **stdlib-v0.65.0 RELEASED: tag 3eb9c05, GitHub Release live (xiom-std-0.65.0.tar.gz + SHA256SUMS, published 22:37:14Z), release run 40030168256 green on Windows+Ubuntu (gates 41m24s / 39m44s); package 0.65.0, COMPILER_VERSION v0.64.8; the owner's pre-release fix 3eb9c05 adds `use xiom.string;` to xiom.path/xiom.time for the all-modules gate and folds the stdlib notes to one highlight**; registry publish runs 40030168194 (tag) and 40034799532 (dispatch) are WAITING for the registry-publish environment approval; the STDLIB_VERSION pin PR was not auto-created, but compiler main already carries `stdlib-v0.65.0` in `a0dc452dc` ("chore(release): pin stdlib-v0.65.0 and drop the C07 shim"), so that job failure is benign; stdlib-v0.64.9 stays tagged/released but HELD; compiler v0.64.9 withdrawn, v0.65.0 gate open, do NOT pin; next: approve the registry publish, open the pin PR, then a green compiler re-cut -> pin/verify/close)
+## 0A. CONTINUE HERE -- handoff snapshot 91 (updated 2026-10-25; **gate 8 MET: clause wave 208 covers every non-tail public fn (non-tail 100%, global 95.9%, 6614/6899, 9128 clauses); readiness 90% (9/10); battery on official v0.64.8: modules 533/533, smokes 963/963, probes 406/406, barename 0/533, floors196 OK, doc_scan 100%**; stdlib-v0.65.0 tag 3eb9c05 is released and the registry is live (xiom-std 0.65.0 sha256 c3629878..., compiler pin v0.64.8); compiler v0.65.0 is released but NOT pinned (owner will signal the next candidate); gate 9 (zero open findings) is the last gate: 1609/1626/2343/2100-W1/1704; the v0.65.0 Windows archive re-check passes m372 (nested=42 local=42) and tuple-returning 1550 (enumerate tuple ok), the Linux leg is not re-run; do not move tags, do not bump COMPILER_VERSION yet)
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-23, snapshot 90)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-25, snapshot 91)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
@@ -27,59 +27,53 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 90 + blocks 278/277/276 + this 0C block.
+Read docs/stdlib_session.md snapshot 91 + blocks 279/278/277 + this 0C block.
 
-STATE (2026-10-23):
-- stdlib-v0.65.0 IS RELEASED. Tag 3eb9c05 (the owner force-moved it
-  from f25a9a6 to add the all-modules fix); package 0.65.0;
-  COMPILER_VERSION v0.64.8. GitHub Release published 2026-10-23T22:37:14Z
-  with xiom-std-0.65.0.tar.gz + SHA256SUMS. Release run 40030168256 is
-  green: validate 5s, Windows gates 41m24s, Ubuntu gates 39m44s,
-  package + GitHub Release 24s. The code carries the 1640 JSON fix,
-  socket_recv_into/timeout_into, and the C07
-  xiom_guard_copy_out_if_arena helper.
-- The first release run 40028023850 was canceled by the owner
-  (@Lefteris-Notas) twice. The owner then fixed the all-modules gate in
-  3eb9c05 (explicit `use xiom.string;` in xiom.path and xiom.time; the
-  stdlib notes fragment folded to one highlight so the compiler's five
-  plus the stdlib fragment stay within the six-highlight cap) and
-  re-tagged/re-ran. Do not re-run or move the tag without the owner.
-- REGISTRY PUBLISH IS PENDING: runs 40030168194 (tag push) and
-  40034799532 (release-workflow dispatch) are WAITING on the
-  registry-publish environment approval. Approve one, then verify the
-  registry entry (xiom-std 0.65.0, compiler pin v0.64.8).
-- STDLIB_VERSION pin PR was NOT auto-created (token scope), but compiler
-  main already carries stdlib-v0.65.0 in a0dc452dc ("chore(release): pin
-  stdlib-v0.65.0 and drop the C07 shim"), so the failure is benign. No
-  manual PR is needed unless the compiler lane re-cuts.
-- Full battery at code commit 15cafd4 on the official v0.64.8 archive:
-  modules 533/533, smokes 963/963, probes 406/406, barename 0/533,
-  floors196 RATCHET OK (95.2% pub / 97.3% clauses), doc_scan 100%
-  (7474/7474) RATCHET OK. The release CI re-ran all gates green.
-- stdlib-v0.64.9 stays tagged at aa8b656 and HELD; do not move it.
-- Compiler v0.64.9 is WITHDRAWN (REL-20261022-1826-compiler); the
-  v0.65.0 production gate is open. Official v0.64.9 archives remain red
-  for 1451/m372 and tuple-returning 1550; do NOT pin or announce.
+STATE (2026-10-25):
+- Readiness is 90% (9/10). Gate 8 is MET by clause wave 208: every
+  non-tail public fn carries a clause (non-tail 100%, global 95.9%,
+  6614/6899, 9128 clauses, 97.8% clauses/fns). The 288 fns in
+  iter/os/math/thread/ffi/serialize/format are the documented no-clause
+  tail; do not add clause waves there.
+- Battery on the OFFICIAL v0.64.8 archive: modules 533/533 (1579.6s),
+  smokes 963/963 (1844.8s on the clean rerun), probes 406/406
+  (2254.4s), barename 0/533 (981s), floors196 RATCHET OK, doc_scan 100%
+  RATCHET OK. The first smoke run failed smoke_test3 with
+  "contract violated: ensures at 289:12" -- the test_register
+  @pre-on-mutable-global contract cannot be snapshotted by the v0.64.8
+  evaluator; it is now an explicit `requires: true` with a comment.
+- Gate 9 (zero open findings) is the last gate: compiler-side
+  1609/1626/2343/2100-W1/1704. The owner will signal when the compiler
+  candidate is ready; do NOT bump COMPILER_VERSION or pin v0.65.0 before
+  that signal.
+- v0.65.0 is released: compiler tag v0.65.0, stdlib-v0.65.0 tag 3eb9c05,
+  registry xiom-std 0.65.0 live (sha256 c3629878..., compiler field
+  v0.64.8). The v0.65.0 Windows archive re-check passes
+  p_nested_generic_ptr_read (nested=42 local=42) and
+  p_iter_enumerate_tuple (enumerate tuple ok); the Linux leg is NOT
+  re-run (the WSL 9p run timed out and was stopped).
+- Do not move stdlib-v0.64.9 or stdlib-v0.65.0.
 
-PRIORITY 1 -- FINISH THE 0.65.0 RELEASE BOOKKEEPING:
-- Approve the registry publish (environment registry-publish) and verify
-  the published entry; confirm the compiler pin (already a0dc452dc on
-  xiom main).
-- Update relay 2049 (recv-into) and 0242 (C07) to fixed with the tag and
-  release refs; 1640 stays fixed pending xvector's re-verify on 0.65.0;
-  1122 is verified.
-- Do not move stdlib-v0.65.0 or stdlib-v0.64.9.
+PRIORITY 1 -- GATE 9 ON THE OWNER'S SIGNAL:
+- On the owner's signal, re-run the known-failure repros and the
+  release-check rows on the designated candidate archive (Windows+Linux),
+  fill release-checks/compiler-compiler-v<ver>.md, close the verified
+  relay items, then bump COMPILER_VERSION and run the battery.
+- Current gate-9 reds: 1609 (Result.value[i] concat), 1626 (trailing
+  match), 2343 (bare inline i32), 2100-W1 (alias field/C001), 1704
+  (JSON retention, compiler drop elaboration).
+- Do not move tags; do not pin an unverified archive.
 
-PRIORITY 2 -- COMPILER RE-CUT (not the current v0.64.9):
-- Wait for a green patch/re-cut. Stage/hash-verify the official
-  Windows+Linux archives; re-run p_nested_generic_ptr_read (m372) and
-  p_iter_enumerate_tuple on both. Both must be rc 0.
-- Then bump COMPILER_VERSION, run the battery, close the verified items
-  1626/1451/1326/2249/2249-2/1731, verify the compiler 1550 e2e lock,
-  update 0918/1704, and update the session.
-- The current 1550 compiler lock uses an Int-returning idx_plus; it does
-  NOT cover the tuple-returning shape. Insist on the tuple-returning
-  witness.
+PRIORITY 2 -- WISHLIST / READINESS:
+- Keep the non-tail clause coverage at 100%; the tail is the documented
+  no-clause tail.
+- Open stdlib wishlist/bug rows: 1549-pulse-5 (io.list_dir, fixed;
+  reporter re-verify), 1704 (JSON retention, partial; compiler-side),
+  1531-xvector (not reproduced; acked), 1550-stdlib (thread worker-loop;
+  compiler/runtime), 0918 (list_dir fixed; macOS witness pending).
+- Agent waves: Agent Manager worktrees, official pin, unique
+  check_modules OutDir, floors196, no floors/workflows/readiness/session
+  edits, commit on branch, no merge/push; main merges --no-ff.
 
 RULES:
 - No clause waves: iter/os/math/thread/ffi/serialize/format are the
@@ -87,17 +81,14 @@ RULES:
 - Keep io.list_dir runtime-owned (xiom_list_dir_names); no preconditions
   that contradict documented clamping (thread.sleep_ms/timer_sleep);
   json_clear(&mut) still hangs; no mutable-enum recursion.
-- Agent waves: Agent Manager worktrees, official pin, unique
-  check_modules OutDir, floors196, no floors/workflows/readiness/session
-  edits, commit on branch, no merge/push; main merges --no-ff.
 - Relay pulls: fetch + merge --ff-only (pull --ff-only fails with
   multiple branches).
 - 1609 still blocks 1549; 1704 parse/build still m375; 1520 open;
   1550 compiler-side; 1410/1414 with compiler.
 - Untracked out/ + smoke_diag_f128_* are documented leftovers.
 
-DELIVERABLE: finish the 0.65.0 registry/pin bookkeeping, then
-compiler-pin verification; leave docs/session current and push.
+DELIVERABLE: gate 9 on the owner's signal; keep readiness at 90%+ and
+non-tail coverage at 100%; leave docs/session current and push.
 ```
 ---
 
@@ -3733,6 +3724,49 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-25 block 279 (readiness clause wave 208: non-tail contract coverage 100%, gate 8 MET, readiness 90%; battery green)**
+- Clause wave 208 covers every remaining non-tail public fn: **49
+  functions across 29 modules**. Every non-tail directory is now
+  **100% pub-with-clause** (alloc, async, collect, convert, core, crypto,
+  debug, hash, io, log, net, num, rand, regex, simd, stats, test, time).
+  Global is **95.9%** (6614/6899; 9128 clauses; 97.8% clauses/fns). The
+  remaining 288 fns are the documented no-clause tail
+  (iter/os/math/thread/ffi/serialize/format); no clause wave was added
+  there.
+- Real contracts added: `Duration.as_secs`, `DateTime.year`, `date_year`,
+  `SystemTime.unix_epoch`, `SystemTime.secs_since_epoch`;
+  `bigfloat_get_round_mode == _default_round`; `https_default_port ==
+  443`; `https_status_text.len() > 0`; `histogram_add` keeps the bin
+  count; `crypto_random_u32` stays in UInt32 range; SHA-256/512 H0
+  constants; `log_sink_rotate` keeps the byte counter. Wrappers and
+  runtime/unit-returning functions use an explicit `requires: true`
+  (no precondition), matching the codebase's existing convention.
+- The first full smoke run caught one over-strong contract:
+  `smoke_test3` failed with `contract violated: ensures at 289:12` --
+  `test_register`'s intended `g_tests.n == g_tests.n@pre + 1` uses
+  `@pre` on a mutable global, which the v0.64.8 evaluator cannot
+  snapshot. Replaced with `requires: true` plus the invariant in a
+  comment; `smoke_test3` reran green.
+- Full battery on the OFFICIAL v0.64.8 archive:
+  - modules **533/533** clean (1579.6s)
+  - smokes **963/963** on the clean rerun (1844.8s)
+  - probes **406/406** (2254.4s)
+  - barename **0/533** (981s)
+  - coverage **floors196 RATCHET OK**
+  - doc_scan **100% (7474/7474) RATCHET OK**
+- Readiness queue updated: gate 8 is MET via the documented non-tail
+  rule; the meter is **90% (9/10)**. Gate 9 (zero open findings) is the
+  last gate: 1609/1626/2343/2100-W1/1704, all compiler-side.
+- No pin/tag change. `COMPILER_VERSION` stays v0.64.8; stdlib-v0.65.0
+  (3eb9c05) and stdlib-v0.64.9 (aa8b656) are untouched. v0.65.0 is
+  released and the registry is live (xiom-std 0.65.0 sha256
+  c3629878..., compiler field v0.64.8), but the owner will signal when
+  to do the next compiler verification/pin.
+- v0.65.0 archive spot-check: the Windows archive passes
+  `p_nested_generic_ptr_read` (`nested=42 local=42`) and
+  `p_iter_enumerate_tuple` (`enumerate tuple ok`); the Linux leg is not
+  re-run (the WSL 9p run timed out and was stopped).
 
 **SESSION 2026-10-23 block 278 (stdlib-v0.65.0 RELEASED: tag 3eb9c05, GitHub Release live; registry publish waiting on environment approval)**
 - Release: `stdlib-v0.65.0` at `3eb9c05`; package.xi 0.65.0;

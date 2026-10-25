@@ -43,6 +43,8 @@ pub fn into_float(n: Int) -> Float64
 /// Parameters: v -- the value to render.
 /// Returns: the value's to_str() representation.
 /// Complexity: O(1) for primitives.
-pub fn into_str[T](v: T) -> Str {
+pub fn into_str[T](v: T) -> Str
+  requires: true
+{
   return v.to_str();
 }

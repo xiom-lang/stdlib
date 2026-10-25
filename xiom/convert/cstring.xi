@@ -51,7 +51,9 @@ pub fn from_cstring(ptr: Int) -> Str
 /// Parameters: s -- the string to copy.
 /// Returns: a malloc'd pointer the caller must free with xiom.ffi.free.
 /// Complexity: O(n).
-pub fn to_cstring(s: Str) -> Int {
+pub fn to_cstring(s: Str) -> Int
+  requires: true
+{
   var len = s.len();
   unsafe {
     var buf = malloc((len + 1) as UInt);
@@ -89,7 +91,9 @@ pub fn cstring_len(ptr: Int) -> Int
 /// Parameters: ptr -- the address of the source C string.
 /// Returns: a malloc'd copy the caller must free.
 /// Complexity: O(n).
-pub fn cstring_copy(ptr: Int) -> Int {
+pub fn cstring_copy(ptr: Int) -> Int
+  requires: true
+{
   var s = from_cstring(ptr);
   return to_cstring(s);
 }

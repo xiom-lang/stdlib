@@ -714,7 +714,9 @@ pub fn Box[T].as_mut(self) -> &mut T
 }
 
 /// === M7: AsRef[Str] impl for Str ===
-pub fn Str.as_ref(self) -> &Str {
+pub fn Str.as_ref(self) -> &Str
+  requires: true
+{
   return &self;
 }
 

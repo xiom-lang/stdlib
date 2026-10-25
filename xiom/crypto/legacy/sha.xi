@@ -26,7 +26,9 @@ type AppendState = { j: Int; }
 type IntW = { v: Int; }
 
 /// SHA-256 initial hash value H0 (FIPS 180-4).
-pub fn sha256_initial_h0() -> Int { return 0x6a09e667; }
+pub fn sha256_initial_h0() -> Int
+  ensures: result == 0x6a09e667
+{ return 0x6a09e667; }
 /// SHA-256 initial hash value H1 (FIPS 180-4).
 pub fn sha256_initial_h1() -> Int { return 0xbb67ae85; }
 /// SHA-256 initial hash value H2 (FIPS 180-4).
@@ -333,7 +335,9 @@ pub fn sha256_hmac(data: &Vec[Int], key: &Vec[Int]) -> Vec[Int]
 }
 
 /// SHA-512 initial hash value H0 (FIPS 180-4).
-pub fn sha512_initial_h0() -> Int { return 0x6a09e667f3bcc908; }
+pub fn sha512_initial_h0() -> Int
+  ensures: result == 0x6a09e667f3bcc908
+{ return 0x6a09e667f3bcc908; }
 /// SHA-512 initial hash value H1 (FIPS 180-4).
 pub fn sha512_initial_h1() -> Int { return 0xbb67ae8584caa73b; }
 /// SHA-512 initial hash value H2 (FIPS 180-4).

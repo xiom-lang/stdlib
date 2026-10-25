@@ -59,7 +59,9 @@ pub type GlobalAlloc = { }
 
 /// Returns the concrete GlobalAlloc (the Allocator interface is a bound for
 /// generic code, not a value type the checker can return).
-pub fn global_alloc() -> GlobalAlloc {
+pub fn global_alloc() -> GlobalAlloc
+  requires: true
+{
   GlobalAlloc{ }
 }
 

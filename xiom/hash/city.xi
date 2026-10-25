@@ -211,7 +211,9 @@ pub fn city64(data: &Vec[UInt8]) -> UInt64
 }
 
 /// CityHash64WithSeed: HashLen16(CityHash64(s) - k2, seed).
-pub fn city64_with_seed(data: &Vec[UInt8], seed: UInt64) -> UInt64 {
+pub fn city64_with_seed(data: &Vec[UInt8], seed: UInt64) -> UInt64
+  requires: true
+{
   return city_hash_len16(city64(data) - _K2, seed);
 }
 

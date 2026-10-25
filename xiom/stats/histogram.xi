@@ -51,7 +51,9 @@ pub fn histogram_new(bins: Int, min: Float64, max: Float64) -> Histogram
 /// Record a value into h (by-value parameter: the caller's copy is not
 /// updated under XIOM move semantics; the frozen signature has no return).
 /// Values outside [min, max) are dropped. Complexity: O(1).
-pub fn histogram_add(h: Histogram, value: Float64) {
+pub fn histogram_add(h: Histogram, value: Float64)
+  ensures: h.counts.len() == h.counts.len()@pre
+{
   if h.counts.len() == 0 { return; }
   if value < h.min || value >= h.max { return; }
   var idx = to_int((value - h.min) * (h.bins as Float64) / (h.max - h.min));

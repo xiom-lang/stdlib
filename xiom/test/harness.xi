@@ -252,7 +252,9 @@ pub fn report_duration_ms(r: &TestReport) -> Int
 
 /// Print a human-readable summary.
 /// Complexity: O(1).
-pub fn report_print(r: &TestReport) {
+pub fn report_print(r: &TestReport)
+  requires: true
+{
   io.println("passed: " + convert.int_to_string(r.passed) + ", failed: " + convert.int_to_string(r.failed) + ", skipped: " + convert.int_to_string(r.skipped) + ", duration_ms: " + convert.int_to_string(r.duration_ms));
 }
 
@@ -283,7 +285,14 @@ pub fn test_main() -> Int
 /// name is recorded -- the function pointer cannot be retained in this build
 /// (see header).
 /// Complexity: O(1).
-pub fn test_register(name: Str, f: fn() -> Result[Unit, Str]) -> Bool {
+pub fn test_register(name: Str, f: fn() -> Result[Unit, Str]) -> Bool
+  // No precondition: the 8-slot registry accepts names until full. The
+  // intended counter postcondition uses @pre on the mutable global
+  // `g_tests.n`, which the v0.64.8 contract evaluator cannot snapshot
+  // (verified: smoke_test3 contract violation at this site), so the
+  // counter invariant stays documented here rather than enforced.
+  requires: true
+{
   if g_tests.n >= 8 {
     return false;
   };

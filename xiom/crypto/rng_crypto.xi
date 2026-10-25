@@ -46,7 +46,9 @@ pub fn crypto_random_bytes(len: Int) -> Vec[UInt8]
 
 /// Random 64-bit unsigned integer.
 /// Complexity: O(1).
-pub fn crypto_random_u64() -> UInt64 {
+pub fn crypto_random_u64() -> UInt64
+  requires: true
+{
   var bytes = crypto.secure_random_bytes(8);
   var r: UInt64 = 0;
   var i = 0;
@@ -59,7 +61,9 @@ pub fn crypto_random_u64() -> UInt64 {
 
 /// Random 32-bit unsigned integer.
 /// Complexity: O(1).
-pub fn crypto_random_u32() -> UInt32 {
+pub fn crypto_random_u32() -> UInt32
+  ensures: result <= 4294967295
+{
   var bytes = crypto.secure_random_bytes(4);
   var b0 = bytes[0] as Int;
   var b1 = bytes[1] as Int;
@@ -122,7 +126,9 @@ pub fn crypto_random_float() -> Float64
 
 /// Fair random boolean.
 /// Complexity: O(1).
-pub fn crypto_random_bool() -> Bool {
+pub fn crypto_random_bool() -> Bool
+  requires: true
+{
   var bytes = crypto.secure_random_bytes(1);
   return (bytes[0] as Int) % 2 == 0;
 }
@@ -156,7 +162,9 @@ pub fn crypto_random_choice[T](v: &Vec[T]) -> Option[T]
 
 /// Seed value gathered from system entropy (8 bytes).
 /// Complexity: O(1).
-pub fn crypto_seed_from_entropy() -> UInt64 {
+pub fn crypto_seed_from_entropy() -> UInt64
+  requires: true
+{
   return crypto_random_u64();
 }
 

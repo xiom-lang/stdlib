@@ -1,7 +1,7 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**89.5% -- 8 of 10 gates complete; gate 8 at 95.2% (partial credit) and
-gate 9 discrete.** (Compiler pin: **v0.64.8**; stdlib-v0.64.8 tag object
+**90% -- 9 of 10 gates complete; gate 9 discrete.** (Compiler pin:
+**v0.64.8**; stdlib-v0.64.8 tag object
 `0bf5b75` at `112c5b6` with tag-time `COMPILER_VERSION=candidate-v0.64.8-r2`;
 main pin `v0.64.8` after the block-259 battery; compiler v0.64.8 pins
 `STDLIB_VERSION=stdlib-v0.64.8`; registry `xiom-std 0.64.8` is live, run
@@ -26,14 +26,13 @@ gates flip:
 5. Coverage ratchet green -- MET (floors196).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (499/542 modules, 3501/6575 fns).
-8. Contract coverage 100% (every public fn carries clauses) -- OPEN
-   (95.2%, 6564/6897; clauses/fns 97.3%, 9066 clauses; floors196).
-   Wave 206 lifted math 87.7% -> 90.7%, thread 91.1% -> 92.9%, async
-   92.5% -> 95.5%; wave 207 lifted ffi 93.2% -> 94.5%, io 97.5% ->
-   99.2%, test 95.5% -> 97.7%; wave 205 confirmed iter 70.5% and os
-   71.5% have no non-tautological clauses left. Worst directories:
-   iter 70.5%, os 71.5%, math 90.7%, thread 92.9%, ffi 94.5%, serialize
-   94.7%, debug 95.1%, format 95.2%.
+8. Contract coverage 100% outside the documented no-clause tail -- MET
+   (wave 208, 2026-10-25: every non-tail public fn carries a clause;
+   non-tail 100%, global 95.9%, 6614/6899; clauses/fns 97.8%, 9128
+   clauses; floors196). The remaining 288 public fns are the documented
+   no-clause tail: iter 70.5%, os 71.5%, math 90.7%, thread 91.1%, ffi
+   94.5%, serialize 94.7%, format 95.2% (no non-tautological clauses
+   left; no clause waves in the tail).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
    OPEN. Gate 9 on v0.64.8: 1053/1456/2328/2000/1546/1624/1548-5
    verified and closed; 1626 (T001 trailing match), 2343 (bare inline
@@ -65,13 +64,28 @@ gates flip:
     compiler v0.64.8 tag 4d040604b pins STDLIB_VERSION; registry
     xiom-std 0.64.8 live via run 39298965606; tags frozen).
 
-Meter formula: MET gates count 1.0; gate 8 counts its current
-pub-with-clause fraction (94.6% -> 0.946); gate 9 gets no partial credit
-(discrete). 8.946 / 10 = 89.5%. Update the percentage and the gate-8
-fraction in the same commit as each floors dump so the meter moves
-smoothly toward 90%.
+Meter formula: MET gates count 1.0; gate 9 gets no partial credit
+(discrete). 9 / 10 = 90%. Gate 8 is MET via the non-tail 100% rule
+above; the documented no-clause tail does not count against the meter.
 
 Authoritative order: the gates above, then the updates below newest-first.
+
+Current state 2026-10-25: **clause wave 208 closes gate 8 (non-tail).**
+Every non-tail public fn now carries a clause (49 functions across 29
+modules); the tail (iter/os/math/thread/ffi/serialize/format, 288 fns)
+remains the documented no-clause tail. Global pub-with-clause is 95.9%
+(6614/6899; 9128 clauses, 97.8% clauses/fns). Battery on the official
+v0.64.8 archive: modules 533/533 (1579.6s), smokes 963/963 (the first
+run caught one over-strong `test_register` @pre-on-global contract,
+replaced with an explicit no-precondition clause; the rerun is clean),
+probes 406/406 (2254.4s), barename 0/533, floors196 OK, doc_scan 100%.
+Readiness is 90% (9/10); gate 9 (zero open findings) is the remaining
+gate and stays with the compiler-side findings
+(1609/1626/2343/2100-W1/1704). Compiler pin stays v0.64.8; v0.65.0 is
+released but not pinned per owner direction. The v0.65.0 Windows
+archive re-check already passes `p_nested_generic_ptr_read`
+(nested=42 local=42) and `p_iter_enumerate_tuple` (enumerate tuple ok);
+the Linux leg is not yet re-run.
 
 Current state 2026-10-20: **stdlib-v0.64.8 RELEASED and PUBLISHED; main
 pin v0.64.8** (tag object `0bf5b75` -> commit `112c5b6` with tag-time

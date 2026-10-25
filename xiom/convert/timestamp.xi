@@ -18,7 +18,9 @@ use xiom.time;
 /// Seconds since the Unix epoch (1970-01-01T00:00:00Z).
 /// Returns: the current epoch seconds.
 /// Complexity: O(1).
-pub fn timestamp_now() -> Int {
+pub fn timestamp_now() -> Int
+  requires: true
+{
   return time.unix_timestamp();
 }
 

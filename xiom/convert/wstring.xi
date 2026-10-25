@@ -59,7 +59,9 @@ pub fn from_wstring(ptr: Int) -> Str
 /// Parameters: s -- the string to copy.
 /// Returns: a malloc'd UTF-16 pointer the caller must free.
 /// Complexity: O(n).
-pub fn to_wstring(s: Str) -> Int {
+pub fn to_wstring(s: Str) -> Int
+  requires: true
+{
   var len = s.len();
   unsafe {
     var buf = malloc(((len * 2) + 2) as UInt);

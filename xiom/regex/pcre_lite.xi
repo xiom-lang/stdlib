@@ -149,7 +149,9 @@ pub fn pcre_split(compiled: Int, s: Str) -> Vec[Str]
 /// Release the resources of a compiled handle. The registry keeps patterns
 /// alive for the whole process, so this is a documented no-op.
 /// Complexity: O(1).
-pub fn pcre_free(compiled: Int) {
+pub fn pcre_free(compiled: Int)
+  requires: true
+{
   // Intentionally empty: handles remain valid for the process lifetime.
 }
 

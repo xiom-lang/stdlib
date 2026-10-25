@@ -123,7 +123,9 @@ pub fn Duration.from_nanos(ns: Int) -> Duration
 }
 
 /// Whole seconds of the duration.
-pub fn Duration.as_secs(self) -> Int {
+pub fn Duration.as_secs(self) -> Int
+  ensures: result == self.secs
+{
   return self.secs;
 }
 
@@ -308,7 +310,9 @@ pub fn SystemTime.now() -> SystemTime
 }
 
 /// The Unix epoch (1970-01-01T00:00:00Z).
-pub fn SystemTime.unix_epoch() -> SystemTime {
+pub fn SystemTime.unix_epoch() -> SystemTime
+  ensures: result.secs == 0 && result.nanos == 0
+{
   return SystemTime{ secs: 0; nanos: 0; };
 }
 
@@ -332,7 +336,9 @@ pub fn SystemTime.duration_since(self, earlier: SystemTime) -> Result[Duration, 
 }
 
 /// Whole seconds since the Unix epoch.
-pub fn SystemTime.secs_since_epoch(self) -> Int {
+pub fn SystemTime.secs_since_epoch(self) -> Int
+  ensures: result == self.secs
+{
   return self.secs;
 }
 
@@ -404,7 +410,9 @@ pub fn DateTime.now() -> DateTime
 }
 
 /// Year component (UTC).
-pub fn DateTime.year(self) -> Int {
+pub fn DateTime.year(self) -> Int
+  ensures: result == self.year
+{
   return self.year;
 }
 
@@ -580,7 +588,9 @@ pub fn date_now() -> Date
 
 /// date_year returns the year field of a Date.
 /// Complexity: O(1).
-pub fn date_year(d: &Date) -> Int {
+pub fn date_year(d: &Date) -> Int
+  ensures: result == d.year
+{
   return d.year;
 }
 

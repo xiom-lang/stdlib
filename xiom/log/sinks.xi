@@ -181,14 +181,18 @@ pub fn log_sinks() -> Vec[Sink]
 
 /// Flush every registered sink. No-op in this build (output is synchronous).
 /// Complexity: O(1).
-pub fn log_flush_all() {
+pub fn log_flush_all()
+  requires: true
+{
 }
 
 /// Rotate a file sink once it exceeds `max_bytes`. This build performs no
 /// byte accounting, so the sink's byte counter is never advanced and rotation
 /// is a no-op (documented).
 /// Complexity: O(1).
-pub fn log_sink_rotate(s: Sink, max_bytes: Int) {
+pub fn log_sink_rotate(s: Sink, max_bytes: Int)
+  ensures: s.bytes == s.bytes@pre
+{
   if s.bytes > max_bytes {
     // Rotation unsupported in this build (see header).
   };

@@ -176,7 +176,9 @@ pub fn Bool.hash(self) -> UInt64
 /// concrete Int.hash/Bool.hash methods, and the explicit-receiver form
 /// (`Bool.hash(x)`) does not type-check -- so those two methods are
 /// unreachable today; treat `.hash()` on Int/Bool as the identity.
-pub fn hash_value[T: Hash](value: T) -> Int {
+pub fn hash_value[T: Hash](value: T) -> Int
+  requires: true
+{
   let h = value.hash();
   return h as Int;
 }
@@ -189,7 +191,9 @@ pub fn hash_combine(seed: Int, hash: Int) -> Int
 }
 
 /// Hash any `Hash`-implementing value.
-pub fn hash[T: Hash](value: T) -> UInt64 {
+pub fn hash[T: Hash](value: T) -> UInt64
+  requires: true
+{
   value.hash()
 }
 

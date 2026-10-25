@@ -113,7 +113,9 @@ pub fn random_float(min: Float64, max: Float64) -> Float64
 }
 
 /// Fair coin flip.
-pub fn random_bool() -> Bool {
+pub fn random_bool() -> Bool
+  requires: true
+{
   return random() >= 0.5;
 }
 

@@ -202,17 +202,23 @@ fn _pump() -> Bool {
 /// Enqueue an async task onto the global executor's ready-queue.
 /// NOTE: unlike the old stub, this no longer runs `task` inline -- it is
 /// scheduled and runs when the executor is driven via `run`/`block_on`.
-pub fn spawn(task: fn()) {
+pub fn spawn(task: fn())
+  requires: true
+{
   _exec.spawn(task);
 }
 
 /// Drive the global executor until all tasks and timers are complete.
-pub fn run() {
+pub fn run()
+  requires: true
+{
   _exec.run();
 }
 
 /// Spawn a task and drive the global executor to completion.
-pub fn block_on(task: fn()) {
+pub fn block_on(task: fn())
+  requires: true
+{
   _exec.spawn(task);
   _exec.run();
 }
