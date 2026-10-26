@@ -17,9 +17,9 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 95 (updated 2026-10-26; **stdlib-v0.65.1 PREPARED but NOT TAGGED at 9dc69b3 -- owner GO required: owns_return on io.read_file_bytes/io.read_at (REL-20261026-0040-compiler-2); HPACK Huffman codec + HEADERS/CONTINUATION reassembly helpers landed on top of the dynamic-table primitives (xiom/net/h2.xi); battery on official v0.64.8: modules 533/533 (303.8s), smokes 963/963 (677.7s), probes 410/410 (484.8s), barename 0/533 (388.3s), floors197 OK (global 95.9%, 6650/6935, 9169 clauses), doc_scan 100%**; readiness 90% (gate 8 MET); gate 9 on v0.65.0 Windows: only 1609 red (`p_result_payload_index_concat` rc 1) + 1704 parse-side; stdlib-v0.65.0 tag 3eb9c05/registry live; compiler v0.65.0 not pinned; next: owner GO -> tag/push stdlib-v0.65.1 at 9dc69b3, release workflow, registry (COMPILER_VERSION v0.64.8), reply 0040-compiler-2; h2 next slice: connection state)
+## 0A. CONTINUE HERE -- handoff snapshot 96 (updated 2026-10-26; **stdlib-v0.65.1 RELEASED: tag 9dc69b3, release run 40375774931 green (Windows 39m36s, Ubuntu 24m51s), GitHub Release live (xiom-std-0.65.1.tar.gz + SHA256SUMS, published 18:53:26Z); pin PR https://github.com/xiom-lang/xiom/pull/8 open; registry publish 40375774857 waiting on the registry-publish environment approval**; COMPILER_VERSION v0.64.8; the tag carries only the owns_return prep, not the later h2/floors commits; h2 now has dynamic table + Huffman + CONTINUATION helpers (probes 410/410; local battery modules 533/533, smokes 963/963, barename 0/533, floors197 OK, doc 100%); readiness 90% (gate 8 MET); gate 9 on v0.65.0 Windows: only 1609 red + 1704 parse-side; next: approve the registry publish, compiler pins v0.65.1; then the next compiler candidate for gate 9)
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-26, snapshot 95)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-26, snapshot 96)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
@@ -27,15 +27,17 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 95 + blocks 286/285/284 + this 0C block.
+Read docs/stdlib_session.md snapshot 96 + blocks 287/286/285 + this 0C block.
 
 STATE (2026-10-26):
-- stdlib-v0.65.1 is PREPARED ON MAIN but NOT TAGGED (owner GO
-  required): #[owns_return] on io.read_file_bytes/io.read_at for the
-  compiler m375 Vec-leak fix (REL-20261026-0040-compiler-2); package
-  0.65.1; release-notes/v0.65.1.md validated; COMPILER_VERSION v0.64.8;
-  battery modules 533/533 (303.8s), smokes 963/963 (677.7s), probes
-  410/410 (484.8s), barename 0/533 (388.3s), floors197 OK, doc 100%.
+- stdlib-v0.65.1 IS RELEASED at 9dc69b3 (the prep commit with the two
+  #[owns_return] annotations; package 0.65.1; COMPILER_VERSION v0.64.8).
+  Release run 40375774931 green (Windows 39m36s, Ubuntu 24m51s); GitHub
+  Release published 2026-10-26T18:53:26Z with xiom-std-0.65.1.tar.gz +
+  SHA256SUMS. Pin PR https://github.com/xiom-lang/xiom/pull/8 is open.
+  Registry publish 40375774857 is waiting on the registry-publish
+  environment approval. Local battery: modules 533/533, smokes 963/963,
+  probes 410/410, barename 0/533, floors197 OK, doc 100%.
 - Wishlist 2202 item 9: HPACK dynamic-table primitives landed in
   xiom/net/h2.xi (H2HpackDynamicTable + new/len/size/add/get/set_max/
   clear; oldest-first, index 1 = newest, size = name+value+32, eviction,
@@ -79,14 +81,10 @@ STATE (2026-10-26):
   re-run (the WSL 9p run timed out and was stopped).
 - Do not move stdlib-v0.64.9 or stdlib-v0.65.0.
 
-PRIORITY 0 -- TAG stdlib-v0.65.1 ON OWNER GO:
-- The prep is on main at 9dc69b3 (package 0.65.1, the two #[owns_return]
-  annotations, validated notes, full battery green). Tag/push that
-  commit so the later h2 feature stays out of the 0.65.1 release. On GO: tag/push
-  stdlib-v0.65.1, run .github/workflows/release.yml, publish the
-  registry with COMPILER_VERSION v0.64.8, and reply to
-  REL-20261026-0040-compiler-2 with the tag/SHA/run id. Do NOT move
-  stdlib-v0.65.0.
+PRIORITY 0 -- FINISH THE 0.65.1 RELEASE:
+- Approve the registry publish (run 40375774857) and verify xiom-std
+  0.65.1; confirm pin PR #8 (branch chore/pin-stdlib-v0.65.1, a3fa2a6).
+  Do NOT move stdlib-v0.65.0 or stdlib-v0.65.1.
 
 PRIORITY 1 -- GATE 9 ON THE OWNER'S SIGNAL:
 - On the owner's signal, re-run the known-failure repros and the
@@ -3758,6 +3756,29 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-26 block 287 (stdlib-v0.65.1 RELEASED; pin PR #8; registry approval pending)**
+- Owner GO received. Annotated tag `stdlib-v0.65.1` at `9dc69b3` (the
+  prep commit: package 0.65.1, the two `#[owns_return]` annotations,
+  validated notes; `COMPILER_VERSION` v0.64.8). The tag deliberately
+  excludes the later floors197 and h2 commits.
+- Release run `40375774931` green: validate 5s, Windows gates 39m36s,
+  Ubuntu gates 24m51s, package + GitHub Release 25s, pin PR job and
+  staging canary dispatch. GitHub Release published
+  2026-10-26T18:53:26Z with `xiom-std-0.65.1.tar.gz` and `SHA256SUMS`.
+- The pin PR job pushed branch `chore/pin-stdlib-v0.65.1` (`a3fa2a6`) but
+  PR creation failed with the token scope; opened manually as
+  https://github.com/xiom-lang/xiom/pull/8.
+- Registry publish run `40375774857` (tag push) is waiting on the
+  `registry-publish` environment approval; staging canary `40381778731`
+  is also waiting. The registry entry is not yet verified.
+- Relay `REL-20261026-0040-compiler-2` moved acked -> fixed with the
+  tag/run/release refs; the compiler can pin `stdlib-v0.65.1`.
+- Local battery at the code head (after the h2/floors commits): modules
+  533/533, smokes 963/963, probes 410/410, barename 0/533, floors197
+  OK, doc 100%.
+- Gate 9 remains 1609 + 1704 parse-side; h2 only connection state
+  remains.
 
 **SESSION 2026-10-26 block 286 (HEADERS + CONTINUATION reassembly helpers; full battery green)**
 - Added `H2HeaderBlock` + `h2_header_block_new/append/is_complete/len/

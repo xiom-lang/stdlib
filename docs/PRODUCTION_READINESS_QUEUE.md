@@ -1,9 +1,10 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
 **90% -- 9 of 10 gates complete; gate 9 discrete.** (Compiler pin:
-**v0.64.8**; stdlib-v0.65.0 tag `3eb9c05`; registry `xiom-std 0.65.0`
-live (sha256 `c3629878...`, compiler field v0.64.8); compiler v0.65.0
-is released but deliberately not pinned yet; main pin v0.64.8.)
+**v0.64.8**; stdlib-v0.65.1 tag `9dc69b3`, GitHub Release live
+(`xiom-std-0.65.1.tar.gz` + `SHA256SUMS`); pin PR #8 open; registry
+publish waiting on the registry-publish environment approval; compiler
+v0.65.0 is released but deliberately not pinned yet; main pin v0.64.8.)
 **Gates: merged corpus 963/963 (0 compilefail / 0 runfail), modules
 533/533, probes 410/410, barename 0/533, floors197. Wave pin: v0.64.8
 (block 280).**
@@ -89,7 +90,10 @@ new/len/size/add/get/set_max/clear; probe `p_wave283_hpack_dynamic`) and
 the RFC 7541 Huffman codec landed (257-entry table, H=1 string
 decode/encode; probe `p_wave285_hpack_huffman`), and HEADERS +
 CONTINUATION reassembly landed (`H2HeaderBlock`; probe
-`p_wave286_h2_cont`), so the probe corpus is 410/410.
+`p_wave286_h2_cont`), so the probe corpus is 410/410. **stdlib-v0.65.1
+released** from `9dc69b3` (owns_return prep): release run 40375774931
+green, GitHub Release live, pin PR #8 open; registry publish waits on
+the registry-publish environment approval.
 
 Current state 2026-10-25: **clause wave 208 closes gate 8 (non-tail).**
 Every non-tail public fn now carries a clause (66 functions across 30
