@@ -17,9 +17,9 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 93 (updated 2026-10-26; **stdlib-v0.65.1 PREPARED but NOT TAGGED -- owner GO required: `#[owns_return]` on io.read_file_bytes/io.read_at for the compiler m375 Vec-leak fix (REL-20261026-0040-compiler-2); package 0.65.1, release-notes/v0.65.1.md validated (1 highlight); COMPILER_VERSION v0.64.8; full battery on official v0.64.8: modules 533/533 (768.8s), smokes 963/963 (727s), probes 407/407 (1098.9s), barename 0/533 (412.8s), floors197 OK (locks non-tail 100%), doc_scan 100%**; readiness 90% (gate 8 MET); gate 9 on v0.65.0 Windows: only 1609 red (`p_result_payload_index_concat` rc 1), 1704 parse-side m375, the rest verified green; stdlib-v0.65.0 tag 3eb9c05/registry live, compiler v0.65.0 not pinned; next: owner GO -> tag/push stdlib-v0.65.1, run release workflow, publish registry (COMPILER_VERSION v0.64.8), reply to 0040-compiler-2 with tag/SHA/run id)
+## 0A. CONTINUE HERE -- handoff snapshot 94 (updated 2026-10-26; **stdlib-v0.65.1 PREPARED but NOT TAGGED at 9dc69b3 -- owner GO required: owns_return on io.read_file_bytes/io.read_at (REL-20261026-0040-compiler-2); HPACK dynamic-table primitives landed in xiom/net/h2.xi (wishlist 2202 item 9); battery on official v0.64.8: modules 533/533 (285.4s), smokes 963/963 (696.1s), probes 408/408 (427s), barename 0/533 (406.8s), floors197 OK, doc_scan 100%**; readiness 90% (gate 8 MET); gate 9 on v0.65.0 Windows: only 1609 red (`p_result_payload_index_concat` rc 1) + 1704 parse-side; stdlib-v0.65.0 tag 3eb9c05/registry live; compiler v0.65.0 not pinned; next: owner GO -> tag/push stdlib-v0.65.1 at 9dc69b3, release workflow, registry (COMPILER_VERSION v0.64.8), reply 0040-compiler-2; h2 next slices: Huffman, CONTINUATION, connection state)
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-26, snapshot 93)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-26, snapshot 94)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
@@ -27,15 +27,20 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 93 + blocks 283/282/281 + this 0C block.
+Read docs/stdlib_session.md snapshot 94 + blocks 284/283/282 + this 0C block.
 
 STATE (2026-10-26):
 - stdlib-v0.65.1 is PREPARED ON MAIN but NOT TAGGED (owner GO
   required): #[owns_return] on io.read_file_bytes/io.read_at for the
   compiler m375 Vec-leak fix (REL-20261026-0040-compiler-2); package
   0.65.1; release-notes/v0.65.1.md validated; COMPILER_VERSION v0.64.8;
-  battery modules 533/533 (768.8s), smokes 963/963 (727s), probes
-  407/407 (1098.9s), barename 0/533 (412.8s), floors197 OK, doc 100%.
+  battery modules 533/533 (285.4s), smokes 963/963 (696.1s), probes
+  408/408 (427s), barename 0/533 (406.8s), floors197 OK, doc 100%.
+- Wishlist 2202 item 9: HPACK dynamic-table primitives landed in
+  xiom/net/h2.xi (H2HpackDynamicTable + new/len/size/add/get/set_max/
+  clear; oldest-first, index 1 = newest, size = name+value+32, eviction,
+  oversized clears). Probe p_wave283_hpack_dynamic. Next h2 slices:
+  Huffman, CONTINUATION reassembly, connection state.
 - Readiness is 90% (9/10). Gate 8 is MET by clause wave 208: every
   non-tail public fn carries a clause (non-tail 100%, global 95.9%,
   6635/6920, 9149 clauses, 97.8% clauses/fns). The 285 fns in
@@ -70,8 +75,9 @@ STATE (2026-10-26):
 - Do not move stdlib-v0.64.9 or stdlib-v0.65.0.
 
 PRIORITY 0 -- TAG stdlib-v0.65.1 ON OWNER GO:
-- The prep is on main (package 0.65.1, the two #[owns_return]
-  annotations, validated notes, full battery green). On GO: tag/push
+- The prep is on main at 9dc69b3 (package 0.65.1, the two #[owns_return]
+  annotations, validated notes, full battery green). Tag/push that
+  commit so the later h2 feature stays out of the 0.65.1 release. On GO: tag/push
   stdlib-v0.65.1, run .github/workflows/release.yml, publish the
   registry with COMPILER_VERSION v0.64.8, and reply to
   REL-20261026-0040-compiler-2 with the tag/SHA/run id. Do NOT move
@@ -3747,6 +3753,29 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-26 block 284 (HPACK dynamic-table primitives, wishlist 2202 item 9; full battery green)**
+- Added `H2HpackDynamicTable` plus seven public functions in
+  `xiom/net/h2.xi`: `h2_hpack_dynamic_new/len/size/add/get/set_max/
+  clear`. Entries are stored oldest-first; dynamic index 1 is the
+  newest; an entry costs name.len + value.len + 32 (RFC 7541 section
+  4.1); add evicts oldest until the entry fits; an oversized entry
+  clears the table; set_max evicts down; clear resets size while
+  preserving max_size.
+- The module header now lists only Huffman, CONTINUATION reassembly and
+  connection state as unimplemented; the dynamic table is standalone
+  for a stateful caller (the existing stateless header encode/decode is
+  unchanged).
+- New probe `p_wave283_hpack_dynamic` covers size accounting,
+  newest-index lookup, eviction, max-size changes, clear, max 0 and the
+  oversized-entry rule; `p_wave174_shapes` stays green.
+- Full battery on the OFFICIAL v0.64.8 archive: modules **533/533**
+  (285.4s), smokes **963/963** (696.1s), probes **408/408** (427s),
+  barename **0/533** (406.8s), floors197 **RATCHET OK** (global 95.9%,
+  6642/6927, 9158 clauses; net 100%), doc_scan **100%**.
+- No pin/tag change. The `stdlib-v0.65.1` prep remains parked at
+  `9dc69b3` pending owner GO; this h2 commit is later on main and is
+  not part of the 0.65.1 tag.
 
 **SESSION 2026-10-26 block 283 (floors197 locks the non-tail 100% coverage; readiness ratchet)**
 - Dumped `tools/coverage_floors197.json` (Global 95.9; every non-tail

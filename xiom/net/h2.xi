@@ -10,10 +10,11 @@
 //   * one header field encode/decode: static-indexed, or a literal without
 //     indexing (indexed name or new name).
 // NOT implemented here (documented scoping boundary): Huffman coding,
-// dynamic-table insert/eviction, CONTINUATION reassembly, and connection
-// state. Huffman strings and 0x40 dynamic-table inserts are rejected with a
-// clear Err so a caller cannot silently mis-decode them. No module-level
-// tables: the static table lives in one private match chain.
+// CONTINUATION reassembly, and connection state. Huffman strings and 0x40
+// dynamic-table inserts are rejected with a clear Err so a caller cannot
+// silently mis-decode them; the dynamic table itself is available as the
+// standalone H2HpackDynamicTable primitives below for a stateful caller.
+// No module-level tables: the static table lives in one private match chain.
 
 module xiom.net.h2
 
@@ -310,6 +311,112 @@ pub fn h2_hpack_string_decode(bytes: &Vec[UInt8], pos: Int) -> Result[(Str, Int)
       return Ok((Str.from_utf8(raw), used + length));
     },
   }
+}
+
+// ---------------------------------------------------------------------------
+// HPACK dynamic table (RFC 7541 section 2.3)
+// ---------------------------------------------------------------------------
+
+/// HPACK dynamic table. Entries are stored oldest-first; dynamic index 1 is
+/// the most recently added entry. An entry costs name.len + value.len + 32
+/// bytes (RFC 7541 section 4.1).
+pub type H2HpackDynamicTable = {
+  names: Vec[Str];
+  values: Vec[Str];
+  size: Int;
+  max_size: Int;
+}
+
+fn _h2_dyn_evict_oldest(t: &mut H2HpackDynamicTable) {
+  if t.names.len() == 0 { return; }
+  t.size = t.size - (t.names[0].len() + t.values[0].len() + 32);
+  var nn = Vec[Str].new();
+  var nv = Vec[Str].new();
+  var i = 1;
+  while i < t.names.len() {
+    nn.push(t.names[i]);
+    nv.push(t.values[i]);
+    i = i + 1;
+  }
+  t.names = nn;
+  t.values = nv;
+}
+
+/// Create an empty dynamic table with the given maximum size in bytes.
+pub fn h2_hpack_dynamic_new(max_size: Int) -> H2HpackDynamicTable
+  requires: max_size >= 0
+  ensures: result.size == 0
+  ensures: result.max_size == max_size
+{
+  return H2HpackDynamicTable{
+    names: Vec[Str].new();
+    values: Vec[Str].new();
+    size: 0;
+    max_size: max_size;
+  };
+}
+
+/// Number of entries currently in the dynamic table.
+pub fn h2_hpack_dynamic_len(t: &H2HpackDynamicTable) -> Int
+  ensures: result == t.names.len()
+{
+  return t.names.len();
+}
+
+/// Current byte size of the dynamic table.
+pub fn h2_hpack_dynamic_size(t: &H2HpackDynamicTable) -> Int
+  ensures: result == t.size
+{
+  return t.size;
+}
+
+/// Insert (name, value) as the newest entry, evicting oldest entries until it
+/// fits. An entry larger than max_size clears the table and is not inserted.
+pub fn h2_hpack_dynamic_add(t: &mut H2HpackDynamicTable, name: Str, value: Str)
+  requires: t.max_size >= 0
+{
+  let entry = name.len() + value.len() + 32;
+  if entry > t.max_size {
+    h2_hpack_dynamic_clear(t);
+    return;
+  }
+  while t.size + entry > t.max_size && t.names.len() > 0 {
+    _h2_dyn_evict_oldest(t);
+  }
+  t.names.push(name);
+  t.values.push(value);
+  t.size = t.size + entry;
+}
+
+/// Look up dynamic index (1 = newest). None when the index is outside
+/// 1..=len. Complexity: O(1).
+pub fn h2_hpack_dynamic_get(t: &H2HpackDynamicTable, index: Int) -> Option[(Str, Str)]
+  requires: true
+{
+  if index < 1 || index > t.names.len() {
+    return None;
+  }
+  let pos = t.names.len() - index;
+  return Some((t.names[pos], t.values[pos]));
+}
+
+/// Set the maximum table size and evict until the size fits.
+pub fn h2_hpack_dynamic_set_max(t: &mut H2HpackDynamicTable, max_size: Int)
+  requires: max_size >= 0
+{
+  t.max_size = max_size;
+  while t.size > t.max_size && t.names.len() > 0 {
+    _h2_dyn_evict_oldest(t);
+  }
+}
+
+/// Remove every entry (size becomes 0; max_size is preserved).
+pub fn h2_hpack_dynamic_clear(t: &mut H2HpackDynamicTable)
+  requires: true
+{
+  t.names = Vec[Str].new();
+  t.values = Vec[Str].new();
+  t.size = 0;
 }
 
 // ---------------------------------------------------------------------------
