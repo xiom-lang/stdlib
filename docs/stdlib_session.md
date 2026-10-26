@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 97 (updated 2026-10-26; **compiler v0.65.1 is PRODUCTION (tag f2c01cf9c) and pins stdlib-v0.65.1; our release is live: tag 9dc69b3, GitHub Release + registry xiom-std 0.65.1 (sha256 3bb9b850..., compiler v0.64.8); pin PR #8 open; gate-9 v0.65.1 Windows: 9/10 green, only 1609 red; 1704 10k parse 23.6 MB (<256 MB) but ~2.3 KB/iter linear residual; full v0.65.1 battery: modules 533/533, smokes 963/963, probes 410/410, barename 0/533, floors197 OK, doc 100%**; readiness 90% (gate 8 MET; gate 9 1609 + 1704 residual); COMPILER_VERSION stays v0.64.8 -- the owner/compiler lane will decide the next candidate; do not bump or cut)
+## 0A. CONTINUE HERE -- handoff snapshot 97 (updated 2026-10-26; **compiler v0.65.1 is PRODUCTION (tag f2c01cf9c) and pins stdlib-v0.65.1; our release is live: tag 9dc69b3, GitHub Release + registry xiom-std 0.65.1 (sha256 3bb9b850..., compiler v0.64.8); pin PR #8 open -> compiler main already pins stdlib-v0.65.1 (PR #8 closed as superseded); gate-9 v0.65.1 Windows: 9/10 green, only 1609 red; 1704 10k parse 23.6 MB (<256 MB) but ~2.3 KB/iter linear residual; full v0.65.1 battery: modules 533/533, smokes 963/963, probes 410/410, barename 0/533, floors197 OK, doc 100%**; readiness 90% (gate 8 MET; gate 9 1609 + 1704 residual); COMPILER_VERSION stays v0.64.8 -- the owner/compiler lane will decide the next candidate; do not bump or cut)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-26, snapshot 97)
 
@@ -34,7 +34,8 @@ STATE (2026-10-26):
   #[owns_return] annotations; package 0.65.1; COMPILER_VERSION v0.64.8).
   Release run 40375774931 green (Windows 39m36s, Ubuntu 24m51s); GitHub
   Release published 2026-10-26T18:53:26Z with xiom-std-0.65.1.tar.gz +
-  SHA256SUMS. Pin PR https://github.com/xiom-lang/xiom/pull/8 is open.
+  SHA256SUMS. Compiler main already pins stdlib-v0.65.1; PR #8 was
+  closed as superseded.
   Registry is live: xiom-std 0.65.1, sha256
   3bb9b85007d69f75a7379b90182f260e8d0bfba03f02431619481f9dae494d31,
   compiler v0.64.8 (run 40375774857); staging canary 40381778731 green.
@@ -98,9 +99,9 @@ STATE (2026-10-26):
 
 PRIORITY 0 -- FINISH THE 0.65.1 RELEASE:
 - Registry is live and verified: xiom-std 0.65.1, sha256
-  3bb9b850..., compiler v0.64.8. Confirm/merge pin PR #8 (branch
-  chore/pin-stdlib-v0.65.1, a3fa2a6; compiler lane owns the merge). Do
-  NOT move stdlib-v0.65.0 or stdlib-v0.65.1.
+  3bb9b850..., compiler v0.64.8. Compiler main already pins
+  stdlib-v0.65.1; PR #8 is closed as superseded. Do NOT move
+  stdlib-v0.65.0 or stdlib-v0.65.1.
 
 PRIORITY 1 -- GATE 9 ON THE OWNER'S SIGNAL:
 - On the owner's signal, re-run the known-failure repros and the
@@ -3802,8 +3803,10 @@ registry pin, agent recon for the rest)**
   **0/533** (472.4s), floors197 **RATCHET OK** (global 95.9%, 6650/6935,
   9169 clauses), doc_scan **100%**.
 - No pin/tag change. `COMPILER_VERSION` stays v0.64.8;
-  stdlib-v0.65.1/0.65.0/0.64.9 untouched. The next candidate (v0.65.2 or
-  later) is the owner/compiler lane decision; do not bump or cut.
+  stdlib-v0.65.1/0.65.0/0.64.9 untouched. Compiler main already pins
+  `stdlib-v0.65.1`; the automated pin PR #8 was closed as superseded.
+  The next candidate (v0.65.2 or later) is the owner/compiler lane
+  decision; do not bump or cut.
 
 **SESSION 2026-10-26 block 287 (stdlib-v0.65.1 RELEASED; pin PR #8; registry approval pending)**
 - Owner GO received. Annotated tag `stdlib-v0.65.1` at `9dc69b3` (the
@@ -3816,7 +3819,9 @@ registry pin, agent recon for the rest)**
   2026-10-26T18:53:26Z with `xiom-std-0.65.1.tar.gz` and `SHA256SUMS`.
 - The pin PR job pushed branch `chore/pin-stdlib-v0.65.1` (`a3fa2a6`) but
   PR creation failed with the token scope; opened manually as
-  https://github.com/xiom-lang/xiom/pull/8.
+  https://github.com/xiom-lang/xiom/pull/8. **Superseded:** compiler main
+  already has `STDLIB_VERSION=stdlib-v0.65.1`, so PR #8 was closed as
+  redundant.
 - Registry publish run `40375774857` succeeded: **xiom-std 0.65.1
   published**, sha256
   `3bb9b85007d69f75a7379b90182f260e8d0bfba03f02431619481f9dae494d31`,
