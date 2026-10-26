@@ -9,11 +9,12 @@
 //   * the 61-entry HPACK static table (RFC 7541 Appendix A);
 //   * one header field encode/decode: static-indexed, or a literal without
 //     indexing (indexed name or new name).
-// NOT implemented here (documented scoping boundary): Huffman coding,
-// CONTINUATION reassembly, and connection state. Huffman strings and 0x40
-// dynamic-table inserts are rejected with a clear Err so a caller cannot
-// silently mis-decode them; the dynamic table itself is available as the
-// standalone H2HpackDynamicTable primitives below for a stateful caller.
+// NOT implemented here (documented scoping boundary): CONTINUATION
+// reassembly and connection state. 0x40 dynamic-table inserts are rejected
+// with a clear Err so a caller cannot silently mis-decode them; the dynamic
+// table itself is available as the standalone H2HpackDynamicTable primitives
+// below, and Huffman (H=1) string bodies are handled by
+// h2_hpack_huffman_decode / h2_hpack_string_encode_huffman.
 // No module-level tables: the static table lives in one private match chain.
 
 module xiom.net.h2
@@ -282,17 +283,15 @@ pub fn h2_hpack_string_encode(s: Str) -> Vec[UInt8]
   return out;
 }
 
-/// Decode an HPACK string at `pos`. Returns (string, consumed bytes). Only
-/// H=0 is supported; an H=1 (Huffman) string is rejected explicitly.
+/// Decode an HPACK string at `pos`. Returns (string, consumed bytes). Both
+/// H=0 and H=1 (Huffman) string bodies are supported.
 pub fn h2_hpack_string_decode(bytes: &Vec[UInt8], pos: Int) -> Result[(Str, Int), Str]
   ensures: (pos < 0 || pos >= bytes.len()) => (result.is_err)
 {
   if pos < 0 || pos >= bytes.len() {
     return Err("h2: HPACK string position out of range");
   };
-  if ((bytes[pos] as Int) & 0x80) != 0 {
-    return Err("h2: huffman strings not supported");
-  };
+  let is_huffman = ((bytes[pos] as Int) & 0x80) != 0;
   let decoded = h2_hpack_int_decode(bytes, pos, 7);
   match decoded {
     Err(e) => { return Err(e); },
@@ -308,6 +307,13 @@ pub fn h2_hpack_string_decode(bytes: &Vec[UInt8], pos: Int) -> Result[(Str, Int)
         raw.push(bytes[pos + used + i]);
         i = i + 1;
       };
+      if is_huffman {
+        let hs = h2_hpack_huffman_decode(&raw);
+        match hs {
+          Err(e) => { return Err(e); },
+          Ok(s) => { return Ok((s, used + length)); },
+        }
+      }
       return Ok((Str.from_utf8(raw), used + length));
     },
   }
@@ -417,6 +423,415 @@ pub fn h2_hpack_dynamic_clear(t: &mut H2HpackDynamicTable)
   t.names = Vec[Str].new();
   t.values = Vec[Str].new();
   t.size = 0;
+}
+
+// ---------------------------------------------------------------------------
+// HPACK Huffman code (RFC 7541 Appendix B)
+// ---------------------------------------------------------------------------
+
+// The 257-entry code table as one private chain (no module-level tables).
+// Each entry is (code right-aligned to the LSB, bit length).
+fn _h2_huffman_code(sym: Int) -> (Int, Int) {
+  if sym == 0 { return (0x1ff8, 13); }
+  if sym == 1 { return (0x7fffd8, 23); }
+  if sym == 2 { return (0xfffffe2, 28); }
+  if sym == 3 { return (0xfffffe3, 28); }
+  if sym == 4 { return (0xfffffe4, 28); }
+  if sym == 5 { return (0xfffffe5, 28); }
+  if sym == 6 { return (0xfffffe6, 28); }
+  if sym == 7 { return (0xfffffe7, 28); }
+  if sym == 8 { return (0xfffffe8, 28); }
+  if sym == 9 { return (0xffffea, 24); }
+  if sym == 10 { return (0x3ffffffc, 30); }
+  if sym == 11 { return (0xfffffe9, 28); }
+  if sym == 12 { return (0xfffffea, 28); }
+  if sym == 13 { return (0x3ffffffd, 30); }
+  if sym == 14 { return (0xfffffeb, 28); }
+  if sym == 15 { return (0xfffffec, 28); }
+  if sym == 16 { return (0xfffffed, 28); }
+  if sym == 17 { return (0xfffffee, 28); }
+  if sym == 18 { return (0xfffffef, 28); }
+  if sym == 19 { return (0xffffff0, 28); }
+  if sym == 20 { return (0xffffff1, 28); }
+  if sym == 21 { return (0xffffff2, 28); }
+  if sym == 22 { return (0x3ffffffe, 30); }
+  if sym == 23 { return (0xffffff3, 28); }
+  if sym == 24 { return (0xffffff4, 28); }
+  if sym == 25 { return (0xffffff5, 28); }
+  if sym == 26 { return (0xffffff6, 28); }
+  if sym == 27 { return (0xffffff7, 28); }
+  if sym == 28 { return (0xffffff8, 28); }
+  if sym == 29 { return (0xffffff9, 28); }
+  if sym == 30 { return (0xffffffa, 28); }
+  if sym == 31 { return (0xffffffb, 28); }
+  if sym == 32 { return (0x14, 6); }
+  if sym == 33 { return (0x3f8, 10); }
+  if sym == 34 { return (0x3f9, 10); }
+  if sym == 35 { return (0xffa, 12); }
+  if sym == 36 { return (0x1ff9, 13); }
+  if sym == 37 { return (0x15, 6); }
+  if sym == 38 { return (0xf8, 8); }
+  if sym == 39 { return (0x7fa, 11); }
+  if sym == 40 { return (0x3fa, 10); }
+  if sym == 41 { return (0x3fb, 10); }
+  if sym == 42 { return (0xf9, 8); }
+  if sym == 43 { return (0x7fb, 11); }
+  if sym == 44 { return (0xfa, 8); }
+  if sym == 45 { return (0x16, 6); }
+  if sym == 46 { return (0x17, 6); }
+  if sym == 47 { return (0x18, 6); }
+  if sym == 48 { return (0x0, 5); }
+  if sym == 49 { return (0x1, 5); }
+  if sym == 50 { return (0x2, 5); }
+  if sym == 51 { return (0x19, 6); }
+  if sym == 52 { return (0x1a, 6); }
+  if sym == 53 { return (0x1b, 6); }
+  if sym == 54 { return (0x1c, 6); }
+  if sym == 55 { return (0x1d, 6); }
+  if sym == 56 { return (0x1e, 6); }
+  if sym == 57 { return (0x1f, 6); }
+  if sym == 58 { return (0x5c, 7); }
+  if sym == 59 { return (0xfb, 8); }
+  if sym == 60 { return (0x7ffc, 15); }
+  if sym == 61 { return (0x20, 6); }
+  if sym == 62 { return (0xffb, 12); }
+  if sym == 63 { return (0x3fc, 10); }
+  if sym == 64 { return (0x1ffa, 13); }
+  if sym == 65 { return (0x21, 6); }
+  if sym == 66 { return (0x5d, 7); }
+  if sym == 67 { return (0x5e, 7); }
+  if sym == 68 { return (0x5f, 7); }
+  if sym == 69 { return (0x60, 7); }
+  if sym == 70 { return (0x61, 7); }
+  if sym == 71 { return (0x62, 7); }
+  if sym == 72 { return (0x63, 7); }
+  if sym == 73 { return (0x64, 7); }
+  if sym == 74 { return (0x65, 7); }
+  if sym == 75 { return (0x66, 7); }
+  if sym == 76 { return (0x67, 7); }
+  if sym == 77 { return (0x68, 7); }
+  if sym == 78 { return (0x69, 7); }
+  if sym == 79 { return (0x6a, 7); }
+  if sym == 80 { return (0x6b, 7); }
+  if sym == 81 { return (0x6c, 7); }
+  if sym == 82 { return (0x6d, 7); }
+  if sym == 83 { return (0x6e, 7); }
+  if sym == 84 { return (0x6f, 7); }
+  if sym == 85 { return (0x70, 7); }
+  if sym == 86 { return (0x71, 7); }
+  if sym == 87 { return (0x72, 7); }
+  if sym == 88 { return (0xfc, 8); }
+  if sym == 89 { return (0x73, 7); }
+  if sym == 90 { return (0xfd, 8); }
+  if sym == 91 { return (0x1ffb, 13); }
+  if sym == 92 { return (0x7fff0, 19); }
+  if sym == 93 { return (0x1ffc, 13); }
+  if sym == 94 { return (0x3ffc, 14); }
+  if sym == 95 { return (0x22, 6); }
+  if sym == 96 { return (0x7ffd, 15); }
+  if sym == 97 { return (0x3, 5); }
+  if sym == 98 { return (0x23, 6); }
+  if sym == 99 { return (0x4, 5); }
+  if sym == 100 { return (0x24, 6); }
+  if sym == 101 { return (0x5, 5); }
+  if sym == 102 { return (0x25, 6); }
+  if sym == 103 { return (0x26, 6); }
+  if sym == 104 { return (0x27, 6); }
+  if sym == 105 { return (0x6, 5); }
+  if sym == 106 { return (0x74, 7); }
+  if sym == 107 { return (0x75, 7); }
+  if sym == 108 { return (0x28, 6); }
+  if sym == 109 { return (0x29, 6); }
+  if sym == 110 { return (0x2a, 6); }
+  if sym == 111 { return (0x7, 5); }
+  if sym == 112 { return (0x2b, 6); }
+  if sym == 113 { return (0x76, 7); }
+  if sym == 114 { return (0x2c, 6); }
+  if sym == 115 { return (0x8, 5); }
+  if sym == 116 { return (0x9, 5); }
+  if sym == 117 { return (0x2d, 6); }
+  if sym == 118 { return (0x77, 7); }
+  if sym == 119 { return (0x78, 7); }
+  if sym == 120 { return (0x79, 7); }
+  if sym == 121 { return (0x7a, 7); }
+  if sym == 122 { return (0x7b, 7); }
+  if sym == 123 { return (0x7ffe, 15); }
+  if sym == 124 { return (0x7fc, 11); }
+  if sym == 125 { return (0x3ffd, 14); }
+  if sym == 126 { return (0x1ffd, 13); }
+  if sym == 127 { return (0xffffffc, 28); }
+  if sym == 128 { return (0xfffe6, 20); }
+  if sym == 129 { return (0x3fffd2, 22); }
+  if sym == 130 { return (0xfffe7, 20); }
+  if sym == 131 { return (0xfffe8, 20); }
+  if sym == 132 { return (0x3fffd3, 22); }
+  if sym == 133 { return (0x3fffd4, 22); }
+  if sym == 134 { return (0x3fffd5, 22); }
+  if sym == 135 { return (0x7fffd9, 23); }
+  if sym == 136 { return (0x3fffd6, 22); }
+  if sym == 137 { return (0x7fffda, 23); }
+  if sym == 138 { return (0x7fffdb, 23); }
+  if sym == 139 { return (0x7fffdc, 23); }
+  if sym == 140 { return (0x7fffdd, 23); }
+  if sym == 141 { return (0x7fffde, 23); }
+  if sym == 142 { return (0xffffeb, 24); }
+  if sym == 143 { return (0x7fffdf, 23); }
+  if sym == 144 { return (0xffffec, 24); }
+  if sym == 145 { return (0xffffed, 24); }
+  if sym == 146 { return (0x3fffd7, 22); }
+  if sym == 147 { return (0x7fffe0, 23); }
+  if sym == 148 { return (0xffffee, 24); }
+  if sym == 149 { return (0x7fffe1, 23); }
+  if sym == 150 { return (0x7fffe2, 23); }
+  if sym == 151 { return (0x7fffe3, 23); }
+  if sym == 152 { return (0x7fffe4, 23); }
+  if sym == 153 { return (0x1fffdc, 21); }
+  if sym == 154 { return (0x3fffd8, 22); }
+  if sym == 155 { return (0x7fffe5, 23); }
+  if sym == 156 { return (0x3fffd9, 22); }
+  if sym == 157 { return (0x7fffe6, 23); }
+  if sym == 158 { return (0x7fffe7, 23); }
+  if sym == 159 { return (0xffffef, 24); }
+  if sym == 160 { return (0x3fffda, 22); }
+  if sym == 161 { return (0x1fffdd, 21); }
+  if sym == 162 { return (0xfffe9, 20); }
+  if sym == 163 { return (0x3fffdb, 22); }
+  if sym == 164 { return (0x3fffdc, 22); }
+  if sym == 165 { return (0x7fffe8, 23); }
+  if sym == 166 { return (0x7fffe9, 23); }
+  if sym == 167 { return (0x1fffde, 21); }
+  if sym == 168 { return (0x7fffea, 23); }
+  if sym == 169 { return (0x3fffdd, 22); }
+  if sym == 170 { return (0x3fffde, 22); }
+  if sym == 171 { return (0xfffff0, 24); }
+  if sym == 172 { return (0x1fffdf, 21); }
+  if sym == 173 { return (0x3fffdf, 22); }
+  if sym == 174 { return (0x7fffeb, 23); }
+  if sym == 175 { return (0x7fffec, 23); }
+  if sym == 176 { return (0x1fffe0, 21); }
+  if sym == 177 { return (0x1fffe1, 21); }
+  if sym == 178 { return (0x3fffe0, 22); }
+  if sym == 179 { return (0x1fffe2, 21); }
+  if sym == 180 { return (0x7fffed, 23); }
+  if sym == 181 { return (0x3fffe1, 22); }
+  if sym == 182 { return (0x7fffee, 23); }
+  if sym == 183 { return (0x7fffef, 23); }
+  if sym == 184 { return (0xfffea, 20); }
+  if sym == 185 { return (0x3fffe2, 22); }
+  if sym == 186 { return (0x3fffe3, 22); }
+  if sym == 187 { return (0x3fffe4, 22); }
+  if sym == 188 { return (0x7ffff0, 23); }
+  if sym == 189 { return (0x3fffe5, 22); }
+  if sym == 190 { return (0x3fffe6, 22); }
+  if sym == 191 { return (0x7ffff1, 23); }
+  if sym == 192 { return (0x3ffffe0, 26); }
+  if sym == 193 { return (0x3ffffe1, 26); }
+  if sym == 194 { return (0xfffeb, 20); }
+  if sym == 195 { return (0x7fff1, 19); }
+  if sym == 196 { return (0x3fffe7, 22); }
+  if sym == 197 { return (0x7ffff2, 23); }
+  if sym == 198 { return (0x3fffe8, 22); }
+  if sym == 199 { return (0x1ffffec, 25); }
+  if sym == 200 { return (0x3ffffe2, 26); }
+  if sym == 201 { return (0x3ffffe3, 26); }
+  if sym == 202 { return (0x3ffffe4, 26); }
+  if sym == 203 { return (0x7ffffde, 27); }
+  if sym == 204 { return (0x7ffffdf, 27); }
+  if sym == 205 { return (0x3ffffe5, 26); }
+  if sym == 206 { return (0xfffff1, 24); }
+  if sym == 207 { return (0x1ffffed, 25); }
+  if sym == 208 { return (0x7fff2, 19); }
+  if sym == 209 { return (0x1fffe3, 21); }
+  if sym == 210 { return (0x3ffffe6, 26); }
+  if sym == 211 { return (0x7ffffe0, 27); }
+  if sym == 212 { return (0x7ffffe1, 27); }
+  if sym == 213 { return (0x3ffffe7, 26); }
+  if sym == 214 { return (0x7ffffe2, 27); }
+  if sym == 215 { return (0xfffff2, 24); }
+  if sym == 216 { return (0x1fffe4, 21); }
+  if sym == 217 { return (0x1fffe5, 21); }
+  if sym == 218 { return (0x3ffffe8, 26); }
+  if sym == 219 { return (0x3ffffe9, 26); }
+  if sym == 220 { return (0xffffffd, 28); }
+  if sym == 221 { return (0x7ffffe3, 27); }
+  if sym == 222 { return (0x7ffffe4, 27); }
+  if sym == 223 { return (0x7ffffe5, 27); }
+  if sym == 224 { return (0xfffec, 20); }
+  if sym == 225 { return (0xfffff3, 24); }
+  if sym == 226 { return (0xfffed, 20); }
+  if sym == 227 { return (0x1fffe6, 21); }
+  if sym == 228 { return (0x3fffe9, 22); }
+  if sym == 229 { return (0x1fffe7, 21); }
+  if sym == 230 { return (0x1fffe8, 21); }
+  if sym == 231 { return (0x7ffff3, 23); }
+  if sym == 232 { return (0x3fffea, 22); }
+  if sym == 233 { return (0x3fffeb, 22); }
+  if sym == 234 { return (0x1ffffee, 25); }
+  if sym == 235 { return (0x1ffffef, 25); }
+  if sym == 236 { return (0xfffff4, 24); }
+  if sym == 237 { return (0xfffff5, 24); }
+  if sym == 238 { return (0x3ffffea, 26); }
+  if sym == 239 { return (0x7ffff4, 23); }
+  if sym == 240 { return (0x3ffffeb, 26); }
+  if sym == 241 { return (0x7ffffe6, 27); }
+  if sym == 242 { return (0x3ffffec, 26); }
+  if sym == 243 { return (0x3ffffed, 26); }
+  if sym == 244 { return (0x7ffffe7, 27); }
+  if sym == 245 { return (0x7ffffe8, 27); }
+  if sym == 246 { return (0x7ffffe9, 27); }
+  if sym == 247 { return (0x7ffffea, 27); }
+  if sym == 248 { return (0x7ffffeb, 27); }
+  if sym == 249 { return (0xffffffe, 28); }
+  if sym == 250 { return (0x7ffffec, 27); }
+  if sym == 251 { return (0x7ffffed, 27); }
+  if sym == 252 { return (0x7ffffee, 27); }
+  if sym == 253 { return (0x7ffffef, 27); }
+  if sym == 254 { return (0x7fffff0, 27); }
+  if sym == 255 { return (0x3ffffee, 26); }
+  if sym == 256 { return (0x3fffffff, 30); }
+  return (0, 0);
+}
+
+// Decode a Huffman-encoded byte string. Builds the code tree once per call
+// from the 257-entry table, then walks it bit by bit. Returns Err on an
+// invalid code, the EOS symbol, or padding that is not <=7 one-bits.
+fn _h2_huffman_decode_raw(bytes: &Vec[UInt8]) -> Result[Vec[UInt8], Str] {
+  var left = Vec[Int].new();
+  var right = Vec[Int].new();
+  var syms = Vec[Int].new();
+  left.push(-1);
+  right.push(-1);
+  syms.push(-1);
+  var s = 0;
+  while s < 257 {
+    let pair = _h2_huffman_code(s);
+    let code = pair.0;
+    let bits = pair.1;
+    var node = 0;
+    var b = bits - 1;
+    while b >= 0 {
+      let bit = (code >> b) & 1;
+      var next = -1;
+      if bit == 0 { next = left[node]; } else { next = right[node]; };
+      if next < 0 {
+        next = left.len();
+        left.push(-1);
+        right.push(-1);
+        syms.push(-1);
+        if bit == 0 { left[node] = next; } else { right[node] = next; };
+      }
+      node = next;
+      b = b - 1;
+    }
+    syms[node] = s;
+    s = s + 1;
+  }
+
+  var out = Vec[UInt8].new();
+  var node = 0;
+  var pad_bits = 0;
+  var pad_ones = true;
+  var i = 0;
+  while i < bytes.len() {
+    let byte = bytes[i] as Int;
+    var b = 7;
+    while b >= 0 {
+      let bit = (byte >> b) & 1;
+      if bit == 0 { node = left[node]; } else { node = right[node]; };
+      if node < 0 { return Err("h2: invalid huffman code"); }
+      pad_bits = pad_bits + 1;
+      if bit == 0 { pad_ones = false; }
+      if syms[node] >= 0 {
+        if syms[node] == 256 { return Err("h2: huffman EOS symbol"); }
+        out.push(syms[node] as UInt8);
+        node = 0;
+        pad_bits = 0;
+        pad_ones = true;
+      }
+      b = b - 1;
+    }
+    i = i + 1;
+  }
+  if node != 0 {
+    if pad_bits > 7 || pad_ones == false {
+      return Err("h2: invalid huffman padding");
+    }
+  }
+  return Ok(out);
+}
+
+/// Decode an RFC 7541 Huffman-coded string body (without the H bit/length
+/// prefix). Err on an invalid code, EOS, or bad padding.
+pub fn h2_hpack_huffman_decode(bytes: &Vec[UInt8]) -> Result[Str, Str]
+  requires: true
+{
+  let raw = _h2_huffman_decode_raw(bytes);
+  match raw {
+    Err(e) => { return Err(e); },
+    Ok(out) => { return Ok(Str.from_utf8(out)); },
+  }
+}
+
+/// Encode a string body with the RFC 7541 Huffman code, padding the final
+/// byte with one-bits. The returned bytes do NOT include the H bit/length
+/// prefix; use h2_hpack_string_encode_huffman for a complete HPACK string.
+pub fn h2_hpack_huffman_encode(s: Str) -> Vec[UInt8]
+  requires: true
+{
+  var out = Vec[UInt8].new();
+  var acc = 0;
+  var nbits = 0;
+  var i = 0;
+  while i < s.len() {
+    let pair = _h2_huffman_code(s.byte_at(i) as Int);
+    let code = pair.0;
+    let bits = pair.1;
+    var b = bits - 1;
+    while b >= 0 {
+      let bit = (code >> b) & 1;
+      acc = (acc << 1) | bit;
+      nbits = nbits + 1;
+      if nbits == 8 {
+        out.push(acc as UInt8);
+        acc = 0;
+        nbits = 0;
+      }
+      b = b - 1;
+    }
+    i = i + 1;
+  }
+  if nbits > 0 {
+    let pad = 8 - nbits;
+    acc = (acc << pad) | ((1 << pad) - 1);
+    out.push(acc as UInt8);
+  }
+  return out;
+}
+
+/// Encode a complete HPACK string with H=1: the 7-bit length prefix (with
+/// the high bit set) followed by the Huffman-coded bytes.
+pub fn h2_hpack_string_encode_huffman(s: Str) -> Vec[UInt8]
+  ensures: result.len() >= 1
+{
+  let raw = h2_hpack_huffman_encode(s);
+  var out = Vec[UInt8].new();
+  let prefix = h2_hpack_int_encode(raw.len(), 7, 0x80);
+  match prefix {
+    Ok(p) => {
+      var i = 0;
+      while i < p.len() {
+        out.push(p[i]);
+        i = i + 1;
+      };
+    },
+    Err(_) => { out.push(0x80); },
+  };
+  var j = 0;
+  while j < raw.len() {
+    out.push(raw[j]);
+    j = j + 1;
+  };
+  return out;
 }
 
 // ---------------------------------------------------------------------------

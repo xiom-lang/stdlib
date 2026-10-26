@@ -17,9 +17,9 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 94 (updated 2026-10-26; **stdlib-v0.65.1 PREPARED but NOT TAGGED at 9dc69b3 -- owner GO required: owns_return on io.read_file_bytes/io.read_at (REL-20261026-0040-compiler-2); HPACK dynamic-table primitives landed in xiom/net/h2.xi (wishlist 2202 item 9); battery on official v0.64.8: modules 533/533 (285.4s), smokes 963/963 (696.1s), probes 408/408 (427s), barename 0/533 (406.8s), floors197 OK, doc_scan 100%**; readiness 90% (gate 8 MET); gate 9 on v0.65.0 Windows: only 1609 red (`p_result_payload_index_concat` rc 1) + 1704 parse-side; stdlib-v0.65.0 tag 3eb9c05/registry live; compiler v0.65.0 not pinned; next: owner GO -> tag/push stdlib-v0.65.1 at 9dc69b3, release workflow, registry (COMPILER_VERSION v0.64.8), reply 0040-compiler-2; h2 next slices: Huffman, CONTINUATION, connection state)
+## 0A. CONTINUE HERE -- handoff snapshot 95 (updated 2026-10-26; **stdlib-v0.65.1 PREPARED but NOT TAGGED at 9dc69b3 -- owner GO required: owns_return on io.read_file_bytes/io.read_at (REL-20261026-0040-compiler-2); HPACK Huffman codec landed (RFC 7541 Appendix B; H=1 string decode/encode) on top of the dynamic-table primitives; battery on official v0.64.8: modules 533/533 (640.1s), smokes 963/963 (738.5s), probes 409/409 (508.7s), barename 0/533 (423.3s), floors197 OK (global 95.9%, 6645/6930, 9161 clauses), doc_scan 100%**; readiness 90% (gate 8 MET); gate 9 on v0.65.0 Windows: only 1609 red (`p_result_payload_index_concat` rc 1) + 1704 parse-side; stdlib-v0.65.0 tag 3eb9c05/registry live; compiler v0.65.0 not pinned; next: owner GO -> tag/push stdlib-v0.65.1 at 9dc69b3, release workflow, registry (COMPILER_VERSION v0.64.8), reply 0040-compiler-2; h2 next slices: CONTINUATION reassembly, connection state)
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-26, snapshot 94)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-26, snapshot 95)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
@@ -27,33 +27,34 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 94 + blocks 284/283/282 + this 0C block.
+Read docs/stdlib_session.md snapshot 95 + blocks 285/284/283 + this 0C block.
 
 STATE (2026-10-26):
 - stdlib-v0.65.1 is PREPARED ON MAIN but NOT TAGGED (owner GO
   required): #[owns_return] on io.read_file_bytes/io.read_at for the
   compiler m375 Vec-leak fix (REL-20261026-0040-compiler-2); package
   0.65.1; release-notes/v0.65.1.md validated; COMPILER_VERSION v0.64.8;
-  battery modules 533/533 (285.4s), smokes 963/963 (696.1s), probes
-  408/408 (427s), barename 0/533 (406.8s), floors197 OK, doc 100%.
+  battery modules 533/533 (640.1s), smokes 963/963 (738.5s), probes
+  409/409 (508.7s), barename 0/533 (423.3s), floors197 OK, doc 100%.
 - Wishlist 2202 item 9: HPACK dynamic-table primitives landed in
   xiom/net/h2.xi (H2HpackDynamicTable + new/len/size/add/get/set_max/
   clear; oldest-first, index 1 = newest, size = name+value+32, eviction,
-  oversized clears). Probe p_wave283_hpack_dynamic. Next h2 slices:
-  Huffman, CONTINUATION reassembly, connection state.
+  oversized clears). Probe p_wave283_hpack_dynamic.
+- HPACK Huffman (RFC 7541 Appendix B) landed in xiom/net/h2.xi: the
+  257-entry private code table, a tree decoder, an encoder, H=1 string
+  decode in h2_hpack_string_decode, and h2_hpack_string_encode_huffman.
+  Probe p_wave285_hpack_huffman covers the four Appendix C example
+  strings, round-trip, empty input, bad padding and EOS. Remaining h2
+  slices: CONTINUATION reassembly, connection state.
 - Readiness is 90% (9/10). Gate 8 is MET by clause wave 208: every
   non-tail public fn carries a clause (non-tail 100%, global 95.9%,
-  6635/6920, 9149 clauses, 97.8% clauses/fns). The 285 fns in
+  6645/6930, 9161 clauses, 97.8% clauses/fns). The 285 fns in
   iter/os/math/thread/ffi/serialize/format are the documented no-clause
   tail; do not add clause waves there.
-- Battery on the OFFICIAL v0.64.8 archive (latest, after the JSON ref
-  APIs): modules 533/533 (348.8s), smokes 963/963 (813.5s), probes
-  407/407 (681.4s), barename 0/533 (458.9s), floors196 RATCHET OK
-  (serialize 94.9%), doc_scan 100% RATCHET OK. The first clause-wave
-  smoke run failed smoke_test3 with "contract violated: ensures at
-  289:12" -- the test_register @pre-on-mutable-global contract cannot be
-  snapshotted by the v0.64.8 evaluator; it is now an explicit
-  `requires: true` with a comment.
+- The first clause-wave smoke run failed smoke_test3 with "contract
+  violated: ensures at 289:12" -- the test_register @pre-on-mutable-global
+  contract cannot be snapshotted by the v0.64.8 evaluator; it is now an
+  explicit `requires: true` with a comment.
 - REL-20261020-1704 follow-up: reference-taking JSON entry points
   json_stringify_ref/json_pretty_ref/json_type_ref/json_get_ref are on
   main; the render cores take &JsonValue and the by-value names are thin
@@ -3753,6 +3754,28 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-26 block 285 (HPACK Huffman codec, RFC 7541 Appendix B; full battery green)**
+- Added the RFC 7541 HPACK Huffman code to `xiom/net/h2.xi`:
+  - `_h2_huffman_code`: the 257-entry private table (code, bit length).
+  - `_h2_huffman_decode_raw` + `h2_hpack_huffman_decode`: builds the code
+    tree once per call, rejects invalid codes, the EOS symbol, and
+    padding that is longer than 7 bits or not all one-bits.
+  - `h2_hpack_huffman_encode`: MSB-first bit packing with one-bit padding.
+  - `h2_hpack_string_decode` now accepts H=1 (Huffman) bodies.
+  - `h2_hpack_string_encode_huffman`: complete H=1 HPACK string (0x80|
+    length prefix followed by the Huffman bytes).
+- Probe `p_wave285_hpack_huffman`: RFC 7541 C.4 vectors
+  (www.example.com, no-cache, custom-key, custom-value), single 'a',
+  empty input, round-trip, the H=1 wrapper, bad padding, 8-bit padding and
+  EOS rejection. `p_wave174_shapes` stays green.
+- Full battery on the OFFICIAL v0.64.8 archive: modules **533/533**
+  (640.1s), smokes **963/963** (738.5s), probes **409/409** (508.7s),
+  barename **0/533** (423.3s), floors197 **RATCHET OK** (global 95.9%,
+  6645/6930, 9161 clauses; net 100%), doc_scan **100%**.
+- The module header now lists only CONTINUATION reassembly and connection
+  state as unimplemented. No pin/tag change; the `stdlib-v0.65.1` prep
+  remains parked at `9dc69b3` pending owner GO.
 
 **SESSION 2026-10-26 block 284 (HPACK dynamic-table primitives, wishlist 2202 item 9; full battery green)**
 - Added `H2HpackDynamicTable` plus seven public functions in
