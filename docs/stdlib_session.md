@@ -17,9 +17,9 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 91 (updated 2026-10-25; **gate 8 MET: clause wave 208 covers every non-tail public fn (non-tail 100%, global 95.9%, 6631/6916, 9145 clauses); readiness 90% (9/10); battery on official v0.64.8: modules 533/533, smokes 963/963, probes 406/406, barename 0/533, floors196 OK, doc_scan 100%**; stdlib-v0.65.0 tag 3eb9c05 is released and the registry is live (xiom-std 0.65.0 sha256 c3629878..., compiler pin v0.64.8); compiler v0.65.0 is released but NOT pinned (owner will signal the next candidate); gate 9 (zero open findings) is the last gate: 1609/1626/2343/2100-W1/1704; the v0.65.0 Windows archive re-check passes m372 (nested=42 local=42) and tuple-returning 1550 (enumerate tuple ok), the Linux leg is not re-run; do not move tags, do not bump COMPILER_VERSION yet)
+## 0A. CONTINUE HERE -- handoff snapshot 92 (updated 2026-10-25; **readiness 90% (gate 8 MET); non-tail contract coverage 100%, global 95.9% (6635/6920, 9149 clauses); the 1704 JSON ref-API mitigation landed (json_stringify_ref/json_pretty_ref/json_type_ref/json_get_ref); battery on official v0.64.8: modules 533/533, smokes 963/963, probes 407/407, barename 0/533, floors196 OK, doc_scan 100%**; stdlib-v0.65.0 tag 3eb9c05 is released and the registry is live (xiom-std 0.65.0 sha256 c3629878..., compiler pin v0.64.8); compiler v0.65.0 is released but NOT pinned (owner will signal the next candidate); gate 9 (zero open findings) is the last gate: 1609/1626/2343/2100-W1/1704 (1704 parse-side remains m375); the v0.65.0 Windows archive re-check passes m372 (nested=42 local=42) and tuple-returning 1550 (enumerate tuple ok), the Linux leg is not re-run; do not move tags, do not bump COMPILER_VERSION yet)
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-25, snapshot 91)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-25, snapshot 92)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
@@ -27,21 +27,28 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 91 + blocks 279/278/277 + this 0C block.
+Read docs/stdlib_session.md snapshot 92 + blocks 280/279/278 + this 0C block.
 
 STATE (2026-10-25):
 - Readiness is 90% (9/10). Gate 8 is MET by clause wave 208: every
   non-tail public fn carries a clause (non-tail 100%, global 95.9%,
-  6631/6916, 9145 clauses, 97.8% clauses/fns). The 285 fns in
+  6635/6920, 9149 clauses, 97.8% clauses/fns). The 285 fns in
   iter/os/math/thread/ffi/serialize/format are the documented no-clause
   tail; do not add clause waves there.
-- Battery on the OFFICIAL v0.64.8 archive: modules 533/533 (1579.6s),
-  smokes 963/963 (1844.8s on the clean rerun), probes 406/406
-  (2254.4s), barename 0/533 (981s), floors196 RATCHET OK, doc_scan 100%
-  RATCHET OK. The first smoke run failed smoke_test3 with
-  "contract violated: ensures at 289:12" -- the test_register
-  @pre-on-mutable-global contract cannot be snapshotted by the v0.64.8
-  evaluator; it is now an explicit `requires: true` with a comment.
+- Battery on the OFFICIAL v0.64.8 archive (latest, after the JSON ref
+  APIs): modules 533/533 (348.8s), smokes 963/963 (813.5s), probes
+  407/407 (681.4s), barename 0/533 (458.9s), floors196 RATCHET OK
+  (serialize 94.9%), doc_scan 100% RATCHET OK. The first clause-wave
+  smoke run failed smoke_test3 with "contract violated: ensures at
+  289:12" -- the test_register @pre-on-mutable-global contract cannot be
+  snapshotted by the v0.64.8 evaluator; it is now an explicit
+  `requires: true` with a comment.
+- REL-20261020-1704 follow-up: reference-taking JSON entry points
+  json_stringify_ref/json_pretty_ref/json_type_ref/json_get_ref are on
+  main; the render cores take &JsonValue and the by-value names are thin
+  wrappers. Probe p_json_ref_api locks byte parity and repeated ref
+  rendering. PULSE should re-run its capped probe; parse-side retention
+  is still compiler m375.
 - Gate 9 (zero open findings) is the last gate: compiler-side
   1609/1626/2343/2100-W1/1704. The owner will signal when the compiler
   candidate is ready; do NOT bump COMPILER_VERSION or pin v0.65.0 before
@@ -3724,6 +3731,37 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-25 block 280 (JSON reference-taking entry points for REL-20261020-1704; full battery green)**
+- PULSE's 2026-10-22 follow-up on 1704 asked for reference-taking
+  entry points so hot callers stop deep-copying whole `JsonValue` trees
+  (the by-value parameter is the O(tree) multiplier under m375). Landed:
+  `json_stringify_ref(v: &JsonValue) -> Str`,
+  `json_pretty_ref(v: &JsonValue) -> Str`,
+  `json_type_ref(v: &JsonValue) -> Str`, and
+  `json_get_ref(v: &JsonValue, key: Str) -> Option[JsonValue]`. The
+  existing by-value names are thin wrappers.
+- The internal render cores `_json_render_node` and
+  `_json_pretty_render` now take `&JsonValue`; recursion passes
+  `&items[i]` / `&entries.values[i]`, so even the by-value entry points
+  no longer deep-copy at every node. `json_get_ref` copies only the found
+  subtree; `json_type_ref` copies nothing.
+- New probe `p_json_ref_api` locks byte parity for compact/pretty/type/
+  get and a 200x repeated ref render of a 50-element tree. JSON probes
+  10/10 and JSON smokes 17/17 green.
+- Full battery on the OFFICIAL v0.64.8 archive after the change:
+  modules **533/533** (348.8s), smokes **963/963** (813.5s), probes
+  **407/407** (681.4s), barename **0/533** (458.9s), floors196
+  **RATCHET OK** (serialize 94.9%; non-tail 100%), doc_scan **100%**
+  (7474/7474) **RATCHET OK**.
+- Coverage: global **95.9%** (6635/6920; 9149 clauses; 97.8%
+  clauses/fns); readiness 90% (gate 8 MET; gate 9 open).
+- Parse-side and builder-built tree retention remains compiler m375;
+  this ref API is the PULSE-side multiplier mitigation. Relay 1704 stays
+  acked; ask PULSE to re-run `probe_alloc_aggregate` / the capped bttger
+  leg on this tree.
+- No pin/tag change. `COMPILER_VERSION` v0.64.8; stdlib-v0.65.0 and
+  stdlib-v0.64.9 untouched.
 
 **SESSION 2026-10-25 block 279 (readiness clause wave 208: non-tail contract coverage 100%, gate 8 MET, readiness 90%; battery green)**
 - Clause wave 208 covers every remaining non-tail public fn: **66

@@ -1,14 +1,12 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
 **90% -- 9 of 10 gates complete; gate 9 discrete.** (Compiler pin:
-**v0.64.8**; stdlib-v0.64.8 tag object
-`0bf5b75` at `112c5b6` with tag-time `COMPILER_VERSION=candidate-v0.64.8-r2`;
-main pin `v0.64.8` after the block-259 battery; compiler v0.64.8 pins
-`STDLIB_VERSION=stdlib-v0.64.8`; registry `xiom-std 0.64.8` is live, run
-39298965606 re-ran green after the ops mapping fix.)
+**v0.64.8**; stdlib-v0.65.0 tag `3eb9c05`; registry `xiom-std 0.65.0`
+live (sha256 `c3629878...`, compiler field v0.64.8); compiler v0.65.0
+is released but deliberately not pinned yet; main pin v0.64.8.)
 **Gates: merged corpus 963/963 (0 compilefail / 0 runfail), modules
-533/533, probes 396/396, barename 0/533, floors196. Wave pin: v0.64.8
-(block 269).**
+533/533, probes 407/407, barename 0/533, floors196. Wave pin: v0.64.8
+(block 280).**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -17,18 +15,18 @@ gates flip:
 2. Smoke corpus green -- MET: merged 963/963 on v0.64.8 (0/0),
    including the directory-rename regression; plus 956/956 on both
    Windows and Ubuntu release gates, no carve-outs.
-3. Probe corpus green -- MET (396/396; waves 188-207, fraction-add,
+3. Probe corpus green -- MET (407/407; waves 188-207, fraction-add,
    io.rename, hash-shadow, async-select, Routh, executor, small-gap,
    math-os, long-tail, mid-gap, math, os/iter, final-gap, read_at_into,
-   JSON-builder, list_dir-roundtrip, and residual-wave probes are
-   included and individually green).
+   JSON-builder, JSON-ref-API, list_dir-roundtrip, and residual-wave
+   probes are included and individually green).
 4. Strict bare-name scan clean -- MET (0/533).
 5. Coverage ratchet green -- MET (floors196).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (499/542 modules, 3501/6575 fns).
 8. Contract coverage 100% outside the documented no-clause tail -- MET
    (wave 208, 2026-10-25: every non-tail public fn carries a clause;
-   non-tail 100%, global 95.9%, 6631/6916; clauses/fns 97.8%, 9145
+   non-tail 100%, global 95.9%, 6635/6920; clauses/fns 97.8%, 9149
    clauses; floors196). The remaining 285 public fns are the documented
    no-clause tail: iter 70.5%, os 71.5%, math 90.7%, thread 91.1%, ffi
    94.5%, serialize 94.7%, format 95.2% (no non-tautological clauses
@@ -46,9 +44,10 @@ gates flip:
    REL-20261020-1550 (tuple-returning fn-value ABI). xvector claim
    REL-20261020-1531 does not reproduce on 87090ec (check rc 0); acked.
    REL-20261020-1302 `io.read_at_into` caller-buffer page reader is
-   implemented and fixed. REL-20261020-1704 JSON builders are
-   implemented as a partial mitigation (acked; drop elaboration remains
-   compiler-side). REL-20261021-0918 `list_dir` is fixed in 05673f8
+   implemented and fixed. REL-20261020-1704 JSON builders plus the
+   reference-taking entry points (json_stringify_ref/json_pretty_ref/
+   json_type_ref/json_get_ref) are implemented as partial mitigations
+   (acked; drop elaboration remains compiler-side). REL-20261021-0918 `list_dir` is fixed in 05673f8
    (runtime-owned names; dirent in one TU), awaiting the macOS witness.
    REL-20261011-1626 is fixed on compiler main
    (626dfbc65/8bfd4235d), pending the next release. New
@@ -74,13 +73,19 @@ Current state 2026-10-25: **clause wave 208 closes gate 8 (non-tail).**
 Every non-tail public fn now carries a clause (66 functions across 30
 modules); the tail (iter/os/math/thread/ffi/serialize/format, 285 fns)
 remains the documented no-clause tail. Global pub-with-clause is 95.9%
-(6631/6916; 9145 clauses, 97.8% clauses/fns). Battery on the official
+(6635/6920; 9149 clauses, 97.8% clauses/fns). Battery on the official
 v0.64.8 archive: modules 533/533 (1579.6s), smokes 963/963 (the first
 run caught one over-strong `test_register` @pre-on-global contract,
 replaced with an explicit no-precondition clause; the rerun is clean),
-probes 406/406 (2254.4s), barename 0/533, floors196 OK, doc_scan 100%.
-Post-wave SHA/convert clauses: 2/2 modules, SHA smokes 11/11, convert
-smokes 66/66, barename 0/533.
+probes 407/407 (681.4s), barename 0/533 (458.9s), floors196 OK, doc_scan
+100%. Post-wave SHA/convert clauses: 2/2 modules, SHA smokes 11/11,
+convert smokes 66/66, barename 0/533.
+REL-20261020-1704 follow-up: the reference-taking entry points
+(`json_stringify_ref`, `json_pretty_ref`, `json_type_ref`,
+`json_get_ref`) landed; the render cores take `&JsonValue` and the
+by-value names are thin wrappers. Probe `p_json_ref_api` locks byte
+parity; PULSE should re-run its capped probe. Parse-side retention
+remains compiler m375.
 Readiness is 90% (9/10); gate 9 (zero open findings) is the remaining
 gate and stays with the compiler-side findings
 (1609/1626/2343/2100-W1/1704). Compiler pin stays v0.64.8; v0.65.0 is
