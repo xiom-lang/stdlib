@@ -17,9 +17,9 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 96 (updated 2026-10-26; **stdlib-v0.65.1 RELEASED: tag 9dc69b3, release run 40375774931 green (Windows 39m36s, Ubuntu 24m51s), GitHub Release live (xiom-std-0.65.1.tar.gz + SHA256SUMS, published 18:53:26Z); pin PR https://github.com/xiom-lang/xiom/pull/8 open; registry live (xiom-std 0.65.1 sha256 3bb9b850..., compiler v0.64.8); staging canary green**; COMPILER_VERSION v0.64.8; the tag carries only the owns_return prep, not the later h2/floors commits; h2 now has dynamic table + Huffman + CONTINUATION helpers (probes 410/410; local battery modules 533/533, smokes 963/963, barename 0/533, floors197 OK, doc 100%); readiness 90% (gate 8 MET); gate 9 on v0.65.0 Windows: only 1609 red + 1704 parse-side; next: approve the registry publish, compiler pins v0.65.1; then the next compiler candidate for gate 9)
+## 0A. CONTINUE HERE -- handoff snapshot 97 (updated 2026-10-26; **compiler v0.65.1 is PRODUCTION (tag f2c01cf9c) and pins stdlib-v0.65.1; our release is live: tag 9dc69b3, GitHub Release + registry xiom-std 0.65.1 (sha256 3bb9b850..., compiler v0.64.8); pin PR #8 open; gate-9 v0.65.1 Windows: 9/10 green, only 1609 red; 1704 10k parse 23.6 MB (<256 MB) but ~2.3 KB/iter linear residual; full v0.65.1 battery: modules 533/533, smokes 963/963, probes 410/410, barename 0/533, floors197 OK, doc 100%**; readiness 90% (gate 8 MET; gate 9 1609 + 1704 residual); COMPILER_VERSION stays v0.64.8 -- the owner/compiler lane will decide the next candidate; do not bump or cut)
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-26, snapshot 96)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-26, snapshot 97)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
@@ -27,7 +27,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 96 + blocks 287/286/285 + this 0C block.
+Read docs/stdlib_session.md snapshot 97 + blocks 288/287/286 + this 0C block.
 
 STATE (2026-10-26):
 - stdlib-v0.65.1 IS RELEASED at 9dc69b3 (the prep commit with the two
@@ -40,6 +40,17 @@ STATE (2026-10-26):
   compiler v0.64.8 (run 40375774857); staging canary 40381778731 green.
   Local battery: modules 533/533, smokes 963/963,
   probes 410/410, barename 0/533, floors197 OK, doc 100%.
+- Compiler v0.65.1 is PRODUCTION (tag f2c01cf9c) and pins stdlib-v0.65.1.
+  Gate-9 on the v0.65.1 Windows archive (sha256 69de1e27...): 9/10 green
+  -- 1626/2343/2100-W1/1456/1451/1326/2249/2249-2/1550 verified, only
+  1609 (p_result_payload_index_concat) still red; Linux pending. 1704
+  memory on v0.65.1: parse 10k=23.6 MB, 20k=48.2, 50k=113.7; 200k killed
+  at the 256 MB cap -- the 10k target is met but the trend is still
+  linear (~2.3 KB/iter; JsonValue enum drop remains compiler-side). Full
+  v0.65.1 battery: modules 533/533 (368.8s), smokes 963/963 (2037.8s),
+  probes 410/410 (1075.2s), barename 0/533 (472.4s), floors197 OK, doc
+  100%. Release-check v0.65.1 rows filled; relay 1704 acked with the
+  memory matrix.
 - Wishlist 2202 item 9: HPACK dynamic-table primitives landed in
   xiom/net/h2.xi (H2HpackDynamicTable + new/len/size/add/get/set_max/
   clear; oldest-first, index 1 = newest, size = name+value+32, eviction,
@@ -69,13 +80,15 @@ STATE (2026-10-26):
   wrappers. Probe p_json_ref_api locks byte parity and repeated ref
   rendering. PULSE should re-run its capped probe; parse-side retention
   is still compiler m375.
-- Gate 9 (zero open findings) is the last gate. On the released v0.65.0
-  Windows archive, 8 of 9 reds are green (1626/2343/2100-W1/1456/1451/
-  1326/2249/2249-2/1550); only 1609 (Result.value[i] concat) is still
-  red, plus 1704's parse-side m375 retention. Linux leg not re-run. The
-  owner will signal when the next compiler candidate is ready; do NOT
-  bump COMPILER_VERSION or pin v0.65.0 before that signal.
-- v0.65.0 is released: compiler tag v0.65.0, stdlib-v0.65.0 tag 3eb9c05,
+- Gate 9 (zero open findings) is the last gate. On the released v0.65.1
+  Windows archive, 9 of 10 are green (1626/2343/2100-W1/1456/1451/1326/
+  2249/2249-2/1550); only 1609 (Result.value[i] concat) is still red.
+  1704's 10k parse target is met (23.6 MB < 256 MB) but the trend is
+  still linear (~2.3 KB/iter; JsonValue enum drop remains compiler-side).
+  Linux leg pending. The owner/compiler lane will decide the next
+  candidate; do NOT bump COMPILER_VERSION or cut a new stdlib tag.
+- Compiler v0.65.1 is PRODUCTION (f2c01cf9c) and pins stdlib-v0.65.1;
+  stdlib-v0.65.0 tag 3eb9c05 is superseded but not moved.
   registry xiom-std 0.65.0 live (sha256 c3629878..., compiler field
   v0.64.8). The v0.65.0 Windows archive re-check passes
   p_nested_generic_ptr_read (nested=42 local=42) and
@@ -94,9 +107,10 @@ PRIORITY 1 -- GATE 9 ON THE OWNER'S SIGNAL:
   release-check rows on the designated candidate archive (Windows+Linux),
   fill release-checks/compiler-compiler-v<ver>.md, close the verified
   relay items, then bump COMPILER_VERSION and run the battery.
-- Gate-9 status on v0.65.0 Windows: 1609 still red; 1704 parse-side
-  m375 remains; the other reds (1626/2343/2100-W1/1456/1451/1326/2249/
-  2249-2/1550) verified green. Linux leg pending.
+- Gate-9 status on v0.65.1 Windows: 1609 still red; 1704's 10k target
+  met but the linear residual remains; the other reds
+  (1626/2343/2100-W1/1456/1451/1326/2249/2249-2/1550) verified green.
+  Linux leg pending.
 - Do not move tags; do not pin an unverified archive.
 
 PRIORITY 2 -- WISHLIST / READINESS:
@@ -3759,6 +3773,37 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-26 block 288 (compiler v0.65.1 production: gate-9 v0.65.1 sweep + 1704 memory matrix + full compatibility battery)**
+- Compiler v0.65.1 is production (tag `f2c01cf9c`) and pins
+  stdlib-v0.65.1; our 0.65.1 release/registry is live. Staged/hash-verified
+  the v0.65.1 Windows (`69de1e27...`) and Linux (`5785320f...`) archives;
+  the binary reports XIOM Compiler v0.65.1 and the archive runtime carries
+  `xiom_guard_copy_out_if_arena`.
+- Gate-9 set on the v0.65.1 Windows archive: **9/10 pass**.
+  `p_result_payload_index_concat` (1609) is the only red (rc 1);
+  `p_alias_module_type_path`, `p_inline_i32_misread`,
+  `p_iter_enumerate_tuple`, `p_map_set_mutating_combo`,
+  `p_nested_generic_ptr_read`, `p_simd_vec4f_lanes`,
+  `p_sync_mutex_builtin_shadow`, `p_trailing_match_after_push` and
+  `p_wave198_long_tail` are all rc 0.
+- 1704 memory (PULSE `probe_alloc_aggregate`, v0.65.1, 256 MB cap):
+  parse 10k=23.6 MB, 20k=48.2, 50k=113.7; obj 10k=23.7/20k=42.4/50k=107.6;
+  type 10k=23.4/20k=29.3/50k=85.2; get 10k=23.1/20k=27.9/50k=97.9;
+  200k is killed at the cap. The **10k target is met**, but the trend is
+  linear (~2.3 KB/iter); the `JsonValue` enum-tree drop remains
+  compiler-side. The `json_*_ref` entry points remove the by-value
+  multiplier; PULSE should re-run the hot paths with them.
+- Release-check `compiler-compiler-v0.65.1.md`: 1609 BOUNCED to acked;
+  1953 re-verified (all prior reds green, 1609 red); 1550 tuple-returning
+  verified. Relay 1704 acked with the memory matrix; 1609 stays acked.
+- Full v0.65.1 compatibility battery: modules **533/533** (368.8s), probes
+  **410/410** (1075.2s), smokes **963/963** (2037.8s), barename
+  **0/533** (472.4s), floors197 **RATCHET OK** (global 95.9%, 6650/6935,
+  9169 clauses), doc_scan **100%**.
+- No pin/tag change. `COMPILER_VERSION` stays v0.64.8;
+  stdlib-v0.65.1/0.65.0/0.64.9 untouched. The next candidate (v0.65.2 or
+  later) is the owner/compiler lane decision; do not bump or cut.
 
 **SESSION 2026-10-26 block 287 (stdlib-v0.65.1 RELEASED; pin PR #8; registry approval pending)**
 - Owner GO received. Annotated tag `stdlib-v0.65.1` at `9dc69b3` (the

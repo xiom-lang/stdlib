@@ -4,8 +4,8 @@
 **v0.64.8**; stdlib-v0.65.1 tag `9dc69b3`, GitHub Release live
 (`xiom-std-0.65.1.tar.gz` + `SHA256SUMS`); pin PR #8 open; registry live
 (xiom-std 0.65.1, sha256 `3bb9b850...`, compiler field v0.64.8); staging
-canary green; compiler v0.65.0 is released but deliberately not pinned
-yet; main pin v0.64.8.)
+canary green; compiler v0.65.1 is PRODUCTION (tag `f2c01cf9c`) and pins
+stdlib-v0.65.1; main pin remains v0.64.8.)
 **Gates: merged corpus 963/963 (0 compilefail / 0 runfail), modules
 533/533, probes 410/410, barename 0/533, floors197. Wave pin: v0.64.8
 (block 280).**
@@ -35,12 +35,14 @@ gates flip:
    94.5%, serialize 94.7%, format 95.2% (no non-tautological clauses
    left; no clause waves in the tail).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
-   OPEN, one red. v0.65.0 Windows sweep (sha256 `ff4abb4a...`):
+   OPEN, one red. v0.65.1 Windows sweep (sha256 `69de1e27...`):
    1626/2343/2100-W1/1456/1451/1326/2249/2249-2/1550 verified green;
    1609 (inline Result.value[i]) still red and keeps the 1549-pulse-5
-   workaround; 1704 parse-side retention remains m375. Linux leg pending.
-   Historical v0.64.8 results: 1053/1456/2328/2000/1546/1624/1548-5
-   verified and closed; 2331 stdlib runtime residual verified/closed.
+   workaround. 1704's 10k parse target is met (23.6 MB < 256 MB), but the
+   trend is still linear (~2.3 KB/iter; JsonValue enum drop remains
+   compiler-side). Linux leg pending. Historical v0.64.8 results:
+   1053/1456/2328/2000/1546/1624/1548-5 verified and closed; 2331 stdlib
+   runtime residual verified/closed.
    New compiler items:
    REL-20261019-2249-stdlib (multiple generic Map/Set free helpers AV
    0xC0000005), -2 (Vec4f lane get/write miscompile), REL-20261020-1242
@@ -94,7 +96,13 @@ CONTINUATION reassembly landed (`H2HeaderBlock`; probe
 `p_wave286_h2_cont`), so the probe corpus is 410/410. **stdlib-v0.65.1
 released** from `9dc69b3` (owns_return prep): release run 40375774931
 green, GitHub Release live, pin PR #8 open; registry live (sha256
-`3bb9b850...`, compiler v0.64.8); staging canary green.
+`3bb9b850...`, compiler v0.64.8); staging canary green. Compiler v0.65.1
+is production and pins stdlib-v0.65.1; the full v0.65.1 compatibility
+battery is green (modules 533/533, probes 410/410, smokes 963/963,
+barename 0/533, floors197, doc 100%), gate-9 is 9/10 (only 1609), and
+the 1704 memory matrix meets the 10k target (23.6 MB) with a linear
+residual. Main `COMPILER_VERSION` stays v0.64.8; the next candidate is
+the owner/compiler decision.
 
 Current state 2026-10-25: **clause wave 208 closes gate 8 (non-tail).**
 Every non-tail public fn now carries a clause (66 functions across 30
