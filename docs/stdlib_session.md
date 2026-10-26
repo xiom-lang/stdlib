@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 93 (updated 2026-10-26; **stdlib-v0.65.1 PREPARED but NOT TAGGED -- owner GO required: `#[owns_return]` on io.read_file_bytes/io.read_at for the compiler m375 Vec-leak fix (REL-20261026-0040-compiler-2); package 0.65.1, release-notes/v0.65.1.md validated (1 highlight); COMPILER_VERSION v0.64.8; full battery on official v0.64.8: modules 533/533 (768.8s), smokes 963/963 (727s), probes 407/407 (1098.9s), barename 0/533 (412.8s), floors196 OK, doc_scan 100%**; readiness 90% (gate 8 MET); gate 9 on v0.65.0 Windows: only 1609 red (`p_result_payload_index_concat` rc 1), 1704 parse-side m375, the rest verified green; stdlib-v0.65.0 tag 3eb9c05/registry live, compiler v0.65.0 not pinned; next: owner GO -> tag/push stdlib-v0.65.1, run release workflow, publish registry (COMPILER_VERSION v0.64.8), reply to 0040-compiler-2 with tag/SHA/run id)
+## 0A. CONTINUE HERE -- handoff snapshot 93 (updated 2026-10-26; **stdlib-v0.65.1 PREPARED but NOT TAGGED -- owner GO required: `#[owns_return]` on io.read_file_bytes/io.read_at for the compiler m375 Vec-leak fix (REL-20261026-0040-compiler-2); package 0.65.1, release-notes/v0.65.1.md validated (1 highlight); COMPILER_VERSION v0.64.8; full battery on official v0.64.8: modules 533/533 (768.8s), smokes 963/963 (727s), probes 407/407 (1098.9s), barename 0/533 (412.8s), floors197 OK (locks non-tail 100%), doc_scan 100%**; readiness 90% (gate 8 MET); gate 9 on v0.65.0 Windows: only 1609 red (`p_result_payload_index_concat` rc 1), 1704 parse-side m375, the rest verified green; stdlib-v0.65.0 tag 3eb9c05/registry live, compiler v0.65.0 not pinned; next: owner GO -> tag/push stdlib-v0.65.1, run release workflow, publish registry (COMPILER_VERSION v0.64.8), reply to 0040-compiler-2 with tag/SHA/run id)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-26, snapshot 93)
 
@@ -27,7 +27,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 93 + blocks 282/281/280 + this 0C block.
+Read docs/stdlib_session.md snapshot 93 + blocks 283/282/281 + this 0C block.
 
 STATE (2026-10-26):
 - stdlib-v0.65.1 is PREPARED ON MAIN but NOT TAGGED (owner GO
@@ -35,7 +35,7 @@ STATE (2026-10-26):
   compiler m375 Vec-leak fix (REL-20261026-0040-compiler-2); package
   0.65.1; release-notes/v0.65.1.md validated; COMPILER_VERSION v0.64.8;
   battery modules 533/533 (768.8s), smokes 963/963 (727s), probes
-  407/407 (1098.9s), barename 0/533 (412.8s), floors196 OK, doc 100%.
+  407/407 (1098.9s), barename 0/533 (412.8s), floors197 OK, doc 100%.
 - Readiness is 90% (9/10). Gate 8 is MET by clause wave 208: every
   non-tail public fn carries a clause (non-tail 100%, global 95.9%,
   6635/6920, 9149 clauses, 97.8% clauses/fns). The 285 fns in
@@ -3747,6 +3747,18 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-26 block 283 (floors197 locks the non-tail 100% coverage; readiness ratchet)**
+- Dumped `tools/coverage_floors197.json` (Global 95.9; every non-tail
+  dir 100; tail unchanged: iter 70.5, os 71.5, math 90.7, thread 91.1,
+  ffi 94.5, serialize 94.9, format 95.2). The floor file is wired into
+  `.github/workflows/{ci,heavy,release}.yml` and `tools/README.md`; the
+  readiness queue header, gate 5 and gate 8 now reference floors197.
+- `coverage_scan.ps1 -RatchetFile tools/coverage_floors197.json` ->
+  **RATCHET: OK** (Global 95.9%, 6635/6920, 9149 clauses).
+- No source, pin or tag change. The `stdlib-v0.65.1` prep remains parked
+  pending owner GO. The official scanner's one-line blind spot remains a
+  separate tooling note; floors197 is based on the official metric.
 
 **SESSION 2026-10-26 block 282 (stdlib-v0.65.1 prep: #[owns_return] on read helpers, full battery green; tag pending owner GO)**
 - REL-20261026-0040-compiler-2 (high, compiler -> stdlib): the m375

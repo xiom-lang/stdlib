@@ -5,7 +5,7 @@
 live (sha256 `c3629878...`, compiler field v0.64.8); compiler v0.65.0
 is released but deliberately not pinned yet; main pin v0.64.8.)
 **Gates: merged corpus 963/963 (0 compilefail / 0 runfail), modules
-533/533, probes 407/407, barename 0/533, floors196. Wave pin: v0.64.8
+533/533, probes 407/407, barename 0/533, floors197. Wave pin: v0.64.8
 (block 280).**
 
 Readiness gates (the meter above counts these; each is backed by the battery
@@ -21,13 +21,13 @@ gates flip:
    JSON-builder, JSON-ref-API, list_dir-roundtrip, and residual-wave
    probes are included and individually green).
 4. Strict bare-name scan clean -- MET (0/533).
-5. Coverage ratchet green -- MET (floors196).
+5. Coverage ratchet green -- MET (floors197).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (499/542 modules, 3501/6575 fns).
 8. Contract coverage 100% outside the documented no-clause tail -- MET
    (wave 208, 2026-10-25: every non-tail public fn carries a clause;
    non-tail 100%, global 95.9%, 6635/6920; clauses/fns 97.8%, 9149
-   clauses; floors196). The remaining 285 public fns are the documented
+   clauses; floors197). The remaining 285 public fns are the documented
    no-clause tail: iter 70.5%, os 71.5%, math 90.7%, thread 91.1%, ffi
    94.5%, serialize 94.7%, format 95.2% (no non-tautological clauses
    left; no clause waves in the tail).
@@ -81,7 +81,8 @@ rc 1. The stdlib rows in
 2343/2100/1410/1414 are verified/closed, 1550 stays acked pending the
 compiler's fixed move, 1609 is BOUNCED to acked. 1704 parse-side
 retention remains m375. Linux leg pending. Readiness stays 90% (gate 9
-discrete); gate 8 MET.
+discrete); gate 8 MET. **floors197** now locks the non-tail 100%
+(Global 95.9) and is wired into the three workflows.
 
 Current state 2026-10-25: **clause wave 208 closes gate 8 (non-tail).**
 Every non-tail public fn now carries a clause (66 functions across 30
@@ -91,7 +92,7 @@ remains the documented no-clause tail. Global pub-with-clause is 95.9%
 v0.64.8 archive: modules 533/533 (1579.6s), smokes 963/963 (the first
 run caught one over-strong `test_register` @pre-on-global contract,
 replaced with an explicit no-precondition clause; the rerun is clean),
-probes 407/407 (681.4s), barename 0/533 (458.9s), floors196 OK, doc_scan
+probes 407/407 (681.4s), barename 0/533 (458.9s), floors197 OK, doc_scan
 100%. Post-wave SHA/convert clauses: 2/2 modules, SHA smokes 11/11,
 convert smokes 66/66, barename 0/533.
 REL-20261020-1704 follow-up: the reference-taking entry points
