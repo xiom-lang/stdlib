@@ -17,9 +17,9 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 97 (updated 2026-10-26; **compiler v0.65.1 is PRODUCTION (tag f2c01cf9c) and pins stdlib-v0.65.1; our release is live: tag 9dc69b3, GitHub Release + registry xiom-std 0.65.1 (sha256 3bb9b850..., compiler v0.64.8); pin PR #8 open -> compiler main already pins stdlib-v0.65.1 (PR #8 closed as superseded); gate-9 v0.65.1 Windows: 9/10 green, only 1609 red; 1704 10k parse 23.6 MB (<256 MB) but ~2.3 KB/iter linear residual; full v0.65.1 battery: modules 533/533, smokes 963/963, probes 410/410, barename 0/533, floors197 OK, doc 100%**; readiness 90% (gate 8 MET; gate 9 1609 + 1704 residual); COMPILER_VERSION stays v0.64.8 -- the owner/compiler lane will decide the next candidate; do not bump or cut)
+## 0A. CONTINUE HERE -- handoff snapshot 98 (updated 2026-10-26; **stdlib-v0.65.1 released and registry live; compiler v0.65.1 production pins it; gate-9 v0.65.1 Windows: only 1609 red; 1704 10k target met (23.6 MB) with linear residual; full v0.65.1 battery 533/533, 963/963, 410/410, 0/533; relay gate-9 report REL-20261026-2247-stdlib sent to compiler; new Vec 8-byte slot wishlist REL-20261026-2142 scoped, stdlib half parked on branch feat/vec-elem-stride 92a6020 (not main; one-sided change segfaults on v0.65.1; needs compiler vec_slot_size)**; COMPILER_VERSION v0.64.8; main compatible with v0.65.1; the next candidate (v0.65.2+) is the owner/compiler decision; do not bump/cut)
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-26, snapshot 97)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-26, snapshot 98)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
@@ -27,7 +27,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 97 + blocks 288/287/286 + this 0C block.
+Read docs/stdlib_session.md snapshot 98 + blocks 289/288/287 + this 0C block.
 
 STATE (2026-10-26):
 - stdlib-v0.65.1 IS RELEASED at 9dc69b3 (the prep commit with the two
@@ -52,6 +52,15 @@ STATE (2026-10-26):
   probes 410/410 (1075.2s), barename 0/533 (472.4s), floors197 OK, doc
   100%. Release-check v0.65.1 rows filled; relay 1704 acked with the
   memory matrix.
+- New Vec slot wishlist REL-20261026-2142: stdlib half parked on
+  branch feat/vec-elem-stride (92a6020, pushed). with_len/push/reserve/
+  shrink_to_fit/insert use elem_size (fallback 8); probe p_wave289_vec8.
+  NOT on main: the one-sided change segfaults on v0.65.1 (run=70); main's
+  8-byte code passes. Needs compiler vec_slot_size=max(elem_size,1)
+  together (or compiler first), then the 4M with_len RSS gate.
+- Relay REL-20261026-2247-stdlib to compiler: v0.65.1 gate-9 report
+  (9/10, only 1609; 1704 10k target met, linear residual; full battery;
+  release-check rows filled).
 - Wishlist 2202 item 9: HPACK dynamic-table primitives landed in
   xiom/net/h2.xi (H2HpackDynamicTable + new/len/size/add/get/set_max/
   clear; oldest-first, index 1 = newest, size = name+value+32, eviction,
@@ -97,11 +106,11 @@ STATE (2026-10-26):
   re-run (the WSL 9p run timed out and was stopped).
 - Do not move stdlib-v0.64.9 or stdlib-v0.65.0.
 
-PRIORITY 0 -- FINISH THE 0.65.1 RELEASE:
-- Registry is live and verified: xiom-std 0.65.1, sha256
-  3bb9b850..., compiler v0.64.8. Compiler main already pins
-  stdlib-v0.65.1; PR #8 is closed as superseded. Do NOT move
-  stdlib-v0.65.0 or stdlib-v0.65.1.
+PRIORITY 0 -- 0.65.1 IS COMPLETE:
+- Registry live (xiom-std 0.65.1, sha256 3bb9b850..., compiler v0.64.8);
+  compiler main pins stdlib-v0.65.1; PR #8 closed as superseded. Do NOT
+  move the tags. The next candidate (v0.65.2+) is the owner/compiler
+  decision; do not bump COMPILER_VERSION or cut a stdlib tag.
 
 PRIORITY 1 -- GATE 9 ON THE OWNER'S SIGNAL:
 - On the owner's signal, re-run the known-failure repros and the
@@ -3774,6 +3783,25 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-26 block 289 (gate-9 report relayed to compiler; Vec 8-byte slot wishlist parked on branch)**
+- Created `REL-20261026-2247-stdlib` -> compiler: the v0.65.1 gate-9
+  report. Only 1609 red; 1626/2343/2100-W1/1456/1451/1326/2249/2249-2/1550
+  green; 1704 10k=23.6 MB (target met) but linear ~2.3 KB/iter; full
+  v0.65.1 battery 533/963/410/0; release-check rows filled; stdlib-v0.65.1
+  release/registry included.
+- New compiler wishlist `REL-20261026-2142` (Vec 8-byte slot floor):
+  scoped the stdlib half on branch `feat/vec-elem-stride` (`92a6020`,
+  pushed). with_len/push/reserve/shrink_to_fit/insert use `elem_size`
+  (fallback 8); probe `p_wave289_vec8` (4M with_len correctness/RSS).
+  **NOT on main:** the one-sided change segfaults on v0.65.1
+  (`p_wave289_vec8` run=70) because the released compiler still assumes
+  8-byte slots; main's 8-byte code passes the same probe. Land compiler
+  `vec_slot_size=max(elem_size,1)` together with the branch (or compiler
+  first), then the 4M with_len RSS gate.
+- Relay committed `d55f9e9`. Main remains `b4dbbdf` (v0.65.1-compatible);
+  `COMPILER_VERSION` v0.64.8; no tag/cut. The next candidate (v0.65.2+)
+  is the owner/compiler decision.
 
 **SESSION 2026-10-26 block 288 (compiler v0.65.1 production: gate-9 v0.65.1 sweep + 1704 memory matrix + full compatibility battery)**
 - Compiler v0.65.1 is production (tag `f2c01cf9c`) and pins

@@ -104,7 +104,10 @@ battery is green (modules 533/533, probes 410/410, smokes 963/963,
 barename 0/533, floors197, doc 100%), gate-9 is 9/10 (only 1609), and
 the 1704 memory matrix meets the 10k target (23.6 MB) with a linear
 residual. Main `COMPILER_VERSION` stays v0.64.8; the next candidate is
-the owner/compiler decision.
+the owner/compiler decision. Vec slot wishlist REL-20261026-2142 is
+scoped on branch `feat/vec-elem-stride` (`92a6020`); main stays
+8-byte-slot compatible until the compiler half lands. Gate-9 report
+`REL-20261026-2247-stdlib` sent to compiler.
 
 Current state 2026-10-25: **clause wave 208 closes gate 8 (non-tail).**
 Every non-tail public fn now carries a clause (66 functions across 30
