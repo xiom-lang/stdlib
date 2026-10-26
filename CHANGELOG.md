@@ -4,6 +4,17 @@ All notable changes to the XIOM standard library are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.65.1] - 2026-10-26
+
+### Fixed
+
+- `io.read_file_bytes` and `io.read_at` now carry the compiler's
+  `#[owns_return]` contract: the `Ok` payload is a fresh main-heap
+  `Vec[UInt8]` owned by the caller. The attribute is ignored by older
+  pins and lets the compiler register the match-bound payload for a
+  scope-exit drop, fixing the m375 Vec leak on the read path
+  (REL-20261026-0040-compiler-2). No runtime or API change.
+
 ## [0.65.0] - 2026-10-23
 
 ### Added

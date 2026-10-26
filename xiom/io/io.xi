@@ -985,6 +985,8 @@ pub fn write_file_bytes(path: Str, data: &Vec[UInt8]) -> Result[Unit, IOError]
 
 /// read_file_bytes reads a file and returns its raw bytes.
 /// Complexity: O(n) where n = file size.
+/// The Ok payload is a fresh main-heap Vec owned by the caller (m375).
+#[owns_return]
 pub fn read_file_bytes(path: Str) -> Result[Vec[UInt8], IOError]
   ensures: (path.len() == 0) => (result.is_err == true)
 {
@@ -1030,6 +1032,8 @@ pub fn fsync(handle: Int) -> Result[Unit, IOError]
 /// read_at reads up to `len` bytes starting at byte `offset`, clamped to the
 /// file size (no past-EOF fabrication). Binary read.
 /// Returns: Ok(bytes) with bytes.len() <= len; Err on open failure.
+/// The Ok payload is a fresh main-heap Vec owned by the caller (m375).
+#[owns_return]
 pub fn read_at(path: Str, offset: Int, len: Int) -> Result[Vec[UInt8], IOError]
   requires: path.len() > 0
   requires: offset >= 0

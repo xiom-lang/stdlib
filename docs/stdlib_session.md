@@ -17,9 +17,9 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 92 (updated 2026-10-26; **readiness 90% (gate 8 MET); non-tail contract coverage 100%, global 95.9% (6635/6920, 9149 clauses); the 1704 JSON ref-API mitigation landed (json_stringify_ref/json_pretty_ref/json_type_ref/json_get_ref); battery on official v0.64.8: modules 533/533, smokes 963/963, probes 407/407, barename 0/533, floors196 OK, doc_scan 100%**; stdlib-v0.65.0 tag 3eb9c05 is released and the registry is live (xiom-std 0.65.0 sha256 c3629878..., compiler pin v0.64.8); compiler v0.65.0 is released but NOT pinned (owner will signal the next candidate); gate 9 (zero open findings) is the last gate: 1609 (still red on v0.65.0 Windows) + 1704 parse-side; 1626/2343/2100-W1/1456/1451/1326/2249/2249-2/1550 verified green on v0.65.0 Windows, Linux pending; the v0.65.0 Windows archive re-check passes m372 (nested=42 local=42) and tuple-returning 1550 (enumerate tuple ok), the Linux leg is not re-run; do not move tags, do not bump COMPILER_VERSION yet)
+## 0A. CONTINUE HERE -- handoff snapshot 93 (updated 2026-10-26; **stdlib-v0.65.1 PREPARED but NOT TAGGED -- owner GO required: `#[owns_return]` on io.read_file_bytes/io.read_at for the compiler m375 Vec-leak fix (REL-20261026-0040-compiler-2); package 0.65.1, release-notes/v0.65.1.md validated (1 highlight); COMPILER_VERSION v0.64.8; full battery on official v0.64.8: modules 533/533 (768.8s), smokes 963/963 (727s), probes 407/407 (1098.9s), barename 0/533 (412.8s), floors196 OK, doc_scan 100%**; readiness 90% (gate 8 MET); gate 9 on v0.65.0 Windows: only 1609 red (`p_result_payload_index_concat` rc 1), 1704 parse-side m375, the rest verified green; stdlib-v0.65.0 tag 3eb9c05/registry live, compiler v0.65.0 not pinned; next: owner GO -> tag/push stdlib-v0.65.1, run release workflow, publish registry (COMPILER_VERSION v0.64.8), reply to 0040-compiler-2 with tag/SHA/run id)
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-26, snapshot 92)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-26, snapshot 93)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
@@ -27,9 +27,15 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 92 + blocks 281/280/279 + this 0C block.
+Read docs/stdlib_session.md snapshot 93 + blocks 282/281/280 + this 0C block.
 
 STATE (2026-10-26):
+- stdlib-v0.65.1 is PREPARED ON MAIN but NOT TAGGED (owner GO
+  required): #[owns_return] on io.read_file_bytes/io.read_at for the
+  compiler m375 Vec-leak fix (REL-20261026-0040-compiler-2); package
+  0.65.1; release-notes/v0.65.1.md validated; COMPILER_VERSION v0.64.8;
+  battery modules 533/533 (768.8s), smokes 963/963 (727s), probes
+  407/407 (1098.9s), barename 0/533 (412.8s), floors196 OK, doc 100%.
 - Readiness is 90% (9/10). Gate 8 is MET by clause wave 208: every
   non-tail public fn carries a clause (non-tail 100%, global 95.9%,
   6635/6920, 9149 clauses, 97.8% clauses/fns). The 285 fns in
@@ -62,6 +68,14 @@ STATE (2026-10-26):
   p_iter_enumerate_tuple (enumerate tuple ok); the Linux leg is NOT
   re-run (the WSL 9p run timed out and was stopped).
 - Do not move stdlib-v0.64.9 or stdlib-v0.65.0.
+
+PRIORITY 0 -- TAG stdlib-v0.65.1 ON OWNER GO:
+- The prep is on main (package 0.65.1, the two #[owns_return]
+  annotations, validated notes, full battery green). On GO: tag/push
+  stdlib-v0.65.1, run .github/workflows/release.yml, publish the
+  registry with COMPILER_VERSION v0.64.8, and reply to
+  REL-20261026-0040-compiler-2 with the tag/SHA/run id. Do NOT move
+  stdlib-v0.65.0.
 
 PRIORITY 1 -- GATE 9 ON THE OWNER'S SIGNAL:
 - On the owner's signal, re-run the known-failure repros and the
@@ -3733,6 +3747,26 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-26 block 282 (stdlib-v0.65.1 prep: #[owns_return] on read helpers, full battery green; tag pending owner GO)**
+- REL-20261026-0040-compiler-2 (high, compiler -> stdlib): the m375
+  Vec-leak fix needs two stdlib ownership contracts. Added
+  `#[owns_return]` to `io.read_file_bytes` and `io.read_at`; both
+  allocate the `Ok` Vec with `Vec[UInt8]::with_capacity` OUTSIDE the
+  unsafe block, return `Ok(buf)`, and do not alias it. Older pins ignore
+  the attribute (v0.64.8 check_modules 533/533 clean).
+- Markers: `package.xi` 0.65.1; `CHANGELOG.md` `[0.65.1] - 2026-10-26`;
+  `release-notes/v0.65.1.md` validated (1 highlight, 0 breaking, 0
+  docs). `COMPILER_VERSION` stays v0.64.8.
+- Full battery on the OFFICIAL v0.64.8 archive after the change:
+  modules **533/533** (768.8s), smokes **963/963** (727s), probes
+  **407/407** (1098.9s), barename **0/533** (412.8s), floors196
+  **RATCHET OK** (global 95.9%, 6635/6920, 9149 clauses), doc_scan
+  **100%** RATCHET OK.
+- Tag/publish pending owner GO. The compiler next candidate will pin
+  stdlib-v0.65.1; do not move stdlib-v0.65.0. Relay
+  REL-20261026-0040-compiler-2 is acked with the prep commit; reply with
+  the tag/SHA/run id after the cut.
 
 **SESSION 2026-10-26 block 281 (v0.65.0 gate-9 sweep: 8 of 9 reds green on Windows; 1609 remains)**
 - Ran the gate-9 set on the released v0.65.0 Windows archive
