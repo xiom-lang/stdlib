@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 96 (updated 2026-10-26; **stdlib-v0.65.1 RELEASED: tag 9dc69b3, release run 40375774931 green (Windows 39m36s, Ubuntu 24m51s), GitHub Release live (xiom-std-0.65.1.tar.gz + SHA256SUMS, published 18:53:26Z); pin PR https://github.com/xiom-lang/xiom/pull/8 open; registry publish 40375774857 waiting on the registry-publish environment approval**; COMPILER_VERSION v0.64.8; the tag carries only the owns_return prep, not the later h2/floors commits; h2 now has dynamic table + Huffman + CONTINUATION helpers (probes 410/410; local battery modules 533/533, smokes 963/963, barename 0/533, floors197 OK, doc 100%); readiness 90% (gate 8 MET); gate 9 on v0.65.0 Windows: only 1609 red + 1704 parse-side; next: approve the registry publish, compiler pins v0.65.1; then the next compiler candidate for gate 9)
+## 0A. CONTINUE HERE -- handoff snapshot 96 (updated 2026-10-26; **stdlib-v0.65.1 RELEASED: tag 9dc69b3, release run 40375774931 green (Windows 39m36s, Ubuntu 24m51s), GitHub Release live (xiom-std-0.65.1.tar.gz + SHA256SUMS, published 18:53:26Z); pin PR https://github.com/xiom-lang/xiom/pull/8 open; registry live (xiom-std 0.65.1 sha256 3bb9b850..., compiler v0.64.8); staging canary green**; COMPILER_VERSION v0.64.8; the tag carries only the owns_return prep, not the later h2/floors commits; h2 now has dynamic table + Huffman + CONTINUATION helpers (probes 410/410; local battery modules 533/533, smokes 963/963, barename 0/533, floors197 OK, doc 100%); readiness 90% (gate 8 MET); gate 9 on v0.65.0 Windows: only 1609 red + 1704 parse-side; next: approve the registry publish, compiler pins v0.65.1; then the next compiler candidate for gate 9)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-26, snapshot 96)
 
@@ -35,8 +35,10 @@ STATE (2026-10-26):
   Release run 40375774931 green (Windows 39m36s, Ubuntu 24m51s); GitHub
   Release published 2026-10-26T18:53:26Z with xiom-std-0.65.1.tar.gz +
   SHA256SUMS. Pin PR https://github.com/xiom-lang/xiom/pull/8 is open.
-  Registry publish 40375774857 is waiting on the registry-publish
-  environment approval. Local battery: modules 533/533, smokes 963/963,
+  Registry is live: xiom-std 0.65.1, sha256
+  3bb9b85007d69f75a7379b90182f260e8d0bfba03f02431619481f9dae494d31,
+  compiler v0.64.8 (run 40375774857); staging canary 40381778731 green.
+  Local battery: modules 533/533, smokes 963/963,
   probes 410/410, barename 0/533, floors197 OK, doc 100%.
 - Wishlist 2202 item 9: HPACK dynamic-table primitives landed in
   xiom/net/h2.xi (H2HpackDynamicTable + new/len/size/add/get/set_max/
@@ -82,9 +84,10 @@ STATE (2026-10-26):
 - Do not move stdlib-v0.64.9 or stdlib-v0.65.0.
 
 PRIORITY 0 -- FINISH THE 0.65.1 RELEASE:
-- Approve the registry publish (run 40375774857) and verify xiom-std
-  0.65.1; confirm pin PR #8 (branch chore/pin-stdlib-v0.65.1, a3fa2a6).
-  Do NOT move stdlib-v0.65.0 or stdlib-v0.65.1.
+- Registry is live and verified: xiom-std 0.65.1, sha256
+  3bb9b850..., compiler v0.64.8. Confirm/merge pin PR #8 (branch
+  chore/pin-stdlib-v0.65.1, a3fa2a6; compiler lane owns the merge). Do
+  NOT move stdlib-v0.65.0 or stdlib-v0.65.1.
 
 PRIORITY 1 -- GATE 9 ON THE OWNER'S SIGNAL:
 - On the owner's signal, re-run the known-failure repros and the
@@ -3769,9 +3772,11 @@ registry pin, agent recon for the rest)**
 - The pin PR job pushed branch `chore/pin-stdlib-v0.65.1` (`a3fa2a6`) but
   PR creation failed with the token scope; opened manually as
   https://github.com/xiom-lang/xiom/pull/8.
-- Registry publish run `40375774857` (tag push) is waiting on the
-  `registry-publish` environment approval; staging canary `40381778731`
-  is also waiting. The registry entry is not yet verified.
+- Registry publish run `40375774857` succeeded: **xiom-std 0.65.1
+  published**, sha256
+  `3bb9b85007d69f75a7379b90182f260e8d0bfba03f02431619481f9dae494d31`,
+  compiler field v0.64.8, signed; the staging canary `40381778731` is
+  also green. The registry entry is verified.
 - Relay `REL-20261026-0040-compiler-2` moved acked -> fixed with the
   tag/run/release refs; the compiler can pin `stdlib-v0.65.1`.
 - Local battery at the code head (after the h2/floors commits): modules
