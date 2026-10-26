@@ -17,9 +17,9 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 92 (updated 2026-10-25; **readiness 90% (gate 8 MET); non-tail contract coverage 100%, global 95.9% (6635/6920, 9149 clauses); the 1704 JSON ref-API mitigation landed (json_stringify_ref/json_pretty_ref/json_type_ref/json_get_ref); battery on official v0.64.8: modules 533/533, smokes 963/963, probes 407/407, barename 0/533, floors196 OK, doc_scan 100%**; stdlib-v0.65.0 tag 3eb9c05 is released and the registry is live (xiom-std 0.65.0 sha256 c3629878..., compiler pin v0.64.8); compiler v0.65.0 is released but NOT pinned (owner will signal the next candidate); gate 9 (zero open findings) is the last gate: 1609/1626/2343/2100-W1/1704 (1704 parse-side remains m375); the v0.65.0 Windows archive re-check passes m372 (nested=42 local=42) and tuple-returning 1550 (enumerate tuple ok), the Linux leg is not re-run; do not move tags, do not bump COMPILER_VERSION yet)
+## 0A. CONTINUE HERE -- handoff snapshot 92 (updated 2026-10-26; **readiness 90% (gate 8 MET); non-tail contract coverage 100%, global 95.9% (6635/6920, 9149 clauses); the 1704 JSON ref-API mitigation landed (json_stringify_ref/json_pretty_ref/json_type_ref/json_get_ref); battery on official v0.64.8: modules 533/533, smokes 963/963, probes 407/407, barename 0/533, floors196 OK, doc_scan 100%**; stdlib-v0.65.0 tag 3eb9c05 is released and the registry is live (xiom-std 0.65.0 sha256 c3629878..., compiler pin v0.64.8); compiler v0.65.0 is released but NOT pinned (owner will signal the next candidate); gate 9 (zero open findings) is the last gate: 1609 (still red on v0.65.0 Windows) + 1704 parse-side; 1626/2343/2100-W1/1456/1451/1326/2249/2249-2/1550 verified green on v0.65.0 Windows, Linux pending; the v0.65.0 Windows archive re-check passes m372 (nested=42 local=42) and tuple-returning 1550 (enumerate tuple ok), the Linux leg is not re-run; do not move tags, do not bump COMPILER_VERSION yet)
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-25, snapshot 92)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-26, snapshot 92)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
@@ -29,7 +29,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
 Read docs/stdlib_session.md snapshot 92 + blocks 280/279/278 + this 0C block.
 
-STATE (2026-10-25):
+STATE (2026-10-26):
 - Readiness is 90% (9/10). Gate 8 is MET by clause wave 208: every
   non-tail public fn carries a clause (non-tail 100%, global 95.9%,
   6635/6920, 9149 clauses, 97.8% clauses/fns). The 285 fns in
@@ -49,10 +49,12 @@ STATE (2026-10-25):
   wrappers. Probe p_json_ref_api locks byte parity and repeated ref
   rendering. PULSE should re-run its capped probe; parse-side retention
   is still compiler m375.
-- Gate 9 (zero open findings) is the last gate: compiler-side
-  1609/1626/2343/2100-W1/1704. The owner will signal when the compiler
-  candidate is ready; do NOT bump COMPILER_VERSION or pin v0.65.0 before
-  that signal.
+- Gate 9 (zero open findings) is the last gate. On the released v0.65.0
+  Windows archive, 8 of 9 reds are green (1626/2343/2100-W1/1456/1451/
+  1326/2249/2249-2/1550); only 1609 (Result.value[i] concat) is still
+  red, plus 1704's parse-side m375 retention. Linux leg not re-run. The
+  owner will signal when the next compiler candidate is ready; do NOT
+  bump COMPILER_VERSION or pin v0.65.0 before that signal.
 - v0.65.0 is released: compiler tag v0.65.0, stdlib-v0.65.0 tag 3eb9c05,
   registry xiom-std 0.65.0 live (sha256 c3629878..., compiler field
   v0.64.8). The v0.65.0 Windows archive re-check passes
@@ -66,9 +68,9 @@ PRIORITY 1 -- GATE 9 ON THE OWNER'S SIGNAL:
   release-check rows on the designated candidate archive (Windows+Linux),
   fill release-checks/compiler-compiler-v<ver>.md, close the verified
   relay items, then bump COMPILER_VERSION and run the battery.
-- Current gate-9 reds: 1609 (Result.value[i] concat), 1626 (trailing
-  match), 2343 (bare inline i32), 2100-W1 (alias field/C001), 1704
-  (JSON retention, compiler drop elaboration).
+- Gate-9 status on v0.65.0 Windows: 1609 still red; 1704 parse-side
+  m375 remains; the other reds (1626/2343/2100-W1/1456/1451/1326/2249/
+  2249-2/1550) verified green. Linux leg pending.
 - Do not move tags; do not pin an unverified archive.
 
 PRIORITY 2 -- WISHLIST / READINESS:
@@ -3731,6 +3733,30 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-26 block 281 (v0.65.0 gate-9 sweep: 8 of 9 reds green on Windows; 1609 remains)**
+- Ran the gate-9 set on the released v0.65.0 Windows archive
+  (sha256 `ff4abb4a...`):
+  - `p_inline_i32_misread` (2343) rc 0
+  - `p_alias_module_type_path` (2100-W1) rc 0
+  - `p_trailing_match_after_push` (1626) rc 0
+  - `p_sync_mutex_builtin_shadow` (1456) rc 0
+  - `p_nested_generic_ptr_read` (1451/m372) rc 0 (`nested=42 local=42`)
+  - `p_wave198_long_tail` (1326) rc 0
+  - `p_map_set_mutating_combo` (2249) rc 0
+  - `p_simd_vec4f_lanes` (2249-2) rc 0
+  - `p_iter_enumerate_tuple` (1550 tuple-returning) rc 0
+  - `p_result_payload_index_concat` (1609) **rc 1** -- still red.
+- Filled the stdlib rows in
+  `release-checks/compiler-compiler-v0.65.0.md` with the evidence. Relay
+  2343, 2100, 1410 and 1414 moved verified -> closed. 1550 remains acked
+  on the bus because the compiler has not moved it fixed; the
+  release-check row records the verified Windows result. 1609 is
+  BOUNCED to acked in the release-check and stays acked.
+- Linux leg not re-run; the Windows archive is the as-shipped gate. The
+  owner will signal the next candidate before any pin.
+- Readiness stays 90% (gate 9 open on 1609 + 1704 parse-side); gate 8
+  remains MET. No pin/tag change.
 
 **SESSION 2026-10-25 block 280 (JSON reference-taking entry points for REL-20261020-1704; full battery green)**
 - PULSE's 2026-10-22 follow-up on 1704 asked for reference-taking

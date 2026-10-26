@@ -32,11 +32,13 @@ gates flip:
    94.5%, serialize 94.7%, format 95.2% (no non-tautological clauses
    left; no clause waves in the tail).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
-   OPEN. Gate 9 on v0.64.8: 1053/1456/2328/2000/1546/1624/1548-5
-   verified and closed; 1626 (T001 trailing match), 2343 (bare inline
-   i32), 2100-W1 (alias field + close C001) still red; 1609 (inline
-   Result.value[i]) still red and keeps the PULSE list_dir workaround;
-   2331 stdlib runtime residual verified/closed. New compiler items:
+   OPEN, one red. v0.65.0 Windows sweep (sha256 `ff4abb4a...`):
+   1626/2343/2100-W1/1456/1451/1326/2249/2249-2/1550 verified green;
+   1609 (inline Result.value[i]) still red and keeps the 1549-pulse-5
+   workaround; 1704 parse-side retention remains m375. Linux leg pending.
+   Historical v0.64.8 results: 1053/1456/2328/2000/1546/1624/1548-5
+   verified and closed; 2331 stdlib runtime residual verified/closed.
+   New compiler items:
    REL-20261019-2249-stdlib (multiple generic Map/Set free helpers AV
    0xC0000005), -2 (Vec4f lane get/write miscompile), REL-20261020-1242
    (Vec4f pointer scale, stdlib fixed, verify on m377),
@@ -68,6 +70,18 @@ Meter formula: MET gates count 1.0; gate 9 gets no partial credit
 above; the documented no-clause tail does not count against the meter.
 
 Authoritative order: the gates above, then the updates below newest-first.
+
+Current state 2026-10-26: **gate 9 is down to one red.** On the released
+v0.65.0 Windows archive (sha256 `ff4abb4a...`), the gate-9 set is green
+except 1609: 1626/2343/2100-W1/1456/1451/1326/2249/2249-2/1550 all rc 0
+(`p_iter_enumerate_tuple` len=3, em[1].0=7; `p_nested_generic_ptr_read`
+nested=42 local=42). 1609 (`p_result_payload_index_concat`) is still
+rc 1. The stdlib rows in
+`release-checks/compiler-compiler-v0.65.0.md` carry the verdicts; relay
+2343/2100/1410/1414 are verified/closed, 1550 stays acked pending the
+compiler's fixed move, 1609 is BOUNCED to acked. 1704 parse-side
+retention remains m375. Linux leg pending. Readiness stays 90% (gate 9
+discrete); gate 8 MET.
 
 Current state 2026-10-25: **clause wave 208 closes gate 8 (non-tail).**
 Every non-tail public fn now carries a clause (66 functions across 30
