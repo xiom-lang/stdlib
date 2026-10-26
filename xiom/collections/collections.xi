@@ -23,6 +23,15 @@ fn Vec.new[T]() -> Vec[T]
   }
 }
 
+// Element stride in bytes: the Vec header carries elem_size (field 3);
+// older/unknown generic contexts report 0, so fall back to the legacy
+// 8-byte slot. The compiler still floors its own allocations at 8 until
+// the coordinated REL-20261026-2142 slot-stride change lands.
+fn _vec_elem_bytes(esz: Int) -> Int {
+  if esz < 1 { return 8; }
+  return esz;
+}
+
 fn Vec.with_capacity[T](cap: Int) -> Vec[T] {
   var v = Vec[T].new();
   v.cap = cap;
@@ -30,10 +39,9 @@ fn Vec.with_capacity[T](cap: Int) -> Vec[T] {
 }
 
 /// Zero-initialized vector with `len() == n`; `n <= 0` yields an empty
-/// vector. The element area is zeroed byte-wise (this Vec implementation
-/// allocates 8 bytes per slot), so primitive element types
-/// (UInt8/Int/Float64/...) are byte-zero. Intended for sized FFI/out-param
-/// buffers, e.g. `Vec[UInt8].with_len(8)`. O(n).
+/// vector. The element area is zeroed byte-wise using the element stride
+/// (elem_size; 8 bytes for unknown/generic contexts). Intended for sized
+/// FFI/out-param buffers, e.g. `Vec[UInt8].with_len(8)`. O(n).
 fn Vec.with_len[T](n: Int) -> Vec[T]
   ensures: (n > 0) => (result.len() == n)
   ensures: (n <= 0) => (result.len() == 0)
@@ -43,7 +51,7 @@ fn Vec.with_len[T](n: Int) -> Vec[T]
   v.reserve(n);
   unsafe {
     var b = v.data as *UInt8;
-    var total = n * 8;
+    var total = n * _vec_elem_bytes(elem_size);
     var i = 0;
     while i < total {
       *b = 0 as UInt8;
@@ -63,7 +71,7 @@ fn Vec.push[T](value: T)
     if len >= cap {
       var new_cap = cap * 2;
       if cap == 0 { new_cap = 4; }
-      data = @realloc(data as *UInt8, new_cap * 8) as *T;
+      data = @realloc(data as *UInt8, new_cap * _vec_elem_bytes(elem_size)) as *T;
       cap = new_cap;
     }
     var dst = data + len;
@@ -121,7 +129,7 @@ fn Vec.reserve[T](additional: Int)
     if new_cap < 4 { new_cap = 4; }
     while new_cap < needed { new_cap = new_cap * 2; }
     unsafe {
-      data = @realloc(data as *UInt8, new_cap * 8) as *T;
+      data = @realloc(data as *UInt8, new_cap * _vec_elem_bytes(elem_size)) as *T;
       cap = new_cap;
     }
   }
@@ -159,7 +167,7 @@ fn Vec.shrink_to_fit[T]()
         }
         cap = 0;
       } else {
-        data = @realloc(data as *UInt8, len * 8) as *T;
+        data = @realloc(data as *UInt8, len * _vec_elem_bytes(elem_size)) as *T;
         cap = len;
       }
     }
@@ -176,7 +184,7 @@ fn Vec.insert[T](index: Int, value: T)
     if len >= cap {
       var new_cap = cap * 2;
       if cap == 0 { new_cap = 4; }
-      data = @realloc(data as *UInt8, new_cap * 8) as *T;
+      data = @realloc(data as *UInt8, new_cap * _vec_elem_bytes(elem_size)) as *T;
       cap = new_cap;
     }
     var i = len;
