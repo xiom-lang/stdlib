@@ -5,7 +5,7 @@
 live (sha256 `c3629878...`, compiler field v0.64.8); compiler v0.65.0
 is released but deliberately not pinned yet; main pin v0.64.8.)
 **Gates: merged corpus 963/963 (0 compilefail / 0 runfail), modules
-533/533, probes 409/409, barename 0/533, floors197. Wave pin: v0.64.8
+533/533, probes 410/410, barename 0/533, floors197. Wave pin: v0.64.8
 (block 280).**
 
 Readiness gates (the meter above counts these; each is backed by the battery
@@ -15,10 +15,10 @@ gates flip:
 2. Smoke corpus green -- MET: merged 963/963 on v0.64.8 (0/0),
    including the directory-rename regression; plus 956/956 on both
    Windows and Ubuntu release gates, no carve-outs.
-3. Probe corpus green -- MET (409/409; waves 188-207, fraction-add,
+3. Probe corpus green -- MET (410/410; waves 188-207, fraction-add,
    io.rename, hash-shadow, async-select, Routh, executor, small-gap,
    math-os, long-tail, mid-gap, math, os/iter, final-gap, read_at_into,
-   JSON-builder, JSON-ref-API, HPACK-dynamic, HPACK-Huffman,
+   JSON-builder, JSON-ref-API, HPACK-dynamic, HPACK-Huffman, HPACK-cont,
    list_dir-roundtrip, and residual-wave probes are included and
    individually green).
 4. Strict bare-name scan clean -- MET (0/533).
@@ -27,7 +27,7 @@ gates flip:
 7. Module-smoke ratchet green -- MET (499/542 modules, 3501/6575 fns).
 8. Contract coverage 100% outside the documented no-clause tail -- MET
    (wave 208, 2026-10-25: every non-tail public fn carries a clause;
-   non-tail 100%, global 95.9%, 6645/6930; clauses/fns 97.8%, 9161
+   non-tail 100%, global 95.9%, 6650/6935; clauses/fns 97.8%, 9169
    clauses; floors197). The remaining 285 public fns are the documented
    no-clause tail: iter 70.5%, os 71.5%, math 90.7%, thread 91.1%, ffi
    94.5%, serialize 94.7%, format 95.2% (no non-tautological clauses
@@ -87,8 +87,9 @@ discrete); gate 8 MET. **floors197** now locks the non-tail 100%
 9: HPACK dynamic-table primitives landed (`H2HpackDynamicTable` +
 new/len/size/add/get/set_max/clear; probe `p_wave283_hpack_dynamic`) and
 the RFC 7541 Huffman codec landed (257-entry table, H=1 string
-decode/encode; probe `p_wave285_hpack_huffman`), so the probe corpus is
-409/409.
+decode/encode; probe `p_wave285_hpack_huffman`), and HEADERS +
+CONTINUATION reassembly landed (`H2HeaderBlock`; probe
+`p_wave286_h2_cont`), so the probe corpus is 410/410.
 
 Current state 2026-10-25: **clause wave 208 closes gate 8 (non-tail).**
 Every non-tail public fn now carries a clause (66 functions across 30

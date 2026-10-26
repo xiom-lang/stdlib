@@ -9,12 +9,13 @@
 //   * the 61-entry HPACK static table (RFC 7541 Appendix A);
 //   * one header field encode/decode: static-indexed, or a literal without
 //     indexing (indexed name or new name).
-// NOT implemented here (documented scoping boundary): CONTINUATION
-// reassembly and connection state. 0x40 dynamic-table inserts are rejected
-// with a clear Err so a caller cannot silently mis-decode them; the dynamic
-// table itself is available as the standalone H2HpackDynamicTable primitives
-// below, and Huffman (H=1) string bodies are handled by
-// h2_hpack_huffman_decode / h2_hpack_string_encode_huffman.
+// NOT implemented here (documented scoping boundary): connection state
+// (stream multiplexing, flow control, settings). 0x40 dynamic-table inserts
+// are rejected with a clear Err so a caller cannot silently mis-decode them;
+// the dynamic table itself is available as the standalone
+// H2HpackDynamicTable primitives below, Huffman (H=1) string bodies are
+// handled by h2_hpack_huffman_decode / h2_hpack_string_encode_huffman, and
+// HEADERS + CONTINUATION fragments are joined by H2HeaderBlock.
 // No module-level tables: the static table lives in one private match chain.
 
 module xiom.net.h2
@@ -184,6 +185,92 @@ pub fn h2_frame_decode(bytes: &Vec[UInt8]) -> Result[(H2FrameHeader, Vec[UInt8])
       return Ok((h, payload));
     },
   }
+}
+
+// ---------------------------------------------------------------------------
+// HEADERS + CONTINUATION reassembly (RFC 9113 section 4.3)
+// ---------------------------------------------------------------------------
+
+/// A header block being reassembled from one HEADERS frame and zero or more
+/// CONTINUATION frames. `bytes` is the concatenated header-block fragment.
+pub type H2HeaderBlock = {
+  stream_id: Int;
+  bytes: Vec[UInt8];
+  complete: Bool;
+}
+
+/// Start a header block from a HEADERS payload (padding/priority already
+/// stripped by the caller). `end_headers` sets the complete flag.
+pub fn h2_header_block_new(stream_id: Int, payload: &Vec[UInt8], end_headers: Bool) -> H2HeaderBlock
+  requires: stream_id > 0
+  ensures: result.stream_id == stream_id
+  ensures: result.complete == end_headers
+  ensures: result.bytes.len() == payload.len()
+{
+  var b = Vec[UInt8].new();
+  var i = 0;
+  while i < payload.len() {
+    b.push(payload[i]);
+    i = i + 1;
+  }
+  return H2HeaderBlock{
+    stream_id: stream_id;
+    bytes: b;
+    complete: end_headers;
+  };
+}
+
+/// Append a CONTINUATION payload. Err when the block is already complete,
+/// the frame is not CONTINUATION, or the stream id differs. Returns whether
+/// the block is complete after the append.
+pub fn h2_header_block_append(block: &mut H2HeaderBlock, frame_type: Int, flags: Int, stream_id: Int, payload: &Vec[UInt8]) -> Result[Bool, Str]
+  requires: block.stream_id > 0
+{
+  if block.complete {
+    return Err("h2: header block already complete");
+  };
+  if frame_type != H2_FRAME_CONTINUATION {
+    return Err("h2: expected CONTINUATION");
+  };
+  if stream_id != block.stream_id {
+    return Err("h2: CONTINUATION stream mismatch");
+  };
+  var i = 0;
+  while i < payload.len() {
+    block.bytes.push(payload[i]);
+    i = i + 1;
+  };
+  if (flags & H2_FLAG_END_HEADERS) != 0 {
+    block.complete = true;
+  };
+  return Ok(block.complete);
+}
+
+/// True once END_HEADERS has been seen.
+pub fn h2_header_block_is_complete(block: &H2HeaderBlock) -> Bool
+  ensures: result == block.complete
+{
+  return block.complete;
+}
+
+/// Total reassembled header-block length in bytes.
+pub fn h2_header_block_len(block: &H2HeaderBlock) -> Int
+  ensures: result == block.bytes.len()
+{
+  return block.bytes.len();
+}
+
+/// Copy the reassembled header-block bytes (for h2_hpack_* input).
+pub fn h2_header_block_to_bytes(block: &H2HeaderBlock) -> Vec[UInt8]
+  ensures: result.len() == block.bytes.len()
+{
+  var out = Vec[UInt8].new();
+  var i = 0;
+  while i < block.bytes.len() {
+    out.push(block.bytes[i]);
+    i = i + 1;
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------------------
