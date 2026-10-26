@@ -1,4 +1,4 @@
-<!--
+﻿<!--
 Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
 SPDX-License-Identifier: MIT OR Apache-2.0
 -->
@@ -27,7 +27,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 92 + blocks 280/279/278 + this 0C block.
+Read docs/stdlib_session.md snapshot 92 + blocks 281/280/279 + this 0C block.
 
 STATE (2026-10-26):
 - Readiness is 90% (9/10). Gate 8 is MET by clause wave 208: every
@@ -2093,7 +2093,7 @@ registry-publish
 workflow verifies the downloaded
 `xiom-<version>-linux-x64.tar.gz` against the release's published
 `SHA256SUMS` (registry lane independently verified the manifest
-`8839e5cc…` and the archive `4cc5d62b…`). The nightly heavy CI already
+`8839e5ccâ€¦` and the archive `4cc5d62bâ€¦`). The nightly heavy CI already
 tests compiler `main`. NOTE: history was rewritten 2026-09-20
 (owner-authorized): every author/committer/tagger is
 `Lefteris Notas <lefterisnotas@gmail.com>`, `main` force-pushed to HEAD
@@ -11485,7 +11485,7 @@ smoke, 3,332/6,200 public fns referenced). Readiness meter in the queue:
 release). Packages intake lives at `docs/STDLIB-WISHLIST.md` (32 rows from
 the four relays; full sheet `xiom-packages/packages` @ `66f26e1`).
 
-**Shipped**: stdlib **0.62.0 released** — tag `stdlib-v0.62.0` force-updated
+**Shipped**: stdlib **0.62.0 released** â€” tag `stdlib-v0.62.0` force-updated
 to `0e63101` (ruleset bypass), GitHub Release published 2026-09-29 00:10Z
 with `xiom-std-0.62.0.tar.gz` + `SHA256SUMS`, staging canary dispatched;
 registry lane has the subject sha and re-dispatches its publish. Two release
@@ -11539,7 +11539,7 @@ module must have a smoke).
 
 **Owner directives in force**: (1) family batching allowed, 40-60 pub per
 wave to shorten the path; (2) ensure every module/function has smoke
-coverage — grow the module-smoke ratchet alongside contract waves; (3)
+coverage â€” grow the module-smoke ratchet alongside contract waves; (3)
 release before 100% is acceptable when all gates are green, coverage
 continues toward 100% in the next release.
 
@@ -14087,3 +14087,4 @@ policy applied (`docs/CI.md`, attestations, dispatch-gated registry
 publish). The single-param sweep repro remains the one open
 stdlib->compiler handoff (fails/hangs on main R45 `483f283e`; repro and
 current evidence in `tools/known_failures/README.md`).
+
