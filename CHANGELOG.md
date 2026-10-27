@@ -4,6 +4,19 @@ All notable changes to the XIOM standard library are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- `net.server.server_parse_request` parses directly from the request byte
+  buffer using (start, len) spans instead of copying the whole head into a
+  `Vec[UInt8]` and a `Str`, then slicing five request-line strings and two
+  strings per header. Header names are lowercased in the same copy and the
+  header vector is pre-sized. 50k-parse measurement on the official
+  v0.64.8/v0.65.2 compilers (Windows x64): ~8,954 B/iteration before,
+  ~857 B/iteration after; the API and error semantics are unchanged. New
+  probe `p_http_parse_alloc` (REL-20261027-1955-pulse-2).
+
 ## [0.65.2] - 2026-10-27
 
 ### Added

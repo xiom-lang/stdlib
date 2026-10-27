@@ -9,6 +9,10 @@ module xiom.net.server
 
 use xiom.string;
 
+extern "C" {
+  fn malloc(size: UInt) -> *UInt8;
+}
+
 /// server_default_port returns the default HTTP server port (80).
 /// Complexity: O(1). Pure.
 pub fn server_default_port() -> Int
@@ -58,8 +62,10 @@ pub type ServerRequest = {
 /// into method/target/version, a lowercased (name, value) header list and
 /// the body span. Returns None when the request line is malformed, the
 /// header block is not CRLF-terminated, a header has no colon, or a
-/// Content-Length value is missing/negative/not an integer. The request
-/// line is parsed by server_parse_request_line. Complexity: O(n). Pure.
+/// Content-Length value is missing/negative/not an integer. The head is
+/// parsed directly from the byte buffer using (start, len) spans: no
+/// whole-head copy is made and each returned field is a single
+/// allocation. Complexity: O(n). Pure.
 pub fn server_parse_request(bytes: &Vec[UInt8]) -> Option[ServerRequest]
   ensures: (bytes.len() == 0) => (result.is_none == true)
 {
@@ -78,35 +84,81 @@ pub fn server_parse_request(bytes: &Vec[UInt8]) -> Option[ServerRequest]
     }
   }
   if body_start < 0 { return None; }
-  var head_bytes = Vec[UInt8].new();
-  var j = 0;
-  while j < head_end {
-    head_bytes.push(bytes[j]);
-    j = j + 1;
+
+  // Request line: find the CRLF that ends it.
+  var rl_end = -1;
+  var a = 0;
+  while a + 1 < head_end {
+    if bytes[a] == 13u8 && bytes[a + 1] == 10u8 {
+      rl_end = a;
+      a = head_end;
+    } else {
+      a = a + 1;
+    }
   }
-  let head = Str::from_utf8(head_bytes);
-  let rl_end = idx_of(head, "\r\n");
   if rl_end <= 0 { return None; }
-  let line_res = server_parse_request_line(string.str_slice(head, 0, rl_end));
-  if line_res.is_none { return None; }
-  let (method, target, version) = line_res?;
-  var headers = Vec[(Str, Str)].new();
+  var sp1 = -1;
+  var b = 0;
+  while b < rl_end {
+    if bytes[b] == 32u8 {
+      sp1 = b;
+      b = rl_end;
+    } else {
+      b = b + 1;
+    }
+  }
+  if sp1 <= 0 { return None; }
+  var sp2 = -1;
+  var c = sp1 + 1;
+  while c < rl_end {
+    if bytes[c] == 32u8 {
+      sp2 = c;
+      c = rl_end;
+    } else {
+      c = c + 1;
+    }
+  }
+  if sp2 <= sp1 + 1 { return None; }
+  if sp2 + 1 >= rl_end { return None; }
+  let method = _str_from_byte_span(bytes, 0, sp1);
+  let target = _str_from_byte_span(bytes, sp1 + 1, sp2);
+  let version = _str_from_byte_span(bytes, sp2 + 1, rl_end);
+
+  // Headers: parse name/value pairs straight from the buffer. The name is
+  // lowercased in the same copy; the value skips one leading space to
+  // match the historic single-OWS trim.
+  var headers = Vec[(Str, Str)].with_capacity(8);
   var body_len = 0;
   var pos = rl_end + 2;
-  while pos < head.len() {
-    var le = _idx_from(head, pos, "\r\n");
-    if le < 0 { le = head.len(); }
-    let hline = string.str_slice(head, pos, le);
-    let colon = idx_of(hline, ":");
-    if colon <= 0 { return None; }
-    let name = string.str_lower(string.str_slice(hline, 0, colon));
-    var vstart = colon + 1;
-    if vstart < hline.len() {
-      if string.str_slice(hline, vstart, vstart + 1) == " " {
-        vstart = vstart + 1;
+  while pos < head_end {
+    var le = -1;
+    var d = pos;
+    while d + 1 < head_end {
+      if bytes[d] == 13u8 && bytes[d + 1] == 10u8 {
+        le = d;
+        d = head_end;
+      } else {
+        d = d + 1;
       }
     }
-    let value = string.str_slice(hline, vstart, hline.len());
+    if le < 0 { le = head_end; }
+    var colon = -1;
+    var e = pos;
+    while e < le {
+      if bytes[e] == 58u8 {
+        colon = e;
+        e = le;
+      } else {
+        e = e + 1;
+      }
+    }
+    if colon <= pos { return None; }
+    let name = _str_lower_from_byte_span(bytes, pos, colon);
+    var vstart = colon + 1;
+    if vstart < le {
+      if bytes[vstart] == 32u8 { vstart = vstart + 1; }
+    }
+    let value = _str_from_byte_span(bytes, vstart, le);
     if name == "content-length" {
       match string.str_to_int(value) {
         Ok(v) => {
@@ -191,6 +243,53 @@ pub fn server_status_text(code: Int) -> Str
   "Unknown"
 }
 
+// _str_from_byte_span copies bytes[start, end) into a fresh Str (one
+// allocation). Empty/clamped ranges return the empty Str.
+fn _str_from_byte_span(bytes: &Vec[UInt8], start: Int, end: Int) -> Str {
+  var s = start;
+  var e = end;
+  if s < 0 { s = 0; }
+  if e > bytes.len() { e = bytes.len(); }
+  if s >= e { return ""; }
+  let len = e - s;
+  unsafe {
+    var buf = malloc((len + 1) as UInt);
+    var i = 0;
+    while i < len {
+      buf[i] = bytes[s + i];
+      i = i + 1;
+    }
+    buf[len] = 0u8;
+    return Str.from_cstring(buf);
+  }
+}
+
+// _str_lower_from_byte_span copies bytes[start, end) into a fresh Str,
+// ASCII-lowercasing A-Z in the same pass (one allocation).
+fn _str_lower_from_byte_span(bytes: &Vec[UInt8], start: Int, end: Int) -> Str {
+  var s = start;
+  var e = end;
+  if s < 0 { s = 0; }
+  if e > bytes.len() { e = bytes.len(); }
+  if s >= e { return ""; }
+  let len = e - s;
+  unsafe {
+    var buf = malloc((len + 1) as UInt);
+    var i = 0;
+    while i < len {
+      let b = bytes[s + i];
+      if b >= 65u8 && b <= 90u8 {
+        buf[i] = (b + 32) as UInt8;
+      } else {
+        buf[i] = b;
+      }
+      i = i + 1;
+    }
+    buf[len] = 0u8;
+    return Str.from_cstring(buf);
+  }
+}
+
 // idx_of returns the byte index of needle in hay, or -1 if not found.
 fn idx_of(hay: Str, needle: Str) -> Int {
   let hlen = hay.len();
@@ -198,23 +297,6 @@ fn idx_of(hay: Str, needle: Str) -> Int {
   if nlen == 0 { return 0; }
   if nlen > hlen { return -1; }
   var i = 0;
-  while i <= hlen - nlen {
-    if string.str_slice(hay, i, i + nlen) == needle {
-      return i;
-    }
-    i = i + 1;
-  }
-  -1
-}
-
-// _idx_from returns the first index >= from where needle occurs, or -1.
-fn _idx_from(hay: Str, from: Int, needle: Str) -> Int {
-  let hlen = hay.len();
-  let nlen = needle.len();
-  if nlen == 0 { return 0; }
-  if from < 0 { return -1; }
-  if nlen > hlen { return -1; }
-  var i = from;
   while i <= hlen - nlen {
     if string.str_slice(hay, i, i + nlen) == needle {
       return i;
