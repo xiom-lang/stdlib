@@ -51,7 +51,7 @@ fn Vec.with_len[T](n: Int) -> Vec[T]
   v.reserve(n);
   unsafe {
     var b = v.data as *UInt8;
-    var total = n * _vec_elem_bytes(elem_size);
+    var total = n * _vec_elem_bytes(v.elem_size);
     var i = 0;
     while i < total {
       *b = 0 as UInt8;
