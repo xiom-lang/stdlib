@@ -17,157 +17,59 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 103 (updated 2026-10-27; **0.65.1 released/registry live; compiler v0.65.1 production pins it; 0.65.2 IS PREPARED ON BRANCH feat/vec-elem-stride at 7d4d48f (pushed): Vec slot fix (with_len v.elem_size + elem_size strides) + 0.65.2 markers/notes validated (2 highlights); COMPILER_VERSION v0.64.8; compiler combined tree c60729714+863248f GREEN (10/10 memory gates, 4M with_len <24 MB, e2e 2648/2648); NO TAG YET -- next: full battery on the branch, tag/push stdlib-v0.65.2, release workflow, registry, reply 2142; main 04a431f has the later h2 settings/flow/stream/conn (not in 0.65.2); gate 9 only 1609 red, 1704 10k target met with linear residual; readiness 90%)**
+## 0A. CONTINUE HERE -- handoff snapshot 104 (updated 2026-10-27; **stdlib-v0.65.2 RELEASED at 7d4d48f: Vec element-stride slots + h2 HPACK dynamic/Huffman/CONTINUATION; release run 40523878342 green; registry xiom-std 0.65.2 live (sha256 9638b576..., compiler v0.64.8, run 40523878370); staging canary 40532608142 green; branch merged to main --no-ff at 6899cb5, main now also carries the later h2 SETTINGS/flow/stream/conn features; release battery 533/533 + 411/411 + 963/963 + barename 0/533 + floors197 + doc 100%; merged-main sanity 533/533 + 414/414; relay 2142 fixed; next: compiler pins stdlib-v0.65.2 (pin branch pushed; PR creation hit the token-scope gap); gate 9 only 1609 red, 1704 10k target met with linear residual; readiness 90%)**
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-27, snapshot 103)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-27, snapshot 104)
 
 ```
-Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
+Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git pull --ff-only origin main
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 103 + blocks 294/293/292 + this 0C block.
+Read docs/stdlib_session.md snapshot 104 + blocks 295/294/293/292 + this 0C block.
 
 STATE (2026-10-27):
-- 0.65.2 IS PREPARED ON BRANCH feat/vec-elem-stride at 7d4d48f (pushed,
-  not merged): package 0.65.2, CHANGELOG [0.65.2], validated
-  release-notes/v0.65.2.md (2 highlights). The branch carries the Vec
-  slot fix (with_len v.elem_size; elem_size strides) + p_wave289_vec8 and
-  the h2 dynamic/Huffman/CONTINUATION primitives (branch base b4dbbdf).
-  COMPILER_VERSION stays v0.64.8. The full battery has NOT been run on the
-  branch; NO TAG yet.
-- Compiler combined tree fix/v0.65.2-vec-packed-slots c60729714 + 863248f
-  is green: 10/10 memory gates, 4M with_len under 24 MB, e2e 2648/2648
-  debug+release. The compiler is waiting on the stdlib tag.
-- The branch does NOT include the later h2 SETTINGS/flow/stream/conn
-  features on main (04a431f). Do NOT merge main into the branch for this
-  tag; 0.65.2 ships the branch content.
-- stdlib-v0.65.1 IS RELEASED at 9dc69b3 (the prep commit with the two
-  #[owns_return] annotations; package 0.65.1; COMPILER_VERSION v0.64.8).
-  Release run 40375774931 green (Windows 39m36s, Ubuntu 24m51s); GitHub
-  Release published 2026-10-26T18:53:26Z with xiom-std-0.65.1.tar.gz +
-  SHA256SUMS. Compiler main already pins stdlib-v0.65.1; PR #8 was
-  closed as superseded.
-  Registry is live: xiom-std 0.65.1, sha256
-  3bb9b85007d69f75a7379b90182f260e8d0bfba03f02431619481f9dae494d31,
-  compiler v0.64.8 (run 40375774857); staging canary 40381778731 green.
-  Local battery: modules 533/533, smokes 963/963,
-  probes 413/413, barename 0/533, floors197 OK, doc 100%.
-- Compiler v0.65.1 is PRODUCTION (tag f2c01cf9c) and pins stdlib-v0.65.1.
-  Gate-9 on the v0.65.1 Windows archive (sha256 69de1e27...): 9/10 green
-  -- 1626/2343/2100-W1/1456/1451/1326/2249/2249-2/1550 verified, only
-  1609 (p_result_payload_index_concat) still red; Linux pending. 1704
-  memory on v0.65.1: parse 10k=23.6 MB, 20k=48.2, 50k=113.7; 200k killed
-  at the 256 MB cap -- the 10k target is met but the trend is still
-  linear (~2.3 KB/iter; JsonValue enum drop remains compiler-side). Full
-  v0.65.1 battery (current head): modules 533/533 (255.9s), smokes
-  963/963 (633.9s), probes 413/413 (437.7s), barename 0/533 (360.4s),
-  floors197 OK (6671/6956, 9193 clauses), doc 100%. Release-check v0.65.1
-  rows filled; relay 1704 acked with the memory matrix.
-- Vec slot REL-20261026-2142: the release branch is at 7d4d48f with the
-  0.65.2 markers; with_len uses v.elem_size and push/reserve/shrink_to_fit/
-  insert use elem_size (fallback 8). The compiler combined tree
-  (c60729714 + 863248f) is green: 10/10 memory gates, 4M with_len under
-  24 MB, e2e 2648/2648 debug+release. The full battery, tag and registry
-  are the next step. Main stays 8-byte-slot compatible; do not merge main
-  into the branch for the tag.
-- Relay REL-20261026-2247-stdlib to compiler: v0.65.1 gate-9 report
-  (9/10, only 1609; 1704 10k target met, linear residual; full battery;
-  release-check rows filled).
-- h2 SETTINGS + flow-control primitives landed:
-  H2Setting + h2_settings_new/add/encode/decode/decode_into/validate
-  (6-byte entries; ENABLE_PUSH 0/1, INITIAL_WINDOW_SIZE <=2^31-1,
-  MAX_FRAME_SIZE 16384..=16777215, duplicate-id rejection), and H2Window
-  + new/available/consume/increment/resize (SETTINGS initial-window
-  delta). Probe p_wave290_h2_settings_flow. Only stream multiplexing
-  remains. Compiler gotcha: Result[Vec[H2Setting], Str] is type-erased
-  at call sites; use h2_settings_decode_into with a caller-owned list.
-- h2 per-stream state transitions landed: H2StreamState (Idle/Open/
-  HalfClosedLocal/HalfClosedRemote/Closed), H2StreamEvent (Send/Recv
-  Headers/Data/EndStream/Rst), h2_stream_state_name, and
-  h2_stream_transition (RFC 9113 section 5.1). Invalid transitions Err
-  (DATA/RST on idle, send after local END_STREAM, recv after remote
-  END_STREAM, duplicate END_STREAM, any event on closed). Probe
-  p_wave291_h2_stream_state. Only connection-level multiplexing
-  (stream-ID allocation, concurrency, GOAWAY) remains.
-- h2 connection-control payloads + stream ids landed:
-  h2_stream_id_next (client odd/server even, max 2^31-1) and
-  h2_stream_id_is_client; h2_rst_stream_encode/decode;
-  h2_goaway_encode/decode_into (last id 31 bits, error code, debug into a
-  caller-owned Vec); h2_window_update_encode/decode (reserved bit masked,
-  increment 0 rejected). Probe p_wave292_h2_conn. Only the
-  concurrency/GOAWAY-drain connection state machine remains.
-- Wishlist 2202 item 9: HPACK dynamic-table primitives landed in
-  xiom/net/h2.xi (H2HpackDynamicTable + new/len/size/add/get/set_max/
-  clear; oldest-first, index 1 = newest, size = name+value+32, eviction,
-  oversized clears). Probe p_wave283_hpack_dynamic.
-- HPACK Huffman (RFC 7541 Appendix B) landed in xiom/net/h2.xi: the
-  257-entry private code table, a tree decoder, an encoder, H=1 string
-  decode in h2_hpack_string_decode, and h2_hpack_string_encode_huffman.
-  Probe p_wave285_hpack_huffman covers the four Appendix C example
-  strings, round-trip, empty input, bad padding and EOS.
-- HEADERS/CONTINUATION reassembly landed: H2HeaderBlock + new/append/
-  is_complete/len/to_bytes in xiom/net/h2.xi (stream match, frame type,
-  END_HEADERS, append-after-complete). Probe p_wave286_h2_cont. Remaining
-  h2 slice: connection state (stream multiplexing, flow control,
-  settings).
-- Readiness is 90% (9/10). Gate 8 is MET by clause wave 208: every
-  non-tail public fn carries a clause (non-tail 100%, global 95.9%,
-  6650/6935, 9169 clauses, 97.8% clauses/fns). The 285 fns in
-  iter/os/math/thread/ffi/serialize/format are the documented no-clause
-  tail; do not add clause waves there.
-- The first clause-wave smoke run failed smoke_test3 with "contract
-  violated: ensures at 289:12" -- the test_register @pre-on-mutable-global
-  contract cannot be snapshotted by the v0.64.8 evaluator; it is now an
-  explicit `requires: true` with a comment.
-- REL-20261020-1704 follow-up: reference-taking JSON entry points
-  json_stringify_ref/json_pretty_ref/json_type_ref/json_get_ref are on
-  main; the render cores take &JsonValue and the by-value names are thin
-  wrappers. Probe p_json_ref_api locks byte parity and repeated ref
-  rendering. PULSE should re-run its capped probe; parse-side retention
-  is still compiler m375.
-- Gate 9 (zero open findings) is the last gate. On the released v0.65.1
-  Windows archive, 9 of 10 are green (1626/2343/2100-W1/1456/1451/1326/
-  2249/2249-2/1550); only 1609 (Result.value[i] concat) is still red.
-  1704's 10k parse target is met (23.6 MB < 256 MB) but the trend is
-  still linear (~2.3 KB/iter; JsonValue enum drop remains compiler-side).
-  Linux leg pending. The owner/compiler lane will decide the next
-  candidate; do NOT bump COMPILER_VERSION or cut a new stdlib tag.
-- Compiler v0.65.1 is PRODUCTION (f2c01cf9c) and pins stdlib-v0.65.1;
-  stdlib-v0.65.0 tag 3eb9c05 is superseded but not moved.
-  registry xiom-std 0.65.0 live (sha256 c3629878..., compiler field
-  v0.64.8). The v0.65.0 Windows archive re-check passes
-  p_nested_generic_ptr_read (nested=42 local=42) and
-  p_iter_enumerate_tuple (enumerate tuple ok); the Linux leg is NOT
-  re-run (the WSL 9p run timed out and was stopped).
-- Do not move stdlib-v0.64.9 or stdlib-v0.65.0.
+- stdlib-v0.65.2 IS RELEASED: annotated tag at 7d4d48f (Vec
+  element-stride slots + h2 HPACK dynamic/Huffman/CONTINUATION), GitHub
+  Release live (xiom-std-0.65.2.tar.gz sha256 25bc1bd0...), registry
+  xiom-std 0.65.2 live (sha256 9638b576..., compiler v0.64.8, run
+  40523878370). Release run 40523878342 green; staging canary 40532608142
+  green.
+- Release battery on the branch with the official v0.64.8 archive:
+  modules 533/533, probes 411/411, smokes 963/963, barename 0/533,
+  floors197 OK, doc 100%, module-smoke OK.
+- The branch is merged to main --no-ff at 6899cb5; main HEAD carries the
+  Vec fix plus the later h2 SETTINGS/flow/stream/conn features.
+  Merged-main sanity: modules 533/533, probes 414/414.
+- COMPILER_VERSION stays v0.64.8; never move tags.
+- Compiler lane: combined tree fix/v0.65.2-vec-packed-slots c60729714 +
+  863248f green (10/10 memory gates, 4M with_len < 24 MB, e2e 2648/2648
+  debug+release). It must pin stdlib-v0.65.2 (automated branch
+  chore/pin-stdlib-v0.65.2 pushed; PR creation blocked by token scope).
+- Gate 9 on v0.65.1 Windows: only 1609 red; 1704 10k=23.6 MB (target
+  met) with a ~2.3 KB/iter linear residual. Both are compiler-side; the
+  next candidate is the owner/compiler decision.
+- h2: SETTINGS/flow-control, per-stream state, connection-control
+  payloads and stream IDs, HPACK dynamic table/Huffman and
+  HEADERS/CONTINUATION are all in 0.65.2; only the connection-level
+  multiplexing state machine (concurrency, GOAWAY drain) remains.
 
-PRIORITY 0 -- CUT stdlib-v0.65.2:
-- Checkout feat/vec-elem-stride (7d4d48f). Run the full battery with the
-  official v0.65.1 (or v0.64.8) archive: modules 533/533, probes 411/411,
-  smokes 963/963, barename 0/533, coverage floors197, doc_scan. Fix any
-  failure before tagging.
-- Tag/push stdlib-v0.65.2 at the branch commit; run
-  .github/workflows/release.yml; publish the registry with
-  COMPILER_VERSION v0.64.8; approve the registry-publish environment.
-- Reply to REL-20261026-2142-compiler (acked -> fixed) with tag/SHA/run/
-  registry; the compiler will pin stdlib-v0.65.2.
-- Do NOT move stdlib-v0.65.1/0.65.0. Do NOT bump COMPILER_VERSION. Do NOT
-  merge main into the branch for this tag. After the release, merge the
-  branch into main --no-ff (or cherry-pick 863248f + the markers) so main
-  carries the Vec fix.
+PRIORITY 0 -- VERIFY THE PIN / RELEASE FOLLOW-THROUGH:
+- Confirm the compiler lane pinned stdlib-v0.65.2 (STDLIB_VERSION on xiom
+  main or the branch chore/pin-stdlib-v0.65.2). If the PR is still
+  missing, hand the branch/PR link to the compiler lane on the bus; do
+  not edit the compiler repo unasked.
+- Keep the release immutable: never move stdlib-v0.65.2/v0.65.1/v0.65.0.
+  Fix forward on main if a problem surfaces.
 
-PRIORITY 1 -- GATE 9 ON THE OWNER'S SIGNAL:
+PRIORITY 1 -- GATE 9 / NEXT COMPILER:
+- 1609 (Result.value[i] concat) and the 1704 linear residual are
+  compiler-side; the owner/compiler lane decides the next candidate. Do
+  not pin or bump COMPILER_VERSION here.
 - On the owner's signal, re-run the known-failure repros and the
   release-check rows on the designated candidate archive (Windows+Linux),
-  fill release-checks/compiler-compiler-v<ver>.md, close the verified
-  relay items, then bump COMPILER_VERSION and run the battery.
-- Gate-9 status on v0.65.1 Windows: 1609 still red; 1704's 10k target
-  met but the linear residual remains; the other reds
-  (1626/2343/2100-W1/1456/1451/1326/2249/2249-2/1550) verified green.
-  Linux leg pending.
-- Do not move tags; do not pin an unverified archive.
+  fill the release-check rows, close verified relay items.
 
 PRIORITY 2 -- WISHLIST / READINESS:
 - Keep the non-tail clause coverage at 100%; the tail is the documented
@@ -176,8 +78,11 @@ PRIORITY 2 -- WISHLIST / READINESS:
   reporter re-verify), 1704 (JSON retention, partial; compiler-side),
   1531-xvector (not reproduced; acked), 1550-stdlib (thread worker-loop;
   compiler/runtime), 0918 (list_dir fixed; macOS witness pending).
+- Vec stride follow-up: confirm the compiler vec_slot_size =
+  max(elem_size, 1) half lands with the pin; the 4M with_len RSS gate
+  stays in the compiler matrix.
 - Agent waves: Agent Manager worktrees, official pin, unique
-  check_modules OutDir, floors196, no floors/workflows/readiness/session
+  check_modules OutDir, floors197, no floors/workflows/readiness/session
   edits, commit on branch, no merge/push; main merges --no-ff.
 
 RULES:
@@ -192,8 +97,8 @@ RULES:
   1550 compiler-side; 1410/1414 with compiler.
 - Untracked out/ + smoke_diag_f128_* are documented leftovers.
 
-DELIVERABLE: gate 9 on the owner's signal; keep readiness at 90%+ and
-non-tail coverage at 100%; leave docs/session current and push.
+DELIVERABLE: 0.65.2 pin confirmed on the compiler lane; gate-9 status
+current; docs/session snapshot current and pushed.
 ```
 ---
 
@@ -3829,6 +3734,36 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-27 block 295 (stdlib-v0.65.2 RELEASED: Vec element-stride + h2 primitives; registry live; merged to main)**
+- Cut and released **stdlib-v0.65.2**: annotated tag at `7d4d48f`
+  (release-branch head), GitHub Release 2026-10-27T15:36:04Z with
+  `xiom-std-0.65.2.tar.gz` (sha256 `25bc1bd07ed87095...`) + SHA256SUMS.
+- Full battery on `feat/vec-elem-stride` with the official v0.64.8
+  archive: modules **533/533** (369s), probes **411/411** (530s), smokes
+  **963/963** (1132s), barename **0/533** (892s), coverage floors197
+  **RATCHET OK** (95.9% pub, 6650/6935, 9169 clauses), doc **100%**
+  (7497/7497), module-smoke ratchet OK.
+- Release run **40523878342** green: Ubuntu 24m13s, Windows 51m56s,
+  package + GitHub Release, staging-canary dispatch, pin-PR job (branch
+  `chore/pin-stdlib-v0.65.2` pushed; PR creation hit the token-scope gap
+  -> warning only).
+- Registry live: **xiom-std 0.65.2**, sha256
+  `9638b576c9737b08e03faf44b468222a37ba2e86882981f0b462b582eb94216d`,
+  compiler v0.64.8, publisher run **40523878370**; staging canary
+  **40532608142** green after the registry-publish environment approval.
+- Branch merged to main `--no-ff` at **6899cb5** (clean; 5 files, no h2
+  overlap). Main now carries the Vec fix AND the later h2
+  SETTINGS/flow/stream/conn features (`febc8f0`). Merged-main sanity with
+  v0.64.8: modules **533/533** (316s), probes **414/414** (462s).
+- Relay `REL-20261026-2142-compiler` acked -> fixed with tag/SHA/runs/
+  release; relay commit `8d25e5c` pushed. The compiler lane will pin
+  stdlib-v0.65.2.
+- Note: the shared xiom-relays checkout carries an unrelated, stale
+  uncommitted edit in `release-checks/compiler-v0.64.8.md` (mtime
+  2026-10-21); left untouched.
+- `COMPILER_VERSION` stays v0.64.8; stdlib-v0.65.1 (`9dc69b3`) and
+  stdlib-v0.65.0 tags untouched.
 
 **SESSION 2026-10-27 block 294 (0.65.2 prep on branch: Vec slot fix + markers; battery/tag pending)**
 - Compiler found the branch bug: `Vec[T].with_len` is a type-receiver
