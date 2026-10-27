@@ -9,10 +9,11 @@
 //   * the 61-entry HPACK static table (RFC 7541 Appendix A);
 //   * one header field encode/decode: static-indexed, or a literal without
 //     indexing (indexed name or new name).
-// NOT implemented here (documented scoping boundary): connection-level
-// stream multiplexing (stream-ID allocation, concurrency, GOAWAY). The
-// per-stream state table (RFC 9113 section 5.1) and SETTINGS/flow-control
-// primitives are available below. 0x40 dynamic-table
+// NOT implemented here (documented scoping boundary): the connection-level
+// multiplexing state machine (concurrency limits, GOAWAY drain handling).
+// Stream-ID allocation, per-stream state transitions, SETTINGS/flow-control,
+// and the RST_STREAM/GOAWAY/WINDOW_UPDATE payloads are available below.
+// 0x40 dynamic-table
 // inserts are rejected with a clear Err so a caller cannot silently mis-decode
 // them; the dynamic table itself is available as the standalone
 // H2HpackDynamicTable primitives below, Huffman (H=1) string bodies are
@@ -570,6 +571,122 @@ pub fn h2_stream_transition(state: H2StreamState, event: H2StreamEvent) -> Resul
     },
   }
   return Err("h2: unreachable stream transition");
+}
+
+// ---------------------------------------------------------------------------
+// Connection-control frames + stream ids (RFC 9113 sections 5.1.1 / 6.4 / 6.8)
+// ---------------------------------------------------------------------------
+
+/// Next locally initiated stream id. Client ids are odd, server ids even;
+/// `last_id` is the last locally used id (0 = none). Err above 2^31-1.
+pub fn h2_stream_id_next(last_id: Int, local_is_client: Bool) -> Result[Int, Str]
+  requires: last_id >= 0 && last_id <= 0x7FFFFFFF
+{
+  if last_id == 0 {
+    if local_is_client { return Ok(1); }
+    return Ok(2);
+  }
+  if last_id + 2 > 0x7FFFFFFF {
+    return Err("h2: stream id exhausted");
+  }
+  return Ok(last_id + 2);
+}
+
+/// True for client-initiated (odd) stream ids.
+pub fn h2_stream_id_is_client(id: Int) -> Bool
+  requires: id > 0
+{
+  return id % 2 == 1;
+}
+
+/// RST_STREAM payload (4-byte error code).
+pub fn h2_rst_stream_encode(error_code: Int) -> Result[Vec[UInt8], Str]
+  ensures: (error_code < 0 || error_code > 0xFFFFFFFF) => (result.is_err)
+{
+  if error_code < 0 || error_code > 0xFFFFFFFF {
+    return Err("h2: RST_STREAM error code out of range");
+  }
+  var out = Vec[UInt8].new();
+  _h2_push_u32(&mut out, error_code);
+  return Ok(out);
+}
+
+/// Decode a RST_STREAM payload. Err when the length is not 4.
+pub fn h2_rst_stream_decode(payload: &Vec[UInt8]) -> Result[Int, Str]
+  ensures: (payload.len() != 4) => (result.is_err)
+{
+  if payload.len() != 4 {
+    return Err("h2: RST_STREAM length must be 4");
+  }
+  let code = ((payload[0] as Int) << 24) | ((payload[1] as Int) << 16) | ((payload[2] as Int) << 8) | (payload[3] as Int);
+  return Ok(code);
+}
+
+/// GOAWAY payload: last stream id (31 bits), error code, debug data.
+pub fn h2_goaway_encode(last_stream_id: Int, error_code: Int, debug: &Vec[UInt8]) -> Result[Vec[UInt8], Str]
+  ensures: (last_stream_id < 0 || last_stream_id > 0x7FFFFFFF || error_code < 0 || error_code > 0xFFFFFFFF) => (result.is_err)
+{
+  if last_stream_id < 0 || last_stream_id > 0x7FFFFFFF {
+    return Err("h2: GOAWAY last stream id out of range");
+  }
+  if error_code < 0 || error_code > 0xFFFFFFFF {
+    return Err("h2: GOAWAY error code out of range");
+  }
+  var out = Vec[UInt8].new();
+  _h2_push_u32(&mut out, last_stream_id);
+  _h2_push_u32(&mut out, error_code);
+  var i = 0;
+  while i < debug.len() {
+    out.push(debug[i]);
+    i = i + 1;
+  }
+  return Ok(out);
+}
+
+/// Decode GOAWAY into (last_stream_id, error_code) and copy the debug data
+/// into the caller-owned vector. The last-id reserved bit is masked.
+pub fn h2_goaway_decode_into(payload: &Vec[UInt8], debug: &mut Vec[UInt8]) -> Result[(Int, Int), Str]
+  ensures: (payload.len() < 8) => (result.is_err)
+{
+  if payload.len() < 8 {
+    return Err("h2: GOAWAY payload too short");
+  }
+  let last = ((payload[0] as Int) << 24) | ((payload[1] as Int) << 16) | ((payload[2] as Int) << 8) | (payload[3] as Int);
+  let code = ((payload[4] as Int) << 24) | ((payload[5] as Int) << 16) | ((payload[6] as Int) << 8) | (payload[7] as Int);
+  debug.clear();
+  var i = 8;
+  while i < payload.len() {
+    debug.push(payload[i]);
+    i = i + 1;
+  }
+  return Ok((last & 0x7FFFFFFF, code));
+}
+
+/// WINDOW_UPDATE payload (4-byte increment, reserved bit 0, 1..=2^31-1).
+pub fn h2_window_update_encode(increment: Int) -> Result[Vec[UInt8], Str]
+  ensures: (increment < 1 || increment > 0x7FFFFFFF) => (result.is_err)
+{
+  if increment < 1 || increment > 0x7FFFFFFF {
+    return Err("h2: WINDOW_UPDATE increment out of range");
+  }
+  var out = Vec[UInt8].new();
+  _h2_push_u32(&mut out, increment);
+  return Ok(out);
+}
+
+/// Decode a WINDOW_UPDATE payload; the reserved bit is masked and an
+/// increment of 0 is a protocol error.
+pub fn h2_window_update_decode(payload: &Vec[UInt8]) -> Result[Int, Str]
+  ensures: (payload.len() != 4) => (result.is_err)
+{
+  if payload.len() != 4 {
+    return Err("h2: WINDOW_UPDATE length must be 4");
+  }
+  let inc = (((payload[0] as Int) << 24) | ((payload[1] as Int) << 16) | ((payload[2] as Int) << 8) | (payload[3] as Int)) & 0x7FFFFFFF;
+  if inc == 0 {
+    return Err("h2: WINDOW_UPDATE increment 0");
+  }
+  return Ok(inc);
 }
 
 // ---------------------------------------------------------------------------
