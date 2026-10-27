@@ -9,10 +9,11 @@
 //   * the 61-entry HPACK static table (RFC 7541 Appendix A);
 //   * one header field encode/decode: static-indexed, or a literal without
 //     indexing (indexed name or new name).
-// NOT implemented here (documented scoping boundary): connection state
-// (stream multiplexing, flow control, settings). 0x40 dynamic-table inserts
-// are rejected with a clear Err so a caller cannot silently mis-decode them;
-// the dynamic table itself is available as the standalone
+// NOT implemented here (documented scoping boundary): stream multiplexing
+// (the connection state machine). SETTINGS encode/decode/validate and
+// one-direction flow-control windows are available below. 0x40 dynamic-table
+// inserts are rejected with a clear Err so a caller cannot silently mis-decode
+// them; the dynamic table itself is available as the standalone
 // H2HpackDynamicTable primitives below, Huffman (H=1) string bodies are
 // handled by h2_hpack_huffman_decode / h2_hpack_string_encode_huffman, and
 // HEADERS + CONTINUATION fragments are joined by H2HeaderBlock.
@@ -271,6 +272,226 @@ pub fn h2_header_block_to_bytes(block: &H2HeaderBlock) -> Vec[UInt8]
     i = i + 1;
   }
   return out;
+}
+
+// ---------------------------------------------------------------------------
+// SETTINGS and flow-control windows (RFC 9113 sections 6.5 / 6.9)
+// ---------------------------------------------------------------------------
+
+/// SETTINGS_HEADER_TABLE_SIZE identifier.
+pub const H2_SETTINGS_HEADER_TABLE_SIZE: Int = 1;
+/// SETTINGS_ENABLE_PUSH identifier.
+pub const H2_SETTINGS_ENABLE_PUSH: Int = 2;
+/// SETTINGS_MAX_CONCURRENT_STREAMS identifier.
+pub const H2_SETTINGS_MAX_CONCURRENT_STREAMS: Int = 3;
+/// SETTINGS_INITIAL_WINDOW_SIZE identifier.
+pub const H2_SETTINGS_INITIAL_WINDOW_SIZE: Int = 4;
+/// SETTINGS_MAX_FRAME_SIZE identifier.
+pub const H2_SETTINGS_MAX_FRAME_SIZE: Int = 5;
+/// SETTINGS_MAX_HEADER_LIST_SIZE identifier.
+pub const H2_SETTINGS_MAX_HEADER_LIST_SIZE: Int = 6;
+
+/// Maximum HTTP/2 flow-control window (2^31-1).
+pub const H2_MAX_WINDOW: Int = 2147483647;
+
+/// One SETTINGS entry (6 bytes on the wire: 2-byte id, 4-byte value).
+pub type H2Setting = {
+  id: Int;
+  value: Int;
+}
+
+fn _h2_push_u16(out: &mut Vec[UInt8], v: Int) {
+  out.push(((v >> 8) & 0xFF) as UInt8);
+  out.push((v & 0xFF) as UInt8);
+}
+
+fn _h2_push_u32(out: &mut Vec[UInt8], v: Int) {
+  out.push(((v >> 24) & 0xFF) as UInt8);
+  out.push(((v >> 16) & 0xFF) as UInt8);
+  out.push(((v >> 8) & 0xFF) as UInt8);
+  out.push((v & 0xFF) as UInt8);
+}
+
+/// New empty SETTINGS list. Module-side constructor so callers do not have
+/// to spell a qualified generic type (which the compiler erases at call
+/// sites).
+pub fn h2_settings_new() -> Vec[H2Setting]
+  ensures: result.len() == 0
+{
+  return Vec[H2Setting].new();
+}
+
+/// Append one SETTINGS entry to a caller-owned list.
+pub fn h2_settings_add(settings: &mut Vec[H2Setting], id: Int, value: Int)
+  requires: true
+{
+  settings.push(H2Setting{ id: id; value: value; });
+}
+
+/// Encode a SETTINGS payload (6 bytes per entry). Err when an id is outside
+/// 0..=0xFFFF or a value outside 0..=0xFFFFFFFF.
+pub fn h2_settings_encode(settings: &Vec[H2Setting]) -> Result[Vec[UInt8], Str]
+  requires: true
+{
+  var out = Vec[UInt8].new();
+  var i = 0;
+  while i < settings.len() {
+    let s = settings[i];
+    if s.id < 0 || s.id > 0xFFFF {
+      return Err("h2: SETTINGS id out of range");
+    }
+    if s.value < 0 || s.value > 0xFFFFFFFF {
+      return Err("h2: SETTINGS value out of range");
+    }
+    _h2_push_u16(&mut out, s.id);
+    _h2_push_u32(&mut out, s.value);
+    i = i + 1;
+  }
+  return Ok(out);
+}
+
+/// Decode a SETTINGS payload. Err when the length is not a multiple of 6.
+pub fn h2_settings_decode(payload: &Vec[UInt8]) -> Result[Vec[H2Setting], Str]
+  ensures: (payload.len() % 6 != 0) => (result.is_err)
+{
+  if payload.len() % 6 != 0 {
+    return Err("h2: SETTINGS length not a multiple of 6");
+  }
+  var out = Vec[H2Setting].new();
+  var i = 0;
+  while i < payload.len() {
+    let id = ((payload[i] as Int) << 8) | (payload[i + 1] as Int);
+    let value = ((payload[i + 2] as Int) << 24) | ((payload[i + 3] as Int) << 16) | ((payload[i + 4] as Int) << 8) | (payload[i + 5] as Int);
+    out.push(H2Setting{ id: id; value: value; });
+    i = i + 6;
+  }
+  return Ok(out);
+}
+
+/// Decode a SETTINGS payload into a caller-owned list. Preferred over the
+/// returning form when the caller inspects the struct fields: a nested
+/// generic return (`Result[Vec[H2Setting], Str]`) is type-erased at some
+/// call sites. The list is cleared first.
+pub fn h2_settings_decode_into(payload: &Vec[UInt8], out: &mut Vec[H2Setting]) -> Result[Unit, Str]
+  ensures: (payload.len() % 6 != 0) => (result.is_err)
+{
+  if payload.len() % 6 != 0 {
+    return Err("h2: SETTINGS length not a multiple of 6");
+  }
+  out.clear();
+  var i = 0;
+  while i < payload.len() {
+    let id = ((payload[i] as Int) << 8) | (payload[i + 1] as Int);
+    let value = ((payload[i + 2] as Int) << 24) | ((payload[i + 3] as Int) << 16) | ((payload[i + 4] as Int) << 8) | (payload[i + 5] as Int);
+    out.push(H2Setting{ id: id; value: value; });
+    i = i + 6;
+  }
+  return Ok(());
+}
+
+/// Validate the SETTINGS entries: duplicate ids, ENABLE_PUSH 0/1,
+/// INITIAL_WINDOW_SIZE <= 2^31-1, and MAX_FRAME_SIZE 16384..=16777215.
+/// Unknown ids are accepted (RFC 9113 section 6.5.2).
+pub fn h2_settings_validate(settings: &Vec[H2Setting]) -> Result[Unit, Str]
+  requires: true
+{
+  var i = 0;
+  while i < settings.len() {
+    let s = settings[i];
+    if s.id == H2_SETTINGS_ENABLE_PUSH {
+      if s.value != 0 && s.value != 1 {
+        return Err("h2: ENABLE_PUSH must be 0 or 1");
+      }
+    }
+    if s.id == H2_SETTINGS_INITIAL_WINDOW_SIZE {
+      if s.value > H2_MAX_WINDOW {
+        return Err("h2: INITIAL_WINDOW_SIZE too large");
+      }
+    }
+    if s.id == H2_SETTINGS_MAX_FRAME_SIZE {
+      if s.value < 16384 || s.value > 16777215 {
+        return Err("h2: MAX_FRAME_SIZE out of range");
+      }
+    }
+    var j = i + 1;
+    while j < settings.len() {
+      if settings[j].id == s.id {
+        return Err("h2: duplicate SETTINGS id");
+      }
+      j = j + 1;
+    }
+    i = i + 1;
+  }
+  return Ok(());
+}
+
+/// A one-direction HTTP/2 flow-control window.
+pub type H2Window = {
+  available: Int;
+  initial: Int;
+}
+
+/// Create a window with `initial` available bytes.
+pub fn h2_window_new(initial: Int) -> H2Window
+  requires: initial >= 0 && initial <= H2_MAX_WINDOW
+  ensures: result.available == initial
+  ensures: result.initial == initial
+{
+  return H2Window{ available: initial; initial: initial; };
+}
+
+/// Current available window bytes.
+pub fn h2_window_available(w: &H2Window) -> Int
+  ensures: result == w.available
+{
+  return w.available;
+}
+
+/// Consume up to `n` bytes. Err on a negative value or an underflow.
+pub fn h2_window_consume(w: &mut H2Window, n: Int) -> Result[Int, Str]
+  requires: w.available >= 0 && w.available <= H2_MAX_WINDOW
+{
+  if n < 0 {
+    return Err("h2: negative window consume");
+  }
+  if n > w.available {
+    return Err("h2: flow-control window underflow");
+  }
+  w.available = w.available - n;
+  return Ok(w.available);
+}
+
+/// Add `n` bytes (WINDOW_UPDATE). Err on a non-positive value or overflow.
+pub fn h2_window_increment(w: &mut H2Window, n: Int) -> Result[Int, Str]
+  requires: w.available >= 0 && w.available <= H2_MAX_WINDOW
+{
+  if n <= 0 {
+    return Err("h2: non-positive window increment");
+  }
+  if w.available + n > H2_MAX_WINDOW {
+    return Err("h2: flow-control window overflow");
+  }
+  w.available = w.available + n;
+  return Ok(w.available);
+}
+
+/// Apply a SETTINGS INITIAL_WINDOW_SIZE change: shift `available` by the
+/// difference and record the new initial. Err when the shift underflows or
+/// overflows.
+pub fn h2_window_resize(w: &mut H2Window, new_initial: Int) -> Result[Int, Str]
+  requires: new_initial >= 0 && new_initial <= H2_MAX_WINDOW
+  requires: w.available >= 0 && w.available <= H2_MAX_WINDOW
+{
+  let delta = new_initial - w.initial;
+  if w.available + delta < 0 {
+    return Err("h2: window resize underflow");
+  }
+  if w.available + delta > H2_MAX_WINDOW {
+    return Err("h2: window resize overflow");
+  }
+  w.available = w.available + delta;
+  w.initial = new_initial;
+  return Ok(w.available);
 }
 
 // ---------------------------------------------------------------------------

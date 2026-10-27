@@ -17,9 +17,9 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 98 (updated 2026-10-26; **stdlib-v0.65.1 released and registry live; compiler v0.65.1 production pins it; gate-9 v0.65.1 Windows: only 1609 red; 1704 10k target met (23.6 MB) with linear residual; full v0.65.1 battery 533/533, 963/963, 410/410, 0/533; relay gate-9 report REL-20261026-2247-stdlib sent to compiler; new Vec 8-byte slot wishlist REL-20261026-2142 scoped, stdlib half parked on branch feat/vec-elem-stride 92a6020 (not main; one-sided change segfaults on v0.65.1; needs compiler vec_slot_size)**; COMPILER_VERSION v0.64.8; main compatible with v0.65.1; the next candidate (v0.65.2+) is the owner/compiler decision; do not bump/cut)
+## 0A. CONTINUE HERE -- handoff snapshot 99 (updated 2026-10-26; **stdlib-v0.65.1 released/registry live; compiler v0.65.1 production pins it; gate-9 v0.65.1: only 1609 red; 1704 10k target met with linear residual; h2 now has dynamic table + Huffman + CONTINUATION + SETTINGS/flow-control windows (only stream multiplexing remains); full v0.65.1 battery: modules 533/533, smokes 963/963, probes 411/411, barename 0/533, floors197 OK (global 95.9%, 6661/6946, 9183 clauses), doc 100%; relay gate-9 report REL-20261026-2247-stdlib; Vec slot wishlist REL-20261026-2142 parked on branch feat/vec-elem-stride 92a6020**; readiness 90% (gate 8 MET; gate 9 1609+1704); COMPILER_VERSION v0.64.8; next candidate owner/compiler; do not bump/cut)
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-26, snapshot 98)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-26, snapshot 99)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
@@ -27,7 +27,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 98 + blocks 289/288/287 + this 0C block.
+Read docs/stdlib_session.md snapshot 99 + blocks 290/289/288 + this 0C block.
 
 STATE (2026-10-26):
 - stdlib-v0.65.1 IS RELEASED at 9dc69b3 (the prep commit with the two
@@ -40,7 +40,7 @@ STATE (2026-10-26):
   3bb9b85007d69f75a7379b90182f260e8d0bfba03f02431619481f9dae494d31,
   compiler v0.64.8 (run 40375774857); staging canary 40381778731 green.
   Local battery: modules 533/533, smokes 963/963,
-  probes 410/410, barename 0/533, floors197 OK, doc 100%.
+  probes 411/411, barename 0/533, floors197 OK, doc 100%.
 - Compiler v0.65.1 is PRODUCTION (tag f2c01cf9c) and pins stdlib-v0.65.1.
   Gate-9 on the v0.65.1 Windows archive (sha256 69de1e27...): 9/10 green
   -- 1626/2343/2100-W1/1456/1451/1326/2249/2249-2/1550 verified, only
@@ -48,10 +48,10 @@ STATE (2026-10-26):
   memory on v0.65.1: parse 10k=23.6 MB, 20k=48.2, 50k=113.7; 200k killed
   at the 256 MB cap -- the 10k target is met but the trend is still
   linear (~2.3 KB/iter; JsonValue enum drop remains compiler-side). Full
-  v0.65.1 battery: modules 533/533 (368.8s), smokes 963/963 (2037.8s),
-  probes 410/410 (1075.2s), barename 0/533 (472.4s), floors197 OK, doc
-  100%. Release-check v0.65.1 rows filled; relay 1704 acked with the
-  memory matrix.
+  v0.65.1 battery (current head): modules 533/533 (531.7s), smokes
+  963/963 (2487.4s), probes 411/411 (1501.8s), barename 0/533 (801.9s),
+  floors197 OK (6661/6946, 9183 clauses), doc 100%. Release-check v0.65.1
+  rows filled; relay 1704 acked with the memory matrix.
 - New Vec slot wishlist REL-20261026-2142: stdlib half parked on
   branch feat/vec-elem-stride (92a6020, pushed). with_len/push/reserve/
   shrink_to_fit/insert use elem_size (fallback 8); probe p_wave289_vec8.
@@ -61,6 +61,14 @@ STATE (2026-10-26):
 - Relay REL-20261026-2247-stdlib to compiler: v0.65.1 gate-9 report
   (9/10, only 1609; 1704 10k target met, linear residual; full battery;
   release-check rows filled).
+- h2 SETTINGS + flow-control primitives landed:
+  H2Setting + h2_settings_new/add/encode/decode/decode_into/validate
+  (6-byte entries; ENABLE_PUSH 0/1, INITIAL_WINDOW_SIZE <=2^31-1,
+  MAX_FRAME_SIZE 16384..=16777215, duplicate-id rejection), and H2Window
+  + new/available/consume/increment/resize (SETTINGS initial-window
+  delta). Probe p_wave290_h2_settings_flow. Only stream multiplexing
+  remains. Compiler gotcha: Result[Vec[H2Setting], Str] is type-erased
+  at call sites; use h2_settings_decode_into with a caller-owned list.
 - Wishlist 2202 item 9: HPACK dynamic-table primitives landed in
   xiom/net/h2.xi (H2HpackDynamicTable + new/len/size/add/get/set_max/
   clear; oldest-first, index 1 = newest, size = name+value+32, eviction,
@@ -3783,6 +3791,32 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-26 block 290 (h2 SETTINGS + flow-control windows; full battery green)**
+- Added to `xiom/net/h2.xi`:
+  - `H2Setting` + `h2_settings_new/add/encode/decode/decode_into/validate`.
+    Encode is 6 bytes per entry; decode rejects a non-multiple-of-6 length;
+    validate rejects duplicate ids, ENABLE_PUSH outside 0/1,
+    INITIAL_WINDOW_SIZE > 2^31-1, and MAX_FRAME_SIZE outside
+    16384..=16777215; unknown ids are accepted.
+  - `H2Window` + `h2_window_new/available/consume/increment/resize`.
+    Consume rejects negative/underflow; increment rejects
+    non-positive/overflow; resize applies the SETTINGS
+    INITIAL_WINDOW_SIZE delta and rejects underflow/overflow.
+- Compiler gotcha: `Result[Vec[H2Setting], Str]` is type-erased at call
+  sites (decoded fields read 0). Added `h2_settings_decode_into` with a
+  caller-owned list; the probe uses it. The returning form stays for
+  completeness.
+- Probe `p_wave290_h2_settings_flow` covers round-trip, encode ranges,
+  decode length, validation, consume/increment/overflow and
+  resize/underflow. `p_wave174/283/285/286` stay green.
+- Full battery on v0.65.1: modules **533/533** (531.7s), probes
+  **411/411** (1501.8s), smokes **963/963** (2487.4s), barename
+  **0/533** (801.9s), floors197 **RATCHET OK** (global 95.9%,
+  6661/6946, 9183 clauses; net 100%), doc_scan **100%**.
+- The module header now lists only stream multiplexing (the connection
+  state machine) as unimplemented. No pin/tag; 0.65.1 release/registry;
+  Vec branch parked at `92a6020`.
 
 **SESSION 2026-10-26 block 289 (gate-9 report relayed to compiler; Vec 8-byte slot wishlist parked on branch)**
 - Created `REL-20261026-2247-stdlib` -> compiler: the v0.65.1 gate-9
