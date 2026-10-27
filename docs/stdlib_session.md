@@ -17,9 +17,9 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 106 (updated 2026-10-27; **REL-20261027-1955-pulse-2 FIXED on main a696fb6: server_parse_request span-parses from the byte buffer -- 8,954 -> 857 B/iter (Windows 50k, official v0.64.8 and v0.65.2) and ~1,138 B/iter on Linux/WSL; new p_http_parse_alloc probe (Linux RSS gate <=1,280 B/iter); wave gates modules 533/533, probes 415/415, smokes 963/963, barename 0/533, coverage floors197 OK, doc 100%; relay sweep: 1549-pulse-5 fixed, 1550 tuple ABI verified on v0.65.2 (compiler to close), 1531/1704/1834/2202 refreshed, thread wishlist gaps 2/3 closed; compiler v0.65.2 production pins stdlib-v0.65.2, gate 9 10/10; no tag; COMPILER_VERSION v0.64.8; readiness 90%)**
+## 0A. CONTINUE HERE -- handoff snapshot 107 (updated 2026-10-28; **wave 298 landed at 63ab0e1: SSE server wire/writers (encode/comment/heartbeat + TcpStream write_all) and the h2 connection multiplexer (H2Connection + h2_conn_*: concurrency cap, local ids, received/local GOAWAY drain); probes 417/417 incl. p_wave298_sse_wire + p_wave298_h2_conn_mux; the h2 primitive layer is complete; gates modules 533/533, probes 417/417, smokes 963/963, barename 0/533, floors197 OK, doc 100%; earlier parse fix a696fb6; no tag; COMPILER_VERSION v0.64.8; gate-9 re-verify (item 3) waits for the compiler OK; next pick RFC brotli/zstd, kqueue/IOCP, thread arg channel; readiness 90%)**
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-27, snapshot 106)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-28, snapshot 107)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
@@ -27,7 +27,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 106 + blocks 297/296/295/294 + this 0C block.
+Read docs/stdlib_session.md snapshot 107 + blocks 298/297/296/295 + this 0C block.
 
 STATE (2026-10-27):
 - stdlib-v0.65.2 IS RELEASED: annotated tag at 7d4d48f (Vec
@@ -68,28 +68,35 @@ STATE (2026-10-27):
   gates Linux RSS growth at <=1,280 B/iter. API/error semantics
   unchanged; `p_pulse_shapes` green on v0.64.8 + v0.65.2. Awaiting
   PULSE's re-run of `probe_req_cycle` / the product GET /health leg.
-- h2: SETTINGS/flow-control, per-stream state, connection-control
-  payloads and stream IDs, HPACK dynamic table/Huffman and
-  HEADERS/CONTINUATION are all in 0.65.2; only the connection-level
-  multiplexing state machine (concurrency, GOAWAY drain) remains.
+- **Wave 298 (`63ab0e1`)**: SSE server half + h2 connection mux. SSE:
+  `sse_encode_event` / `sse_encode_comment` / `sse_encode_heartbeat`
+  build LF wire bytes (CR/LF injection rejected; multi-line data becomes
+  repeated `data:` fields) and `sse_write_event` / `sse_write_comment` /
+  `sse_heartbeat` write them over a `TcpStream` with `write_all`.
+  h2: `H2Connection` + `h2_conn_new/open_stream/close_stream/can_open/
+  active/recv_goaway/begin_drain/is_draining/is_closed/goaway_last_id/
+  goaway_error` -- concurrency cap, local stream ids, received-GOAWAY
+  drain (streams above the peer's last id are dropped; an increased id is
+  rejected per RFC 9113 6.8) and local graceful drain. Probes
+  `p_wave298_sse_wire` + `p_wave298_h2_conn_mux`. **The h2 primitive
+  layer is complete**; frame I/O stays with the caller.
 
-PRIORITY 0 -- CLOSE THE PARSE LOOP / NEXT WISHLIST PICK:
+PRIORITY 0 -- NEXT WISHLIST PICK:
 - PULSE re-runs `probe_req_cycle` (parse mode) and the product GET
   /health leg on the next pin; the relay item is fixed with the A/B
   numbers and the probe. Close it when their numbers land.
-- Next code pick from the residual wishlist (owner's choice): RFC 7932
-  brotli or zstd, SSE connection helpers, kqueue/IOCP event-loop parity,
-  or the thread arg/closure channel. Keep each on a branch with a probe
-  and the full battery; **no tag without the owner's GO**.
+- Next code pick from the remaining 2202 residuals: RFC 7932 brotli or
+  zstd, kqueue/IOCP event-loop parity, or the thread arg/closure channel
+  (compiler). Keep each on a branch with a probe and the full battery;
+  **no tag without the owner's GO**.
 - `COMPILER_VERSION` stays v0.64.8 until the owner decides the next pin.
 
-PRIORITY 1 -- GATE 9 / NEXT COMPILER:
-- Gate 9 is **green on v0.65.2** (10/10); keep the release-check rows
-  current. 1704's linear residual remains compiler-side; do not pin or
-  bump COMPILER_VERSION here.
+PRIORITY 1 -- GATE 9 / NEXT COMPILER (waiting for the compiler OK):
+- Item 3 is held: on the compiler's OK, re-run the 10-probe gate-9 set +
+  the full battery on the designated archive (Windows+Linux), refresh the
+  release-check rows, then report. Gate 9 is 10/10 on v0.65.2.
 - Watch the compiler v0.65.3 reclaim fixes (orbitdb 2033/2042, xvector
-  1956, engine 2034). When a green archive lands, re-run the gate-9 set
-  and the full battery before any pin decision.
+  1956, engine 2034). Do not pin or bump COMPILER_VERSION here.
 - Keep stdlib-v0.65.2/v0.65.1/v0.65.0 tags immutable; fix forward on main.
 
 PRIORITY 2 -- WISHLIST / READINESS:
@@ -122,10 +129,9 @@ RULES:
   1550 compiler-side; 1410/1414 with compiler.
 - Untracked out/ + smoke_diag_f128_* are documented leftovers.
 
-DELIVERABLE: PULSE's parse/probe re-run recorded and 1955 closed; the
-next wishlist item landed on a branch with a probe and the full battery;
-gate-9 rows current on the next compiler archive; docs/session snapshot
-current and pushed. No tag without the owner's GO.
+DELIVERABLE: the next wishlist item landed on a branch with a probe and
+the full battery; gate-9 re-verify executed on the compiler's OK;
+docs/session snapshot current and pushed. No tag without the owner's GO.
 ```
 ---
 
@@ -3761,6 +3767,45 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-28 block 298 (wave 298: SSE server wire/writers + h2 connection multiplexing; h2 primitive layer complete)**
+- Wave 298 at `63ab0e1` (5 files, +616/-4).
+- **SSE server half** in `xiom/net/sse.xi`:
+  - `sse_encode_event(e)` builds `id:`/`event:`/`retry:`/repeated `data:`
+    lines with LF endings and a blank-line terminator; rejects CR in any
+    field, LF in id/event, and a negative retry. Empty data is still a
+    complete event (`data: `).
+  - `sse_encode_comment(text)` emits one `: line` per LF segment;
+    `sse_encode_heartbeat()` is exactly `": ping\n\n"`.
+  - `sse_write_event` / `sse_write_comment` / `sse_heartbeat` write over a
+    `TcpStream` via `write_all` and return the byte count.
+  - Probe `p_wave298_sse_wire`: event round-trip (id/event/multi-line
+    data/retry), empty data, four injection rejects, comment/heartbeat
+    parity, and a real loopback write where the client bytes parse back to
+    the same event.
+- **h2 connection multiplexer** in `xiom/net/h2.xi` (end of file):
+  `H2Connection` + `h2_conn_new(max_concurrent, local_is_client)`,
+  `h2_conn_open_stream`, `h2_conn_close_stream`, `h2_conn_can_open`,
+  `h2_conn_active`, `h2_conn_recv_goaway(last_id, error)`,
+  `h2_conn_begin_drain(last_processed_id, error)`,
+  `h2_conn_is_draining`, `h2_conn_is_closed`, `h2_conn_goaway_last_id`,
+  `h2_conn_goaway_error`. Semantics: cap clamps to 1; local ids via
+  `h2_stream_id_next` (odd client / even server); received GOAWAY drops
+  active local streams above the peer's last id (caller may retry them)
+  and rejects a later GOAWAY that increases the last id (RFC 9113 6.8);
+  a local drain refuses new streams and `h2_conn_is_closed` reports
+  drained+empty. Probe `p_wave298_h2_conn_mux` (17 cases incl. cap, ids,
+  GOAWAY drop, increased-id rejection, range validation, local drain).
+  The module header no longer lists the connection state machine as a
+  boundary; **the h2 primitive layer is complete** and frame I/O stays
+  with the caller.
+- Gates on the official v0.64.8 archive: modules **533/533** (676s),
+  probes **417/417** (789.5s), smokes **963/963** (773.2s), barename
+  **0/533** (466.6s), coverage floors197 **RATCHET OK** (6688/6973, 9213
+  clauses), doc **100%** (7547/7547), module-smoke ratchet OK.
+- Relay `REL-20261015-2202-pulse` updated (items 7/9 delivered). No tag;
+  `COMPILER_VERSION` stays v0.64.8. Item 3 (gate-9 re-verify on a new
+  archive) is held for the compiler OK.
 
 **SESSION 2026-10-27 block 297 (wishlist sweep: server_parse_request span-parse landed; relay items closed/refreshed)**
 - `REL-20261027-1955-pulse-2` **FIXED** on main `a696fb6`:
