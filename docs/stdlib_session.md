@@ -17,9 +17,9 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 102 (updated 2026-10-27; **stdlib-v0.65.1 released/registry live; compiler v0.65.1 production pins it; gate-9 v0.65.1: only 1609 red; 1704 10k target met with linear residual; h2 primitive layer complete through connection-control payloads (only concurrency/GOAWAY drain state machine remains); Vec slot branch feat/vec-elem-stride fixed at 863248f (with_len uses v.elem_size) -- compiler combined tree c60729714+863248f is GREEN (10/10 memory gates, 4M with_len <24 MB, e2e 2648/2648 debug+release); the next stdlib tag is PENDING OWNER GO**; full v0.65.1 battery: modules 533/533, smokes 963/963, probes 413/413, barename 0/533, floors197 OK (global 95.9%, 6671/6956, 9193 clauses), doc 100%; relay gate-9 report REL-20261026-2247-stdlib; readiness 90% (gate 8 MET; gate 9 1609+1704); COMPILER_VERSION v0.64.8; do not bump/cut until owner GO)
+## 0A. CONTINUE HERE -- handoff snapshot 103 (updated 2026-10-27; **0.65.1 released/registry live; compiler v0.65.1 production pins it; 0.65.2 IS PREPARED ON BRANCH feat/vec-elem-stride at 7d4d48f (pushed): Vec slot fix (with_len v.elem_size + elem_size strides) + 0.65.2 markers/notes validated (2 highlights); COMPILER_VERSION v0.64.8; compiler combined tree c60729714+863248f GREEN (10/10 memory gates, 4M with_len <24 MB, e2e 2648/2648); NO TAG YET -- next: full battery on the branch, tag/push stdlib-v0.65.2, release workflow, registry, reply 2142; main 04a431f has the later h2 settings/flow/stream/conn (not in 0.65.2); gate 9 only 1609 red, 1704 10k target met with linear residual; readiness 90%)**
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-27, snapshot 102)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-27, snapshot 103)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
@@ -27,9 +27,22 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 102 + blocks 293/292/291 + this 0C block.
+Read docs/stdlib_session.md snapshot 103 + blocks 294/293/292 + this 0C block.
 
-STATE (2026-10-26):
+STATE (2026-10-27):
+- 0.65.2 IS PREPARED ON BRANCH feat/vec-elem-stride at 7d4d48f (pushed,
+  not merged): package 0.65.2, CHANGELOG [0.65.2], validated
+  release-notes/v0.65.2.md (2 highlights). The branch carries the Vec
+  slot fix (with_len v.elem_size; elem_size strides) + p_wave289_vec8 and
+  the h2 dynamic/Huffman/CONTINUATION primitives (branch base b4dbbdf).
+  COMPILER_VERSION stays v0.64.8. The full battery has NOT been run on the
+  branch; NO TAG yet.
+- Compiler combined tree fix/v0.65.2-vec-packed-slots c60729714 + 863248f
+  is green: 10/10 memory gates, 4M with_len under 24 MB, e2e 2648/2648
+  debug+release. The compiler is waiting on the stdlib tag.
+- The branch does NOT include the later h2 SETTINGS/flow/stream/conn
+  features on main (04a431f). Do NOT merge main into the branch for this
+  tag; 0.65.2 ships the branch content.
 - stdlib-v0.65.1 IS RELEASED at 9dc69b3 (the prep commit with the two
   #[owns_return] annotations; package 0.65.1; COMPILER_VERSION v0.64.8).
   Release run 40375774931 green (Windows 39m36s, Ubuntu 24m51s); GitHub
@@ -52,14 +65,13 @@ STATE (2026-10-26):
   963/963 (633.9s), probes 413/413 (437.7s), barename 0/533 (360.4s),
   floors197 OK (6671/6956, 9193 clauses), doc 100%. Release-check v0.65.1
   rows filled; relay 1704 acked with the memory matrix.
-- Vec slot REL-20261026-2142: branch feat/vec-elem-stride is fixed at
-  863248f (with_len uses v.elem_size; push/reserve/shrink_to_fit/insert
-  use elem_size with fallback 8); p_wave289_vec8 passes on v0.65.1. The
-  compiler combined tree (fix/v0.65.2-vec-packed-slots c60729714 +
-  863248f) is green per its note: 10/10 memory gates, 4M with_len under
-  a 24 MB cap, e2e 2648/2648 debug+release; m296 packed semantics. The
-  next stdlib tag is **PENDING OWNER GO**; main stays 8-byte-slot
-  compatible.
+- Vec slot REL-20261026-2142: the release branch is at 7d4d48f with the
+  0.65.2 markers; with_len uses v.elem_size and push/reserve/shrink_to_fit/
+  insert use elem_size (fallback 8). The compiler combined tree
+  (c60729714 + 863248f) is green: 10/10 memory gates, 4M with_len under
+  24 MB, e2e 2648/2648 debug+release. The full battery, tag and registry
+  are the next step. Main stays 8-byte-slot compatible; do not merge main
+  into the branch for the tag.
 - Relay REL-20261026-2247-stdlib to compiler: v0.65.1 gate-9 report
   (9/10, only 1609; 1704 10k target met, linear residual; full battery;
   release-check rows filled).
@@ -131,13 +143,20 @@ STATE (2026-10-26):
   re-run (the WSL 9p run timed out and was stopped).
 - Do not move stdlib-v0.64.9 or stdlib-v0.65.0.
 
-PRIORITY 0 -- NEXT STDLIB TAG IS PENDING OWNER GO:
-- 0.65.1 is complete (registry live, compiler main pins it). The Vec slot
-  fix is on branch feat/vec-elem-stride at 863248f; the compiler combined
-  tree (c60729714 + 863248f) is green. On owner GO: bump the package
-  version, cut the next stdlib tag, run the release gates/registry, and
-  reply to REL-20261026-2142-compiler with the tag/SHA/run id. Do NOT
-  bump/cut or move tags before that GO.
+PRIORITY 0 -- CUT stdlib-v0.65.2:
+- Checkout feat/vec-elem-stride (7d4d48f). Run the full battery with the
+  official v0.65.1 (or v0.64.8) archive: modules 533/533, probes 411/411,
+  smokes 963/963, barename 0/533, coverage floors197, doc_scan. Fix any
+  failure before tagging.
+- Tag/push stdlib-v0.65.2 at the branch commit; run
+  .github/workflows/release.yml; publish the registry with
+  COMPILER_VERSION v0.64.8; approve the registry-publish environment.
+- Reply to REL-20261026-2142-compiler (acked -> fixed) with tag/SHA/run/
+  registry; the compiler will pin stdlib-v0.65.2.
+- Do NOT move stdlib-v0.65.1/0.65.0. Do NOT bump COMPILER_VERSION. Do NOT
+  merge main into the branch for this tag. After the release, merge the
+  branch into main --no-ff (or cherry-pick 863248f + the markers) so main
+  carries the Vec fix.
 
 PRIORITY 1 -- GATE 9 ON THE OWNER'S SIGNAL:
 - On the owner's signal, re-run the known-failure repros and the
@@ -3810,6 +3829,27 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-27 block 294 (0.65.2 prep on branch: Vec slot fix + markers; battery/tag pending)**
+- Compiler found the branch bug: `Vec[T].with_len` is a type-receiver
+  method, so unqualified `elem_size` read the uninitialized receiver.
+  Fixed to `v.elem_size` at `863248f`; `p_wave289_vec8` passes on v0.65.1.
+- Compiler combined tree (`fix/v0.65.2-vec-packed-slots` `c60729714` +
+  `863248f`) is green: 10/10 memory gates, 4M with_len under a 24 MB cap,
+  e2e 2648/2648 debug+release; m296 packed semantics.
+- Release prep on branch `feat/vec-elem-stride` at `7d4d48f` (pushed):
+  package 0.65.2, CHANGELOG [0.65.2] (Added h2 dynamic/Huffman/
+  CONTINUATION; Fixed Vec stride), `release-notes/v0.65.2.md` validated
+  (2 highlights, 0 breaking, 0 docs). `COMPILER_VERSION` stays v0.64.8.
+- The branch is based on `b4dbbdf`, so 0.65.2 has the Vec fix plus the h2
+  dynamic/Huffman/CONTINUATION primitives but NOT the later h2 SETTINGS/
+  flow/stream/conn on main (`04a431f`). Do not merge main into the branch
+  for this tag.
+- No tag/publish yet. Next: full battery on the branch (modules 533,
+  probes 411, smokes 963, barename 0/533, floors197, doc), tag/push
+  `stdlib-v0.65.2`, release workflow, registry (COMPILER_VERSION v0.64.8),
+  reply to `REL-20261026-2142-compiler` with tag/SHA/run. Main stays
+  8-byte-slot compatible until the post-release merge.
 
 **SESSION 2026-10-27 block 293 (Vec branch fixed at 863248f; compiler combined tree green; next stdlib tag pending owner GO)**
 - Compiler found the branch bug: `Vec[T].with_len` is a type-receiver
