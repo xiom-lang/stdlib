@@ -4,6 +4,27 @@ All notable changes to the XIOM standard library are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.65.2] - 2026-10-27
+
+### Added
+
+- `H2HpackDynamicTable` with new/len/size/add/get/set_max/clear; the
+  RFC 7541 Huffman codec with H=1 string decode/encode; and
+  `H2HeaderBlock` for HEADERS + CONTINUATION reassembly (pure h2
+  primitives; the connection state machine is not included).
+
+### Fixed
+
+- Vec allocation now uses the element stride from the header instead of a
+  hardcoded 8-byte slot: `with_len` zero-fills `n * elem_size`,
+  `push`/`reserve`/`insert` grow by `cap * elem_size`, and
+  `shrink_to_fit` reallocs by `len * elem_size` (legacy fallback 8 for
+  unknown/generic contexts). `Vec[UInt8]`/`Vec[Bool]`/`Vec[Char]` become
+  packed byte buffers; `Vec[Int]` is unchanged. `with_len` also reads
+  `v.elem_size` on the type receiver, fixing the SIGSEGV on the WIP
+  branch. Coordinated with the compiler `vec_slot_size` companion
+  (REL-20261026-2142-compiler).
+
 ## [0.65.1] - 2026-10-26
 
 ### Fixed
