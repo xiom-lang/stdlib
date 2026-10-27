@@ -17,9 +17,9 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 104 (updated 2026-10-27; **stdlib-v0.65.2 RELEASED at 7d4d48f: Vec element-stride slots + h2 HPACK dynamic/Huffman/CONTINUATION; release run 40523878342 green; registry xiom-std 0.65.2 live (sha256 9638b576..., compiler v0.64.8, run 40523878370); staging canary 40532608142 green; branch merged to main --no-ff at 6899cb5, main now also carries the later h2 SETTINGS/flow/stream/conn features; release battery 533/533 + 411/411 + 963/963 + barename 0/533 + floors197 + doc 100%; merged-main sanity 533/533 + 414/414; relay 2142 fixed; next: compiler pins stdlib-v0.65.2 (pin branch pushed; PR creation hit the token-scope gap); gate 9 only 1609 red, 1704 10k target met with linear residual; readiness 90%)**
+## 0A. CONTINUE HERE -- handoff snapshot 105 (updated 2026-10-27; **compiler v0.65.2 is PRODUCTION (tag v0.65.2, 8ec0904a5) and pins stdlib-v0.65.2 -- relay 2142 verified; gate 9 on the official v0.65.2 windows-x64 archive is 10/10 green (1609 fixed, 1704 10k target met); fleet: playground/packages/bindings/registry/benchmark adopted, PULSE x64 green; ORBITDB + XVECTOR reject v0.65.2 for aggregate-moved Vec reclaim defects (compiler-only A/B clears stdlib 0.65.2), engine 2034 residual leak, PULSE arm64 blocked by xiom.http 0.1.8 FFI (packages); NEW stdlib item 1955-pulse-2 acked: server_parse_request 7,963 B/iter, span-parse fix scoped for the next wave; COMPILER_VERSION stays v0.64.8; readiness 90%)**
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-27, snapshot 104)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-27, snapshot 105)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
@@ -27,7 +27,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 104 + blocks 295/294/293/292 + this 0C block.
+Read docs/stdlib_session.md snapshot 105 + blocks 296/295/294/293 + this 0C block.
 
 STATE (2026-10-27):
 - stdlib-v0.65.2 IS RELEASED: annotated tag at 7d4d48f (Vec
@@ -43,33 +43,50 @@ STATE (2026-10-27):
   Vec fix plus the later h2 SETTINGS/flow/stream/conn features.
   Merged-main sanity: modules 533/533, probes 414/414.
 - COMPILER_VERSION stays v0.64.8; never move tags.
-- Compiler lane: combined tree fix/v0.65.2-vec-packed-slots c60729714 +
-  863248f green (10/10 memory gates, 4M with_len < 24 MB, e2e 2648/2648
-  debug+release). It must pin stdlib-v0.65.2 (automated branch
-  chore/pin-stdlib-v0.65.2 pushed; PR creation blocked by token scope).
-- Gate 9 on v0.65.1 Windows: only 1609 red; 1704 10k=23.6 MB (target
-  met) with a ~2.3 KB/iter linear residual. Both are compiler-side; the
-  next candidate is the owner/compiler decision.
+- Compiler v0.65.2 is PRODUCTION (tag v0.65.2 `fe1994b1` on `8ec0904a5`,
+  release 40566604850) and pins stdlib-v0.65.2; relay 2142 is verified.
+  On the official v0.65.2 windows-x64 archive (sha256 0a328560...) the
+  gate-9 set is **10/10 green** (52.7s): 1609 fixed (compile rc 0, run
+  rc 0), p_iter_enumerate_tuple green; 1704 10k target stays met (PULSE:
+  JSON obj 2,006 B/iter). Reporter rows filled in
+  release-checks/compiler-compiler-v0.65.2.md.
+- Fleet reception of v0.65.2: playground absorbed + production verified;
+  packages absorbed/workarounds retired; bindings adopted (579 records);
+  registry served artifact hashes identically; benchmark green (42/36/16,
+  lz4 3/3) but t1 Peak Memory stays 30 MB (t1 uses Vec[Int]). ORBITDB and
+  XVECTOR reject it for aggregate-moved Vec reclaim defects (2033/2042,
+  1956; compiler-only A/B clears stdlib 0.65.2); engine 2034 is the
+  residual by-value-aggregate move leak; PULSE arm64 is blocked by
+  xiom.http 0.1.8 libc FFI widths (packages, 2041).
+- NEW stdlib item REL-20261027-1955-pulse-2 (open -> acked):
+  `server_parse_request` is 7,963 B/iter on v0.65.2 + stdlib 0.65.2;
+  span-parse rewrite scoped, acceptance <=1 KB/iter plus a
+  `p_http_parse_alloc` probe. This is the next code wave.
 - h2: SETTINGS/flow-control, per-stream state, connection-control
   payloads and stream IDs, HPACK dynamic table/Huffman and
   HEADERS/CONTINUATION are all in 0.65.2; only the connection-level
   multiplexing state machine (concurrency, GOAWAY drain) remains.
 
-PRIORITY 0 -- VERIFY THE PIN / RELEASE FOLLOW-THROUGH:
-- Confirm the compiler lane pinned stdlib-v0.65.2 (STDLIB_VERSION on xiom
-  main or the branch chore/pin-stdlib-v0.65.2). If the PR is still
-  missing, hand the branch/PR link to the compiler lane on the bus; do
-  not edit the compiler repo unasked.
-- Keep the release immutable: never move stdlib-v0.65.2/v0.65.1/v0.65.0.
-  Fix forward on main if a problem surfaces.
+PRIORITY 0 -- REQUEST-PARSE ALLOCATION (REL-20261027-1955-pulse-2):
+- Implement the span-parse rewrite in `xiom/net/server.xi`
+  `server_parse_request`: parse from `&Vec[UInt8]` (start,len) spans,
+  delete the `head_bytes` + `head` whole-head copies, build lowercased
+  header names in one pass, pre-size and grow `headers` once. Keep the
+  `ServerRequest` shape and error semantics identical.
+- Add `p_http_parse_alloc` (parse mode, 50k iterations, peak RSS per
+  iteration) to `tools/probes` with the acceptance line **<=1 KB/iter**
+  (from 7,963 B/iter). Run the probe corpus + smokes, then mark the item
+  fixed with the numbers and ask PULSE to re-run `probe_req_cycle`.
+- Branch work, no tag unless the owner asks; `COMPILER_VERSION` unchanged.
 
 PRIORITY 1 -- GATE 9 / NEXT COMPILER:
-- 1609 (Result.value[i] concat) and the 1704 linear residual are
-  compiler-side; the owner/compiler lane decides the next candidate. Do
-  not pin or bump COMPILER_VERSION here.
-- On the owner's signal, re-run the known-failure repros and the
-  release-check rows on the designated candidate archive (Windows+Linux),
-  fill the release-check rows, close verified relay items.
+- Gate 9 is **green on v0.65.2** (10/10); keep the release-check rows
+  current. 1704's linear residual remains compiler-side; do not pin or
+  bump COMPILER_VERSION here.
+- Watch the compiler v0.65.3 reclaim fixes (orbitdb 2033/2042, xvector
+  1956, engine 2034). When a green archive lands, re-run the gate-9 set
+  and the full battery before any pin decision.
+- Keep stdlib-v0.65.2/v0.65.1/v0.65.0 tags immutable; fix forward on main.
 
 PRIORITY 2 -- WISHLIST / READINESS:
 - Keep the non-tail clause coverage at 100%; the tail is the documented
@@ -78,9 +95,9 @@ PRIORITY 2 -- WISHLIST / READINESS:
   reporter re-verify), 1704 (JSON retention, partial; compiler-side),
   1531-xvector (not reproduced; acked), 1550-stdlib (thread worker-loop;
   compiler/runtime), 0918 (list_dir fixed; macOS witness pending).
-- Vec stride follow-up: confirm the compiler vec_slot_size =
-  max(elem_size, 1) half lands with the pin; the 4M with_len RSS gate
-  stays in the compiler matrix.
+- Vec stride follow-up: the compiler `vec_slot_size = max(elem_size, 1)`
+  half shipped in v0.65.2; keep the 4M with_len RSS gate in the compiler
+  matrix and p_wave289_vec8 in the probe corpus.
 - Agent waves: Agent Manager worktrees, official pin, unique
   check_modules OutDir, floors197, no floors/workflows/readiness/session
   edits, commit on branch, no merge/push; main merges --no-ff.
@@ -93,12 +110,13 @@ RULES:
   json_clear(&mut) still hangs; no mutable-enum recursion.
 - Relay pulls: fetch + merge --ff-only (pull --ff-only fails with
   multiple branches).
-- 1609 still blocks 1549; 1704 parse/build still m375; 1520 open;
+- 1609 is fixed on v0.65.2; 1704 residual still m375; 1520 open;
   1550 compiler-side; 1410/1414 with compiler.
 - Untracked out/ + smoke_diag_f128_* are documented leftovers.
 
-DELIVERABLE: 0.65.2 pin confirmed on the compiler lane; gate-9 status
-current; docs/session snapshot current and pushed.
+DELIVERABLE: server_parse_request span-parse fix with p_http_parse_alloc
+at <=1 KB/iter (1955-pulse-2 fixed with numbers); gate-9 rows current on
+the next compiler archive; docs/session snapshot current and pushed.
 ```
 ---
 
@@ -3734,6 +3752,50 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-27 block 296 (v0.65.2 reception: compiler v0.65.2 pins stdlib-v0.65.2; gate 9 10/10; parse-allocation item acked)**
+- Compiler **v0.65.2** is PRODUCTION (annotated tag `v0.65.2` `fe1994b1`
+  on `8ec0904a5`; release 40566604850 with 11 assets + SHA256SUMS
+  `c08eeadf...`) and pins **stdlib-v0.65.2**; relay 2142 moved
+  fixed -> verified at 17:07Z. Shipping: packed Vec slots, arm64
+  Result[Str,E] contracts, inline `Result.value[i]` typing, borrowed/
+  aggregate Vec reclaim.
+- Gate 9 on the official v0.65.2 windows-x64 archive (zip sha256
+  `0a328560...`, verified against SHA256SUMS): the 10-probe set is
+  **10/10 green** (52.7s). `p_result_payload_index_concat` is fixed
+  (compile rc 0, run rc 0 -- inline and bound forms both correct);
+  `p_iter_enumerate_tuple` green; 1704 10k target stays met (PULSE
+  v0.65.2: JSON obj 2,006 / type 1,959 B/iter).
+- Reporter rows filled in `release-checks/compiler-compiler-v0.65.2.md`:
+  1609 (verified fixed), 1550-stdlib (tuple ABI verified), 2247 (gate-9
+  verdict). Relay commit `a61e194`.
+- Fleet reception: playground absorbed + production verified (538
+  modules); packages absorbed and workarounds retired; bindings adopted
+  (canonical slot v0.65.2, 579 records); registry served artifact hashes
+  identically (6,432,769 B); benchmark acceptance green (42/42, 36/36,
+  16/16, lz4 3/3) but t1 Peak Memory stays 30 MB because t1 uses
+  `Vec[Int]`; PULSE x64 green (suites, smoke 135/135 x2, crash 6/6,
+  stream 20/20, ws-auth 11/11; CI 40577914298).
+- Blocks are compiler-side and their A/B clears stdlib 0.65.2: ORBITDB
+  Station loopback 0xC0000374 double-free (2033) and XVECTOR WAL reopen
+  data loss (2042) -- aggregate-moved Vec reclaim; xvector 1956 same
+  family; engine 2034 residual by-value-aggregate field-move leak;
+  PULSE arm64 blocked by xiom.http 0.1.8 libc FFI widths (packages,
+  2041). ORBITDB/XVECTOR pins stay v0.64.8; release not accepted there.
+- New stdlib item **REL-20261027-1955-pulse-2** (open -> acked):
+  `server_parse_request` allocates 7,963 B/iter (50k loop, v0.65.2 +
+  stdlib 0.65.2); the fix is a span parse from `&Vec[UInt8]` with no API
+  change, acceptance <=1 KB/iter plus a `p_http_parse_alloc` probe.
+- Backlog otherwise unchanged: 1704 (partial, compiler-side),
+  1531-xvector (not reproduced), 1550-stdlib (thread worker-loop),
+  1549-pulse-5 (io.list_dir reporter re-verify), 2202 top-tier asks.
+- Shared-clone hazard 2039 persists: `release-checks/compiler-v0.64.8.md`
+  is a stale uncommitted copy in the shared relay clone (left untouched).
+  The clone can be advanced by another lane mid-session (`66c0e32`
+  appeared during this one) -- re-check `git status` before staging.
+- No stdlib tag; `COMPILER_VERSION` stays v0.64.8. The next cut should
+  decide the pin; v0.65.2 is compiler-tagged but ORBITDB/XVECTOR reject it
+  for reclaim defects, so waiting for v0.65.3 is the likely path.
 
 **SESSION 2026-10-27 block 295 (stdlib-v0.65.2 RELEASED: Vec element-stride + h2 primitives; registry live; merged to main)**
 - Cut and released **stdlib-v0.65.2**: annotated tag at `7d4d48f`
