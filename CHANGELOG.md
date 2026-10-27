@@ -6,6 +6,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Server-side SSE: `sse_encode_event` / `sse_encode_comment` /
+  `sse_encode_heartbeat` build the wire bytes (LF endings; CR/LF
+  injection rejected; multi-line data becomes repeated `data:` fields)
+  and `sse_write_event` / `sse_write_comment` / `sse_heartbeat` write
+  them over a `TcpStream` with `write_all`. Probe `p_wave298_sse_wire`
+  covers round-trip, injection and a loopback write.
+- HTTP/2 connection-level multiplexing: `H2Connection` plus
+  `h2_conn_new/open_stream/close_stream/can_open/active/recv_goaway/
+  begin_drain/is_draining/is_closed/goaway_last_id/goaway_error` --
+  concurrency cap, local stream ids, received-GOAWAY drain (streams
+  above the peer's last id are dropped, an increased last id is
+  rejected) and local graceful drain. Probe `p_wave298_h2_conn_mux`.
+  This completes the h2 primitive layer; frame I/O stays with the
+  caller.
+
 ### Changed
 
 - `net.server.server_parse_request` parses directly from the request byte

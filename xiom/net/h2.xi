@@ -9,10 +9,12 @@
 //   * the 61-entry HPACK static table (RFC 7541 Appendix A);
 //   * one header field encode/decode: static-indexed, or a literal without
 //     indexing (indexed name or new name).
-// NOT implemented here (documented scoping boundary): the connection-level
-// multiplexing state machine (concurrency limits, GOAWAY drain handling).
-// Stream-ID allocation, per-stream state transitions, SETTINGS/flow-control,
-// and the RST_STREAM/GOAWAY/WINDOW_UPDATE payloads are available below.
+// The connection-level multiplexing state machine (concurrency limits,
+// GOAWAY drain handling) is implemented at the end of the module as
+// H2Connection + h2_conn_*; it is pure state, so frame I/O stays with the
+// caller. Stream-ID allocation, per-stream state transitions,
+// SETTINGS/flow-control, and the RST_STREAM/GOAWAY/WINDOW_UPDATE payloads
+// are also available below.
 // 0x40 dynamic-table
 // inserts are rejected with a clear Err so a caller cannot silently mis-decode
 // them; the dynamic table itself is available as the standalone
@@ -1597,4 +1599,219 @@ pub fn h2_hpack_decode_header(bytes: &Vec[UInt8], pos: Int) -> Result[(Str, Str,
       };
     },
   }
+}
+
+// ---------------------------------------------------------------------------
+// Connection-level multiplexing (RFC 9113 section 5.1 / 6.8).
+//
+// Tracks the locally initiated streams of ONE connection: the concurrency
+// cap, the next local stream id, and the GOAWAY drain state. Peer stream ids
+// are owned by the caller (they arrive in frame headers); the caller passes
+// the last peer id it processed when it starts a graceful shutdown. This
+// layer is pure state: no I/O, no frame parsing.
+// ---------------------------------------------------------------------------
+
+/// Connection-level multiplexing state for one HTTP/2 connection.
+/// `active` holds the locally initiated streams that are still open;
+/// `draining` means no new local streams may open (a GOAWAY was sent or
+/// received); `peer_goaway` distinguishes a received GOAWAY from a local
+/// graceful shutdown; `goaway_last_id`/`goaway_error` record the last
+/// stream id that may still be processed and the advertised error code.
+pub type H2Connection = {
+  local_is_client: Bool;
+  max_concurrent: Int;
+  last_local_id: Int;
+  active: Vec[Int];
+  draining: Bool;
+  peer_goaway: Bool;
+  goaway_last_id: Int;
+  goaway_error: Int;
+}
+
+// _h2_conn_remove drops one id from the active list; false when absent.
+fn _h2_conn_remove(active: &mut Vec[Int], id: Int) -> Bool {
+  var i = 0;
+  var found = false;
+  while i < active.len() {
+    if active[i] == id {
+      var k = i;
+      while k + 1 < active.len() {
+        active[k] = active[k + 1];
+        k = k + 1;
+      }
+      active.pop();
+      found = true;
+      i = active.len();
+    } else {
+      i = i + 1;
+    }
+  }
+  found
+}
+
+/// Create a connection state. `max_concurrent <= 0` clamps to 1.
+/// Parameters: max_concurrent -- the peer's concurrency limit;
+///         local_is_client -- true for odd (client) local stream ids.
+/// Complexity: O(1).
+pub fn h2_conn_new(max_concurrent: Int, local_is_client: Bool) -> H2Connection
+  ensures: result.max_concurrent >= 1
+  ensures: result.active.len() == 0
+  ensures: result.draining == false
+{
+  var cap = max_concurrent;
+  if cap < 1 {
+    cap = 1;
+  }
+  return H2Connection{
+    local_is_client: local_is_client;
+    max_concurrent: cap;
+    last_local_id: 0;
+    active: Vec[Int].new();
+    draining: false;
+    peer_goaway: false;
+    goaway_last_id: 0;
+    goaway_error: 0;
+  };
+}
+
+/// True when a new local stream may be opened (not draining, under the
+/// concurrency cap).
+/// Complexity: O(1).
+pub fn h2_conn_can_open(c: &H2Connection) -> Bool
+  ensures: result == (c.draining == false && c.peer_goaway == false && c.active.len() < c.max_concurrent)
+{
+  return c.draining == false && c.peer_goaway == false && c.active.len() < c.max_concurrent;
+}
+
+/// Allocate the next local stream id and mark it active. Returns None when
+/// draining, at the concurrency cap, or when the id space is exhausted.
+/// Complexity: O(1).
+pub fn h2_conn_open_stream(c: &mut H2Connection) -> Option[Int]
+  ensures: (result.is_some == true) => (c.active.len() >= 1)
+{
+  if c.draining || c.peer_goaway {
+    return None;
+  }
+  if c.active.len() >= c.max_concurrent {
+    return None;
+  }
+  match h2_stream_id_next(c.last_local_id, c.local_is_client) {
+    Err(_) => { return None; },
+    Ok(id) => {
+      c.last_local_id = id;
+      c.active.push(id);
+      return Some(id);
+    },
+  }
+}
+
+/// Mark one local stream closed. False when the id is not active.
+/// Complexity: O(n) in the active count.
+pub fn h2_conn_close_stream(c: &mut H2Connection, id: Int) -> Bool
+  ensures: (result == true) => (c.active.len() <= c.max_concurrent)
+{
+  return _h2_conn_remove(&mut c.active, id);
+}
+
+/// Number of locally initiated streams still open.
+/// Complexity: O(1).
+pub fn h2_conn_active(c: &H2Connection) -> Int
+  ensures: result >= 0 && result <= c.max_concurrent
+{
+  return c.active.len();
+}
+
+/// Handle a received GOAWAY. `last_stream_id` is the peer's last processed
+/// stream; local streams above it are dropped (they were not processed, so
+/// the caller may retry them). Returns false for out-of-range values or a
+/// GOAWAY that increases a previously received last-stream-id (RFC 9113
+/// section 6.8 forbids that).
+/// Complexity: O(n) in the active count.
+pub fn h2_conn_recv_goaway(c: &mut H2Connection, last_stream_id: Int, error_code: Int) -> Bool
+  ensures: (result == true) => (c.peer_goaway == true)
+  ensures: (result == true) => (c.draining == true)
+{
+  if last_stream_id < 0 || last_stream_id > 0x7FFFFFFF {
+    return false;
+  }
+  if error_code < 0 || error_code > 0xFFFFFFFF {
+    return false;
+  }
+  if c.peer_goaway && last_stream_id > c.goaway_last_id {
+    return false;
+  }
+  c.peer_goaway = true;
+  c.draining = true;
+  c.goaway_last_id = last_stream_id;
+  c.goaway_error = error_code;
+  var w = 0;
+  var r = 0;
+  while r < c.active.len() {
+    if c.active[r] <= last_stream_id {
+      c.active[w] = c.active[r];
+      w = w + 1;
+    }
+    r = r + 1;
+  }
+  while c.active.len() > w {
+    c.active.pop();
+  }
+  return true;
+}
+
+/// Start a local graceful shutdown. `last_processed_id` is the last
+/// peer-initiated stream the caller has processed (it goes into the GOAWAY
+/// frame); no new local stream opens afterwards. Returns false for
+/// out-of-range values or a last-stream-id that increases a previous
+/// GOAWAY's value.
+/// Complexity: O(1).
+pub fn h2_conn_begin_drain(c: &mut H2Connection, last_processed_id: Int, error_code: Int) -> Bool
+  ensures: (result == true) => (c.draining == true)
+{
+  if last_processed_id < 0 || last_processed_id > 0x7FFFFFFF {
+    return false;
+  }
+  if error_code < 0 || error_code > 0xFFFFFFFF {
+    return false;
+  }
+  if c.draining && last_processed_id > c.goaway_last_id {
+    return false;
+  }
+  c.draining = true;
+  c.goaway_last_id = last_processed_id;
+  c.goaway_error = error_code;
+  return true;
+}
+
+/// True once a GOAWAY was sent or received (no new local streams).
+/// Complexity: O(1).
+pub fn h2_conn_is_draining(c: &H2Connection) -> Bool
+  ensures: result == (c.draining == true)
+{
+  return c.draining;
+}
+
+/// True when draining and every locally initiated stream is closed: the
+/// connection may be closed.
+/// Complexity: O(1).
+pub fn h2_conn_is_closed(c: &H2Connection) -> Bool
+  ensures: (result == true) => (c.draining == true && c.active.len() == 0)
+{
+  return c.draining == true && c.active.len() == 0;
+}
+
+/// Last stream id recorded by the most recent GOAWAY (0 when none).
+/// Complexity: O(1).
+pub fn h2_conn_goaway_last_id(c: &H2Connection) -> Int
+  ensures: result >= 0
+{
+  return c.goaway_last_id;
+}
+
+/// Error code recorded by the most recent GOAWAY (0 when none).
+/// Complexity: O(1).
+pub fn h2_conn_goaway_error(c: &H2Connection) -> Int
+  ensures: result >= 0
+{
+  return c.goaway_error;
 }

@@ -21,9 +21,16 @@ module xiom.net.sse
 // data; the dispatch filter (skip empty-data events, update last-event-id)
 // is the consumer's step, sse_read_events drains only what is already
 // readable when polled.
+//
+// The server half lives below: sse_encode_event / sse_encode_comment /
+// sse_encode_heartbeat build the wire bytes (LF endings, CR/LF injection
+// rejected) and sse_write_event / sse_write_comment / sse_heartbeat write
+// them over a TcpStream with write_all.
 // ============================================================================
 
 use xiom.string;
+use xiom.string.builder;
+use xiom.string.slice;
 use xiom.net;
 use xiom.net.socket;
 
@@ -516,4 +523,162 @@ pub fn sse_read_events(conn: &mut SseConnection, out: &mut Vec[SseEvent]) -> Int
     };
   };
   count
+}
+
+// ============================================================================
+// Wire encoders + server-side writers (REL-20261015-2202-pulse item 7).
+// The client parses; these build the bytes a server sends: one field per
+// line, LF endings, a blank line to terminate, and comment lines for
+// keep-alives. CR is rejected in every field (it would corrupt framing);
+// LF is legal only in data and comments, where it becomes repeated fields.
+// ============================================================================
+
+// _has_byte returns true when s contains the byte value `want`.
+fn _has_byte(s: Str, want: Int) -> Bool {
+  var i = 0;
+  while i < s.len() {
+    if s.byte_at(i) == want {
+      return true;
+    }
+    i = i + 1;
+  }
+  false
+}
+
+// _push_field appends "name: value\n" to the builder.
+fn _push_field(sb: &mut Vec[UInt8], name: Str, value: Str) {
+  builder.sb_push_str(sb, name);
+  builder.sb_push_str(sb, ": ");
+  builder.sb_push_str(sb, value);
+  builder.sb_push_byte(sb, 10u8);
+}
+
+/// Encode one SSE event in wire format (LF endings, blank-line terminated).
+/// Rejects CR in any field, LF in id/event, and a negative retry. LF in data
+/// becomes one `data:` line per segment; an empty data field is sent as
+/// `data: ` so the chunk is still a complete event.
+/// Parameters: e -- the event to encode.
+/// Returns: Ok(wire text) or Err(reason).
+/// Complexity: O(n). Pure.
+pub fn sse_encode_event(e: SseEvent) -> Result[Str, Str]
+  ensures: (result.is_ok == true) => (result.value.len() >= 2)
+{
+  if e.retry < 0 {
+    return Err("sse_encode_event: negative retry");
+  }
+  if _has_byte(e.id, 13) || _has_byte(e.id, 10) {
+    return Err("sse_encode_event: CR/LF in id");
+  }
+  if _has_byte(e.event, 13) || _has_byte(e.event, 10) {
+    return Err("sse_encode_event: CR/LF in event");
+  }
+  if _has_byte(e.data, 13) {
+    return Err("sse_encode_event: CR in data");
+  }
+  var sb = builder.sb_new();
+  if e.id.len() > 0 {
+    _push_field(&mut sb, "id", e.id);
+  }
+  if e.event.len() > 0 {
+    _push_field(&mut sb, "event", e.event);
+  }
+  if e.retry > 0 {
+    builder.sb_push_str(&mut sb, "retry: ");
+    builder.sb_push_int(&mut sb, e.retry);
+    builder.sb_push_byte(&mut sb, 10u8);
+  }
+  let lines = split(e.data, "\n");
+  var i = 0;
+  while i < lines.len() {
+    _push_field(&mut sb, "data", fresh(lines[i]));
+    i = i + 1;
+  }
+  builder.sb_push_byte(&mut sb, 10u8);
+  Ok(builder.sb_into_str(sb))
+}
+
+/// Encode a comment (keep-alive) block: every LF-separated segment becomes a
+/// `: text` line, terminated by a blank line. CR is rejected (it would
+/// corrupt framing). An empty text yields a bare `:` comment.
+/// Parameters: text -- the comment text.
+/// Returns: Ok(wire text) or Err(reason).
+/// Complexity: O(n). Pure.
+pub fn sse_encode_comment(text: Str) -> Result[Str, Str]
+  ensures: (result.is_ok == true) => (result.value.len() >= 2)
+{
+  if _has_byte(text, 13) {
+    return Err("sse_encode_comment: CR in text");
+  }
+  var sb = builder.sb_new();
+  let lines = split(text, "\n");
+  var i = 0;
+  while i < lines.len() {
+    builder.sb_push_str(&mut sb, ": ");
+    builder.sb_push_str(&mut sb, fresh(lines[i]));
+    builder.sb_push_byte(&mut sb, 10u8);
+    i = i + 1;
+  }
+  builder.sb_push_byte(&mut sb, 10u8);
+  Ok(builder.sb_into_str(sb))
+}
+
+/// The canonical keep-alive comment block (`": ping\n\n"`).
+/// Complexity: O(1). Pure.
+pub fn sse_encode_heartbeat() -> Str
+  ensures: result.len() == 8
+{
+  ": ping\n\n"
+}
+
+/// Write one event to a stream (server side). Uses write_all, so partial
+/// sends are completed before returning.
+/// Parameters: stream -- the client stream; e -- the event.
+/// Returns: Ok(bytes written) or Err(reason).
+/// Complexity: O(n) plus the transport write.
+pub fn sse_write_event(stream: &TcpStream, e: SseEvent) -> Result[Int, Str]
+  ensures: (result.is_ok == true) => (result.value >= 1)
+{
+  match sse_encode_event(e) {
+    Ok(s) => {
+      let bytes = slice.str_bytes(s);
+      match stream.clone().write_all(&bytes) {
+        Ok(n) => { Ok(n) },
+        Err(err) => { Err("sse_write_event: " + err.message) },
+      }
+    },
+    Err(msg) => { Err(msg) },
+  }
+}
+
+/// Write a comment (keep-alive) block to a stream (server side).
+/// Parameters: stream -- the client stream; text -- the comment text.
+/// Returns: Ok(bytes written) or Err(reason).
+/// Complexity: O(n) plus the transport write.
+pub fn sse_write_comment(stream: &TcpStream, text: Str) -> Result[Int, Str]
+  ensures: (result.is_ok == true) => (result.value >= 1)
+{
+  match sse_encode_comment(text) {
+    Ok(s) => {
+      let bytes = slice.str_bytes(s);
+      match stream.clone().write_all(&bytes) {
+        Ok(n) => { Ok(n) },
+        Err(err) => { Err("sse_write_comment: " + err.message) },
+      }
+    },
+    Err(msg) => { Err(msg) },
+  }
+}
+
+/// Write the canonical heartbeat comment (`": ping\n\n"`).
+/// Parameters: stream -- the client stream.
+/// Returns: Ok(8) or Err(reason).
+/// Complexity: O(1) plus the transport write.
+pub fn sse_heartbeat(stream: &TcpStream) -> Result[Int, Str]
+  ensures: (result.is_ok == true) => (result.value == 8)
+{
+  let bytes = slice.str_bytes(sse_encode_heartbeat());
+  match stream.clone().write_all(&bytes) {
+    Ok(n) => { Ok(n) },
+    Err(err) => { Err("sse_heartbeat: " + err.message) },
+  }
 }
