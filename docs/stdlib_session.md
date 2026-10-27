@@ -3809,6 +3809,12 @@ registry pin, agent recon for the rest)**
   **100%** (7529/7529).
 - No tag; `COMPILER_VERSION` stays v0.64.8. No tag/cut without the
   owner's explicit GO.
+- Compiler bus update `REL-20261027-2128-compiler` (21:28Z): v0.65.2 is
+  **NOT accepted for durable/vector lanes** (Struct{Vec} push ownership
+  + a Str-drop if-arm regression; PULSE reverted to v0.65.1). Compiler
+  main `bb8eccf5a` carries the fix (xvector XVC-C-23 + str_if_arm_drop
+  PASS, 14/14 memory gates, e2e 2651/2651); **v0.65.3 awaits owner GO**.
+  Our next pin decision waits for v0.65.3 acceptance.
 
 **SESSION 2026-10-27 block 296 (v0.65.2 reception: compiler v0.65.2 pins stdlib-v0.65.2; gate 9 10/10; parse-allocation item acked)**
 - Compiler **v0.65.2** is PRODUCTION (annotated tag `v0.65.2` `fe1994b1`
