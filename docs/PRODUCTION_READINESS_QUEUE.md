@@ -8,7 +8,7 @@ stdlib-v0.65.1 (PR #8 closed as superseded); registry live
 canary green; compiler v0.65.1 is PRODUCTION (tag `f2c01cf9c`) and pins
 stdlib-v0.65.1; main pin remains v0.64.8.)
 **Gates: merged corpus 963/963 (0 compilefail / 0 runfail), modules
-533/533, probes 411/411, barename 0/533, floors197. Wave pin: v0.64.8
+533/533, probes 412/412, barename 0/533, floors197. Wave pin: v0.64.8
 (block 280).**
 
 Readiness gates (the meter above counts these; each is backed by the battery
@@ -22,7 +22,7 @@ gates flip:
    io.rename, hash-shadow, async-select, Routh, executor, small-gap,
    math-os, long-tail, mid-gap, math, os/iter, final-gap, read_at_into,
    JSON-builder, JSON-ref-API, HPACK-dynamic, HPACK-Huffman, HPACK-cont,
-   HPACK-settings-flow,
+   HPACK-settings-flow, HPACK-stream-state,
    list_dir-roundtrip, and residual-wave probes are included and
    individually green).
 4. Strict bare-name scan clean -- MET (0/533).
@@ -31,7 +31,7 @@ gates flip:
 7. Module-smoke ratchet green -- MET (499/542 modules, 3501/6575 fns).
 8. Contract coverage 100% outside the documented no-clause tail -- MET
    (wave 208, 2026-10-25: every non-tail public fn carries a clause;
-   non-tail 100%, global 95.9%, 6661/6946; clauses/fns 97.9%, 9183
+   non-tail 100%, global 95.9%, 6663/6948; clauses/fns 97.9%, 9185
    clauses; floors197). The remaining 285 public fns are the documented
    no-clause tail: iter 70.5%, os 71.5%, math 90.7%, thread 91.1%, ffi
    94.5%, serialize 94.7%, format 95.2% (no non-tautological clauses
@@ -96,13 +96,14 @@ the RFC 7541 Huffman codec landed (257-entry table, H=1 string
 decode/encode; probe `p_wave285_hpack_huffman`), and HEADERS +
 CONTINUATION reassembly landed (`H2HeaderBlock`; probe
 `p_wave286_h2_cont`) and h2 SETTINGS/flow windows
-(`p_wave290_h2_settings_flow`), so the probe corpus is 411/411. **stdlib-v0.65.1
+(`p_wave290_h2_settings_flow`) and per-stream state transitions
+(`p_wave291_h2_stream_state`), so the probe corpus is 412/412. **stdlib-v0.65.1
 released** from `9dc69b3` (owns_return prep): release run 40375774931
 green, GitHub Release live, compiler main pins stdlib-v0.65.1 (PR #8
 closed as superseded); registry live (sha256
 `3bb9b850...`, compiler v0.64.8); staging canary green. Compiler v0.65.1
 is production and pins stdlib-v0.65.1; the full v0.65.1 compatibility
-battery is green (modules 533/533, probes 411/411, smokes 963/963,
+battery is green (modules 533/533, probes 412/412, smokes 963/963,
 barename 0/533, floors197, doc 100%), gate-9 is 9/10 (only 1609), and
 the 1704 memory matrix meets the 10k target (23.6 MB) with a linear
 residual. Main `COMPILER_VERSION` stays v0.64.8; the next candidate is

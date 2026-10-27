@@ -17,9 +17,9 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 99 (updated 2026-10-26; **stdlib-v0.65.1 released/registry live; compiler v0.65.1 production pins it; gate-9 v0.65.1: only 1609 red; 1704 10k target met with linear residual; h2 now has dynamic table + Huffman + CONTINUATION + SETTINGS/flow-control windows (only stream multiplexing remains); full v0.65.1 battery: modules 533/533, smokes 963/963, probes 411/411, barename 0/533, floors197 OK (global 95.9%, 6661/6946, 9183 clauses), doc 100%; relay gate-9 report REL-20261026-2247-stdlib; Vec slot wishlist REL-20261026-2142 parked on branch feat/vec-elem-stride 92a6020**; readiness 90% (gate 8 MET; gate 9 1609+1704); COMPILER_VERSION v0.64.8; next candidate owner/compiler; do not bump/cut)
+## 0A. CONTINUE HERE -- handoff snapshot 100 (updated 2026-10-26; **stdlib-v0.65.1 released/registry live; compiler v0.65.1 production pins it; gate-9 v0.65.1: only 1609 red; 1704 10k target met with linear residual; h2 now has dynamic table + Huffman + CONTINUATION + SETTINGS/flow-control + per-stream state transitions (only connection-level multiplexing remains); full v0.65.1 battery: modules 533/533 (253.6s), smokes 963/963 (631.8s), probes 412/412 (417s), barename 0/533 (351.8s), floors197 OK (global 95.9%, 6663/6948, 9185 clauses), doc 100%; relay gate-9 report REL-20261026-2247-stdlib; Vec slot wishlist REL-20261026-2142 parked on branch feat/vec-elem-stride 92a6020**; readiness 90% (gate 8 MET; gate 9 1609+1704); COMPILER_VERSION v0.64.8; next candidate owner/compiler; do not bump/cut)
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-26, snapshot 99)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-26, snapshot 100)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
@@ -27,7 +27,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 99 + blocks 290/289/288 + this 0C block.
+Read docs/stdlib_session.md snapshot 100 + blocks 291/290/289 + this 0C block.
 
 STATE (2026-10-26):
 - stdlib-v0.65.1 IS RELEASED at 9dc69b3 (the prep commit with the two
@@ -40,7 +40,7 @@ STATE (2026-10-26):
   3bb9b85007d69f75a7379b90182f260e8d0bfba03f02431619481f9dae494d31,
   compiler v0.64.8 (run 40375774857); staging canary 40381778731 green.
   Local battery: modules 533/533, smokes 963/963,
-  probes 411/411, barename 0/533, floors197 OK, doc 100%.
+  probes 412/412, barename 0/533, floors197 OK, doc 100%.
 - Compiler v0.65.1 is PRODUCTION (tag f2c01cf9c) and pins stdlib-v0.65.1.
   Gate-9 on the v0.65.1 Windows archive (sha256 69de1e27...): 9/10 green
   -- 1626/2343/2100-W1/1456/1451/1326/2249/2249-2/1550 verified, only
@@ -48,9 +48,9 @@ STATE (2026-10-26):
   memory on v0.65.1: parse 10k=23.6 MB, 20k=48.2, 50k=113.7; 200k killed
   at the 256 MB cap -- the 10k target is met but the trend is still
   linear (~2.3 KB/iter; JsonValue enum drop remains compiler-side). Full
-  v0.65.1 battery (current head): modules 533/533 (531.7s), smokes
-  963/963 (2487.4s), probes 411/411 (1501.8s), barename 0/533 (801.9s),
-  floors197 OK (6661/6946, 9183 clauses), doc 100%. Release-check v0.65.1
+  v0.65.1 battery (current head): modules 533/533 (253.6s), smokes
+  963/963 (631.8s), probes 412/412 (417s), barename 0/533 (351.8s),
+  floors197 OK (6663/6948, 9185 clauses), doc 100%. Release-check v0.65.1
   rows filled; relay 1704 acked with the memory matrix.
 - New Vec slot wishlist REL-20261026-2142: stdlib half parked on
   branch feat/vec-elem-stride (92a6020, pushed). with_len/push/reserve/
@@ -69,6 +69,14 @@ STATE (2026-10-26):
   delta). Probe p_wave290_h2_settings_flow. Only stream multiplexing
   remains. Compiler gotcha: Result[Vec[H2Setting], Str] is type-erased
   at call sites; use h2_settings_decode_into with a caller-owned list.
+- h2 per-stream state transitions landed: H2StreamState (Idle/Open/
+  HalfClosedLocal/HalfClosedRemote/Closed), H2StreamEvent (Send/Recv
+  Headers/Data/EndStream/Rst), h2_stream_state_name, and
+  h2_stream_transition (RFC 9113 section 5.1). Invalid transitions Err
+  (DATA/RST on idle, send after local END_STREAM, recv after remote
+  END_STREAM, duplicate END_STREAM, any event on closed). Probe
+  p_wave291_h2_stream_state. Only connection-level multiplexing
+  (stream-ID allocation, concurrency, GOAWAY) remains.
 - Wishlist 2202 item 9: HPACK dynamic-table primitives landed in
   xiom/net/h2.xi (H2HpackDynamicTable + new/len/size/add/get/set_max/
   clear; oldest-first, index 1 = newest, size = name+value+32, eviction,
@@ -3791,6 +3799,23 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-26 block 291 (h2 per-stream state transitions; full battery green)**
+- Added `H2StreamState` (Idle/Open/HalfClosedLocal/HalfClosedRemote/
+  Closed), `H2StreamEvent` (Send/Recv Headers/Data/EndStream/Rst),
+  `h2_stream_state_name`, and `h2_stream_transition` (RFC 9113 section
+  5.1). Invalid transitions return Err: DATA/RST on idle, send after
+  local END_STREAM, recv after remote END_STREAM, duplicate END_STREAM,
+  and any event on a closed stream.
+- Probe `p_wave291_h2_stream_state` walks both half-close paths and the
+  invalid cases. `p_wave174/283/285/286/290` stay green.
+- Full battery on v0.65.1: modules **533/533** (253.6s), probes
+  **412/412** (417s), smokes **963/963** (631.8s), barename **0/533**
+  (351.8s), floors197 **RATCHET OK** (global 95.9%, 6663/6948, 9185
+  clauses; net 100%), doc_scan **100%**.
+- The module header now lists only connection-level multiplexing
+  (stream-ID allocation, concurrency, GOAWAY) as unimplemented. No
+  pin/tag; 0.65.1 release/registry; Vec branch parked at `92a6020`.
 
 **SESSION 2026-10-26 block 290 (h2 SETTINGS + flow-control windows; full battery green)**
 - Added to `xiom/net/h2.xi`:

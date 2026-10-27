@@ -9,9 +9,10 @@
 //   * the 61-entry HPACK static table (RFC 7541 Appendix A);
 //   * one header field encode/decode: static-indexed, or a literal without
 //     indexing (indexed name or new name).
-// NOT implemented here (documented scoping boundary): stream multiplexing
-// (the connection state machine). SETTINGS encode/decode/validate and
-// one-direction flow-control windows are available below. 0x40 dynamic-table
+// NOT implemented here (documented scoping boundary): connection-level
+// stream multiplexing (stream-ID allocation, concurrency, GOAWAY). The
+// per-stream state table (RFC 9113 section 5.1) and SETTINGS/flow-control
+// primitives are available below. 0x40 dynamic-table
 // inserts are rejected with a clear Err so a caller cannot silently mis-decode
 // them; the dynamic table itself is available as the standalone
 // H2HpackDynamicTable primitives below, Huffman (H=1) string bodies are
@@ -492,6 +493,83 @@ pub fn h2_window_resize(w: &mut H2Window, new_initial: Int) -> Result[Int, Str]
   w.available = w.available + delta;
   w.initial = new_initial;
   return Ok(w.available);
+}
+
+// ---------------------------------------------------------------------------
+// Stream states (RFC 9113 section 5.1)
+// ---------------------------------------------------------------------------
+
+/// Per-stream HTTP/2 state.
+pub type H2StreamState = enum { Idle, Open, HalfClosedLocal, HalfClosedRemote, Closed }
+
+/// Events that drive the per-stream state machine. HEADERS/DATA with
+/// END_STREAM are modelled as the frame event followed by the EndStream event.
+pub type H2StreamEvent = enum { SendHeaders, RecvHeaders, SendData, RecvData, SendEndStream, RecvEndStream, SendRst, RecvRst }
+
+/// Stable diagnostic name for a stream state.
+pub fn h2_stream_state_name(state: H2StreamState) -> Str
+  requires: true
+{
+  match state {
+    H2StreamState.Idle => "idle",
+    H2StreamState.Open => "open",
+    H2StreamState.HalfClosedLocal => "half-closed-local",
+    H2StreamState.HalfClosedRemote => "half-closed-remote",
+    H2StreamState.Closed => "closed",
+  }
+}
+
+/// Apply one event to a stream state. Err on a protocol-invalid transition
+/// (for example DATA on an idle stream, a send after local END_STREAM, or any
+/// event on a closed stream).
+pub fn h2_stream_transition(state: H2StreamState, event: H2StreamEvent) -> Result[H2StreamState, Str]
+  requires: true
+{
+  match state {
+    H2StreamState.Idle => {
+      match event {
+        H2StreamEvent.SendHeaders => { return Ok(H2StreamState.Open); },
+        H2StreamEvent.RecvHeaders => { return Ok(H2StreamState.Open); },
+        H2StreamEvent.SendRst => { return Err("h2: RST_STREAM on idle stream"); },
+        _ => { return Err("h2: invalid event on idle stream"); },
+      }
+    },
+    H2StreamState.Open => {
+      match event {
+        H2StreamEvent.SendEndStream => { return Ok(H2StreamState.HalfClosedLocal); },
+        H2StreamEvent.RecvEndStream => { return Ok(H2StreamState.HalfClosedRemote); },
+        H2StreamEvent.SendRst => { return Ok(H2StreamState.Closed); },
+        H2StreamEvent.RecvRst => { return Ok(H2StreamState.Closed); },
+        _ => { return Ok(H2StreamState.Open); },
+      }
+    },
+    H2StreamState.HalfClosedLocal => {
+      match event {
+        H2StreamEvent.RecvEndStream => { return Ok(H2StreamState.Closed); },
+        H2StreamEvent.SendRst => { return Ok(H2StreamState.Closed); },
+        H2StreamEvent.RecvRst => { return Ok(H2StreamState.Closed); },
+        H2StreamEvent.SendHeaders => { return Err("h2: send after local END_STREAM"); },
+        H2StreamEvent.SendData => { return Err("h2: send after local END_STREAM"); },
+        H2StreamEvent.SendEndStream => { return Err("h2: duplicate local END_STREAM"); },
+        _ => { return Ok(H2StreamState.HalfClosedLocal); },
+      }
+    },
+    H2StreamState.HalfClosedRemote => {
+      match event {
+        H2StreamEvent.SendEndStream => { return Ok(H2StreamState.Closed); },
+        H2StreamEvent.SendRst => { return Ok(H2StreamState.Closed); },
+        H2StreamEvent.RecvRst => { return Ok(H2StreamState.Closed); },
+        H2StreamEvent.RecvHeaders => { return Err("h2: recv after remote END_STREAM"); },
+        H2StreamEvent.RecvData => { return Err("h2: recv after remote END_STREAM"); },
+        H2StreamEvent.RecvEndStream => { return Err("h2: duplicate remote END_STREAM"); },
+        _ => { return Ok(H2StreamState.HalfClosedRemote); },
+      }
+    },
+    H2StreamState.Closed => {
+      return Err("h2: event on closed stream");
+    },
+  }
+  return Err("h2: unreachable stream transition");
 }
 
 // ---------------------------------------------------------------------------
