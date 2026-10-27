@@ -17,9 +17,9 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 105 (updated 2026-10-27; **compiler v0.65.2 is PRODUCTION (tag v0.65.2, 8ec0904a5) and pins stdlib-v0.65.2 -- relay 2142 verified; gate 9 on the official v0.65.2 windows-x64 archive is 10/10 green (1609 fixed, 1704 10k target met); fleet: playground/packages/bindings/registry/benchmark adopted, PULSE x64 green; ORBITDB + XVECTOR reject v0.65.2 for aggregate-moved Vec reclaim defects (compiler-only A/B clears stdlib 0.65.2), engine 2034 residual leak, PULSE arm64 blocked by xiom.http 0.1.8 FFI (packages); NEW stdlib item 1955-pulse-2 acked: server_parse_request 7,963 B/iter, span-parse fix scoped for the next wave; COMPILER_VERSION stays v0.64.8; readiness 90%)**
+## 0A. CONTINUE HERE -- handoff snapshot 106 (updated 2026-10-27; **REL-20261027-1955-pulse-2 FIXED on main a696fb6: server_parse_request span-parses from the byte buffer -- 8,954 -> 857 B/iter (Windows 50k, official v0.64.8 and v0.65.2) and ~1,138 B/iter on Linux/WSL; new p_http_parse_alloc probe (Linux RSS gate <=1,280 B/iter); wave gates modules 533/533, probes 415/415, smokes 963/963, barename 0/533, coverage floors197 OK, doc 100%; relay sweep: 1549-pulse-5 fixed, 1550 tuple ABI verified on v0.65.2 (compiler to close), 1531/1704/1834/2202 refreshed, thread wishlist gaps 2/3 closed; compiler v0.65.2 production pins stdlib-v0.65.2, gate 9 10/10; no tag; COMPILER_VERSION v0.64.8; readiness 90%)**
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-27, snapshot 105)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-27, snapshot 106)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
@@ -27,7 +27,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 105 + blocks 296/295/294/293 + this 0C block.
+Read docs/stdlib_session.md snapshot 106 + blocks 297/296/295/294 + this 0C block.
 
 STATE (2026-10-27):
 - stdlib-v0.65.2 IS RELEASED: annotated tag at 7d4d48f (Vec
@@ -58,26 +58,30 @@ STATE (2026-10-27):
   1956; compiler-only A/B clears stdlib 0.65.2); engine 2034 is the
   residual by-value-aggregate move leak; PULSE arm64 is blocked by
   xiom.http 0.1.8 libc FFI widths (packages, 2041).
-- NEW stdlib item REL-20261027-1955-pulse-2 (open -> acked):
-  `server_parse_request` is 7,963 B/iter on v0.65.2 + stdlib 0.65.2;
-  span-parse rewrite scoped, acceptance <=1 KB/iter plus a
-  `p_http_parse_alloc` probe. This is the next code wave.
+- REL-20261027-1955-pulse-2 is **FIXED on main `a696fb6`**:
+  `server_parse_request` span-parses the head from `&Vec[UInt8]` (no
+  whole-head copies, one allocation per returned field, header names
+  lowercased in the same copy, headers pre-sized). A/B, 50k parses:
+  Windows x64 **8,954 -> 857 B/iter** (official v0.64.8 and v0.65.2);
+  Linux/WSL glibc ~8.9 KB -> **1,138 B/iter**. New
+  `tools/probes/p_http_parse_alloc.xi` checks semantics everywhere and
+  gates Linux RSS growth at <=1,280 B/iter. API/error semantics
+  unchanged; `p_pulse_shapes` green on v0.64.8 + v0.65.2. Awaiting
+  PULSE's re-run of `probe_req_cycle` / the product GET /health leg.
 - h2: SETTINGS/flow-control, per-stream state, connection-control
   payloads and stream IDs, HPACK dynamic table/Huffman and
   HEADERS/CONTINUATION are all in 0.65.2; only the connection-level
   multiplexing state machine (concurrency, GOAWAY drain) remains.
 
-PRIORITY 0 -- REQUEST-PARSE ALLOCATION (REL-20261027-1955-pulse-2):
-- Implement the span-parse rewrite in `xiom/net/server.xi`
-  `server_parse_request`: parse from `&Vec[UInt8]` (start,len) spans,
-  delete the `head_bytes` + `head` whole-head copies, build lowercased
-  header names in one pass, pre-size and grow `headers` once. Keep the
-  `ServerRequest` shape and error semantics identical.
-- Add `p_http_parse_alloc` (parse mode, 50k iterations, peak RSS per
-  iteration) to `tools/probes` with the acceptance line **<=1 KB/iter**
-  (from 7,963 B/iter). Run the probe corpus + smokes, then mark the item
-  fixed with the numbers and ask PULSE to re-run `probe_req_cycle`.
-- Branch work, no tag unless the owner asks; `COMPILER_VERSION` unchanged.
+PRIORITY 0 -- CLOSE THE PARSE LOOP / NEXT WISHLIST PICK:
+- PULSE re-runs `probe_req_cycle` (parse mode) and the product GET
+  /health leg on the next pin; the relay item is fixed with the A/B
+  numbers and the probe. Close it when their numbers land.
+- Next code pick from the residual wishlist (owner's choice): RFC 7932
+  brotli or zstd, SSE connection helpers, kqueue/IOCP event-loop parity,
+  or the thread arg/closure channel. Keep each on a branch with a probe
+  and the full battery; **no tag without the owner's GO**.
+- `COMPILER_VERSION` stays v0.64.8 until the owner decides the next pin.
 
 PRIORITY 1 -- GATE 9 / NEXT COMPILER:
 - Gate 9 is **green on v0.65.2** (10/10); keep the release-check rows
@@ -91,10 +95,14 @@ PRIORITY 1 -- GATE 9 / NEXT COMPILER:
 PRIORITY 2 -- WISHLIST / READINESS:
 - Keep the non-tail clause coverage at 100%; the tail is the documented
   no-clause tail.
-- Open stdlib wishlist/bug rows: 1549-pulse-5 (io.list_dir, fixed;
-  reporter re-verify), 1704 (JSON retention, partial; compiler-side),
-  1531-xvector (not reproduced; acked), 1550-stdlib (thread worker-loop;
-  compiler/runtime), 0918 (list_dir fixed; macOS witness pending).
+- Open stdlib wishlist/bug rows after the sweep: 1704 (JSON
+  retention; only the compiler drop half remains), 1531-xvector
+  (refreshed; waiting for the reporter re-run), 1550-stdlib
+  (thread worker-loop: gaps 2/3 closed, closure/arg channel remains with
+  the compiler), REL-20261020-1550-stdlib (tuple ABI verified on v0.65.2;
+  compiler to move fixed), 1549-pulse-5 + 1955-pulse-2 (fixed; PULSE
+  re-verify/re-run). 0918/1549 list_dir stale rows can close once PULSE
+  re-verifies.
 - Vec stride follow-up: the compiler `vec_slot_size = max(elem_size, 1)`
   half shipped in v0.65.2; keep the 4M with_len RSS gate in the compiler
   matrix and p_wave289_vec8 in the probe corpus.
@@ -114,9 +122,10 @@ RULES:
   1550 compiler-side; 1410/1414 with compiler.
 - Untracked out/ + smoke_diag_f128_* are documented leftovers.
 
-DELIVERABLE: server_parse_request span-parse fix with p_http_parse_alloc
-at <=1 KB/iter (1955-pulse-2 fixed with numbers); gate-9 rows current on
-the next compiler archive; docs/session snapshot current and pushed.
+DELIVERABLE: PULSE's parse/probe re-run recorded and 1955 closed; the
+next wishlist item landed on a branch with a probe and the full battery;
+gate-9 rows current on the next compiler archive; docs/session snapshot
+current and pushed. No tag without the owner's GO.
 ```
 ---
 
@@ -3752,6 +3761,54 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-27 block 297 (wishlist sweep: server_parse_request span-parse landed; relay items closed/refreshed)**
+- `REL-20261027-1955-pulse-2` **FIXED** on main `a696fb6`:
+  `net.server.server_parse_request` now parses directly from
+  `&Vec[UInt8]` with (start, len) spans -- no `head_bytes`/`head`
+  whole-head copies, one allocation per returned field, header names
+  lowercased in the same copy, pre-sized `headers`. A/B over 50k parses
+  (same 4-header request): Windows x64 **8,954 -> 857 B/iteration**
+  (official v0.64.8 and v0.65.2); Linux/WSL glibc **~8.9 KB -> 1,138
+  B/iteration**. `p_pulse_shapes` stays green on both compilers, so the
+  API and error semantics are unchanged.
+- New `tools/probes/p_http_parse_alloc.xi`: semantics on every platform,
+  plus a Linux `/proc/self/statm` RSS gate at <=1,280 B/iter (Windows
+  skips the measurement; 857 B is the platform PULSE measures).
+- Relay sweep:
+  - `REL-20261010-1549-pulse-5` (io.list_dir consumer break)
+    acked -> **fixed**: the blocking compiler row 1609 is verified fixed
+    on v0.65.2; list_dir itself was always correct. PULSE re-verifies.
+  - `REL-20261020-1550-stdlib` (tuple ABI): verified on v0.65.2
+    (`p_iter_enumerate_tuple` exit 0 in the 10/10 gate-9 set) and the
+    release-check row is filled; it is our item to compiler, which owns
+    the acked -> fixed transition.
+  - `REL-20261020-1531-xvector` refreshed: shared HEAD + v0.64.8 is green
+    (modules 533/533, probes 415/415); reporter asked to re-run and close.
+  - `REL-20261020-1704-pulse` refreshed: v0.65.2 numbers stay ~2.0 KB/iter
+    (obj 2,006 / type 1,959 / get 1,959); the stdlib renderer/ref APIs are
+    in, the residual is the compiler JsonValue copy/drop (m375). The
+    separate ~7.96 KB/request parse site is now fixed above.
+  - `REL-20261010-1834-engine-6` refreshed: the pool is real for no-arg
+    jobs (tp_submit -> OS thread, tp_join/tp_shutdown drain, size/idle/
+    busy), channels close and wake recv; tp_submit_with stays inline and
+    Send/Sync is still documentation-only. Engine asked to try no-arg
+    jobs and report.
+  - `REL-20261015-2202-pulse` delivery matrix posted: TLS/ALPN real,
+    NODELAY + configurable backlog, popen-class spawn, real threads,
+    dynamic-Huffman gzip, zero-copy send, h2 primitives; residuals are
+    RFC 7932 brotli / zstd, SSE helpers, kqueue/IOCP, arg channel.
+  - `REL-20261016-1550-stdlib` (thread worker-loop, our wishlist)
+    reporter refresh: gaps 2 (channel close/wake) and 3 (join surface)
+    are closed in stdlib; only closure-from-payload / spawn arg channel
+    remains with the compiler.
+- Wave gates on the official v0.64.8 archive: modules **533/533**
+  (374.5s), probes **415/415** (767.8s), smokes **963/963** (2406.1s;
+  slower because barename ran concurrently), barename **0/533** (1234s),
+  coverage floors197 **RATCHET OK** (6671/6956, 9193 clauses), doc
+  **100%** (7529/7529).
+- No tag; `COMPILER_VERSION` stays v0.64.8. No tag/cut without the
+  owner's explicit GO.
 
 **SESSION 2026-10-27 block 296 (v0.65.2 reception: compiler v0.65.2 pins stdlib-v0.65.2; gate 9 10/10; parse-allocation item acked)**
 - Compiler **v0.65.2** is PRODUCTION (annotated tag `v0.65.2` `fe1994b1`
