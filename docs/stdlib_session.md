@@ -17,9 +17,9 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 101 (updated 2026-10-26; **stdlib-v0.65.1 released/registry live; compiler v0.65.1 production pins it; gate-9 v0.65.1: only 1609 red; 1704 10k target met with linear residual; h2 primitive layer now covers frames, HPACK (static/dynamic/Huffman), HEADERS+CONTINUATION, SETTINGS/flow-control, per-stream states, stream-ID allocation, RST_STREAM/GOAWAY/WINDOW_UPDATE (only the concurrency/GOAWAY-drain state machine remains); full v0.65.1 battery: modules 533/533 (255.9s), smokes 963/963 (633.9s), probes 413/413 (437.7s), barename 0/533 (360.4s), floors197 OK (global 95.9%, 6671/6956, 9193 clauses), doc 100%; relay gate-9 report REL-20261026-2247-stdlib; Vec slot wishlist REL-20261026-2142 parked on branch feat/vec-elem-stride 92a6020**; readiness 90% (gate 8 MET; gate 9 1609+1704); COMPILER_VERSION v0.64.8; next candidate owner/compiler; do not bump/cut)
+## 0A. CONTINUE HERE -- handoff snapshot 102 (updated 2026-10-27; **stdlib-v0.65.1 released/registry live; compiler v0.65.1 production pins it; gate-9 v0.65.1: only 1609 red; 1704 10k target met with linear residual; h2 primitive layer complete through connection-control payloads (only concurrency/GOAWAY drain state machine remains); Vec slot branch feat/vec-elem-stride fixed at 863248f (with_len uses v.elem_size) -- compiler combined tree c60729714+863248f is GREEN (10/10 memory gates, 4M with_len <24 MB, e2e 2648/2648 debug+release); the next stdlib tag is PENDING OWNER GO**; full v0.65.1 battery: modules 533/533, smokes 963/963, probes 413/413, barename 0/533, floors197 OK (global 95.9%, 6671/6956, 9193 clauses), doc 100%; relay gate-9 report REL-20261026-2247-stdlib; readiness 90% (gate 8 MET; gate 9 1609+1704); COMPILER_VERSION v0.64.8; do not bump/cut until owner GO)
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-26, snapshot 101)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-27, snapshot 102)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
@@ -27,7 +27,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib, branch main). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 101 + blocks 292/291/290 + this 0C block.
+Read docs/stdlib_session.md snapshot 102 + blocks 293/292/291 + this 0C block.
 
 STATE (2026-10-26):
 - stdlib-v0.65.1 IS RELEASED at 9dc69b3 (the prep commit with the two
@@ -52,12 +52,14 @@ STATE (2026-10-26):
   963/963 (633.9s), probes 413/413 (437.7s), barename 0/533 (360.4s),
   floors197 OK (6671/6956, 9193 clauses), doc 100%. Release-check v0.65.1
   rows filled; relay 1704 acked with the memory matrix.
-- New Vec slot wishlist REL-20261026-2142: stdlib half parked on
-  branch feat/vec-elem-stride (92a6020, pushed). with_len/push/reserve/
-  shrink_to_fit/insert use elem_size (fallback 8); probe p_wave289_vec8.
-  NOT on main: the one-sided change segfaults on v0.65.1 (run=70); main's
-  8-byte code passes. Needs compiler vec_slot_size=max(elem_size,1)
-  together (or compiler first), then the 4M with_len RSS gate.
+- Vec slot REL-20261026-2142: branch feat/vec-elem-stride is fixed at
+  863248f (with_len uses v.elem_size; push/reserve/shrink_to_fit/insert
+  use elem_size with fallback 8); p_wave289_vec8 passes on v0.65.1. The
+  compiler combined tree (fix/v0.65.2-vec-packed-slots c60729714 +
+  863248f) is green per its note: 10/10 memory gates, 4M with_len under
+  a 24 MB cap, e2e 2648/2648 debug+release; m296 packed semantics. The
+  next stdlib tag is **PENDING OWNER GO**; main stays 8-byte-slot
+  compatible.
 - Relay REL-20261026-2247-stdlib to compiler: v0.65.1 gate-9 report
   (9/10, only 1609; 1704 10k target met, linear residual; full battery;
   release-check rows filled).
@@ -129,11 +131,13 @@ STATE (2026-10-26):
   re-run (the WSL 9p run timed out and was stopped).
 - Do not move stdlib-v0.64.9 or stdlib-v0.65.0.
 
-PRIORITY 0 -- 0.65.1 IS COMPLETE:
-- Registry live (xiom-std 0.65.1, sha256 3bb9b850..., compiler v0.64.8);
-  compiler main pins stdlib-v0.65.1; PR #8 closed as superseded. Do NOT
-  move the tags. The next candidate (v0.65.2+) is the owner/compiler
-  decision; do not bump COMPILER_VERSION or cut a stdlib tag.
+PRIORITY 0 -- NEXT STDLIB TAG IS PENDING OWNER GO:
+- 0.65.1 is complete (registry live, compiler main pins it). The Vec slot
+  fix is on branch feat/vec-elem-stride at 863248f; the compiler combined
+  tree (c60729714 + 863248f) is green. On owner GO: bump the package
+  version, cut the next stdlib tag, run the release gates/registry, and
+  reply to REL-20261026-2142-compiler with the tag/SHA/run id. Do NOT
+  bump/cut or move tags before that GO.
 
 PRIORITY 1 -- GATE 9 ON THE OWNER'S SIGNAL:
 - On the owner's signal, re-run the known-failure repros and the
@@ -3806,6 +3810,23 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-27 block 293 (Vec branch fixed at 863248f; compiler combined tree green; next stdlib tag pending owner GO)**
+- Compiler found the branch bug: `Vec[T].with_len` is a type-receiver
+  method, so the unqualified `elem_size` read the uninitialized receiver
+  temporary. Fixed to `v.elem_size` (commit `863248f` on
+  `feat/vec-elem-stride`). `p_wave289_vec8` now passes on v0.65.1.
+- Compiler combined tree (`fix/v0.65.2-vec-packed-slots` `c60729714` +
+  `863248f`) is green per its note: 10/10 memory gates, 4M with_len under
+  a 24 MB cap, e2e 2648/2648 on debug+release; the m296 fixture is packed
+  semantics (byte buffer 16 bytes; `Vec[UInt64]` control).
+- Relay 2142 acked with `863248f`; the next stdlib tag is the remaining
+  action and is **pending owner GO**. No tag/cut from this lane; main
+  stays 8-byte-slot compatible.
+- h2 primitive layer remains as block 292 (frames, HPACK static/dynamic/
+  Huffman, HEADERS+CONTINUATION, SETTINGS/flow-control, per-stream states,
+  stream IDs, RST/GOAWAY/WINDOW_UPDATE); only the concurrency/GOAWAY-drain
+  connection state machine remains.
 
 **SESSION 2026-10-26 block 292 (h2 connection-control payloads + stream ids; full battery green)**
 - Added `h2_stream_id_next` (client odd/server even, max 2^31-1) and
