@@ -39,6 +39,13 @@ bug). Status lives
 on the bus; this section closes an entry only when its item closes.
 The stdlib algorithm entry (polygon) is not cross-lane and stays here.
 
+2026-10-28 finding: `p_result_bool_pattern.xi` -- a match on
+`Result[Bool, Str]` with nested literal Bool patterns takes the
+`Ok(false)` arm for an `Ok(true)` value (compile rc 0, run rc 2 on the
+official v0.64.8 and v0.65.2 windows-x64 archives). Item
+REL-20261028-1159-stdlib (to: compiler, bug high). Workaround: bind the
+payload first (`Ok(v) => if !v { ... }`), used in `xiom/net/h2_io.xi`.
+
 Status check 2026-10-09 (compiler v0.64.2, tag `c51170a6`): every Current
 repro below was re-compiled and re-run on the new pin. Observed rcs are
 unchanged from the entries except where noted; `p_array_zip_no_truncate.xi`

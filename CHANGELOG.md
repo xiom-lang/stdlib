@@ -22,6 +22,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   rejected) and local graceful drain. Probe `p_wave298_h2_conn_mux`.
   This completes the h2 primitive layer; frame I/O stays with the
   caller.
+- HTTP/2 frame transport: `xiom/net/h2_io.xi` provides a buffered
+  `H2Reader` over a `TcpStream` (9-byte header + payload reassembly,
+  EOF/`max_payload` errors), `h2_join_header_block` (HEADERS +
+  CONTINUATION with a block cap), `h2_write_frame`,
+  `h2_write_settings_ack`, `h2_write_ping_ack` and
+  `h2_write_header_block` (fragmented HEADERS/CONTINUATION). Probe
+  `p_wave299_h2_io` covers 40 KB fragmentation, ACK frames, empty
+  blocks, EOF and the payload cap.
 
 ### Changed
 
