@@ -9,8 +9,9 @@ pins stdlib-v0.65.2 but is **not accepted for durable/vector lanes**
 (Struct{Vec} push regression fixed on compiler main `bb8eccf5a`, v0.65.3
 awaits owner GO); PULSE is on v0.65.1. Main pin stays v0.64.8.)
 **Gates: merged corpus 963/963 (0 compilefail / 0 runfail), modules
-533/533, probes 417/417, barename 0/533, floors197. Wave pin: v0.64.8
-(block 298).**
+533/533, probes 418/418, barename 0/533, floors197. Wave pin: v0.64.8
+(block 299). Release dry-run 40683465791 green (validate + Ubuntu/Windows
+gates + package; no release).**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
@@ -19,17 +20,18 @@ gates flip:
 2. Smoke corpus green -- MET: merged 963/963 on v0.64.8 (0/0),
    including the directory-rename regression; plus 963/963 on both
    Windows and Ubuntu release gates, no carve-outs.
-3. Probe corpus green -- MET (417/417; the gate-9 set plus
-   p_http_parse_alloc, p_wave298_sse_wire, p_wave298_h2_conn_mux and the
-   earlier waves are included and individually green).
+3. Probe corpus green -- MET (418/418; the gate-9 set, the h2 frame-I/O
+   probe, p_http_parse_alloc, p_wave298_sse_wire,
+   p_wave298_h2_conn_mux and the earlier waves are included and
+   individually green).
 4. Strict bare-name scan clean -- MET (0/533).
 5. Coverage ratchet green -- MET (floors197).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (499/542 modules, 3501/6575 fns).
 8. Contract coverage 100% outside the documented no-clause tail -- MET
    (wave 208, 2026-10-25, refreshed 2026-10-28: every non-tail public fn
-   carries a clause; non-tail 100%, global 95.9%, 6688/6973; clauses/fns
-   97.9%, 9213 clauses; floors197). The remaining 285 public fns are the
+   carries a clause; non-tail 100%, global 95.9%, 6697/6982; clauses/fns
+   97.8%, 9224 clauses; floors197). The remaining 285 public fns are the
    documented no-clause tail: iter 70.5%, os 71.5%, math 90.7%, thread
    91.1%, ffi 94.5%, serialize 94.7%, format 95.2% (no non-tautological
    clauses left; no clause waves in the tail).
@@ -49,9 +51,17 @@ gates flip:
      with the linear drop residual still compiler-side (m375);
    - 1955 (`server_parse_request` ~8 KB/req) is fixed on main `a696fb6`
      (857 B/iter Windows, 1,138 B/iter Linux/WSL) and awaits the next pin.
-   Why it stays OPEN: the compiler-side JsonValue drop residual (1704) and
-   the v0.65.2 durable-lane regression (Struct{Vec} push, fixed on compiler
-   main `bb8eccf5a`, v0.65.3 awaiting owner GO) are still open findings; the
+   - 2026-10-28: the h2 frame-I/O wave found a NEW compiler defect --
+     `Result[Bool, Str]` matches with nested literal Bool patterns take
+     the `Ok(false)` arm for an `Ok(true)` value
+     (`p_result_bool_pattern.xi`: compile rc 0, run rc 2 on v0.64.8 and
+     v0.65.2; REL-20261028-1159-stdlib). Workaround applied in
+     `xiom/net/h2_io.xi`; the repro is in the corpus and
+     `tools/gate9_scan.ps1` reports it red until the fix lands.
+   Why it stays OPEN: the compiler-side JsonValue drop residual (1704),
+   the v0.65.2 durable-lane regression (Struct{Vec} push, fixed on
+   compiler main `bb8eccf5a`, v0.65.3 awaiting owner GO), and the
+   Result[Bool] literal-pattern defect above are still open findings; the
    gate flips when the compiler OK arrives and the next archive is swept.
    Historical: v0.65.1 was 9/10 (only 1609); v0.64.8 results are in the
    updates below.
@@ -97,12 +107,30 @@ Current state 2026-10-28: **wave 298 + gate-9 evidence complete on v0.65.2.**
   **The h2 primitive layer is complete** (frame I/O stays with the
   caller). File-watch parity is already in (Windows ReadDirectoryChangesW,
   Linux inotify); only macOS/BSD kqueue remains a documented Err.
-- Gates on the official v0.64.8 archive: modules 533/533, probes 417/417,
-  smokes 963/963, barename 0/533, coverage floors197 OK (6688/6973,
-  9213 clauses), doc 100% (7547/7547), module-smoke ratchet OK.
-- Readiness stays 90% (gate 9 discrete). Remaining 2202 residuals: RFC
-  7932 brotli / zstd, macOS/BSD kqueue, thread arg/closure channel
-  (compiler). No tag; `COMPILER_VERSION` stays v0.64.8.
+- Gates on the official v0.64.8 archive: modules 533/533, probes 418/418,
+  smokes 963/963, barename 0/533, coverage floors197 OK (6697/6982,
+  9224 clauses), doc 100% (7557/7557), module-smoke ratchet OK.
+- Wave 299: **h2 frame transport** (`xiom/net/h2_io.xi`: buffered reader,
+  HEADERS+CONTINUATION join, frame/SETTINGS-ACK/PING-ACK writers and
+  fragmented header-block writer; probe `p_wave299_h2_io`). The wave also
+  found a NEW compiler defect (`p_result_bool_pattern.xi`: Result[Bool]
+  literal patterns take Ok(false) for Ok(true); REL-20261028-1159-stdlib;
+  workaround applied in h2_io).
+- Release workflow dry-run 40683465791 (dispatch, version=0.65.2) is
+  GREEN end to end: validate + Ubuntu/Windows gates + package staging,
+  with the pin PR and registry canary correctly skipped (no tag). See
+  `docs/RELEASE_DRY_RUN.md`.
+- Compression boundary: zstd/brotli are NOT reimplemented in stdlib; the
+  registry packages `xiom.zstd` 0.3.0 and `xiom.brotli` 0.1.0 (verified
+  live) remain the supported paths. JSON allocation study: the existing
+  Vec+from_utf8 token path (65 B/token) is cheaper than
+  malloc+from_cstring (97 B/token) under this runtime; an attempted
+  switch measured 6,637 -> 7,091 B/iter and was reverted, so the 1704
+  residual stays compiler drop.
+- Readiness stays 90% (gate 9 discrete). Remaining 2202 residuals:
+  macOS/BSD kqueue and the thread arg/closure channel (compiler); compression
+  is served by the registry packages.
+- No tag; `COMPILER_VERSION` stays v0.64.8.
 
 Current state 2026-10-26: **gate 9 is down to one red.** On the released
 v0.65.0 Windows archive (sha256 `ff4abb4a...`), the gate-9 set is green

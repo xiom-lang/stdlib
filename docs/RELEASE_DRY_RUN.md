@@ -37,9 +37,14 @@ bump first.
 gh workflow run release.yml --repo xiom-lang/stdlib -f version=0.65.2
 ```
 
-Result: record the run id/conclusion here when it completes. It exercises
-the same validate/gates/package path the tag will use, on the current `main`
-tree (which already carries the parse, SSE and h2 work).
+Result: **run 40683465791 completed `success`.** validate package.xi
+green; release gates on **ubuntu-latest** and **windows-latest** green;
+package staging green (deterministic tarball + SHA256SUMS + attestation).
+`STDLIB_VERSION pin PR` and `dispatch staging registry canary` were
+correctly **skipped** because the dispatch had no `tag`: no GitHub
+Release, no registry write. The run exercised the tree at `4426942` (the
+release-workflow path is independent of the later h2_io wave; that wave
+was validated by the local battery below).
 
 ## 3. Preflight for the real cut (owner GO required)
 

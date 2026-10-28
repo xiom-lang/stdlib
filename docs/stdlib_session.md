@@ -17,9 +17,9 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 107 (updated 2026-10-28; **wave 298 landed at 63ab0e1: SSE server wire/writers (encode/comment/heartbeat + TcpStream write_all) and the h2 connection multiplexer (H2Connection + h2_conn_*: concurrency cap, local ids, received/local GOAWAY drain); probes 417/417 incl. p_wave298_sse_wire + p_wave298_h2_conn_mux; the h2 primitive layer is complete; readiness evidence on official v0.65.2: gate-9 set 10/10 + all 27 known-failures repros 26 pass/1 intended T001, queue refreshed, meter stays 90% pending the compiler OK; gates modules 533/533, probes 417/417, smokes 963/963, barename 0/533, floors197 OK, doc 100%; earlier parse fix a696fb6; no tag; COMPILER_VERSION v0.64.8; next pick RFC brotli/zstd, macOS kqueue, thread arg channel; readiness 90%)**
+## 0A. CONTINUE HERE -- handoff snapshot 108 (updated 2026-10-28; **items 1-6 done: Linux gate-9 evidence (10/10 gate set; 27 repros 26 pass + 1 intended T001); tools/gate9_scan.ps1 one-command sweep; release dry-run 40683465791 green end-to-end (validate + Ubuntu/Windows gates + package; pin/canary skipped, NO release); h2 frame transport xiom/net/h2_io.xi + p_wave299_h2_io at c3a6978; zstd/brotli confirmed as registry packages (xiom.zstd 0.3.0 / xiom.brotli 0.1.0), not stdlib; JSON allocation study (existing Vec+from_utf8 path is cheaper; attempted switch reverted); NEW compiler finding REL-20261028-1159-stdlib (Result[Bool] literal match silent wrong branch, repro p_result_bool_pattern); gates modules 533/533, probes 418/418, smokes 963/963, barename 0/533, floors197 OK (6697/6982), doc 100%; no tag; COMPILER_VERSION v0.64.8; readiness 90%)**
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-28, snapshot 107)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-28, snapshot 108)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
@@ -27,7 +27,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 107 + blocks 298/297/296/295 + this 0C block.
+Read docs/stdlib_session.md snapshot 108 + blocks 299/298/297/296 + this 0C block.
 
 STATE (2026-10-27):
 - stdlib-v0.65.2 IS RELEASED: annotated tag at 7d4d48f (Vec
@@ -80,21 +80,57 @@ STATE (2026-10-27):
   rejected per RFC 9113 6.8) and local graceful drain. Probes
   `p_wave298_sse_wire` + `p_wave298_h2_conn_mux`. **The h2 primitive
   layer is complete**; frame I/O stays with the caller.
+- **Wave 299 (`c3a6978`)**: h2 frame transport `xiom/net/h2_io.xi` --
+  buffered `H2Reader` over `TcpStream` (9-byte header + payload
+  reassembly, EOF and `max_payload` errors), `h2_join_header_block`
+  (HEADERS + CONTINUATION, block cap), `h2_write_frame`,
+  `h2_write_settings_ack` (9 B), `h2_write_ping_ack` (17 B) and
+  `h2_write_header_block` (fragmented HEADERS/CONTINUATION with
+  END_STREAM/END_HEADERS). Probe `p_wave299_h2_io`: 40,001-byte block
+  across 3 frames, both ACKs, empty block, EOF, payload cap and a
+  non-HEADERS join rejection. Note: `TcpStream.read` appends up to 4096
+  per call, hence the buffered reader; the read targets a local Vec then
+  appends (a direct `&mut r.buf` read and the nested
+  `Ok(false)/Ok(true)` match both misbehaved).
+- **Release dry-run 40683465791 GREEN end to end**: dispatch
+  (`version=0.65.2`) -> validate + Ubuntu gates + Windows gates + package
+  staging; pin PR and registry canary correctly skipped (no tag); **no
+  GitHub Release, no registry write**. `docs/RELEASE_DRY_RUN.md` is the
+  pre-cut package (checklist, draft notes, exact commands).
+- **NEW compiler finding `REL-20261028-1159-stdlib`**: a match on
+  `Result[Bool, Str]` with nested literal Bool patterns takes the
+  `Ok(false)` arm for `Ok(true)` (silent wrong branch; compile rc 0, run
+  rc 2 on v0.64.8 and v0.65.2). Repro `p_result_bool_pattern.xi`;
+  workaround in `h2_io` (bind the payload first). `tools/gate9_scan.ps1`
+  reports it red until the fix lands.
+- **Compression boundary**: zstd/brotli are NOT reimplemented in stdlib
+  (documented in `compress.xi`); the registry packages `xiom.zstd` 0.3.0
+  and `xiom.brotli` 0.1.0 are the supported paths (verified live).
+  **JSON allocation study**: the existing `Vec`+`from_utf8` per-token
+  path retains 65 B/token vs 97 B/token for `malloc`+`from_cstring`; an
+  attempted switch measured 6,637 -> 7,091 B/iter and was **reverted**.
+  The 1704 residual stays compiler drop glue, not stdlib allocation
+  choice.
 
-PRIORITY 0 -- NEXT WISHLIST PICK:
+PRIORITY 0 -- NEXT WORK (owner-gated tag):
 - PULSE re-runs `probe_req_cycle` (parse mode) and the product GET
-  /health leg on the next pin; the relay item is fixed with the A/B
-  numbers and the probe. Close it when their numbers land.
-- Next code pick from the remaining 2202 residuals: RFC 7932 brotli or
-  zstd, kqueue/IOCP event-loop parity, or the thread arg/closure channel
-  (compiler). Keep each on a branch with a probe and the full battery;
-  **no tag without the owner's GO**.
-- `COMPILER_VERSION` stays v0.64.8 until the owner decides the next pin.
+  /health leg on the next pin; 1955 is fixed with the A/B numbers.
+- On the compiler OK: `tools/gate9_scan.ps1 -Compiler <archive>` on the
+  designated archive (Windows + Linux), refresh the release-check rows,
+  and expect 10/10 + 26 pass + 1 intended T001, with
+  `p_result_bool_pattern` red until 1159 is fixed.
+- Remaining 2202 work: macOS/BSD kqueue (needs a `heavy.yml` macOS-14
+  dispatch as the witness) and the thread arg/closure channel
+  (compiler). Compression is served by the registry packages, not stdlib.
+- **no tag without the owner's GO**; `COMPILER_VERSION` stays v0.64.8.
 
 PRIORITY 1 -- GATE 9 / NEXT COMPILER (waiting for the compiler OK):
-- Item 3 is held: on the compiler's OK, re-run the 10-probe gate-9 set +
-  the full battery on the designated archive (Windows+Linux), refresh the
-  release-check rows, then report. Gate 9 is 10/10 on v0.65.2.
+- Gate 9 is now OPEN on three items: 1704 (compiler drop residual), the
+  v0.65.2 durable-lane regression (v0.65.3 hold), and the NEW
+  `REL-20261028-1159-stdlib` Result[Bool] literal-pattern defect.
+- On the compiler's OK, run `tools/gate9_scan.ps1` (one command: 10-probe
+  set + all known-failures + expected-negative allowlist) and the full
+  battery before any pin decision.
 - Watch the compiler v0.65.3 reclaim fixes (orbitdb 2033/2042, xvector
   1956, engine 2034). Do not pin or bump COMPILER_VERSION here.
 - Keep stdlib-v0.65.2/v0.65.1/v0.65.0 tags immutable; fix forward on main.
@@ -3767,6 +3803,59 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-28 block 299 (items 1-6: Linux gate-9, gate9_scan, release dry-run, h2 frame I/O, compression boundary, JSON study)**
+- **Item 1 -- Linux gate-9 evidence.** Official v0.65.2 linux-x64 archive
+  (tar.gz sha256 `ca55a088...`), repo stdlib, in WSL:
+  the 10-probe gate-9 set is **10/10** and all 27 known-failures repros
+  are **26 pass + 1 intended T001** (`p_vec_shape_arg_mismatch_av`),
+  matching Windows. The `p_i128_div_vec_loop_av` support module lives in
+  `tools/known_failures/support/` and must be copied alongside the
+  repros.
+- **Item 2 -- `tools/gate9_scan.ps1`.** One command runs the 10-probe
+  gate-9 set (6 from known-failures + 4 from probes/evidence) plus every
+  known-failures repro, applies the intended-T001 allowlist, writes a
+  JSON report and exits 1 on any unexpected failure. Validated green on
+  v0.65.2 (10/10, 26 pass, 1 expected, exit 0) and red on v0.64.8
+  (7 unexpected, exit 1). `tools/README.md` updated.
+- **Item 3 -- release dry-run.** `docs/RELEASE_DRY_RUN.md` documents the
+  workflow, the pre-cut checklist, the exact commands and a draft of the
+  next release notes. The dispatch dry-run **40683465791** (version
+  0.65.2) is **GREEN end to end**: validate + Ubuntu gates + Windows
+  gates + package staging; pin PR and registry canary correctly skipped;
+  no GitHub Release and no registry write. A next-version dry-run needs
+  the owner's version bump first (validate requires package.xi to match).
+- **Item 4 -- h2 frame transport (`c3a6978`).** `xiom/net/h2_io.xi`:
+  buffered `H2Reader` (header + payload reassembly, EOF/max_payload
+  errors), `h2_join_header_block` (HEADERS + CONTINUATION, block cap),
+  `h2_write_frame`, `h2_write_settings_ack`, `h2_write_ping_ack`,
+  `h2_write_header_block` (fragmentation with END_STREAM/END_HEADERS).
+  Probe `p_wave299_h2_io`: 40,001-byte block across 3 frames, ACKs,
+  empty block, EOF, payload cap, non-HEADERS join rejection. The wave
+  found a NEW compiler defect: nested `Ok(false)/Ok(true)` matches on
+  `Result[Bool, Str]` take the false arm for true (repro
+  `p_result_bool_pattern.xi`, rc 2 on v0.64.8 and v0.65.2;
+  `REL-20261028-1159-stdlib`; workaround: bind the payload first).
+  `TcpStream.read` appends up to 4096 per call, hence the buffered reader;
+  read into a local Vec then append (`&mut` field read misbehaved too).
+- **Item 5 -- compression boundary.** zstd/brotli are documented as
+  registry packages, not stdlib: `xiom.zstd` 0.3.0 and `xiom.brotli`
+  0.1.0 are live on the registry and remain the supported paths;
+  `compress.xi` already says so. No reimplementation added.
+- **Item 6 -- JSON allocation study.** The existing
+  `Vec`+`Str::from_utf8` per-token parse path is cheaper under this
+  runtime: 65 B/token vs 97 B/token for `malloc`+`Str::from_cstring`
+  (200k-call microbench). Switching parse strings/numbers to
+  malloc+adopt measured 6,637 -> 7,091 B/iter (50k parses of a nested
+  doc, v0.65.2) and was **reverted**. The 1704 residual is compiler drop
+  glue; the current stdlib path is already the cheaper idiom.
+- Final gates on the official v0.64.8 archive: modules **533/533**
+  (599s), probes **418/418** (655s), smokes **963/963** (1646s),
+  barename **0/533** (713s), coverage floors197 **OK**
+  (6697/6982, 9224 clauses), doc **100%** (7557/7557), module-smoke
+  ratchet OK.
+- No tag; `COMPILER_VERSION` stays v0.64.8. Readiness stays 90% (gate 9
+  discrete, now open on 1704 + v0.65.3 hold + 1159).
 
 **SESSION 2026-10-28 block 298 (wave 298: SSE server wire/writers + h2 connection multiplexing; h2 primitive layer complete)**
 - Wave 298 at `63ab0e1` (5 files, +616/-4).
