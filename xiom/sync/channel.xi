@@ -12,10 +12,20 @@ use xiom.core.size_of;  // bare intrinsic binding (strict catalog gate)
 
 // ============================================================================
 // Bounded/unbounded typed channels for message passing between threads.
-// Pure-XIOM data structure over Vec[T]: capacity 0 means unbounded. The
-// blocking operations (`channel_send` on a full bounded channel, `channel_recv`
-// on an empty one, `channel_select`) poll with a 1 ms sleep, so they make
-// progress in single-threaded programs as soon as the counterpart op runs.
+// Capacity 0 means unbounded. The blocking operations (`channel_send` on a
+// full bounded channel, `channel_recv` on an empty one, `channel_select`)
+// poll with a 1 ms sleep, so they make progress in single-threaded programs
+// as soon as the counterpart op runs.
+//
+// NON-OWNING REPRESENTATION (REL-20261028-1533-stdlib /
+// REL-20261028-1617-stdlib): the handle form copies the `Channel[T]` cell
+// through ptr.read/ptr.write. `ptr.read` is a bitwise copy of an owning
+// value and the local copy is dropped (compiler decision 2026-10-28), so a
+// Vec-backed struct would leave two owners of the item buffer and free live
+// memory. The queue is therefore raw element storage: `data` (pointer),
+// `len`, `alloc_cap`, configured `cap`, `closed`. Copies of Channel[T] are
+// plain scalars/pointers; elements are moved with ptr.read/ptr.write and the
+// buffer is grown/freed with alloc/dealloc.
 //
 // THREAD SAFETY
 // - The value form (`Channel[T]`) has NO internal lock. It is safe for
@@ -27,9 +37,10 @@ use xiom.core.size_of;  // bare intrinsic binding (strict catalog gate)
 //   copyable Int-addressed handle. Every handle operation assumes the CALLER
 //   holds the same external `xiom.sync.mutex.SyncMutex`; there is no internal
 //   lock. Threads using copies of one handle must agree on that lock.
-// - `channel_handle_free` drains and deallocates the cell. Call it exactly
-//   once, after every thread that can touch the handle has been joined, and
-//   never concurrently with another operation. Copies are dangling after it.
+// - `channel_handle_free` drains and deallocates the cell and its element
+//   buffer. Call it exactly once, after every thread that can touch the
+//   handle has been joined, and never concurrently with another operation.
+//   Copies are dangling after it.
 // ============================================================================
 
 extern "C" {
@@ -37,10 +48,127 @@ extern "C" {
 }
 
 /// Channel[T] - a generic message queue; capacity 0 means unbounded.
+/// `data` is raw element storage, `len` the queued count, `alloc_cap` the
+/// allocated slots, `cap` the configured maximum (0 = unbounded).
 pub type Channel[T] = {
-  items: Vec[T];
-  closed: Bool;
+  data: *UInt8;
+  len: Int;
+  alloc_cap: Int;
   cap: Int;
+  closed: Bool;
+}
+
+// _ch_elem_size returns the per-element byte size (at least 1).
+fn _ch_elem_size[T]() -> Int {
+  let n = size_of[T]();
+  if n < 1 {
+    return 1;
+  }
+  return n;
+}
+
+// _ch_grow doubles the element buffer (or clamps to the configured cap),
+// moves the live elements into it, and frees the old buffer.
+fn _ch_grow[T](ch: &mut Channel[T]) {
+  let size = _ch_elem_size[T]();
+  var new_cap = 4;
+  if ch.alloc_cap > 0 {
+    new_cap = ch.alloc_cap * 2;
+  }
+  if ch.cap > 0 && new_cap > ch.cap {
+    new_cap = ch.cap;
+  }
+  if new_cap <= ch.alloc_cap {
+    return;
+  }
+  let raw = alloc.alloc(new_cap * size);
+  var old_addr: Int = 0;
+  var raw_addr: Int = 0;
+  unsafe {
+    old_addr = ch.data as Int;
+    raw_addr = raw as Int;
+  }
+  var i = 0;
+  while i < ch.len {
+    let src = old_addr + i * size;
+    let dst = raw_addr + i * size;
+    unsafe {
+      let v = ptr.read(src as *T);
+      ptr.write(dst as *T, v);
+    }
+    i = i + 1;
+  }
+  if ch.alloc_cap > 0 {
+    if old_addr != 0 {
+      unsafe { alloc.dealloc(ch.data, ch.alloc_cap * size); }
+    }
+  }
+  ch.data = raw as *UInt8;
+  ch.alloc_cap = new_cap;
+}
+
+// _ch_push appends one owned element. Full bounded channels are rejected by
+// the callers before this point.
+fn _ch_push[T](ch: &mut Channel[T], item: T) {
+  if ch.len >= ch.alloc_cap {
+    _ch_grow(ch);
+    if ch.len >= ch.alloc_cap {
+      return;
+    }
+  }
+  let size = _ch_elem_size[T]();
+  var base: Int = 0;
+  unsafe { base = ch.data as Int; }
+  let dst = base + ch.len * size;
+  unsafe { ptr.write(dst as *T, item); }
+  ch.len = ch.len + 1;
+}
+
+// _ch_pop removes and returns the front element (None when empty).
+fn _ch_pop[T](ch: &mut Channel[T]) -> Option[T] {
+  if ch.len == 0 {
+    return None;
+  }
+  let size = _ch_elem_size[T]();
+  var base: Int = 0;
+  unsafe { base = ch.data as Int; }
+  let first = unsafe { ptr.read(base as *T) };
+  var i = 0;
+  while i + 1 < ch.len {
+    let src = base + (i + 1) * size;
+    let dst = base + i * size;
+    unsafe {
+      let v = ptr.read(src as *T);
+      ptr.write(dst as *T, v);
+    }
+    i = i + 1;
+  }
+  ch.len = ch.len - 1;
+  return Some(first);
+}
+
+// _ch_clear drops every queued element (payloads freed) but keeps the buffer.
+fn _ch_clear[T](ch: &mut Channel[T]) {
+  while ch.len > 0 {
+    match _ch_pop(ch) {
+      Some(_) => { },
+      None => { },
+    };
+  }
+}
+
+// _ch_release drops queued elements and frees the element buffer.
+fn _ch_release[T](ch: &mut Channel[T]) {
+  _ch_clear(ch);
+  if ch.alloc_cap > 0 {
+    var addr: Int = 0;
+    unsafe { addr = ch.data as Int; }
+    if addr != 0 {
+      unsafe { alloc.dealloc(ch.data, ch.alloc_cap * _ch_elem_size[T]()); }
+    }
+  }
+  ch.data = 0 as *UInt8;
+  ch.alloc_cap = 0;
 }
 
 /// Create a channel with the given capacity (0 = unbounded).
@@ -56,7 +184,7 @@ pub fn channel_new[T](capacity: Int) -> Channel[T]
   if c < 0 {
     c = 0;
   }
-  return Channel[T]{ items: Vec[T].new(); closed: false; cap: c; }
+  return Channel[T]{ data: 0 as *UInt8; len: 0; alloc_cap: 0; cap: c; closed: false; };
 }
 
 /// Enqueue `item`, blocking on a full bounded channel; error if closed.
@@ -71,8 +199,8 @@ pub fn channel_send[T](ch: &mut Channel[T], item: T) -> Result[Unit, Str]
     if ch.closed {
       return Err("channel closed");
     }
-    if ch.cap == 0 || ch.items.len() < ch.cap {
-      ch.items.push(item);
+    if ch.cap == 0 || ch.len < ch.cap {
+      _ch_push(ch, item);
       done = true;
     } else {
       unsafe { xiom_thread_sleep_ms(1); }
@@ -86,16 +214,16 @@ pub fn channel_send[T](ch: &mut Channel[T], item: T) -> Result[Unit, Str]
 /// Returns: true if queued, false if the channel is full or closed.
 /// Complexity: O(1). Never blocks.
 pub fn channel_try_send[T](ch: &mut Channel[T], item: T) -> Bool
-  ensures: result => ch.cap == 0 || ch.items.len() <= ch.cap
-  ensures: !result => ch.closed || (ch.cap > 0 && ch.items.len() >= ch.cap)
+  ensures: result => ch.cap == 0 || ch.len <= ch.cap
+  ensures: !result => ch.closed || (ch.cap > 0 && ch.len >= ch.cap)
 {
   if ch.closed {
     return false;
   }
-  if ch.cap > 0 && ch.items.len() >= ch.cap {
+  if ch.cap > 0 && ch.len >= ch.cap {
     return false;
   }
-  ch.items.push(item);
+  _ch_push(ch, item);
   return true;
 }
 
@@ -104,22 +232,15 @@ pub fn channel_try_send[T](ch: &mut Channel[T], item: T) -> Bool
 /// Returns: Some(item) in FIFO order, None if closed and drained.
 /// Complexity: O(n) shift per pop; blocks while empty.
 pub fn channel_recv[T](ch: &mut Channel[T]) -> Option[T]
-  ensures: result is None => ch.closed == true && ch.items.len() == 0
+  ensures: result is None => ch.closed == true && ch.len == 0
 {
-  while ch.items.len() == 0 && !ch.closed {
+  while ch.len == 0 && !ch.closed {
     unsafe { xiom_thread_sleep_ms(1); }
   }
-  if ch.items.len() == 0 {
+  if ch.len == 0 {
     return None;
   }
-  var val = ch.items[0];
-  var i: Int = 0;
-  while i + 1 < ch.items.len() {
-    ch.items[i] = ch.items[i + 1];
-    i = i + 1;
-  }
-  ch.items.pop();
-  return Some(val);
+  return _ch_pop(ch);
 }
 
 /// Dequeue without blocking; None if empty or closed.
@@ -127,19 +248,9 @@ pub fn channel_recv[T](ch: &mut Channel[T]) -> Option[T]
 /// Returns: Some(item) in FIFO order, None if empty or closed.
 /// Complexity: O(n) shift per pop. Never blocks.
 pub fn channel_try_recv[T](ch: &mut Channel[T]) -> Option[T]
-  ensures: result is None => ch.items.len() == 0
+  ensures: result is None => ch.len == 0
 {
-  if ch.items.len() == 0 {
-    return None;
-  }
-  var val = ch.items[0];
-  var i: Int = 0;
-  while i + 1 < ch.items.len() {
-    ch.items[i] = ch.items[i + 1];
-    i = i + 1;
-  }
-  ch.items.pop();
-  return Some(val);
+  return _ch_pop(ch);
 }
 
 /// Mark the channel closed; pending sends fail, queued items stay readable.
@@ -168,7 +279,7 @@ pub fn channel_is_closed[T](ch: &Channel[T]) -> Bool
 pub fn channel_len[T](ch: &Channel[T]) -> Int
   ensures: result >= 0
 {
-  return ch.items.len();
+  return ch.len;
 }
 
 /// Configured capacity; 0 for unbounded.
@@ -197,11 +308,11 @@ pub fn channel_select[T](chs: &Vec[Channel[T]]) -> Option[Int]
     var found: Option[Int] = None;
     var n = chs.len();
     while i < n {
-      var c = chs[i];
+      let c = &chs[i];
       if !c.closed {
         any_open = true;
       }
-      if c.items.len() > 0 {
+      if c.len > 0 {
         found = Some(i);
         i = n;
       } else {
@@ -233,6 +344,9 @@ pub fn channel_select[T](chs: &Vec[Channel[T]]) -> Option[Int]
 // external SyncMutex across each whole operation, and every thread using a
 // copy of the handle must use that same mutex. `channel_handle_free` is
 // single-use and only valid after all users have been joined.
+//
+// The cell is now non-owning (raw element storage), so the ptr.read copy /
+// ptr.write write-back pattern is sound: the local copy owns no buffer.
 //
 // COMPILER NOTE: stage the cell pointer in a local before ptr.read/ptr.write.
 // `ptr.read(channel_handle_cell[T](h))` (a generic call nested as the argument
@@ -268,7 +382,7 @@ pub fn channel_open[T](capacity: Int) -> ChannelHandle[T]
   if cap < 0 {
     cap = 0;
   }
-  let c = Channel[T]{ items: Vec[T].new(); closed: false; cap: cap; };
+  let c = Channel[T]{ data: 0 as *UInt8; len: 0; alloc_cap: 0; cap: cap; closed: false; };
   let cell = alloc.alloc(size_of[Channel[T]]());
   unsafe { ptr.write(cell as *Channel[T], c); }
   var addr: Int = 0;
@@ -290,10 +404,10 @@ pub fn channel_handle_try_send[T](h: ChannelHandle[T], item: T) -> Bool
   if c.closed {
     return false;
   }
-  if c.cap > 0 && c.items.len() >= c.cap {
+  if c.cap > 0 && c.len >= c.cap {
     return false;
   }
-  c.items.push(item);
+  _ch_push(&mut c, item);
   ptr.write(cell, c);
   return true;
 }
@@ -309,18 +423,9 @@ pub fn channel_handle_try_recv[T](h: ChannelHandle[T]) -> Option[T]
 {
   let cell = channel_handle_cell[T](h);
   var c = ptr.read(cell);
-  if c.items.len() == 0 {
-    return None;
-  }
-  let val = c.items[0];
-  var i: Int = 0;
-  while i + 1 < c.items.len() {
-    c.items[i] = c.items[i + 1];
-    i = i + 1;
-  }
-  c.items.pop();
+  let got = _ch_pop(&mut c);
   ptr.write(cell, c);
-  return Some(val);
+  return got;
 }
 
 /// Mark the channel closed; queued items stay readable.
@@ -361,7 +466,7 @@ pub fn channel_handle_len[T](h: ChannelHandle[T]) -> Int
 {
   let cell = channel_handle_cell[T](h);
   let c = ptr.read(cell);
-  return c.items.len();
+  return c.len;
 }
 
 /// Configured capacity; 0 for unbounded.
@@ -378,7 +483,7 @@ pub fn channel_handle_capacity[T](h: ChannelHandle[T]) -> Int
   return c.cap;
 }
 
-/// Drain the channel and deallocate its cell.
+/// Drain the channel and deallocate its element buffer and cell.
 /// Params: h - the handle.
 /// Thread safety: caller must hold the external lock for `h`; call exactly
 ///               once, after every thread using the handle has been joined,
@@ -390,8 +495,6 @@ pub fn channel_handle_free[T](h: ChannelHandle[T])
 {
   let cell = channel_handle_cell[T](h);
   var c = ptr.read(cell);
-  while c.items.len() > 0 {
-    c.items.pop();
-  }
+  _ch_release(&mut c);
   unsafe { alloc.dealloc(cell as *UInt8, size_of[Channel[T]]()); }
 }
