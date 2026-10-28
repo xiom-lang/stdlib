@@ -37,12 +37,14 @@ gates flip:
    OPEN pending the compiler OK (gate 9 is discrete). Evidence on the
    official v0.65.2 windows-x64 archive (zip sha256 `0a328560...`, verified
    against SHA256SUMS `c08eeadf...`):
-   - the 10-probe gate-9 set is **10/10 green** (52.7 s); 1609
-     (`p_result_payload_index_concat`) is fixed (compile rc 0, run rc 0)
-     and `p_iter_enumerate_tuple` is green;
+   - the 10-probe gate-9 set is **10/10 green** (52.7 s Windows; WSL Linux
+     also 10/10); 1609 (`p_result_payload_index_concat`) is fixed (compile
+     rc 0, run rc 0) and `p_iter_enumerate_tuple` is green;
    - a full sweep of all 27 `tools/known_failures` repros is 26 pass + 1
-     intended negative (`p_vec_shape_arg_mismatch_av` correctly reports
-     T001 at the call site), so no repro is red;
+     intended negative on BOTH platforms (Windows v0.65.2 zip sha256
+     `0a328560...` and Linux v0.65.2 tar.gz sha256 `ca55a088...`;
+     `p_vec_shape_arg_mismatch_av` correctly reports T001 at the call
+     site), so no repro is red;
    - 1704's 10k target stays met (PULSE v0.65.2: JSON obj 2,006 B/iter)
      with the linear drop residual still compiler-side (m375);
    - 1955 (`server_parse_request` ~8 KB/req) is fixed on main `a696fb6`
@@ -78,8 +80,12 @@ Current state 2026-10-28: **wave 298 + gate-9 evidence complete on v0.65.2.**
   compiler main `bb8eccf5a`, v0.65.3 awaits owner GO. PULSE stays on
   v0.65.1.
 - Full 27-repro `tools/known_failures` sweep on the official v0.65.2
-  archive: 26 pass + 1 intended negative (T001 on
-  `p_vec_shape_arg_mismatch_av`); no red repro.
+  archive: **26 pass + 1 intended negative** (T001 on
+  `p_vec_shape_arg_mismatch_av`) on both Windows (zip sha256
+  `0a328560...`) and Linux (tar.gz sha256 `ca55a088...`); the 10-probe
+  gate-9 set is 10/10 on both. No red repro. `tools/gate9_scan.ps1` now
+  reproduces the whole sweep in one command (JSON report, exit 1 on any
+  unexpected failure); `docs/RELEASE_DRY_RUN.md` is the pre-cut package.
 - Wave 297 fixed `server_parse_request` allocation on main `a696fb6`
   (8,954 -> 857 B/iter Windows; 1,138 B/iter Linux/WSL; new
   `p_http_parse_alloc`). REL-20261027-1955-pulse-2 fixed; 1549-pulse-5

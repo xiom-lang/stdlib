@@ -13,6 +13,7 @@ All scripts are repo-relative: they work from any CWD and from CI checkouts.
 | Bare-name scan | `barename_scan.ps1` | strict catalog-body findings across all manifest modules (0 expected) |
 | Module check | `check_modules.ps1` | `xiom --check` type-checks every manifest module |
 | Probes | `run_smokes.ps1 -Corpus tools/probes` | re-run the per-lock probes after a compiler bump |
+| Gate 9 evidence | `gate9_scan.ps1` | the 10-probe gate-9 set plus every `tools/known_failures` repro on a given compiler archive; the intended T001 negative is allowlisted and any other failure exits 1 |
 
 **Runtime-detection fix (2026-09-19):** Windows PowerShell 5.1 rejects
 `-RedirectStandardInput 'NUL'` (it resolves the device name against the CWD),
@@ -61,6 +62,9 @@ pwsh tools/barename_scan.ps1 -Compiler C:\path\to\xiom.exe
 
 # check-only type-check of every manifest module
 pwsh tools/check_modules.ps1 -Compiler C:\path\to\xiom.exe
+
+# gate-9 evidence: 10-probe set + all known-failures repros (JSON report)
+pwsh tools/gate9_scan.ps1 -Compiler C:\path\to\xiom.exe -Json out/gate9.json
 ```
 
 ### Linux / macOS
