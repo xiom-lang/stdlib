@@ -17,9 +17,9 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 109 (updated 2026-10-28; **pre-release candidate test (compiler HEAD e8180229f, sha256 503FFEC8...): bool-pattern fix (1159) verified; gate9_scan 10/10 + 27 pass + 1 intended T001; modules 533/533, smokes 963/963, barename 0/533, coverage/doc/module-smoke OK; probe corpus 416/418 -- p_wave188_channel_handle + p_wave162_shapes crash 0xC0000374/0xC0000005 due to a PRE-EXISTING channel-handle double-owner (ptr.read/ptr.write copies owning Channel[T]); minimal repro p_channel_handle_free_after_send also crashes on v0.65.2; filed REL-20261028-1533-stdlib + REL-20261028-1617-stdlib (high); v0.65.3 HOLD until resolved (compiler semantics or stdlib channel redesign); no tag; COMPILER_VERSION v0.64.8; readiness 90%)**
+## 0A. CONTINUE HERE -- handoff snapshot 110 (updated 2026-10-28; **channel FIXED per compiler decision (non-owning raw element storage, main 5071f86); fixed-candidate matrix: modules 533/533, smokes 963/963, barename 0/533, gate9_scan 10/10 + 28 pass + 1 intended, probes 417/418 (only p_wave162); heavy 40733112135: Ubuntu 956/957 (huffman SIGILL, items 1801/1805), macOS leg failed in the Oct-26 baseline too (pre-existing); NEW compiler v0.65.x blockers: p_wave162 (1641) + huffman_compress ILLEGAL_INSTRUCTION (1801 Linux, 1805 Windows correction); v0.65.3 HOLD; no tag; COMPILER_VERSION v0.64.8; readiness 90%)**
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-28, snapshot 109)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-28, snapshot 110)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
@@ -27,7 +27,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 109 + blocks 300/299/298/297 + this 0C block.
+Read docs/stdlib_session.md snapshot 110 + blocks 301/300/299/298 + this 0C block.
 
 STATE (2026-10-27):
 - stdlib-v0.65.2 IS RELEASED: annotated tag at 7d4d48f (Vec
@@ -128,35 +128,34 @@ STATE (2026-10-27):
   The 1704 residual stays compiler drop glue, not stdlib allocation
   choice.
 
-PRIORITY 0 -- RESOLVE THE PRE-RELEASE CHANNEL BLOCKER:
-- **v0.65.3 must not be cut** while `p_wave188_channel_handle` /
-  `p_wave162_shapes` crash on the candidate (heap corruption).
-- Decide with the compiler who fixes the `ptr.read`/`ptr.write` owning-
-  aggregate semantics: if reading an owning aggregate must not schedule a
-  drop, the compiler fixes it; if the drop is correct, stdlib must
-  redesign `Channel[T]` to non-owning raw storage (data pointer + len/
-  cap) so whole-cell copies are safe. Tracked as
-  REL-20261028-1533-stdlib and REL-20261028-1617-stdlib.
-- Minimal repro `tools/known_failures/p_channel_handle_free_after_send.xi`
-  (0xC0000005 on v0.65.2 and the candidate). Do not paper over a
-  double-free with a neutralization hack: two such experiments (pointer-
-  field rewrite, ptr.write forget) crashed and were reverted.
-- After the fix: re-run the two probes, the minimal repro, gate9_scan
-  and the full battery on the new candidate before any GO.
+PRIORITY 0 -- AWAIT COMPILER FIXES / RE-VERIFY (v0.65.3 HOLD):
+- The compiler decided the `ptr.read` ownership question: the copy is
+  owning and must be dropped, so **stdlib owns the channel fix**. Done on
+  main `5071f86`: `Channel[T]` is non-owning raw element storage; the
+  minimal repro (`p_channel_handle_free_after_send`) and
+  `p_wave188_channel_handle` are rc 0 on v0.64.8, v0.65.2 and the
+  candidate.
+- **v0.65.3 must not be cut** while these compiler-side regressions are
+  open: `p_wave162_shapes` (REL-20261028-1641-stdlib) and
+  `huffman_compress` ILLEGAL_INSTRUCTION (REL-20261028-1801-stdlib +
+  REL-20261028-1805-stdlib correction; Linux + Windows v0.65.x,
+  v0.64.8 clean).
+- After the compiler fixes: re-run the two probes, the minimal repro,
+  `gate9_scan`, the full Windows battery and the heavy Windows/Linux
+  matrix on the new archive before any GO.
 - PULSE re-runs `probe_req_cycle` (parse) and the product GET /health leg
   on the next pin; 1955 is fixed with the A/B numbers.
 - **no tag without the owner's GO**; `COMPILER_VERSION` stays v0.64.8.
 
 PRIORITY 1 -- GATE 9 / NEXT COMPILER (waiting for the compiler OK):
-- Gate 9 is OPEN on: the channel double-owner (1533/1617), 1704
-  (compiler drop residual), the v0.65.2 durable-lane regression, and the
-  released-archive bool-pattern defect (1159 is fixed on main/candidate
-  but still red on v0.65.2). On the candidate the gate-9 set itself is
-  10/10 and 27/28 repros pass + 1 intended T001; the channel repro is
-  the only new red.
-- On the compiler's OK, run `tools/gate9_scan.ps1` (one command: 10-probe
-  set + all known-failures + expected-negative allowlist) and the full
-  battery before any pin decision.
+- Gate 9 on the fixed candidate: `gate9_scan` is **10/10 + 28 pass + 1
+  intended T001, 0 unexpected** (bool + channel repros green). The
+  separate probe corpus is 417/418 (only p_wave162, compiler item 1641).
+  Gate 9 is still OPEN overall because of the compiler-side blockers
+  (1641, 1801/1805, 1704) and the v0.65.2 durable-lane hold.
+- On the compiler's OK, run `tools/gate9_scan.ps1` and the full battery
+  on the designated archive (Windows + heavy Ubuntu/macOS) before any pin
+  decision.
 - Watch the compiler v0.65.3 reclaim fixes (orbitdb 2033/2042, xvector
   1956, engine 2034). Do not pin or bump COMPILER_VERSION here.
 - Keep stdlib-v0.65.2/v0.65.1/v0.65.0 tags immutable; fix forward on main.
@@ -3829,6 +3828,47 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-28 block 301 (channel fixed as non-owning; fixed-candidate matrix; heavy Linux/macOS; new v0.65.x blockers)**
+- **Compiler decision on 1533/1617** (acked 2026-10-28): `ptr.read` is a
+  bitwise copy of an OWNING value; the read-out local must be dropped.
+  No `ptr.read` semantic change. **Stdlib owns the fix**: Channel must be
+  non-owning.
+- **Fix (`5071f86`)**: `Channel[T]` = `{ data: *UInt8; len; alloc_cap;
+  cap; closed; }` with private `_ch_push/_ch_pop/_ch_clear/_ch_grow/
+  _ch_release`. Elements are moved with ptr.read/ptr.write, growth
+  reallocates and moves, and `channel_handle_free` frees the element
+  buffer. The value API is unchanged; the public `.items` field is gone.
+  Result: minimal repro `p_channel_handle_free_after_send` and
+  `p_wave188_channel_handle` are rc 0 on v0.64.8, v0.65.2 and the
+  candidate; `channel_select` uses a reference (no owning copy).
+- **Fixed-candidate matrix** (local build sha256 `503FFEC8...`):
+  modules **533/533** (532s), smokes **963/963** (2362s), barename
+  **0/533** (1086s), coverage floors197 OK (6697/6982, 9224 clauses),
+  doc 100% (7557/7557), module-smoke OK; `gate9_scan` **10/10 + 28 pass
+  + 1 intended T001, 0 unexpected**; probes **417/418** -- only
+  `p_wave162_shapes` (compiler item 1641).
+- **Heavy 40733112135** (`compiler_ref=main`, fixed tree): Ubuntu
+  956/957 -- the only failure is `smoke_compress_roundtrip_family`
+  (exit 132 SIGILL). macOS leg failed, but the Oct-26 baseline heavy run
+  also failed macOS (pre-existing macOS compile issues), so that is not
+  new. The Ubuntu failure narrowed to
+  `tools/known_failures/p_huffman_compress_5000_linux.xi`: official
+  v0.65.2 linux-x64 SIGILL 132 3/3; official v0.64.8 linux-x64 rc 0;
+  Windows v0.65.2 0xC000001D 1/3 (nondeterministic) and the candidate
+  3/3; v0.64.8 Windows rc 0.
+- **New compiler items**: REL-20261028-1641-stdlib (p_wave162, v0.65.x),
+  REL-20261028-1801-stdlib (huffman SIGILL, first recorded as Linux) +
+  REL-20261028-1805-stdlib (correction: Windows too). **v0.65.3 HOLD**
+  until these are fixed and the channel probes verified.
+- **PULSE 1955/1549**: still awaiting their re-run/verification (both
+  items fixed on our side with evidence). **kqueue**: if needed, the
+  heavy workflow's macOS-14 leg is the witness, but that leg is currently
+  red for pre-existing macOS compile reasons -- fix that first or expect
+  noise.
+- **Release prep**: `docs/RELEASE_DRY_RUN.md` is ready (workflow path
+  validated by dry-run 40683465791); version/pin and the notes/package
+  bump wait for the owner's GO and the compiler fixes. No tag/branch cut.
 
 **SESSION 2026-10-28 block 300 (pre-release candidate test: bool fix verified; channel-handle heap corruption found; v0.65.3 HOLD)**
 - Candidate: local compiler build `E:\xiom-lang\xiom\target\release\xiom.exe`,

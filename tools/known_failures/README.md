@@ -55,7 +55,16 @@ archive (3/3); the candidate's ownership-tagged element drops turn it
 into the `p_wave188_channel_handle` / `p_wave162_shapes` crashes. Items
 REL-20261028-1533-stdlib + REL-20261028-1617-stdlib (to: compiler; the
 semantics question is whether `ptr.read` of an owning aggregate should
-schedule a drop).
+schedule a drop). FIXED in stdlib `5071f86` (non-owning Channel); the
+repro is rc 0 on v0.64.8, v0.65.2 and the candidate with that tree.
+
+2026-10-28 finding 3: `p_huffman_compress_5000_linux.xi` --
+`huffman_compress` on a 5000-byte Vec traps with SIGILL on Linux v0.65.2
+(132 3/3) and STATUS_ILLEGAL_INSTRUCTION on Windows v0.65.2 (1/3,
+allocator-state dependent) and the candidate (3/3); v0.64.8 is rc 0 on
+both. Items REL-20261028-1801-stdlib + REL-20261028-1805-stdlib (to:
+compiler, v0.65.x codegen/UB regression). The Ubuntu heavy leg's only
+smoke failure was `smoke_compress_roundtrip_family` (exit 132).
 
 Status check 2026-10-09 (compiler v0.64.2, tag `c51170a6`): every Current
 repro below was re-compiled and re-run on the new pin. Observed rcs are

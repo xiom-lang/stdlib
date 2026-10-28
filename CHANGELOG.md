@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- `sync.channel` now stores its queue as non-owning raw element storage
+  (`data` pointer, `len`, `alloc_cap`, `cap`, `closed`) instead of a
+  `Vec[T]`. The handle form copies the cell through `ptr.read` /
+  `ptr.write`, and a `Vec` field made the cell and the local copy two
+  owners of the same items buffer (heap corruption on open/send/free,
+  REL-20261028-1533-stdlib / REL-20261028-1617-stdlib). The element
+  buffer is moved element-wise on growth and freed by
+  `channel_handle_free`; the public function API is unchanged, but the
+  old public `.items` field is gone (use `channel_len`/`channel_capacity`).
+
 ### Added
 
 - Server-side SSE: `sse_encode_event` / `sse_encode_comment` /

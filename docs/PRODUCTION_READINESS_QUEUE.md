@@ -58,21 +58,21 @@ gates flip:
      v0.65.2; REL-20261028-1159-stdlib). FIXED on compiler main
      `eac90fba6`, verified rc 0 on the 2026-10-28 candidate; still red on
      the released v0.65.2.
-   - 2026-10-28: PRE-RELEASE candidate test found a release blocker:
-     `p_channel_handle_free_after_send.xi` crashes 0xC0000005 on the
-     official v0.65.2 AND the candidate because the channel handle
-     copies its owning `Channel[T]` through `ptr.read`/`ptr.write`
-     (`p_wave188_channel_handle` + `p_wave162_shapes` are the candidate
-     crashes; REL-20261028-1533-stdlib + REL-20261028-1617-stdlib).
-     Everything else on the candidate is green (modules 533/533, smokes
-     963/963, barename 0/533, coverage/doc, gate9 set 10/10).
-   Why it stays OPEN: the channel-handle double-owner blocker above, the
-   compiler-side JsonValue drop residual (1704), and the v0.65.2
-   durable-lane regression (Struct{Vec} push, fixed on compiler main
-   `bb8eccf5a`, v0.65.3 awaiting owner GO); the bool-pattern defect is
-   fixed on main but not in the released archive. The gate flips when the
-   compiler OK arrives, the channel fix lands, and the next archive is
-   swept.
+   - 2026-10-28: PRE-RELEASE candidate test found the channel-handle
+     double-owner (`p_channel_handle_free_after_send.xi` crashed
+     0xC0000005 on v0.65.2 and the candidate). **FIXED in stdlib
+     `5071f86`** (non-owning `Channel[T]`, compiler decision that
+     `ptr.read` is owning); the repro and p_wave188 are rc 0 on
+     v0.64.8/v0.65.2/candidate. Remaining compiler-side reds: p_wave162
+     (REL-20261028-1641-stdlib) and huffman_compress
+     ILLEGAL_INSTRUCTION (REL-20261028-1801/1805-stdlib; Linux + Windows
+     v0.65.x, v0.64.8 clean). Candidate `gate9_scan`: 10/10 + 28 pass +
+     1 intended, 0 unexpected; probes 417/418 (p_wave162 only).
+   Why it stays OPEN: the compiler-side p_wave162 and huffman
+   regressions above, the JsonValue drop residual (1704), and the
+   v0.65.2 durable-lane hold. The gate flips when the compiler OK
+   arrives, the archive is swept on Windows + Ubuntu, and the fixed
+   channel is verified.
    Historical: v0.65.1 was 9/10 (only 1609); v0.64.8 results are in the
    updates below.
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- MET
@@ -143,6 +143,20 @@ Current state 2026-10-28: **wave 298 + gate-9 evidence complete on v0.65.2.**
   Filed REL-20261028-1533-stdlib + REL-20261028-1617-stdlib (high);
   **v0.65.3 must not be cut until this is resolved** (compiler semantics
   decision or a stdlib channel redesign).
+- **CHANNEL FIXED (`5071f86`)**: per the compiler decision (`ptr.read` is
+  owning), `Channel[T]` is now non-owning raw element storage; the
+  minimal repro and p_wave188 are rc 0 on v0.64.8/v0.65.2/candidate.
+  Fixed-candidate matrix: modules 533/533, smokes 963/963, barename
+  0/533, gate9_scan 10/10 + 28 pass + 1 intended, coverage/doc OK;
+  probes 417/418 (p_wave162 only).
+- **Heavy 40733112135** (`compiler_ref=main`): Ubuntu 956/957 -- only
+  `smoke_compress_roundtrip_family` (SIGILL 132). Narrowed to
+  `huffman_compress` on a 5000-byte Vec: v0.65.2 Linux 132 3/3,
+  v0.64.8 Linux rc 0, v0.65.2 Windows 0xC000001D 1/3, candidate Windows
+  3/3, v0.64.8 Windows rc 0. Items REL-20261028-1801-stdlib +
+  REL-20261028-1805-stdlib. macOS heavy failed in the Oct-26 baseline
+  too (pre-existing macOS compile issues). **v0.65.3 HOLD** on 1641 +
+  1801/1805.
 - Compression boundary: zstd/brotli are NOT reimplemented in stdlib; the
   registry packages `xiom.zstd` 0.3.0 and `xiom.brotli` 0.1.0 (verified
   live) remain the supported paths. JSON allocation study: the existing
