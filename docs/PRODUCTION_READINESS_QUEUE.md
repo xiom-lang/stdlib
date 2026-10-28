@@ -1,82 +1,102 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**90% -- 9 of 10 gates complete; gate 9 discrete.** (Compiler pin:
-**v0.64.8**; stdlib-v0.65.1 tag `9dc69b3`, GitHub Release live
-(`xiom-std-0.65.1.tar.gz` + `SHA256SUMS`); compiler main pins
-stdlib-v0.65.1 (PR #8 closed as superseded); registry live
-(xiom-std 0.65.1, sha256 `3bb9b850...`, compiler field v0.64.8); staging
-canary green; compiler v0.65.1 is PRODUCTION (tag `f2c01cf9c`) and pins
-stdlib-v0.65.1; main pin remains v0.64.8.)
+**90% -- 9 of 10 gates complete; gate 9 discrete.** (Main pin:
+**v0.64.8**; stdlib-v0.65.2 tag `7d4d48f`, GitHub Release live
+(`xiom-std-0.65.2.tar.gz` + `SHA256SUMS`, run 40523878342); registry live
+(xiom-std 0.65.2, sha256 `9638b576...`, compiler field v0.64.8, run
+40523878370); staging canary green. Compiler v0.65.2 (tag `fe1994b1`)
+pins stdlib-v0.65.2 but is **not accepted for durable/vector lanes**
+(Struct{Vec} push regression fixed on compiler main `bb8eccf5a`, v0.65.3
+awaits owner GO); PULSE is on v0.65.1. Main pin stays v0.64.8.)
 **Gates: merged corpus 963/963 (0 compilefail / 0 runfail), modules
-533/533, probes 413/413, barename 0/533, floors197. Wave pin: v0.64.8
-(block 280).**
+533/533, probes 417/417, barename 0/533, floors197. Wave pin: v0.64.8
+(block 298).**
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
 gates flip:
 1. Modules type-check clean -- MET (533/533).
 2. Smoke corpus green -- MET: merged 963/963 on v0.64.8 (0/0),
-   including the directory-rename regression; plus 956/956 on both
+   including the directory-rename regression; plus 963/963 on both
    Windows and Ubuntu release gates, no carve-outs.
-3. Probe corpus green -- MET (410/410; waves 188-207, fraction-add,
-   io.rename, hash-shadow, async-select, Routh, executor, small-gap,
-   math-os, long-tail, mid-gap, math, os/iter, final-gap, read_at_into,
-   JSON-builder, JSON-ref-API, HPACK-dynamic, HPACK-Huffman, HPACK-cont,
-   HPACK-settings-flow, HPACK-stream-state, HPACK-conn,
-   list_dir-roundtrip, and residual-wave probes are included and
-   individually green).
+3. Probe corpus green -- MET (417/417; the gate-9 set plus
+   p_http_parse_alloc, p_wave298_sse_wire, p_wave298_h2_conn_mux and the
+   earlier waves are included and individually green).
 4. Strict bare-name scan clean -- MET (0/533).
 5. Coverage ratchet green -- MET (floors197).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (499/542 modules, 3501/6575 fns).
 8. Contract coverage 100% outside the documented no-clause tail -- MET
-   (wave 208, 2026-10-25: every non-tail public fn carries a clause;
-   non-tail 100%, global 95.9%, 6671/6956; clauses/fns 97.9%, 9193
-   clauses; floors197). The remaining 285 public fns are the documented
-   no-clause tail: iter 70.5%, os 71.5%, math 90.7%, thread 91.1%, ffi
-   94.5%, serialize 94.7%, format 95.2% (no non-tautological clauses
-   left; no clause waves in the tail).
+   (wave 208, 2026-10-25, refreshed 2026-10-28: every non-tail public fn
+   carries a clause; non-tail 100%, global 95.9%, 6688/6973; clauses/fns
+   97.9%, 9213 clauses; floors197). The remaining 285 public fns are the
+   documented no-clause tail: iter 70.5%, os 71.5%, math 90.7%, thread
+   91.1%, ffi 94.5%, serialize 94.7%, format 95.2% (no non-tautological
+   clauses left; no clause waves in the tail).
 9. Zero open findings (`tools/known_failures/README.md` Current section) --
-   OPEN, one red. v0.65.1 Windows sweep (sha256 `69de1e27...`):
-   1626/2343/2100-W1/1456/1451/1326/2249/2249-2/1550 verified green;
-   1609 (inline Result.value[i]) still red and keeps the 1549-pulse-5
-   workaround. 1704's 10k parse target is met (23.6 MB < 256 MB), but the
-   trend is still linear (~2.3 KB/iter; JsonValue enum drop remains
-   compiler-side). Linux leg pending. Historical v0.64.8 results:
-   1053/1456/2328/2000/1546/1624/1548-5 verified and closed; 2331 stdlib
-   runtime residual verified/closed.
-   New compiler items:
-   REL-20261019-2249-stdlib (multiple generic Map/Set free helpers AV
-   0xC0000005), -2 (Vec4f lane get/write miscompile), REL-20261020-1242
-   (Vec4f pointer scale, stdlib fixed, verify on m377),
-   REL-20261020-1326 (log+serialize IR icmp on LogLevel), and
-   REL-20261020-1550 (tuple-returning fn-value ABI). xvector claim
-   REL-20261020-1531 does not reproduce on 87090ec (check rc 0); acked.
-   REL-20261020-1302 `io.read_at_into` caller-buffer page reader is
-   implemented and fixed. REL-20261020-1704 JSON builders plus the
-   reference-taking entry points (json_stringify_ref/json_pretty_ref/
-   json_type_ref/json_get_ref) are implemented as partial mitigations
-   (acked; drop elaboration remains compiler-side). REL-20261021-0918 `list_dir` is fixed in 05673f8
-   (runtime-owned names; dirent in one TU), awaiting the macOS witness.
-   REL-20261011-1626 is fixed on compiler main
-   (626dfbc65/8bfd4235d), pending the next release. New
-   REL-20261021-1520: MapIter.max/min + ZipIter.find/all/any/nth/last
-   generic specialization collision (tuple/i64 IR type).
-   New stdlib fixes this cycle: fraction_add, io.rename directory
-   postcondition, Routh-Hurwitz, weekday convention, AsyncExecutor.run
-   receiver drain, Vec4f lane pointer arithmetic, read_at_into, JSON
-   in-place builders.
+   OPEN pending the compiler OK (gate 9 is discrete). Evidence on the
+   official v0.65.2 windows-x64 archive (zip sha256 `0a328560...`, verified
+   against SHA256SUMS `c08eeadf...`):
+   - the 10-probe gate-9 set is **10/10 green** (52.7 s); 1609
+     (`p_result_payload_index_concat`) is fixed (compile rc 0, run rc 0)
+     and `p_iter_enumerate_tuple` is green;
+   - a full sweep of all 27 `tools/known_failures` repros is 26 pass + 1
+     intended negative (`p_vec_shape_arg_mismatch_av` correctly reports
+     T001 at the call site), so no repro is red;
+   - 1704's 10k target stays met (PULSE v0.65.2: JSON obj 2,006 B/iter)
+     with the linear drop residual still compiler-side (m375);
+   - 1955 (`server_parse_request` ~8 KB/req) is fixed on main `a696fb6`
+     (857 B/iter Windows, 1,138 B/iter Linux/WSL) and awaits the next pin.
+   Why it stays OPEN: the compiler-side JsonValue drop residual (1704) and
+   the v0.65.2 durable-lane regression (Struct{Vec} push, fixed on compiler
+   main `bb8eccf5a`, v0.65.3 awaiting owner GO) are still open findings; the
+   gate flips when the compiler OK arrives and the next archive is swept.
+   Historical: v0.65.1 was 9/10 (only 1609); v0.64.8 results are in the
+   updates below.
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- MET
-    (stdlib-v0.64.8 released 2026-10-19; tag object 0bf5b75 -> commit
-    112c5b6; release run 39289746856; assets + SHA256SUMS published;
-    compiler v0.64.8 tag 4d040604b pins STDLIB_VERSION; registry
-    xiom-std 0.64.8 live via run 39298965606; tags frozen).
+    (stdlib-v0.65.2 released 2026-10-27; tag object `e041aae` -> commit
+    `7d4d48f`; release run 40523878342; assets + SHA256SUMS published;
+    registry xiom-std 0.65.2 live via run 40523878370; compiler v0.65.2
+    pins STDLIB_VERSION; tags frozen. stdlib-v0.65.1 `9dc69b3` and 0.65.0
+    remain released/immutable.)
 
 Meter formula: MET gates count 1.0; gate 9 gets no partial credit
 (discrete). 9 / 10 = 90%. Gate 8 is MET via the non-tail 100% rule
 above; the documented no-clause tail does not count against the meter.
 
 Authoritative order: the gates above, then the updates below newest-first.
+
+Current state 2026-10-28: **wave 298 + gate-9 evidence complete on v0.65.2.**
+- stdlib-v0.65.2 released from `7d4d48f` (annotated tag `e041aae`);
+  release run 40523878342 green (Ubuntu 24m13s, Windows 51m56s);
+  registry xiom-std 0.65.2 live (sha256 `9638b576...`, compiler v0.64.8,
+  run 40523878370); staging canary 40532608142 green; branch merged to
+  main `--no-ff` at `6899cb5`.
+- Compiler v0.65.2 (tag `fe1994b1`) pins stdlib-v0.65.2 and its 10-probe
+  gate-9 set is 10/10 green (1609 fixed). It is NOT accepted for
+  durable/vector lanes (Struct{Vec} push regression); the fix is on
+  compiler main `bb8eccf5a`, v0.65.3 awaits owner GO. PULSE stays on
+  v0.65.1.
+- Full 27-repro `tools/known_failures` sweep on the official v0.65.2
+  archive: 26 pass + 1 intended negative (T001 on
+  `p_vec_shape_arg_mismatch_av`); no red repro.
+- Wave 297 fixed `server_parse_request` allocation on main `a696fb6`
+  (8,954 -> 857 B/iter Windows; 1,138 B/iter Linux/WSL; new
+  `p_http_parse_alloc`). REL-20261027-1955-pulse-2 fixed; 1549-pulse-5
+  fixed (1609 cleared).
+- Wave 298 (`63ab0e1`) delivered the SSE server half (encode/write/
+  comment/heartbeat over TcpStream) and the h2 connection multiplexer
+  (H2Connection + h2_conn_*: concurrency cap, local ids, received/local
+  GOAWAY drain); probes `p_wave298_sse_wire` + `p_wave298_h2_conn_mux`.
+  **The h2 primitive layer is complete** (frame I/O stays with the
+  caller). File-watch parity is already in (Windows ReadDirectoryChangesW,
+  Linux inotify); only macOS/BSD kqueue remains a documented Err.
+- Gates on the official v0.64.8 archive: modules 533/533, probes 417/417,
+  smokes 963/963, barename 0/533, coverage floors197 OK (6688/6973,
+  9213 clauses), doc 100% (7547/7547), module-smoke ratchet OK.
+- Readiness stays 90% (gate 9 discrete). Remaining 2202 residuals: RFC
+  7932 brotli / zstd, macOS/BSD kqueue, thread arg/closure channel
+  (compiler). No tag; `COMPILER_VERSION` stays v0.64.8.
 
 Current state 2026-10-26: **gate 9 is down to one red.** On the released
 v0.65.0 Windows archive (sha256 `ff4abb4a...`), the gate-9 set is green

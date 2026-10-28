@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 107 (updated 2026-10-28; **wave 298 landed at 63ab0e1: SSE server wire/writers (encode/comment/heartbeat + TcpStream write_all) and the h2 connection multiplexer (H2Connection + h2_conn_*: concurrency cap, local ids, received/local GOAWAY drain); probes 417/417 incl. p_wave298_sse_wire + p_wave298_h2_conn_mux; the h2 primitive layer is complete; gates modules 533/533, probes 417/417, smokes 963/963, barename 0/533, floors197 OK, doc 100%; earlier parse fix a696fb6; no tag; COMPILER_VERSION v0.64.8; gate-9 re-verify (item 3) waits for the compiler OK; next pick RFC brotli/zstd, kqueue/IOCP, thread arg channel; readiness 90%)**
+## 0A. CONTINUE HERE -- handoff snapshot 107 (updated 2026-10-28; **wave 298 landed at 63ab0e1: SSE server wire/writers (encode/comment/heartbeat + TcpStream write_all) and the h2 connection multiplexer (H2Connection + h2_conn_*: concurrency cap, local ids, received/local GOAWAY drain); probes 417/417 incl. p_wave298_sse_wire + p_wave298_h2_conn_mux; the h2 primitive layer is complete; readiness evidence on official v0.65.2: gate-9 set 10/10 + all 27 known-failures repros 26 pass/1 intended T001, queue refreshed, meter stays 90% pending the compiler OK; gates modules 533/533, probes 417/417, smokes 963/963, barename 0/533, floors197 OK, doc 100%; earlier parse fix a696fb6; no tag; COMPILER_VERSION v0.64.8; next pick RFC brotli/zstd, macOS kqueue, thread arg channel; readiness 90%)**
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-28, snapshot 107)
 
@@ -3803,6 +3803,15 @@ registry pin, agent recon for the rest)**
   probes **417/417** (789.5s), smokes **963/963** (773.2s), barename
   **0/533** (466.6s), coverage floors197 **RATCHET OK** (6688/6973, 9213
   clauses), doc **100%** (7547/7547), module-smoke ratchet OK.
+- Readiness evidence (2026-10-28) on the official v0.65.2 windows-x64
+  archive (zip sha256 `0a328560...`, SHA256SUMS `c08eeadf...`): the
+  10-probe gate-9 set is **10/10** (52.7s), and a full sweep of all 27
+  `tools/known_failures` repros is **26 pass + 1 intended negative**
+  (`p_vec_shape_arg_mismatch_av` correctly emits T001 at the call site).
+  No repro is red. `docs/PRODUCTION_READINESS_QUEUE.md` refreshed to the
+  current gates (probes 417, coverage 6688/6973, 9213 clauses, gate 10
+  v0.65.2, gate-9 evidence); readiness stays 90% (gate 9 discrete)
+  pending the compiler OK on the next archive.
 - Relay `REL-20261015-2202-pulse` updated (items 7/9 delivered). No tag;
   `COMPILER_VERSION` stays v0.64.8. Item 3 (gate-9 re-verify on a new
   archive) is held for the compiler OK.
