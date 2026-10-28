@@ -55,14 +55,24 @@ gates flip:
      `Result[Bool, Str]` matches with nested literal Bool patterns take
      the `Ok(false)` arm for an `Ok(true)` value
      (`p_result_bool_pattern.xi`: compile rc 0, run rc 2 on v0.64.8 and
-     v0.65.2; REL-20261028-1159-stdlib). Workaround applied in
-     `xiom/net/h2_io.xi`; the repro is in the corpus and
-     `tools/gate9_scan.ps1` reports it red until the fix lands.
-   Why it stays OPEN: the compiler-side JsonValue drop residual (1704),
-   the v0.65.2 durable-lane regression (Struct{Vec} push, fixed on
-   compiler main `bb8eccf5a`, v0.65.3 awaiting owner GO), and the
-   Result[Bool] literal-pattern defect above are still open findings; the
-   gate flips when the compiler OK arrives and the next archive is swept.
+     v0.65.2; REL-20261028-1159-stdlib). FIXED on compiler main
+     `eac90fba6`, verified rc 0 on the 2026-10-28 candidate; still red on
+     the released v0.65.2.
+   - 2026-10-28: PRE-RELEASE candidate test found a release blocker:
+     `p_channel_handle_free_after_send.xi` crashes 0xC0000005 on the
+     official v0.65.2 AND the candidate because the channel handle
+     copies its owning `Channel[T]` through `ptr.read`/`ptr.write`
+     (`p_wave188_channel_handle` + `p_wave162_shapes` are the candidate
+     crashes; REL-20261028-1533-stdlib + REL-20261028-1617-stdlib).
+     Everything else on the candidate is green (modules 533/533, smokes
+     963/963, barename 0/533, coverage/doc, gate9 set 10/10).
+   Why it stays OPEN: the channel-handle double-owner blocker above, the
+   compiler-side JsonValue drop residual (1704), and the v0.65.2
+   durable-lane regression (Struct{Vec} push, fixed on compiler main
+   `bb8eccf5a`, v0.65.3 awaiting owner GO); the bool-pattern defect is
+   fixed on main but not in the released archive. The gate flips when the
+   compiler OK arrives, the channel fix lands, and the next archive is
+   swept.
    Historical: v0.65.1 was 9/10 (only 1609); v0.64.8 results are in the
    updates below.
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- MET
@@ -120,6 +130,19 @@ Current state 2026-10-28: **wave 298 + gate-9 evidence complete on v0.65.2.**
   GREEN end to end: validate + Ubuntu/Windows gates + package staging,
   with the pin PR and registry canary correctly skipped (no tag). See
   `docs/RELEASE_DRY_RUN.md`.
+- **PRE-RELEASE CANDIDATE TEST (2026-10-28)**: local build at compiler
+  HEAD `e8180229f` (sha256 `503FFEC8...`, includes `eac90fba6` bool fix +
+  `6a58a60e1`/`93d561107` element drops). gate9_scan **10/10 + 27 pass +
+  1 intended T001** (the bool repro is rc 0 -- fix verified); modules
+  533/533, smokes 963/963, barename 0/533, coverage/doc/module-smoke OK;
+  h2 frame probe green. **Probe corpus 416/418**: `p_wave188_channel_handle`
+  and `p_wave162_shapes` crash 0xC0000374/0xC0000005. Root cause is a
+  pre-existing stdlib channel-handle double-owner (ptr.read/ptr.write of
+  an owning `Channel[T]`); the element-drop tag exposes it. Minimal repro
+  `p_channel_handle_free_after_send.xi` also crashes on official v0.65.2.
+  Filed REL-20261028-1533-stdlib + REL-20261028-1617-stdlib (high);
+  **v0.65.3 must not be cut until this is resolved** (compiler semantics
+  decision or a stdlib channel redesign).
 - Compression boundary: zstd/brotli are NOT reimplemented in stdlib; the
   registry packages `xiom.zstd` 0.3.0 and `xiom.brotli` 0.1.0 (verified
   live) remain the supported paths. JSON allocation study: the existing

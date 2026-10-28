@@ -46,6 +46,17 @@ official v0.64.8 and v0.65.2 windows-x64 archives). Item
 REL-20261028-1159-stdlib (to: compiler, bug high). Workaround: bind the
 payload first (`Ok(v) => if !v { ... }`), used in `xiom/net/h2_io.xi`.
 
+2026-10-28 finding 2: `p_channel_handle_free_after_send.xi` -- a channel
+handle with one queued item crashes on free (0xC0000005) because the
+handle operations copy the owning `Channel[T]` through `ptr.read` /
+`ptr.write`, leaving the heap cell and the local copy as two owners of
+the same items Vec. Reproduces on the official v0.65.2 windows-x64
+archive (3/3); the candidate's ownership-tagged element drops turn it
+into the `p_wave188_channel_handle` / `p_wave162_shapes` crashes. Items
+REL-20261028-1533-stdlib + REL-20261028-1617-stdlib (to: compiler; the
+semantics question is whether `ptr.read` of an owning aggregate should
+schedule a drop).
+
 Status check 2026-10-09 (compiler v0.64.2, tag `c51170a6`): every Current
 repro below was re-compiled and re-run on the new pin. Observed rcs are
 unchanged from the entries except where noted; `p_array_zip_no_truncate.xi`
