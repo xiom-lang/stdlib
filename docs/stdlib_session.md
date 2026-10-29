@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 113 (updated 2026-10-29; **1641 is NOT fixed by ed2f38cff: p_wave162 no longer crashes but the SSE buffer is a use-after-free (11/20 rc 12); new tracked witness `p_borrowed_mut_grown_vec_uaf` is 10/10 red on ed2f38cff and 0/3 on v0.64.8; gate9_scan VERDICT FAIL (1 unexpected); relay REL-20261029-1910-stdlib; v0.65.3 stays HOLD; full matrix running**)
+## 0A. CONTINUE HERE -- handoff snapshot 113 (updated 2026-10-29; **1641 is NOT fixed by ed2f38cff: p_wave162 no longer crashes but the SSE buffer is a use-after-free (11/20 rc 12); new tracked witness `p_borrowed_mut_grown_vec_uaf` is 10/10 red on ed2f38cff and 0/3 on v0.64.8; gate9_scan VERDICT FAIL (1 unexpected); relay REL-20261029-1910-stdlib; v0.65.3 stays HOLD; full matrix 417/418 probes (only p_wave162 rc 12), 963/963 smokes, 533/533 modules**)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-29, snapshot 113)
 
@@ -51,8 +51,10 @@ STATE (2026-10-29):
   Compiler's claim lives on REL-20261029-1840-compiler.
 - v0.65.3 HOLD. No tag/release; COMPILER_VERSION v0.64.8; package/version
   untouched. docs/RELEASE_DRY_RUN.md remains the pre-cut package.
-- Full matrix on ed2f38cff launched (probes/smokes/modules/barename/
-  coverage/doc/module-smoke); results in block 304.
+- Full matrix on ed2f38cff: probes 417/418 (only p_wave162 rc 12), smokes
+  963/963, modules 533/533, barename 0/533, coverage/doc/module-smoke
+  ratchets OK. The candidate is otherwise clean; the sole red is the 1641
+  UAF on p_wave162 row 12.
 
 PRIORITY 0 -- NEXT COMPILER CANDIDATE:
 - Do NOT re-verify ed2f38cff as fixed. Wait for a candidate that passes
@@ -3914,9 +3916,13 @@ registry pin, agent recon for the rest)**
   **VERDICT FAIL** (`out/verify_ed2f38cff/gate9.json`).
 - Relay: opened **REL-20261029-1910-stdlib** (stdlib -> compiler, bug/high)
   with the evidence; the compiler-addressed 1641 item is not edited.
-- **v0.65.3 HOLD**; no version/`COMPILER_VERSION`/package changes. Full
-  matrix on ed2f38cff launched; per-leg results:
-  (filled below when the battery completes).
+- **v0.65.3 HOLD**; no version/`COMPILER_VERSION`/package changes.
+- **Full matrix on ed2f38cff** (Windows, candidate binary): probes
+  **417/418** (only `p_wave162_shapes`, rc 12), smokes **963/963** (855.9s),
+  modules **533/533** (374.5s), barename **0/533** (557.1s), coverage
+  **RATCHET OK**, doc **RATCHET OK (100%)**, module-smoke **RATCHET OK**
+  (499/543 modules, 3504/6658 fns). So the candidate is otherwise clean;
+  the sole stdlib-visible red is the 1641 UAF on row 12.
 
 **SESSION 2026-10-29 block 303 (channels + huffman closed; 1641 is the only blocker; e48213c66 tested; app soaks)**
 - **Channel items closed**: compiler moved 1533/1617 to fixed; we verified
