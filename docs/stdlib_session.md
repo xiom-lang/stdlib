@@ -3835,7 +3835,9 @@ registry pin, agent recon for the rest)**
 - **Candidate e48213c66** (sha256 `E0222F26...`, 1324 aggregate-local
   move + nested-struct fixes): `p_wave162` 0xC0000374 **5/5** (still
   red); `p_wave188` 5/5, channel minimal repro 5/5, huffman 5/5; gate9
-  10/10 + 29 pass + 1 intended, 0 unexpected.
+  10/10 + 29 pass + 1 intended, 0 unexpected; probe corpus **417/418**
+  (only p_wave162); smoke corpus **963/963** (1968s). This is the
+  newest rc candidate and is otherwise clean.
 - **App soaks** (Windows, 50k, baseline 5.32 MB) on e48213c66 and
   ab97014d9 (identical): server parse **926 B/iter** (span-parse fix
   holds), JSON parse nested doc **6,526 B/iter**, JSON build +

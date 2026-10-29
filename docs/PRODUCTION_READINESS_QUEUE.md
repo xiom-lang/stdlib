@@ -103,8 +103,8 @@ Current state 2026-10-29: **only 1641 blocks the release.**
   huffman 1801 **verified/closed** (1805 duplicate).
 - Candidate `e48213c66` (sha256 `E0222F26...`): p_wave162 0xC0000374
   5/5 (1641, compiler `&mut` aggregate by-value-temp ASan double-free);
-  gate9_scan 10/10 + 29 pass + 1 intended; p_wave188/huffman/channel
-  probes 5/5.
+  gate9_scan 10/10 + 29 pass + 1 intended; probes 417/418 (only
+  p_wave162); smokes **963/963**; p_wave188/huffman/channel probes 5/5.
 - App soaks (Windows 50k): server parse 926 B/iter, JSON parse
   6,526 B/iter, JSON build+stringify 2,243 B/op; the residual is the
   JsonValue/Map/enum drop family (1704), not Str/Vec/Struct.
