@@ -68,11 +68,20 @@ gates flip:
      ILLEGAL_INSTRUCTION (REL-20261028-1801/1805-stdlib; Linux + Windows
      v0.65.x, v0.64.8 clean). Candidate `gate9_scan`: 10/10 + 28 pass +
      1 intended, 0 unexpected; probes 417/418 (p_wave162 only).
-   Why it stays OPEN: the compiler-side p_wave162 and huffman
-   regressions above, the JsonValue drop residual (1704), and the
-   v0.65.2 durable-lane hold. The gate flips when the compiler OK
-   arrives, the archive is swept on Windows + Ubuntu, and the fixed
-   channel is verified.
+   - 2026-10-29 candidate `ab97014d9` (sha256 `6D9F2ED0...`): huffman
+     SIGILL **fixed** (repro + compress family 5/5; REL-20261028-1801
+     verified/closed, 1805 duplicate) and the non-owning Channel
+     **verified** (p_wave188 + minimal repro 5/5). `gate9_scan` 10/10 +
+     29 pass + 1 intended, 0 unexpected. The **only** probe red is
+     `p_wave162_shapes` 0xC0000374 5/5 (REL-20261028-1641-stdlib).
+     Heavy 40874531519 failed at checkout because `compiler_ref` accepts
+     a branch/tag, not a raw SHA; Linux evidence for this candidate is
+     the compiler's own 10/10.
+   Why it stays OPEN: REL-20261028-1641-stdlib (p_wave162) and the
+   compiler-side JsonValue drop residual (1704); the channel items are
+   fixed on main and awaiting the compiler's fixed/close transition.
+   The gate flips when 1641 is fixed and the archive is swept on
+   Windows + Ubuntu.
    Historical: v0.65.1 was 9/10 (only 1609); v0.64.8 results are in the
    updates below.
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- MET

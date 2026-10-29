@@ -17,9 +17,9 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 110 (updated 2026-10-28; **channel FIXED per compiler decision (non-owning raw element storage, main 5071f86); fixed-candidate matrix: modules 533/533, smokes 963/963, barename 0/533, gate9_scan 10/10 + 28 pass + 1 intended, probes 417/418 (only p_wave162); heavy 40733112135: Ubuntu 956/957 (huffman SIGILL, items 1801/1805), macOS leg failed in the Oct-26 baseline too (pre-existing); NEW compiler v0.65.x blockers: p_wave162 (1641) + huffman_compress ILLEGAL_INSTRUCTION (1801 Linux, 1805 Windows correction); v0.65.3 HOLD; no tag; COMPILER_VERSION v0.64.8; readiness 90%)**
+## 0A. CONTINUE HERE -- handoff snapshot 111 (updated 2026-10-29; **candidate ab97014d9 (sha256 6D9F2ED0...): huffman SIGILL FIXED (repro + compress family 5/5), non-owning Channel verified (p_wave188 5/5, minimal repro 5/5), gate9_scan 10/10 + 29 pass + 1 intended, modules 533/533, probes 417/418 -- p_wave162 still 0xC0000374 5/5 (REL-20261028-1641 open); smoke batch in progress; heavy 40874531519 could not build a raw SHA (compiler_ref takes a branch/tag only), so Linux ab97014d9 evidence is the compiler's 10/10; 1801 verified/closed, 1805 duplicate, 1533/1617 evidence posted (compiler to move fixed); v0.65.3 HOLD on 1641; no tag; COMPILER_VERSION v0.64.8; readiness 90%)**
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-28, snapshot 110)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-29, snapshot 111)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
@@ -27,7 +27,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 110 + blocks 301/300/299/298 + this 0C block.
+Read docs/stdlib_session.md snapshot 111 + blocks 302/301/300/299 + this 0C block.
 
 STATE (2026-10-27):
 - stdlib-v0.65.2 IS RELEASED: annotated tag at 7d4d48f (Vec
@@ -92,22 +92,19 @@ STATE (2026-10-27):
   per call, hence the buffered reader; the read targets a local Vec then
   appends (a direct `&mut r.buf` read and the nested
   `Ok(false)/Ok(true)` match both misbehaved).
-- **PRE-RELEASE CANDIDATE TEST (2026-10-28)**: local compiler build at
-  HEAD `e8180229f` (sha256 `503FFEC8...`; includes `eac90fba6` bool fix
-  and `6a58a60e1`/`93d561107` element drops). Bool repro **rc 0** (1159
-  verified fixed); `gate9_scan` **10/10 + 27 pass + 1 intended T001**;
-  modules 533/533, smokes 963/963, barename 0/533, coverage/doc/
-  module-smoke OK; h2 frame probe green. **Probe corpus 416/418**:
-  `p_wave188_channel_handle` + `p_wave162_shapes` crash
-  0xC0000374/0xC0000005. Root cause: the channel handle copies the owning
-  `Channel[T]` through `ptr.read`/`ptr.write`, so the cell and the local
-  copy both own the items Vec; the local drop frees the live buffer.
-  Minimal repro `p_channel_handle_free_after_send.xi` crashes 0xC0000005
-  on **official v0.65.2** too (open+free without a send is rc 0), so it
-  is pre-existing; the element-drop tag exposes it. Items
-  REL-20261028-1533-stdlib + REL-20261028-1617-stdlib (high).
-  **v0.65.3 HOLD** until the compiler decides the ptr.read drop semantics
-  or stdlib redesigns Channel to non-owning storage.
+- **PRE-RELEASE CANDIDATE (2026-10-29, `ab97014d9`, sha256
+  `6D9F2ED0...`)**: huffman SIGILL fixed (repro + compress family 5/5);
+  non-owning Channel verified (`p_wave188_channel_handle` 5/5,
+  `p_channel_handle_free_after_send` 5/5); `gate9_scan` **10/10 + 29
+  pass + 1 intended T001, 0 unexpected**; modules 533/533; probes
+  **417/418** -- `p_wave162_shapes` still 0xC0000374 5/5
+  (REL-20261028-1641-stdlib). Smokes/barename/ratchets for this exact
+  candidate were still running at handoff (the prior candidate was
+  963/963 + 0/533). **Heavy 40874531519 could not build a raw SHA**:
+  `compiler_ref` fetches `refs/heads/<ref>`, so Linux evidence for this
+  candidate is the compiler's own 10/10; ask them for a branch/tag if a
+  heavy witness is needed. **v0.65.3 HOLD** on 1641 (+ 1533/1617
+  close-out).
 - **Release dry-run 40683465791 GREEN end to end**: dispatch
   (`version=0.65.2`) -> validate + Ubuntu gates + Windows gates + package
   staging; pin PR and registry canary correctly skipped (no tag); **no
@@ -128,21 +125,19 @@ STATE (2026-10-27):
   The 1704 residual stays compiler drop glue, not stdlib allocation
   choice.
 
-PRIORITY 0 -- AWAIT COMPILER FIXES / RE-VERIFY (v0.65.3 HOLD):
-- The compiler decided the `ptr.read` ownership question: the copy is
-  owning and must be dropped, so **stdlib owns the channel fix**. Done on
-  main `5071f86`: `Channel[T]` is non-owning raw element storage; the
-  minimal repro (`p_channel_handle_free_after_send`) and
-  `p_wave188_channel_handle` are rc 0 on v0.64.8, v0.65.2 and the
-  candidate.
-- **v0.65.3 must not be cut** while these compiler-side regressions are
-  open: `p_wave162_shapes` (REL-20261028-1641-stdlib) and
-  `huffman_compress` ILLEGAL_INSTRUCTION (REL-20261028-1801-stdlib +
-  REL-20261028-1805-stdlib correction; Linux + Windows v0.65.x,
-  v0.64.8 clean).
-- After the compiler fixes: re-run the two probes, the minimal repro,
-  `gate9_scan`, the full Windows battery and the heavy Windows/Linux
-  matrix on the new archive before any GO.
+PRIORITY 0 -- AWAIT 1641 / VERIFY THE CANDIDATE (v0.65.3 HOLD):
+- Candidate `ab97014d9` is green on the huffman repro, the compress
+  family, the non-owning Channel probes and gate 9 (10/10 + 29 pass).
+  The ONLY remaining red is `p_wave162_shapes` (0xC0000374 5/5;
+  REL-20261028-1641-stdlib).
+- **v0.65.3 must not be cut** until 1641 is fixed and the channel items
+  are closed out (`1533`/`1617` evidence is posted; compiler to move
+  fixed).
+- After the compiler fix: re-run `p_wave162`, the full Windows battery,
+  and a heavy Windows/Linux witness. **Heavy needs a branch/tag**: its
+  `compiler_ref` fetches `refs/heads/<ref>`, so a raw SHA fails at
+  checkout (run 40874531519). Ask the compiler to push
+  `candidate-<sha>` for the witness.
 - PULSE re-runs `probe_req_cycle` (parse) and the product GET /health leg
   on the next pin; 1955 is fixed with the A/B numbers.
 - **no tag without the owner's GO**; `COMPILER_VERSION` stays v0.64.8.
@@ -3828,6 +3823,36 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-29 block 302 (candidate ab97014d9: huffman + channel verified; p_wave162 still open; heavy ref limitation)**
+- Candidate `ab97014d9` (binary
+  `E:\xiom-lang\xiom\target\candidate\xiom-ab97014d9.exe`, sha256
+  `6D9F2ED0...`, CI 40763583267): the huffman SIGILL is fixed by the
+  borrow-safe scalar-return change.
+- Verified on the candidate (Windows):
+  - `p_huffman_compress_5000_linux`: **5/5 rc 0** (was 0xC000001D
+    1/3 on v0.65.2, 3/3 on the prior candidate);
+  - `smoke_compress_roundtrip_family`: **5/5 rc 0**;
+  - non-owning Channel: `p_wave188_channel_handle` **5/5 rc 0**,
+    `p_channel_handle_free_after_send` **5/5 rc 0** (v0.64.8/v0.65.2/
+    candidate all green with `5071f86`);
+  - `gate9_scan`: **10/10 + 29 pass + 1 intended T001, 0 unexpected**;
+  - modules **533/533**, probes **417/418** -- only `p_wave162_shapes`
+    (0xC0000374 5/5, REL-20261028-1641-stdlib still open);
+  - smokes 963 pending at handoff; barename/ratchets pending.
+- Relay: `1801` verified and **closed** (evidence on the item; compiler's
+  Linux 10/10 noted); `1805` is duplicate; `1533`/`1617` evidence posted
+  (non-owning Channel, p_wave188 + minimal repro 5/5) -- still acked,
+  compiler to move fixed/close; `1641` remains open and is NOT fixed by
+  the channel work.
+- **Heavy limitation**: `heavy.yml`'s `compiler_ref` is a branch/tag
+  name (`fetch refs/heads/<ref>`), not a commit SHA, so dispatch
+  40874531519 failed at checkout for `ab97014d9`. Linux evidence for this
+  exact candidate is the compiler's own 10/10. If a heavy Linux/Windows
+  witness on a candidate is needed, the compiler must push a branch/tag
+  (e.g. `candidate-ab97014d9`).
+- **v0.65.3 HOLD** on 1641 (p_wave162) and the 1533/1617 close-out.
+  Release prep (`docs/RELEASE_DRY_RUN.md`) remains ready; no tag.
 
 **SESSION 2026-10-28 block 301 (channel fixed as non-owning; fixed-candidate matrix; heavy Linux/macOS; new v0.65.x blockers)**
 - **Compiler decision on 1533/1617** (acked 2026-10-28): `ptr.read` is a
