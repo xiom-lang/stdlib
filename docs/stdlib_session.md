@@ -3974,8 +3974,10 @@ registry pin, agent recon for the rest)**
   (639.3s), coverage **RATCHET OK**, doc **RATCHET OK (100%)**,
   module-smoke **RATCHET OK** (499/543 modules, 3504/6658 fns).
 - Relay: **REL-20261028-1641** verified + closed; **REL-20261029-1910**
-  (the ed2f38cff refutation) verified + closed. REL-20261029-1956 is acked
-  info.
+  (the ed2f38cff refutation) verified + closed; REL-20261029-1956 closed as
+  info; compiler sync item REL-20261029-2128 resolved (fixed). Remaining
+  v0.65.3 blocker is packages-side **REL-20261029-2110** (Vec[Vec]/UDP),
+  not stdlib.
 - **Release**: v0.65.3 package is ready for the owner's GO; no bump, tag,
   release or registry write yet. `COMPILER_VERSION` stays v0.64.8; see
   `docs/RELEASE_DRY_RUN.md` for the verified numbers and the GO checklist.
