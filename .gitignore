@@ -37,6 +37,7 @@ tools/out/
 .DS_Store
 Thumbs.db
 *.code-workspace
+.VSCodeCounter/
 kilo.jsonc
 .kilo/worktrees/
 .vscode/
