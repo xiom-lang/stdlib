@@ -3839,7 +3839,9 @@ registry pin, agent recon for the rest)**
   - `gate9_scan`: **10/10 + 29 pass + 1 intended T001, 0 unexpected**;
   - modules **533/533**, probes **417/418** -- only `p_wave162_shapes`
     (0xC0000374 5/5, REL-20261028-1641-stdlib still open);
-  - smokes 963 pending at handoff; barename/ratchets pending.
+  - smokes **963/963** (2473s), barename **0/533** (720s),
+    coverage/doc/module-smoke ratchets OK. Full matrix green except the
+    p_wave162 probe.
 - Relay: `1801` verified and **closed** (evidence on the item; compiler's
   Linux 10/10 noted); `1805` is duplicate; `1533`/`1617` evidence posted
   (non-owning Channel, p_wave188 + minimal repro 5/5) -- still acked,
