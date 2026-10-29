@@ -5,6 +5,13 @@ pre-cut package: what the workflow does, the dry-run that was executed, the
 exact GO checklist, and a draft of the next release notes. The version
 number and `COMPILER_VERSION` pin are the owner's decision.
 
+**Verified candidate (2026-10-29):** compiler `605c6a879`, binary
+`target/candidate/xiom-605c6a879.exe`, sha256
+`50A10EBEF9F728519243487E1B785A5E6A93C3B6A5EF7F6CA56FF66454CF09DE`.
+It fixes the last stdlib-visible blocker, 1641 (implicit tail-return
+ownership). The package is ready for the owner's GO; the tree has not been
+bumped yet.
+
 ## 1. What `.github/workflows/release.yml` does
 
 Trigger: `push` on `stdlib-v*`, or `workflow_dispatch`.
@@ -96,19 +103,21 @@ Highlights:
   RFC 9113 6.8), and local graceful drain. This completes the h2 primitive
   layer; frame I/O stays with the caller. Probe `p_wave298_h2_conn_mux`.
 
-Validation (draft; fill at cut time):
+Validation on 605c6a879 (Windows, 2026-10-29):
 
-- gate-9 set 10/10; all 27 `tools/known_failures` repros 26 pass + 1
-  intended T001; no red repro.
-- modules 533/533; probes 417/417; smokes 963/963; barename 0/533;
-  coverage floors197 OK; doc 100%; module-smoke ratchet OK.
-- Compiler pin: `<decided at GO>`.
+- gate-9 set **10/10**; `tools/known_failures` **30 pass + 1 intended
+  T001, 0 unexpected** -> `gate9_scan` VERDICT OK.
+- `p_wave162_shapes` **20/20 rc 0**; `p_borrowed_mut_grown_vec_uaf`
+  **20/20 rc 0**.
+- modules **533/533**; probes **418/418**; smokes **963/963**; barename
+  **0/533**; coverage floors197 OK; doc **100%**; module-smoke ratchet OK.
+- Compiler pin: `v0.64.8` unless the owner moves it at GO.
 
-# Registry: `xiom-std <version>`, compiler field `<pin>`.
+Registry: `xiom-std <version>`, compiler field `<pin decided at GO>`.
 
 ## 5. What is intentionally NOT done here
 
-- No `release-notes/v<version>.md` (the version is not chosen).
+- No `release-notes/v<version>.md` (pending the owner's GO / version).
 - No `package.xi` bump, no `COMPILER_VERSION` change, no tag, no release,
-  no registry write.
+  no registry write until the owner's GO.
 - The dry-run above uses the current label and creates no release.

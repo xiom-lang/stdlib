@@ -17,9 +17,77 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 113 (updated 2026-10-29; **1641 is NOT fixed by ed2f38cff: p_wave162 no longer crashes but the SSE buffer is a use-after-free (11/20 rc 12); new tracked witness `p_borrowed_mut_grown_vec_uaf` is 10/10 red on ed2f38cff and 0/3 on v0.64.8; gate9_scan VERDICT FAIL (1 unexpected); relay REL-20261029-1910-stdlib; v0.65.3 stays HOLD; full matrix 417/418 probes (only p_wave162 rc 12), 963/963 smokes, 533/533 modules**)
+## 0A. CONTINUE HERE -- handoff snapshot 114 (updated 2026-10-29; **1641 VERIFIED FIXED on candidate 605c6a879 (sha256 50A10EBE...): p_wave162 20/20, witness `p_borrowed_mut_grown_vec_uaf` 20/20, gate9_scan OK (10/10 + 30 pass + 1 intended, 0 unexpected), full matrix green (probes 418/418, smokes 963/963, modules 533/533, barename 0/533, ratchets OK); 1641 + REL-20261029-1910 verified+closed; v0.65.3 release package ready for the owner's GO -- no bump/tag yet; COMPILER_VERSION v0.64.8**)
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-29, snapshot 113)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-29, snapshot 114)
+
+```
+Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
+  git pull --ff-only origin main
+  git -C E:\xiom-lang\xiom-relays fetch origin
+  git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
+  python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
+Read docs/stdlib_session.md snapshot 114 + block 305 + blocks 304/303/302/301/300.
+
+STATE (2026-10-29):
+- 1641 is VERIFIED FIXED on candidate 605c6a879 (sha256
+  50A10EBEF9F728519243487E1B785A5E6A93C3B6A5EF7F6CA56FF66454CF09DE),
+  the implicit-tail-return ownership fix. Windows evidence: p_wave162_shapes
+  20/20 rc 0; p_borrowed_mut_grown_vec_uaf 20/20 rc 0; gate9_scan gate set
+  10/10 + known_failures 30 pass + 1 intended T001 + 0 unexpected -> OK.
+- Full matrix on 605c6a879: probes 418/418 (696.6s), smokes 963/963
+  (1078s), modules 533/533 (496s), barename 0/533 (639.3s), coverage/
+  doc(100%)/module-smoke ratchets OK.
+- Relay: REL-20261028-1641 and REL-20261029-1910 verified + closed by
+  stdlib (reporter). Compiler item REL-20261029-2013-compiler records the
+  fix; 1956 (ed2f38cff matrix) is acked info.
+- Release: v0.65.3 package is READY for the owner's GO. docs/
+  RELEASE_DRY_RUN.md carries the verified numbers. NO bump, NO tag, NO
+  release, NO registry write yet. COMPILER_VERSION stays v0.64.8 unless
+  the owner moves it. The release doc's contract: the version number and
+  pin are the owner's decision; on GO do the package.xi/CHANGELOG/
+  release-notes commit, then run the release battery on that commit, then
+  tag + push stdlib-v<version>.
+- App soaks are unchanged by the ownership-marking fix (compiler-only;
+  last measured 926 B/iter server parse, 6,526 B/iter JSON parse, 2,243
+  B/op JSON build+stringify; residual 1704). Re-measure only if the owner
+  wants fresh numbers.
+
+PRIORITY 0 -- ON THE OWNER'S GO:
+- One commit: package.xi version 0.65.3 (+ compiler range if the pin
+  moves), CHANGELOG.md [0.65.3], release-notes/v0.65.3.md, docs snapshot.
+- Re-run the release battery on that commit (the compiler archive is the
+  verified 605c6a879 or the released v0.65.3 archive), then tag
+  stdlib-v0.65.3 and push (triggers release.yml); registry publish +
+  canary after the tag; post tag/SHA/run/registry on the relay.
+- A heavy Windows/Linux witness needs a branch/tag, not a raw SHA.
+
+PRIORITY 1 -- READINESS:
+- Keep gate 9 green (it is: 10/10 + 30 pass + 1 intended).
+- Keep the new witness in tools/known_failures (it is green now).
+- PULSE 1955/1549 still await their re-run/verification.
+
+PRIORITY 2 -- WISHLISTS:
+- kqueue only after the heavy macOS leg is green; brotli/zstd remain
+  registry packages; thread arg/closure channel is compiler.
+- packages item REL-20261029-1926 (Vec[Vec]/UDP) is packages-owned and
+  still v0.65.3-blocking; do not claim it fixed from the stdlib side.
+
+RULES:
+- No clause waves; io.list_dir runtime-owned; json_clear(&mut) hangs; no
+  mutable-enum recursion.
+- Relay pulls: fetch + merge --ff-only; never move tags.
+- Untracked out/ + smoke_diag_f128_* are documented leftovers.
+- No tag/release without the owner's explicit GO.
+
+DELIVERABLE: on GO, the v0.65.3 package commit + tag + release + registry,
+with the release battery green; docs/session current and pushed.
+```
+---
+
+## 0A-113. PREVIOUS HANDOFF -- snapshot 113 (updated 2026-10-29; **1641 is NOT fixed by ed2f38cff: p_wave162 no longer crashes but the SSE buffer is a use-after-free (11/20 rc 12); new tracked witness `p_borrowed_mut_grown_vec_uaf` is 10/10 red on ed2f38cff and 0/3 on v0.64.8; gate9_scan VERDICT FAIL (1 unexpected); relay REL-20261029-1910-stdlib; v0.65.3 stays HOLD; full matrix 417/418 probes (only p_wave162 rc 12), 963/963 smokes, 533/533 modules**)
+
+## 0C-113. NEXT-SESSION PROMPT (2026-10-29, snapshot 113 -- SUPERSEDED by snapshot 114)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
@@ -3889,6 +3957,31 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-29 block 305 (1641 verified fixed on 605c6a879; gate9 OK; full matrix green; release ready for GO)**
+- Compiler relay REL-20261029-2013-compiler: candidate **605c6a879**
+  (sha256 `50A10EBE...`) completes 1641 by marking the function body's
+  implicit trailing expression (`Ok(conn)` / `Some(conn)`, no `return`) with
+  `mark_returned_roots`, so the aggregate exit drop no longer frees the
+  buffer the caller owns. This matches the block-304 witness exactly.
+- Verified on Windows with that binary:
+  - `p_wave162_shapes`: **20/20 rc 0** (was 11/20 rc 12 on ed2f38cff).
+  - `p_borrowed_mut_grown_vec_uaf`: **20/20 rc 0** (was 10/10 rc 3).
+  - `gate9_scan`: gate set **10/10**; known_failures **30 pass + 1 intended
+    T001 + 0 unexpected** -> **VERDICT OK** (`gate9_exit=0`).
+- **Full matrix** on 605c6a879: probes **418/418** (696.6s), smokes
+  **963/963** (1078s), modules **533/533** (496s), barename **0/533**
+  (639.3s), coverage **RATCHET OK**, doc **RATCHET OK (100%)**,
+  module-smoke **RATCHET OK** (499/543 modules, 3504/6658 fns).
+- Relay: **REL-20261028-1641** verified + closed; **REL-20261029-1910**
+  (the ed2f38cff refutation) verified + closed. REL-20261029-1956 is acked
+  info.
+- **Release**: v0.65.3 package is ready for the owner's GO; no bump, tag,
+  release or registry write yet. `COMPILER_VERSION` stays v0.64.8; see
+  `docs/RELEASE_DRY_RUN.md` for the verified numbers and the GO checklist.
+  App soaks are unchanged by this compiler-only ownership fix (last:
+  926 B/iter server parse, 6,526 B/iter JSON parse, 2,243 B/op JSON
+  build+stringify; residual 1704).
 
 **SESSION 2026-10-29 block 304 (ed2f38cff refuted: 1641 is a UAF, not a double-free; minimal witness; gate9 FAIL; matrix)**
 - Compiler relay REL-20261029-1840-compiler claimed 1641 fixed on candidate
