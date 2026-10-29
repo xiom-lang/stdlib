@@ -17,9 +17,79 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 112 (updated 2026-10-29; **channel items CLOSED (1533/1617 verified+closed), huffman CLOSED (1801; 1805 dup); 1641 (`p_wave162`) is the ONLY stdlib-visible release blocker; newest candidate e48213c66 (sha E0222F26...): p_wave162 0xC0000374 5/5, everything else green (gate9_scan 10/10 + 29 pass + 1 intended; p_wave188/huffman/channel 5/5); app soaks on e48213c66 = server parse 926 B/iter, JSON parse 6,526 B/iter, JSON build+stringify 2,243 B/op (residual JsonValue/Map/enum drops, 1704); heavy `compiler_ref` takes a branch/tag, not a SHA; v0.65.3 HOLD on 1641; no tag; COMPILER_VERSION v0.64.8; readiness 90%)**
+## 0A. CONTINUE HERE -- handoff snapshot 113 (updated 2026-10-29; **1641 is NOT fixed by ed2f38cff: p_wave162 no longer crashes but the SSE buffer is a use-after-free (11/20 rc 12); new tracked witness `p_borrowed_mut_grown_vec_uaf` is 10/10 red on ed2f38cff and 0/3 on v0.64.8; gate9_scan VERDICT FAIL (1 unexpected); relay REL-20261029-1910-stdlib; v0.65.3 stays HOLD; full matrix running**)
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-29, snapshot 112)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-29, snapshot 113)
+
+```
+Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
+  git pull --ff-only origin main
+  git -C E:\xiom-lang\xiom-relays fetch origin
+  git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
+  python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
+Read docs/stdlib_session.md snapshot 113 + block 304 + blocks 303/302/301/300.
+
+STATE (2026-10-29):
+- 1641 is NOT fixed by candidate ed2f38cff (sha256 99AF0E77...). The
+  0xC0000374 is gone, but conn.buf is freed after sse_connect -> UAF:
+  p_wave162_shapes 9/20 rc 0 / 11/20 rc 12 (row 12); v0.64.8 control
+  10/10 rc 0. At the stuck point conn.buf.len=70/start=52 are correct but
+  the 18-byte event tail is 0x00, or reused by the probe's own Str
+  allocations; EOF then yields "stream closed" and read_events returns 0.
+- Minimal tracked witness tools/known_failures/p_borrowed_mut_grown_vec_uaf.xi:
+  ed2f38cff 10/10 rc 3 (buf[17]=0x55 after heap churn), e48213c66 3/3
+  0xC0000374, v0.64.8 0/3. Trigger: _connect_core -> _read_head (while loop,
+  early return Ok after a nested _fill(&mut conn) grew the Vec) -> _fill;
+  the outer function returns S by value through Result. Two-level main-owned
+  and direct-match variants pass on ed2f38cff, so the stale drop runs on the
+  loop/early-return path and frees the returned aggregate's CURRENT Vec
+  pointer -- exactly the pointer VecDrop::Aggregate now re-reads.
+- gate9_scan on ed2f38cff: gate set 10/10 green; known_failures 29 pass +
+  1 intended T001 + 1 unexpected (the new witness) -> VERDICT FAIL.
+- Relay: opened REL-20261029-1910-stdlib (stdlib -> compiler, bug/high) with
+  the evidence; the compiler-addressed 1641 item itself is untouched.
+  Compiler's claim lives on REL-20261029-1840-compiler.
+- v0.65.3 HOLD. No tag/release; COMPILER_VERSION v0.64.8; package/version
+  untouched. docs/RELEASE_DRY_RUN.md remains the pre-cut package.
+- Full matrix on ed2f38cff launched (probes/smokes/modules/barename/
+  coverage/doc/module-smoke); results in block 304.
+
+PRIORITY 0 -- NEXT COMPILER CANDIDATE:
+- Do NOT re-verify ed2f38cff as fixed. Wait for a candidate that passes
+  tools/known_failures/p_borrowed_mut_grown_vec_uaf.xi AND p_wave162_shapes
+  (prefer 20x).
+- On the next candidate: p_wave162 20x, gate9_scan (10/10 + known_failures
+  all pass/1 intended), full probe+smoke matrix, then prepare the release
+  package (version + COMPILER_VERSION + notes/CHANGELOG/package.xi) for the
+  owner's GO.
+- A heavy Windows/Linux witness needs a branch/tag, not a SHA.
+
+PRIORITY 1 -- GATE 9 / READINESS:
+- Keep the new witness in known_failures until 1641 is verified fixed;
+  gate 9 is intentionally FAIL while it is red.
+- Re-run app soaks on the fixed candidate (server parse 926 B/iter, JSON
+  parse 6,526 B/iter, JSON build+stringify 2,243 B/op; residual 1704).
+
+PRIORITY 2 -- WISHLISTS:
+- kqueue only after the heavy macOS leg is green; brotli/zstd remain
+  registry packages; thread arg/closure channel is compiler.
+- PULSE 1955/1549 still await their re-run/verification.
+
+RULES:
+- No clause waves; io.list_dir runtime-owned; json_clear(&mut) hangs;
+  no mutable-enum recursion.
+- Relay pulls: fetch + merge --ff-only; never move tags.
+- Untracked out/ + smoke_diag_f128_* are documented leftovers.
+- No tag/release without the owner's explicit GO.
+
+DELIVERABLE: 1641 fixed and verified with the full matrix; release package
+prepared for the owner's GO; docs/session current and pushed.
+```
+---
+
+## 0A-112. PREVIOUS HANDOFF -- snapshot 112 (updated 2026-10-29; **channel items CLOSED (1533/1617 verified+closed), huffman CLOSED (1801; 1805 dup); 1641 (`p_wave162`) is the ONLY stdlib-visible release blocker; newest candidate e48213c66 (sha E0222F26...): p_wave162 0xC0000374 5/5, everything else green (gate9_scan 10/10 + 29 pass + 1 intended; p_wave188/huffman/channel 5/5); app soaks on e48213c66 = server parse 926 B/iter, JSON parse 6,526 B/iter, JSON build+stringify 2,243 B/op (residual JsonValue/Map/enum drops, 1704); heavy `compiler_ref` takes a branch/tag, not a SHA; v0.65.3 HOLD on 1641; no tag; COMPILER_VERSION v0.64.8; readiness 90%)**
+
+## 0C-112. NEXT-SESSION PROMPT (2026-10-29, snapshot 112 -- SUPERSEDED by snapshot 113)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
@@ -3817,6 +3887,36 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-29 block 304 (ed2f38cff refuted: 1641 is a UAF, not a double-free; minimal witness; gate9 FAIL; matrix)**
+- Compiler relay REL-20261029-1840-compiler claimed 1641 fixed on candidate
+  ed2f38cff (sha256 `99AF0E77...`), p_wave162 5/5 ASan+release. Refuted on
+  Windows with that binary.
+- `p_wave162_shapes` 20x on ed2f38cff: **9 rc 0, 11 rc 12** (row 12), no
+  0xC0000374. v0.64.8 control: **10/10 rc 0**. At the stuck point
+  `conn12.open=true`, the fd is valid, `buf.len=70`, `start=52` at connect,
+  but the 18-byte event tail reads 0x00 (or the bytes of the probe's own Str
+  allocations) at t=8. `socket_poll_read` is ready at EOF; `sse_read_event`
+  then sets `open=false` ("stream closed") and `sse_read_events` returns 0
+  forever. The buffer was freed after `sse_connect` returned and reused.
+- **Minimal witness (new, tracked)**: `tools/known_failures/
+  p_borrowed_mut_grown_vec_uaf.xi` -- ed2f38cff **10/10 rc 3**
+  (`buf[17]=0x55` after heap churn, rounds 0-87), e48213c66 **3/3
+  0xC0000374**, v0.64.8 **0/3 rc 0**. Shape: `_connect_core` ->
+  `_read_head` (while loop whose early `return Ok(...)` runs after a nested
+  `_fill(&mut conn)` grew the Vec) -> `_fill`; `_connect_core` returns S by
+  value through Result. Two-level main-owned and direct-match variants pass
+  on ed2f38cff, so the stale drop runs on the loop/early-return path and
+  frees the returned aggregate's CURRENT Vec pointer -- exactly the pointer
+  `VecDrop::Aggregate` now re-reads. This is 1641 inverted, not fixed.
+- `gate9_scan` on ed2f38cff: gate set **10/10 green**; known_failures
+  **29 pass + 1 intended T001 + 1 unexpected** (the new witness) ->
+  **VERDICT FAIL** (`out/verify_ed2f38cff/gate9.json`).
+- Relay: opened **REL-20261029-1910-stdlib** (stdlib -> compiler, bug/high)
+  with the evidence; the compiler-addressed 1641 item is not edited.
+- **v0.65.3 HOLD**; no version/`COMPILER_VERSION`/package changes. Full
+  matrix on ed2f38cff launched; per-leg results:
+  (filled below when the battery completes).
 
 **SESSION 2026-10-29 block 303 (channels + huffman closed; 1641 is the only blocker; e48213c66 tested; app soaks)**
 - **Channel items closed**: compiler moved 1533/1617 to fixed; we verified
