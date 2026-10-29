@@ -97,6 +97,21 @@ above; the documented no-clause tail does not count against the meter.
 
 Authoritative order: the gates above, then the updates below newest-first.
 
+Current state 2026-10-29: **only 1641 blocks the release.**
+- Channel items 1533/1617 **verified/closed** (non-owning `Channel[T]`
+  on main `5071f86`; p_wave188 + minimal repro 5/5 on the candidate);
+  huffman 1801 **verified/closed** (1805 duplicate).
+- Candidate `e48213c66` (sha256 `E0222F26...`): p_wave162 0xC0000374
+  5/5 (1641, compiler `&mut` aggregate by-value-temp ASan double-free);
+  gate9_scan 10/10 + 29 pass + 1 intended; p_wave188/huffman/channel
+  probes 5/5.
+- App soaks (Windows 50k): server parse 926 B/iter, JSON parse
+  6,526 B/iter, JSON build+stringify 2,243 B/op; the residual is the
+  JsonValue/Map/enum drop family (1704), not Str/Vec/Struct.
+- heavy `compiler_ref` accepts a branch/tag, not a raw SHA; Linux
+  evidence for candidates is the compiler CI. v0.65.3 HOLD on 1641; no
+  tag; `COMPILER_VERSION` v0.64.8.
+
 Current state 2026-10-28: **wave 298 + gate-9 evidence complete on v0.65.2.**
 - stdlib-v0.65.2 released from `7d4d48f` (annotated tag `e041aae`);
   release run 40523878342 green (Ubuntu 24m13s, Windows 51m56s);

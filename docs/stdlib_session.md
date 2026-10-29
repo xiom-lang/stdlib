@@ -17,9 +17,9 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 111 (updated 2026-10-29; **candidate ab97014d9 (sha256 6D9F2ED0...): huffman SIGILL FIXED (repro + compress family 5/5), non-owning Channel verified (p_wave188 5/5, minimal repro 5/5), gate9_scan 10/10 + 29 pass + 1 intended, modules 533/533, probes 417/418 -- p_wave162 still 0xC0000374 5/5 (REL-20261028-1641 open); smoke batch in progress; heavy 40874531519 could not build a raw SHA (compiler_ref takes a branch/tag only), so Linux ab97014d9 evidence is the compiler's 10/10; 1801 verified/closed, 1805 duplicate, 1533/1617 evidence posted (compiler to move fixed); v0.65.3 HOLD on 1641; no tag; COMPILER_VERSION v0.64.8; readiness 90%)**
+## 0A. CONTINUE HERE -- handoff snapshot 112 (updated 2026-10-29; **channel items CLOSED (1533/1617 verified+closed), huffman CLOSED (1801; 1805 dup); 1641 (`p_wave162`) is the ONLY stdlib-visible release blocker; newest candidate e48213c66 (sha E0222F26...): p_wave162 0xC0000374 5/5, everything else green (gate9_scan 10/10 + 29 pass + 1 intended; p_wave188/huffman/channel 5/5); app soaks on e48213c66 = server parse 926 B/iter, JSON parse 6,526 B/iter, JSON build+stringify 2,243 B/op (residual JsonValue/Map/enum drops, 1704); heavy `compiler_ref` takes a branch/tag, not a SHA; v0.65.3 HOLD on 1641; no tag; COMPILER_VERSION v0.64.8; readiness 90%)**
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-29, snapshot 111)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-29, snapshot 112)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
@@ -27,7 +27,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 111 + blocks 302/301/300/299 + this 0C block.
+Read docs/stdlib_session.md snapshot 112 + blocks 303/302/301/300 + this 0C block.
 
 STATE (2026-10-27):
 - stdlib-v0.65.2 IS RELEASED: annotated tag at 7d4d48f (Vec
@@ -92,19 +92,17 @@ STATE (2026-10-27):
   per call, hence the buffered reader; the read targets a local Vec then
   appends (a direct `&mut r.buf` read and the nested
   `Ok(false)/Ok(true)` match both misbehaved).
-- **PRE-RELEASE CANDIDATE (2026-10-29, `ab97014d9`, sha256
-  `6D9F2ED0...`)**: huffman SIGILL fixed (repro + compress family 5/5);
-  non-owning Channel verified (`p_wave188_channel_handle` 5/5,
-  `p_channel_handle_free_after_send` 5/5); `gate9_scan` **10/10 + 29
-  pass + 1 intended T001, 0 unexpected**; modules 533/533; probes
-  **417/418** -- `p_wave162_shapes` still 0xC0000374 5/5
-  (REL-20261028-1641-stdlib). Smokes/barename/ratchets for this exact
-  candidate were still running at handoff (the prior candidate was
-  963/963 + 0/533). **Heavy 40874531519 could not build a raw SHA**:
-  `compiler_ref` fetches `refs/heads/<ref>`, so Linux evidence for this
-  candidate is the compiler's own 10/10; ask them for a branch/tag if a
-  heavy witness is needed. **v0.65.3 HOLD** on 1641 (+ 1533/1617
-  close-out).
+- **PRE-RELEASE CANDIDATE (2026-10-29, `e48213c66`, sha256
+  `E0222F26...`)**: `p_wave162_shapes` still 0xC0000374 5/5 (1641);
+  everything else targeted is green: p_wave188 5/5, channel minimal
+  repro 5/5, huffman repro 5/5; `gate9_scan` 10/10 + 29 pass + 1
+  intended, 0 unexpected. Channel items 1533/1617 and huffman 1801 are
+  **verified/closed**. App soaks (Windows 50k): server parse 926 B/iter,
+  JSON parse 6,526 B/iter, JSON build+stringify 2,243 B/op (residual
+  JsonValue/Map/enum drops, 1704).
+  **Heavy 40874531519 could not build a raw SHA** (`compiler_ref` fetches
+  `refs/heads/<ref>`); Linux evidence for these candidates is the
+  compiler's own CI -- ask for a branch/tag. **v0.65.3 HOLD** on 1641.
 - **Release dry-run 40683465791 GREEN end to end**: dispatch
   (`version=0.65.2`) -> validate + Ubuntu gates + Windows gates + package
   staging; pin PR and registry canary correctly skipped (no tag); **no
@@ -125,19 +123,15 @@ STATE (2026-10-27):
   The 1704 residual stays compiler drop glue, not stdlib allocation
   choice.
 
-PRIORITY 0 -- AWAIT 1641 / VERIFY THE CANDIDATE (v0.65.3 HOLD):
-- Candidate `ab97014d9` is green on the huffman repro, the compress
-  family, the non-owning Channel probes and gate 9 (10/10 + 29 pass).
-  The ONLY remaining red is `p_wave162_shapes` (0xC0000374 5/5;
-  REL-20261028-1641-stdlib).
-- **v0.65.3 must not be cut** until 1641 is fixed and the channel items
-  are closed out (`1533`/`1617` evidence is posted; compiler to move
-  fixed).
-- After the compiler fix: re-run `p_wave162`, the full Windows battery,
-  and a heavy Windows/Linux witness. **Heavy needs a branch/tag**: its
-  `compiler_ref` fetches `refs/heads/<ref>`, so a raw SHA fails at
-  checkout (run 40874531519). Ask the compiler to push
-  `candidate-<sha>` for the witness.
+PRIORITY 0 -- VERIFY THE 1641 FIX / PREPARE THE CUT:
+- 1641 (`p_wave162_shapes`) is the only stdlib-visible release blocker.
+  It is a compiler `&mut`-aggregate by-value-temp lowering bug (ASan
+  double-free in `net.sse._connect_core`/`_read_head`); no stdlib
+  workaround. On the fix: run `p_wave162` 5/5 + the full probe/smoke
+  battery on the new candidate, then gate9_scan.
+- Once green: prepare the release package (version + `COMPILER_VERSION`
+  + release-notes/CHANGELOG/package.xi) for the owner's GO; a heavy
+  Windows/Linux witness needs a branch/tag, not a SHA.
 - PULSE re-runs `probe_req_cycle` (parse) and the product GET /health leg
   on the next pin; 1955 is fixed with the A/B numbers.
 - **no tag without the owner's GO**; `COMPILER_VERSION` stays v0.64.8.
@@ -3823,6 +3817,40 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-29 block 303 (channels + huffman closed; 1641 is the only blocker; e48213c66 tested; app soaks)**
+- **Channel items closed**: compiler moved 1533/1617 to fixed; we verified
+  on ab97014d9 (p_wave188 5/5, minimal repro 5/5, full matrix) and
+  **verified + closed both**. Non-owning `Channel[T]` on main `5071f86`
+  is the recorded fix. No stdlib action remains.
+- **Huffman closed**: 1801 was verified/closed earlier (candidate
+  ab97014d9: repro + compress family 5/5); 1805 is duplicate.
+- **1641 is the ONLY stdlib-visible release blocker.** Compiler root
+  cause (ASan, `0e8caf803`): `net.sse._connect_core` copies `conn` into a
+  by-value temp alloca; `_read_head` grows `conn.buf` (realloc frees the
+  16-byte buffer) and the caller's stale header double-frees. Root is the
+  `&mut` aggregate arg lowered through the by-value temp path (compiler
+  ownership), not a stdlib buffer bug; **do not disable drops** and do
+  not paper over it in sse.xi.
+- **Candidate e48213c66** (sha256 `E0222F26...`, 1324 aggregate-local
+  move + nested-struct fixes): `p_wave162` 0xC0000374 **5/5** (still
+  red); `p_wave188` 5/5, channel minimal repro 5/5, huffman 5/5; gate9
+  10/10 + 29 pass + 1 intended, 0 unexpected.
+- **App soaks** (Windows, 50k, baseline 5.32 MB) on e48213c66 and
+  ab97014d9 (identical): server parse **926 B/iter** (span-parse fix
+  holds), JSON parse nested doc **6,526 B/iter**, JSON build +
+  `json_stringify_ref` **2,243 B/op**. The Str-rebind/Vec[Vec]/
+  Vec[Struct]/1324 fixes did not move these; the dominant residual is
+  the JsonValue/Map/enum drop family (1704). Reported on 1641.
+- **Heavy limitation**: `compiler_ref` fetches `refs/heads/<ref>`/tags;
+  a raw SHA fails at checkout (40874531519). For a heavy Linux/Windows
+  witness the compiler must push a branch/tag (e.g.
+  `candidate-e48213c66`). Linux evidence for these candidates is the
+  compiler's own CI.
+- **Release**: v0.65.3 HOLD on 1641. `docs/RELEASE_DRY_RUN.md` is ready;
+  no tag, no package bump, `COMPILER_VERSION` v0.64.8. PULSE 1955/1549
+  still await their verification. kqueue remains deferred (heavy macOS
+  leg red in the Oct-26 baseline too).
 
 **SESSION 2026-10-29 block 302 (candidate ab97014d9: huffman + channel verified; p_wave162 still open; heavy ref limitation)**
 - Candidate `ab97014d9` (binary
