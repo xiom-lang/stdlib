@@ -6,6 +6,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.65.4] - 2026-10-30
+
+### Fixed
+
+- Socket handle returns are `int64_t` on every target: the runtime's
+  `xiom_socket_create` / `xiom_socket_accept` / `xiom_socket_close` now
+  widen the POSIX `int` / Win64 `SOCKET` to `int64_t`, matching the stdlib's
+  `-> Int` declarations. On arm64 the previous i32 definitions failed LLVM
+  IR verification (`@xiom_socket_close defined with type 'i32 (i64)*' but
+  expected 'i64 (i64)*'`), so every socket consumer (PULSE and others)
+  could not build. Probe `p_socket_ffi_width`
+  (REL-20261030-1628-pulse).
+- POSIX `xiom_socket_send` uses `MSG_NOSIGNAL` and the runtime ignores
+  `SIGPIPE` at init, so a client disconnect during a response no longer
+  kills the process with exit 141. Windows is unchanged. Probe
+  `p_socket_sigpipe` (REL-20261030-1645-xvector).
+
 ## [0.65.3] - 2026-10-30
 
 ### Fixed

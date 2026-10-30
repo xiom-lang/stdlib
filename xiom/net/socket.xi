@@ -30,6 +30,9 @@ module xiom.net.socket
 use xiom.env;
 use xiom.os.platform as plat;
 
+// Handle ABI (REL-20261030-1628): xiom_socket_create/accept/close return
+// int64_t on every target, so their declarations stay `-> Int` (POSIX fd and
+// Win64 SOCKET both widen losslessly). Do not narrow them to Int32.
 extern "C" {
   fn xiom_socket_create(family: Int, typ: Int, proto: Int) -> Int;
   fn xiom_socket_connect(sock: Int, host: *UInt8, port: Int) -> Int32;

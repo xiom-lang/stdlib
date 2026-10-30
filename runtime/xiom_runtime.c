@@ -6087,17 +6087,21 @@ typedef SOCKET xiom_socket_t;
 #define XIOM_INVALID_SOCKET INVALID_SOCKET
 #define XIOM_SOCKET_ERROR SOCKET_ERROR
 
-xiom_socket_t xiom_socket_create(int family, int type, int proto) {
+/* REL-20261030-1628: the stdlib declares socket handles/returns as Int
+   (i64). Handle-returning entry points therefore return int64_t on every
+   target (SOCKET is 64-bit on Win64, int on POSIX); a bare xiom_socket_t
+   return made the POSIX/arm64 definition i32 and failed IR verification. */
+int64_t xiom_socket_create(int family, int type, int proto) {
     xiom_net_init();
-    return socket(family, type, proto);
+    return (int64_t)socket(family, type, proto);
 }
 int xiom_socket_connect(xiom_socket_t s, const char* host, int port);
 int xiom_socket_bind(xiom_socket_t s, int port);
 int xiom_socket_listen(xiom_socket_t s, int backlog);
-xiom_socket_t xiom_socket_accept(xiom_socket_t s, char* client_ip, int* client_port);
+int64_t xiom_socket_accept(xiom_socket_t s, char* client_ip, int* client_port);
 int xiom_socket_send(xiom_socket_t s, const char* buf, int len);
 int xiom_socket_recv(xiom_socket_t s, char* buf, int len);
-int xiom_socket_close(xiom_socket_t s);
+int64_t xiom_socket_close(xiom_socket_t s);
 int xiom_dns_resolve(const char* hostname, char* ip_buf, int buf_size);
 
 int xiom_socket_connect(xiom_socket_t s, const char* host, int port) {
@@ -6140,7 +6144,7 @@ int xiom_socket_local_addr(xiom_socket_t s, char* ip_buf, int buf_size, int* out
     return 0;
 }
 int xiom_socket_listen(xiom_socket_t s, int backlog) { return listen(s, backlog); }
-xiom_socket_t xiom_socket_accept(xiom_socket_t s, char* client_ip, int* client_port) {
+int64_t xiom_socket_accept(xiom_socket_t s, char* client_ip, int* client_port) {
     struct sockaddr_in addr;
     int addrlen = sizeof(addr);
     xiom_socket_t client = accept(s, (struct sockaddr*)&addr, &addrlen);
@@ -6148,11 +6152,11 @@ xiom_socket_t xiom_socket_accept(xiom_socket_t s, char* client_ip, int* client_p
         strcpy(client_ip, inet_ntoa(addr.sin_addr));
         *client_port = ntohs(addr.sin_port);
     }
-    return client;
+    return (int64_t)client;
 }
 int xiom_socket_send(xiom_socket_t s, const char* buf, int len) { return send(s, buf, len, 0); }
 int xiom_socket_recv(xiom_socket_t s, char* buf, int len) { return recv(s, buf, len, 0); }
-int xiom_socket_close(xiom_socket_t s) { return closesocket(s); }
+int64_t xiom_socket_close(xiom_socket_t s) { return (int64_t)closesocket(s); }
 int xiom_socket_set_timeout(xiom_socket_t s, int ms) {
     /* Windows SO_RCVTIMEO takes milliseconds; 0 = no timeout. */
     return setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, (const char*)&ms, sizeof(ms));
@@ -6306,7 +6310,17 @@ typedef int xiom_socket_t;
 #define XIOM_INVALID_SOCKET (-1)
 #define XIOM_SOCKET_ERROR (-1)
 
-xiom_socket_t xiom_socket_create(int family, int type, int proto) { return socket(family, type, proto); }
+/* REL-20261030-1645: a client disconnect during a response must not kill the
+   process with SIGPIPE. MSG_NOSIGNAL below covers send(2); ignoring SIGPIPE
+   here is the belt-and-braces guard for any other write path (macOS has no
+   MSG_NOSIGNAL). Windows is unaffected. */
+static void xiom_ignore_sigpipe(void) __attribute__((constructor));
+static void xiom_ignore_sigpipe(void) { signal(SIGPIPE, SIG_IGN); }
+
+/* REL-20261030-1628: handle-returning entry points use int64_t on every
+   target so the i64 stdlib ABI matches (POSIX fd is int; Win64 SOCKET is
+   64-bit). See the Windows branch above. */
+int64_t xiom_socket_create(int family, int type, int proto) { return (int64_t)socket(family, type, proto); }
 int xiom_socket_connect(xiom_socket_t s, const char* host, int port) {
     struct hostent* he = gethostbyname(host);
     if (!he) return -1;
@@ -6345,7 +6359,7 @@ int xiom_socket_local_addr(xiom_socket_t s, char* ip_buf, int buf_size, int* out
     return 0;
 }
 int xiom_socket_listen(xiom_socket_t s, int backlog) { return listen(s, backlog); }
-xiom_socket_t xiom_socket_accept(xiom_socket_t s, char* client_ip, int* client_port) {
+int64_t xiom_socket_accept(xiom_socket_t s, char* client_ip, int* client_port) {
     struct sockaddr_in addr;
     socklen_t addrlen = sizeof(addr);
     xiom_socket_t client = accept(s, (struct sockaddr*)&addr, &addrlen);
@@ -6353,11 +6367,17 @@ xiom_socket_t xiom_socket_accept(xiom_socket_t s, char* client_ip, int* client_p
         inet_ntop(AF_INET, &addr.sin_addr, client_ip, 64);
         *client_port = ntohs(addr.sin_port);
     }
-    return client;
+    return (int64_t)client;
 }
-int xiom_socket_send(xiom_socket_t s, const char* buf, int len) { return (int)send(s, buf, len, 0); }
+int xiom_socket_send(xiom_socket_t s, const char* buf, int len) {
+#ifdef MSG_NOSIGNAL
+    return (int)send(s, buf, len, MSG_NOSIGNAL);
+#else
+    return (int)send(s, buf, len, 0);
+#endif
+}
 int xiom_socket_recv(xiom_socket_t s, char* buf, int len) { return (int)recv(s, buf, len, 0); }
-int xiom_socket_close(xiom_socket_t s) { return close(s); }
+int64_t xiom_socket_close(xiom_socket_t s) { return (int64_t)close(s); }
 
 #include <fcntl.h>
 #include <sys/time.h>

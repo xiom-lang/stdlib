@@ -17,9 +17,71 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 115 (updated 2026-10-30; **v0.65.3 CUT IN PROGRESS: compiler sign received (REL-20261030-0007), packages green on fd27be39a (REL-20261030-0005), owner GO recorded. release commit 26ede85 (package 0.65.3, CHANGELOG, release-notes/v0.65.3.md); tag LIVE at 26ede85 after re-cutting the owner's stale 801d300 (package 0.65.2); release run 40986322723; battery green (probes 418/418, smokes 963/963, modules 533/533, barename 0/533, gate9 OK). RELEASED: run 40986322723 green; registry live (xiom-std 0.65.3, sha 95403d8b, compiler v0.64.8); pin PR #9; RC archive 40980879241 still bundles 0.65.2 -> compiler rebuild requested (REL-20261030-0133); announcement held. 1641 verified fixed on 605c6a879 and re-confirmed on fd27be39a**)
+## 0A. CONTINUE HERE -- handoff snapshot 116 (updated 2026-10-30; **v0.65.4 CUT: REL-20261030-1832 both fixes landed -- arm64 socket handle ABI (create/accept/close int64_t) and POSIX SIGPIPE (MSG_NOSIGNAL + SIG_IGN); probes p_socket_ffi_width/p_socket_sigpipe; battery probes 420/420, smokes 963/963, modules 533/533, barename 0/533, gate9 OK. Compiler v0.65.3 released and the published stdlib 0.65.3 asset accepted (8383aa5b); tag/registry for 0.65.4 next; runtime verification rides the compiler v0.65.4 build**)
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-30, snapshot 115)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-30, snapshot 116)
+
+```
+Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
+  git pull --ff-only origin main
+  git -C E:\xiom-lang\xiom-relays fetch origin
+  git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
+  python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
+Read docs/stdlib_session.md snapshot 116 + block 307 + blocks 306/305/304.
+
+STATE (2026-10-30):
+- Compiler v0.65.3 is RELEASED (tag v0.65.3, run 41077253955); it bundles
+  stdlib 0.65.3 (26ede85). The published windows asset (sha 8383aa5b) is
+  ACCEPTED by stdlib (p_wave162 20/20, witness 20/20, gate9 OK). Pin PR #9
+  is closed as redundant (xiom main already pins stdlib-v0.65.3).
+- v0.65.4 fixes REL-20261030-1832 (both items are post-v0.65.3 stdlib-side):
+  1) REL-20261030-1628-pulse: runtime xiom_socket_create/accept/close return
+     int64_t on every target (POSIX int and Win64 SOCKET widen); stdlib keeps
+     `-> Int`. Probe p_socket_ffi_width. This unblocks arm64 consumers.
+  2) REL-20261030-1645-xvector: POSIX send uses MSG_NOSIGNAL and the runtime
+     ignores SIGPIPE at init; Windows unchanged. Probe p_socket_sigpipe.
+- Battery on the 0.65.4 tree (published v0.65.3 compiler): probes 420/420,
+  smokes 963/963, modules 533/533, barename 0/533, coverage/doc(100%)/
+  module-smoke ratchets OK, gate9 10/10 + 30 pass + 1 intended/0 unexpected.
+- IMPORTANT: the runtime fixes are compiled into the compiler (the compiler
+  pins stdlib-v0.65.4). The local battery uses the v0.64.8/v0.65.3 runtime;
+  arm64 + SIGPIPE integration is verified by the compiler v0.65.4 CI and
+  PULSE's WSL/arm64 runs.
+- Open after this cut: 1704 JSON retention (compiler drop glue), 1531-xvector
+  (not reproduced, fixed pending reporter verify), 1807-orbitdb (compiler
+  write path), wishlist row 33 (compiler/install lane). No stdlib-owned open
+  bug remains.
+
+PRIORITY 0 -- FINISH v0.65.4:
+- Packaged: package.xi 0.65.4, CHANGELOG [0.65.4], release-notes/v0.65.4.md.
+- Tag stdlib-v0.65.4 (annotated) on the release commit, push, approve the
+  registry-publish environment, verify xiom-std 0.65.4 in the registry.
+- Post the tag sha + probe results on REL-20261030-1832 and 1628.
+- Watch for the compiler v0.65.4 candidate; re-run p_socket_ffi_width on
+  arm64 and p_socket_sigpipe on Linux/WSL against the rebuilt runtime.
+
+PRIORITY 1 -- READINESS:
+- Refresh docs/PRODUCTION_READINESS_QUEUE.md (stale at v0.65.2) with the
+  v0.65.3/v0.65.4 evidence and the new probe count (420).
+- Re-measure the 1704 JSON soak only if a compiler drop change lands.
+- kqueue stays deferred until the heavy macOS leg is green.
+
+RULES:
+- No clause waves; io.list_dir runtime-owned; json_clear(&mut) hangs; no
+  mutable-enum recursion.
+- Relay pulls: fetch + merge --ff-only; never move released tags
+  (the 0.65.4 tag will be new; 0.65.3 stays at 26ede85).
+- Untracked out/ + smoke_diag_f128_* are documented leftovers.
+- No tag/release without the owner's GO (v0.65.4 GO is recorded).
+
+DELIVERABLE: stdlib-v0.65.4 tagged/published with the battery green; compiler
+v0.65.4 can pin it; arm64/SIGPIPE probes green on the rebuilt runtime.
+```
+---
+
+## 0A-115. PREVIOUS HANDOFF -- snapshot 115 (updated 2026-10-30; **v0.65.3 CUT IN PROGRESS: compiler sign received (REL-20261030-0007), packages green on fd27be39a (REL-20261030-0005), owner GO recorded. release commit 26ede85 (package 0.65.3, CHANGELOG, release-notes/v0.65.3.md); tag LIVE at 26ede85 after re-cutting the owner's stale 801d300 (package 0.65.2); release run 40986322723; battery green (probes 418/418, smokes 963/963, modules 533/533, barename 0/533, gate9 OK). RELEASED: run 40986322723 green; registry live (xiom-std 0.65.3, sha 95403d8b, compiler v0.64.8); pin PR #9; RC archive 40980879241 still bundles 0.65.2 -> compiler rebuild requested (REL-20261030-0133); announcement held. 1641 verified fixed on 605c6a879 and re-confirmed on fd27be39a**)
+
+## 0C-115. NEXT-SESSION PROMPT (2026-10-30, snapshot 115 -- SUPERSEDED by snapshot 116)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
@@ -4015,6 +4077,35 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-30 block 307 (v0.65.4: arm64 socket ABI + POSIX SIGPIPE fixed; battery 420/420; tag/registry)**
+- REL-20261030-1832-compiler asked for stdlib-v0.65.4 with two stdlib-side
+  post-release fixes. Both landed:
+  1) **1628-pulse (arm64 socket ABI)**: `runtime/xiom_runtime.c` now returns
+     `int64_t` from `xiom_socket_create` / `xiom_socket_accept` /
+     `xiom_socket_close` on both branches (POSIX `int` and Win64 `SOCKET`
+     widen losslessly); the stdlib declarations stay `-> Int`. New probe
+     `tools/probes/p_socket_ffi_width.xi`.
+  2) **1645-xvector (Linux SIGPIPE)**: POSIX `xiom_socket_send` passes
+     `MSG_NOSIGNAL` where defined and a constructor ignores `SIGPIPE`
+     (`signal(SIGPIPE, SIG_IGN)`); Windows path unchanged. New probe
+     `tools/probes/p_socket_sigpipe.xi`.
+- Compile checks: Windows branch via `clang -fsyntax-only -D_WIN32 -D_WIN64`;
+  POSIX branch via WSL Ubuntu `clang -c -maes -msse4.1 -mssse3 -msse2`
+  (exit 0).
+- Battery on the release tree (published v0.65.3 compiler): probes
+  **420/420** (746.7s; includes the two new probes), smokes **963/963**
+  (1445.7s), modules **533/533** (663.5s), barename **0/533** (826.5s),
+  coverage/doc(100%)/module-smoke ratchets OK, gate9 **10/10 + 30 pass +
+  1 intended T001 + 0 unexpected**.
+- The runtime fixes are carried by the compiler v0.65.4 build (which pins
+  this tag); the local battery uses the old runtime, so arm64/SIGPIPE
+  integration is verified by the compiler v0.65.4 CI + PULSE.
+- Release package: package.xi 0.65.4, CHANGELOG [0.65.4] - 2026-10-30,
+  release-notes/v0.65.4.md. Tag `stdlib-v0.65.4` + registry publish follow.
+- Open after this cut: 1704 (compiler drop glue), 1531-xvector (not
+  reproduced; fixed pending reporter verify), 1807-orbitdb (compiler write
+  path), wishlist row 33 (compiler/install). No stdlib-owned open bug.
 
 **SESSION 2026-10-30 block 306 (v0.65.3 cut: tag live at 26ede85; battery green; RC archive bundles stale 0.65.2)**
 - Compiler sign: REL-20261030-0007-compiler (owner GO recorded; asks stdlib
