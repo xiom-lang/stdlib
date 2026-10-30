@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 115 (updated 2026-10-30; **v0.65.3 CUT IN PROGRESS: compiler sign received (REL-20261030-0007), packages green on fd27be39a (REL-20261030-0005), owner GO recorded. release commit 26ede85 (package 0.65.3, CHANGELOG, release-notes/v0.65.3.md); tag LIVE at 26ede85 after re-cutting the owner's stale 801d300 (package 0.65.2); release run 40986322723; battery green (probes 418/418, smokes 963/963, modules 533/533, barename 0/533, gate9 OK). RC archive 40980879241 bundles stdlib 0.65.2 -> compiler rebuild requested (REL-20261030-0133); registry/announcement held. 1641 verified fixed on 605c6a879 and re-confirmed on fd27be39a**)
+## 0A. CONTINUE HERE -- handoff snapshot 115 (updated 2026-10-30; **v0.65.3 CUT IN PROGRESS: compiler sign received (REL-20261030-0007), packages green on fd27be39a (REL-20261030-0005), owner GO recorded. release commit 26ede85 (package 0.65.3, CHANGELOG, release-notes/v0.65.3.md); tag LIVE at 26ede85 after re-cutting the owner's stale 801d300 (package 0.65.2); release run 40986322723; battery green (probes 418/418, smokes 963/963, modules 533/533, barename 0/533, gate9 OK). RELEASED: run 40986322723 green; registry live (xiom-std 0.65.3, sha 95403d8b, compiler v0.64.8); pin PR #9; RC archive 40980879241 still bundles 0.65.2 -> compiler rebuild requested (REL-20261030-0133); announcement held. 1641 verified fixed on 605c6a879 and re-confirmed on fd27be39a**)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-30, snapshot 115)
 
@@ -4041,9 +4041,22 @@ registry pin, agent recon for the rest)**
   compiler to rebuild the RC against the re-cut tag and republish the shas.
 - The released compiler binary itself is good against our tree: p_wave162
   **20/20**, witness **20/20**, gate9 **OK**.
-- **Hold**: no public announcement / no registry canary promotion until the
-  compiler's rebuilt-archive signal. Registry canary auto-dispatch (if any)
-  is release.yml behavior, not an announcement.
+- **Release run 40986322723 SUCCESS**: validate + windows gates + ubuntu
+  gates + package/GitHub Release + pin PR + staging canary. Release:
+  https://github.com/xiom-lang/stdlib/releases/tag/stdlib-v0.65.3;
+  `xiom-std-0.65.3.tar.gz` sha256 `728db62d...`.
+- **Registry live**: xiom-std 0.65.3, sha256
+  `95403d8b0c293974ddfdf984d16e525caeddd0423e793708c3d91323f1887958`,
+  compiler field v0.64.8, publisher commit 26ede85, run 40986322710;
+  staging canary 40991441243 SUCCESS; `latest: 0.65.3`. The stale publish
+  dispatch from the pre-bump tag (40979966639) was cancelled.
+- **Pin PR**: https://github.com/xiom-lang/xiom/pull/9
+  (`chore/pin-stdlib-v0.65.3`). The release job pushed the branch but could
+  not open the PR (token), so it was opened manually.
+- **Hold**: no public announcement until the compiler's rebuilt-archive
+  signal (RC still bundles 0.65.2). If the compiler release wants the
+  registry's per-version `compiler` field recorded as v0.65.3, use
+  publish-registry.yml's `compiler` override (no retag).
 
 **SESSION 2026-10-29 block 305 (1641 verified fixed on 605c6a879; gate9 OK; full matrix green; release ready for GO)**
 - Compiler relay REL-20261029-2013-compiler: candidate **605c6a879**
