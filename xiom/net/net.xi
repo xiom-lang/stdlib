@@ -24,7 +24,7 @@ extern "C" {
   fn xiom_socket_accept(sock: Int, client_ip: *UInt8, client_port: *Int) -> Int;
   fn xiom_socket_send(sock: Int, buf: *UInt8, len: Int) -> Int32;
   fn xiom_socket_recv(sock: Int, buf: *UInt8, len: Int) -> Int32;
-  fn xiom_socket_close(sock: Int) -> Int32;
+  fn xiom_socket_close(sock: Int) -> Int;
   fn xiom_dns_resolve(hostname: *UInt8, ip_buf: *UInt8, buf_size: Int) -> Int32;
   fn xiom_socket_sendto(sock: Int, buf: *UInt8, len: Int, host: *UInt8, port: Int) -> Int32;
   fn xiom_socket_recvfrom(sock: Int, buf: *UInt8, len: Int, out_ip: *UInt8, out_port: *Int) -> Int32;
