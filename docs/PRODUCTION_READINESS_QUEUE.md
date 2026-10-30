@@ -1,17 +1,34 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
-**90% -- 9 of 10 gates complete; gate 9 discrete.** (Main pin:
-**v0.64.8**; stdlib-v0.65.2 tag `7d4d48f`, GitHub Release live
-(`xiom-std-0.65.2.tar.gz` + `SHA256SUMS`, run 40523878342); registry live
-(xiom-std 0.65.2, sha256 `9638b576...`, compiler field v0.64.8, run
-40523878370); staging canary green. Compiler v0.65.2 (tag `fe1994b1`)
-pins stdlib-v0.65.2 but is **not accepted for durable/vector lanes**
-(Struct{Vec} push regression fixed on compiler main `bb8eccf5a`, v0.65.3
-awaits owner GO); PULSE is on v0.65.1. Main pin stays v0.64.8.)
-**Gates: merged corpus 963/963 (0 compilefail / 0 runfail), modules
-533/533, probes 418/418, barename 0/533, floors197. Wave pin: v0.64.8
-(block 299). Release dry-run 40683465791 green (validate + Ubuntu/Windows
-gates + package; no release).**
+**90% -- 9 of 10 gates complete; gate 9 discrete.** (Compiler pin:
+**v0.64.8**. stdlib-v0.65.3 released at `26ede85` (tag object `7eeea48`,
+run 40986322723); registry xiom-std 0.65.3 live (sha256 `95403d8b...`,
+compiler field v0.64.8); the published compiler v0.65.3 windows asset
+(`8383aa5b...`) is accepted by stdlib. stdlib-v0.65.4 is cut at `d267317`
+(tag `stdlib-v0.65.4`) for the two post-release socket fixes -- arm64
+handle ABI (REL-20261030-1628) and POSIX SIGPIPE
+(REL-20261030-1645); release run 41117752917. The runtime fixes are carried
+by the compiler v0.65.4 build, which pins this tag.)
+**Gates on the 0.65.4 tree (published v0.65.3 compiler): merged corpus
+963/963 (0 compilefail / 0 runfail), modules 533/533, probes 420/420
+(includes p_socket_ffi_width + p_socket_sigpipe), barename 0/533,
+floors197, gate9 10/10 + 30 known-failure repros pass + 1 intended T001
+(0 unexpected).**
+
+### 2026-10-30 addendum -- v0.65.3 release + v0.65.4 socket patch
+- v0.65.3 released (tag 26ede85) and the registry verified; the compiler
+  v0.65.3 release (run 41077253955) bundles stdlib 0.65.3, and its
+  published windows asset (sha 8383aa5b) passes p_wave162 20/20, the 1641
+  witness 20/20, and gate9.
+- v0.65.4 fixes the only stdlib-owned post-release bugs: socket
+  create/accept/close return int64_t on every target (arm64 IR), and POSIX
+  send uses MSG_NOSIGNAL / the runtime ignores SIGPIPE. arm64 and
+  Linux/WSL integration are verified by the compiler v0.65.4 build and
+  PULSE; the local battery uses the old runtime.
+- Remaining non-stdlib items: 1704 (compiler drop glue), 1531-xvector
+  (not reproduced; fixed pending reporter verify), 1807-orbitdb
+  (compiler write path), wishlist row 33 (compiler/install lane), kqueue
+  (deferred until the heavy macOS leg is green).
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
