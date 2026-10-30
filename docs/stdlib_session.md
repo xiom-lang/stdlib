@@ -17,9 +17,67 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 114 (updated 2026-10-29; **1641 VERIFIED FIXED on candidate 605c6a879 (sha256 50A10EBE...): p_wave162 20/20, witness `p_borrowed_mut_grown_vec_uaf` 20/20, gate9_scan OK (10/10 + 30 pass + 1 intended, 0 unexpected), full matrix green (probes 418/418, smokes 963/963, modules 533/533, barename 0/533, ratchets OK); 1641 + REL-20261029-1910 verified+closed; v0.65.3 release package ready for the owner's GO -- no bump/tag yet; COMPILER_VERSION v0.64.8**)
+## 0A. CONTINUE HERE -- handoff snapshot 115 (updated 2026-10-30; **v0.65.3 CUT IN PROGRESS: compiler sign received (REL-20261030-0007), packages green on fd27be39a (REL-20261030-0005), owner GO recorded. package.xi -> 0.65.3, CHANGELOG [0.65.3] + release-notes/v0.65.3.md prepared; battery on the release commit, then tag stdlib-v0.65.3. Registry/announcement held for the compiler's final signal. 1641 verified fixed on 605c6a879 and re-confirmed on fd27be39a (p_wave162 20/20, witness 20/20, gate9 OK)**)
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-29, snapshot 114)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-30, snapshot 115)
+
+```
+Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
+  git pull --ff-only origin main
+  git -C E:\xiom-lang\xiom-relays fetch origin
+  git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
+  python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
+Read docs/stdlib_session.md snapshot 115 + block 306 + blocks 305/304/303/302.
+
+STATE (2026-10-30):
+- 1641 VERIFIED FIXED: 605c6a879 (implicit tail return) then measured again
+  on fd27be39a (p_wave162 20/20 rc 0, p_borrowed_mut_grown_vec_uaf 20/20,
+  gate9 10/10 + 30 pass + 1 intended/0 unexpected).
+- Compiler sign: REL-20261030-0007-compiler (owner GO recorded; asks stdlib
+  to tag stdlib-v0.65.3 and confirm the exact sha). Packages: REL-20261030-0005
+  (VERIFIED fd27be39a, all blockers green, -2110 closed). Release held only
+  for the stdlib tag + the compiler's final archive signal.
+- Release commit (this commit): package.xi version "0.65.3", CHANGELOG
+  [0.65.3] - 2026-10-30, release-notes/v0.65.3.md, docs snapshot.
+  COMPILER_VERSION stays v0.64.8 unless the compiler asks to move it.
+- Battery: the fd27be39a matrix lost one probe row to a runner worker-start
+  flake (417/418 rows, probes rc=2); smokes/modules/barename/ratchets from
+  the same tree. Re-run the flaked legs with -Workers 4 on the release
+  commit before tagging. Harness flake, not a compiler failure (seen twice
+  today; "workers failed to start").
+- Tag: annotated stdlib-v0.65.3 on the release commit, push (triggers
+  release.yml: validate, gates, package, GitHub Release, pin PR, registry
+  canary). Post the exact sha + run on REL-20261030-0007.
+- Do NOT dispatch publish-registry.yml or publish an announcement until the
+  compiler sends the final release signal after the archive verification.
+
+PRIORITY 0 -- FINISH THE CUT:
+- Re-run probes + check_modules on the release commit (-Workers 4), gate9.
+- Confirm package.xi/version and release.yml validate.
+- Tag + push; watch the release run; report the tag sha + run id.
+- On the compiler's final signal: registry publish + canary, verify the
+  registry metadata, post tag/SHA/run/registry on the relay.
+
+PRIORITY 1 -- READINESS:
+- Keep gate 9 green; keep p_borrowed_mut_grown_vec_uaf in known_failures.
+- PULSE 1955/1549 still await re-run/verification.
+
+RULES:
+- No clause waves; io.list_dir runtime-owned; json_clear(&mut) hangs; no
+  mutable-enum recursion.
+- Relay pulls: fetch + merge --ff-only; never move tags.
+- Untracked out/ + smoke_diag_f128_* are documented leftovers.
+- No tag/release without the owner's explicit GO (recorded) and the
+  compiler sign (received for the tag; final signal still owed).
+
+DELIVERABLE: stdlib-v0.65.3 tagged and published with a green battery; the
+registry canary after the compiler's final signal; docs/session current.
+```
+---
+
+## 0A-114. PREVIOUS HANDOFF -- snapshot 114 (updated 2026-10-29; **1641 VERIFIED FIXED on candidate 605c6a879 (sha256 50A10EBE...): p_wave162 20/20, witness `p_borrowed_mut_grown_vec_uaf` 20/20, gate9_scan OK (10/10 + 30 pass + 1 intended, 0 unexpected), full matrix green (probes 418/418, smokes 963/963, modules 533/533, barename 0/533, ratchets OK); 1641 + REL-20261029-1910 verified+closed; v0.65.3 release package ready for the owner's GO -- no bump/tag yet; COMPILER_VERSION v0.64.8**)
+
+## 0C-114. NEXT-SESSION PROMPT (2026-10-29, snapshot 114 -- SUPERSEDED by snapshot 115)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:

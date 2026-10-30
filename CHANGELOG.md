@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.65.3] - 2026-10-30
+
 ### Fixed
 
 - `sync.channel` now stores its queue as non-owning raw element storage
