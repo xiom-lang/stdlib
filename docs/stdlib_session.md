@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 116 (updated 2026-10-30; **v0.65.4 CUT: REL-20261030-1832 both fixes landed -- arm64 socket handle ABI (create/accept/close int64_t) and POSIX SIGPIPE (MSG_NOSIGNAL + SIG_IGN); probes p_socket_ffi_width/p_socket_sigpipe; battery probes 420/420, smokes 963/963, modules 533/533, barename 0/533, gate9 OK. Compiler v0.65.3 released and the published stdlib 0.65.3 asset accepted (8383aa5b); tag/registry for 0.65.4 next; runtime verification rides the compiler v0.65.4 build**)
+## 0A. CONTINUE HERE -- handoff snapshot 116 (updated 2026-10-30; **v0.65.4 CUT: REL-20261030-1832 both fixes landed -- arm64 socket handle ABI (create/accept/close int64_t) and POSIX SIGPIPE (MSG_NOSIGNAL + SIG_IGN); probes p_socket_ffi_width/p_socket_sigpipe; battery probes 420/420, smokes 963/963, modules 533/533, barename 0/533, gate9 OK. Compiler v0.65.3 released and the published stdlib 0.65.3 asset accepted (8383aa5b); tag stdlib-v0.65.4 -> d267317 + registry 0.65.4 live (sha 12111688); pin PR xiom#10; runtime verification rides the compiler v0.65.4 build**)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-30, snapshot 116)
 
@@ -4102,7 +4102,11 @@ registry pin, agent recon for the rest)**
   this tag); the local battery uses the old runtime, so arm64/SIGPIPE
   integration is verified by the compiler v0.65.4 CI + PULSE.
 - Release package: package.xi 0.65.4, CHANGELOG [0.65.4] - 2026-10-30,
-  release-notes/v0.65.4.md. Tag `stdlib-v0.65.4` + registry publish follow.
+  release-notes/v0.65.4.md. **RELEASED**: tag stdlib-v0.65.4 (object
+  b3ae1a3b) -> d267317; release run 41117752917 SUCCESS; asset
+  `xiom-std-0.65.4.tar.gz` sha256 `e0add829...`; registry xiom-std 0.65.4
+  live (sha256 `12111688...`, compiler v0.64.8, run 41117752919); canary
+  41124566756 SUCCESS; pin PR xiom#10.
 - Open after this cut: 1704 (compiler drop glue), 1531-xvector (not
   reproduced; fixed pending reporter verify), 1807-orbitdb (compiler write
   path), wishlist row 33 (compiler/install). No stdlib-owned open bug.
