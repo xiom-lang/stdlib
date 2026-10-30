@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 115 (updated 2026-10-30; **v0.65.3 CUT IN PROGRESS: compiler sign received (REL-20261030-0007), packages green on fd27be39a (REL-20261030-0005), owner GO recorded. package.xi -> 0.65.3, CHANGELOG [0.65.3] + release-notes/v0.65.3.md prepared; battery on the release commit, then tag stdlib-v0.65.3. Registry/announcement held for the compiler's final signal. 1641 verified fixed on 605c6a879 and re-confirmed on fd27be39a (p_wave162 20/20, witness 20/20, gate9 OK)**)
+## 0A. CONTINUE HERE -- handoff snapshot 115 (updated 2026-10-30; **v0.65.3 CUT IN PROGRESS: compiler sign received (REL-20261030-0007), packages green on fd27be39a (REL-20261030-0005), owner GO recorded. release commit 26ede85 (package 0.65.3, CHANGELOG, release-notes/v0.65.3.md); tag LIVE at 26ede85 after re-cutting the owner's stale 801d300 (package 0.65.2); release run 40986322723; battery green (probes 418/418, smokes 963/963, modules 533/533, barename 0/533, gate9 OK). RC archive 40980879241 bundles stdlib 0.65.2 -> compiler rebuild requested (REL-20261030-0133); registry/announcement held. 1641 verified fixed on 605c6a879 and re-confirmed on fd27be39a**)
 
 ## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-30, snapshot 115)
 
@@ -4015,6 +4015,35 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-30 block 306 (v0.65.3 cut: tag live at 26ede85; battery green; RC archive bundles stale 0.65.2)**
+- Compiler sign: REL-20261030-0007-compiler (owner GO recorded; asks stdlib
+  to tag `stdlib-v0.65.3`). Packages: REL-20261030-0005 (VERIFIED
+  fd27be39a, -2110 closed) and REL-20261030-0111 (RC windows archive
+  verified, release GO).
+- Release commit **26ede85**: package.xi `0.65.3`, CHANGELOG `[0.65.3]`,
+  `release-notes/v0.65.3.md`, snapshot 115.
+- Battery on the release tree (compiler fd27be39a): probes **418/418**
+  (599.1s, clean re-run after one 417/418 runner worker-start flake),
+  smokes **963/963** (918.1s), modules **533/533** (367.1s), barename
+  **0/533** (485.3s), coverage/doc(100%)/module-smoke ratchets OK; gate9
+  **10/10 + 30 pass + 1 intended T001 + 0 unexpected** (run twice).
+- **Tag re-cut**: the owner had pre-created `stdlib-v0.65.3` at `801d300`
+  (package.xi 0.65.2); its release run **40979966483 failed at validate in
+  9s**. The tag is a protected ref (deletion rejected); it was force-updated
+  to **26ede85** (annotated tag object `7eeea48`). New release run
+  **40986322723**: validate SUCCESS, gates in progress.
+- **RC archive is stale**: run 40980879241's
+  `xiom-0.65.3-windows-x64.zip` (sha256 `7ff7919d...`, matches) has
+  `xiom --version` 0.65.3 and `xiom-pkg`/`xiom-lsp` 0.65.3, but the bundled
+  `lib/package.xi` says **0.65.2** -- the rc pinned the tag while it still
+  pointed at 801d300. Reported as **REL-20261030-0133-stdlib**; asked the
+  compiler to rebuild the RC against the re-cut tag and republish the shas.
+- The released compiler binary itself is good against our tree: p_wave162
+  **20/20**, witness **20/20**, gate9 **OK**.
+- **Hold**: no public announcement / no registry canary promotion until the
+  compiler's rebuilt-archive signal. Registry canary auto-dispatch (if any)
+  is release.yml behavior, not an announcement.
 
 **SESSION 2026-10-29 block 305 (1641 verified fixed on 605c6a879; gate9 OK; full matrix green; release ready for GO)**
 - Compiler relay REL-20261029-2013-compiler: candidate **605c6a879**
