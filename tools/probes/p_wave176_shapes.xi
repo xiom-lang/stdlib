@@ -1,11 +1,10 @@
-// p_wave176_shapes.xi -- waves 176/177 lock: the readiness event loop.
-// Linux uses epoll; Windows uses the WSAPoll readiness shim; macOS/BSD are
-// the documented Err until the kqueue wave (docs/EVENT_LOOP_PLAN.md).
-// Linux rows: empty wait, pipe read readiness, writable registration,
+// p_wave176_shapes.xi -- waves 176/177/178 lock: the readiness event loop.
+// Linux uses epoll; macOS/FreeBSD use kqueue; Windows uses the WSAPoll
+// readiness shim (docs/EVENT_LOOP_PLAN.md).
+// POSIX rows: empty wait, pipe read readiness, writable registration,
 // modify, remove, close idempotence, closed-loop Err, bad timeout.
 // Windows rows: listener readiness, accept, read readiness on the accepted
 // socket, remove/close, and the closed-loop guard.
-// macOS row: eventloop_new is Err.
 // Returns 0 when all rows hold; a nonzero return names the first failing row.
 //
 // Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
@@ -19,12 +18,6 @@ use xiom.os.platform as plat;
 
 fn main() -> Int {
   let created = socket.eventloop_new();
-
-  if plat.platform_is_macos() {
-    // --- row 1: macOS is the documented Err until the kqueue wave ---
-    if !created.is_err { return 1; }
-    return 0;
-  };
 
   if plat.platform_is_windows() {
     // --- Windows: WSAPoll readiness shim ---
@@ -112,7 +105,7 @@ fn main() -> Int {
     return 0;
   };
 
-  // --- Linux: epoll ---
+  // --- Linux epoll / macOS-FreeBSD kqueue ---
   var loop: socket.EventLoop;
   match created {
     Ok(l) => { loop = l; },

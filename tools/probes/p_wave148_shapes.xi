@@ -12,6 +12,9 @@ module p_wave148_shapes
 use xiom.io;
 
 fn main() -> Int {
+  // Self-contained in a clean checkout: the fixture dir is untracked.
+  let _ = io.create_dir_all("out");
+
   let tmp = "out\\w148_stress.tmp";
   let dst = "out\\w148_stress.dat";
   var i = 0;

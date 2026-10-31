@@ -1,19 +1,94 @@
-# Production-readiness remaining queue (handoff 2026-09-25)
+﻿# Production-readiness remaining queue (handoff 2026-09-25)
 
 **90% -- 9 of 10 gates complete; gate 9 discrete.** (Compiler pin:
-**v0.64.8**. stdlib-v0.65.3 released at `26ede85` (tag object `7eeea48`,
-run 40986322723); registry xiom-std 0.65.3 live (sha256 `95403d8b...`,
-compiler field v0.64.8); the published compiler v0.65.3 windows asset
-(`8383aa5b...`) is accepted by stdlib. stdlib-v0.65.4 is cut at `d267317`
-(tag `stdlib-v0.65.4`) for the two post-release socket fixes -- arm64
-handle ABI (REL-20261030-1628) and POSIX SIGPIPE
-(REL-20261030-1645); release run 41117752917. The runtime fixes are carried
-by the compiler v0.65.4 build, which pins this tag.)
-**Gates on the 0.65.4 tree (published v0.65.3 compiler): merged corpus
-963/963 (0 compilefail / 0 runfail), modules 533/533, probes 420/420
-(includes p_socket_ffi_width + p_socket_sigpipe), barename 0/533,
-floors197, gate9 10/10 + 30 known-failure repros pass + 1 intended T001
-(0 unexpected).**
+**v0.65.4** (published); stdlib-v0.65.4 released at `d267317` (tag
+`stdlib-v0.65.4`, run 41117752917); registry xiom-std 0.65.4 live (sha256
+`12111688...`, compiler field v0.64.8 -- historical and immutable, see
+REL-20261031-1554-stdlib). The post-release tail is on main: persistent
+worker pool + real thread arguments (`a0e91cd`) and the engine P1/P2 gaps
+(`1a17405`). Those are not in v0.65.4; they ride the v0.65.5 candidate.)
+**Gates on the current tree (official v0.65.4 windows-x64 archive):
+smokes 964/964, modules 533/533, probes 424/424, barename 0/533,
+module-smoke 543/543 (100%), floors197, gate9 10/10 + 30 known-failure
+repros pass + 1 intended T001 (0 unexpected).**
+**v0.65.5 prep:** `release/v0.65.5-prep` (package 0.65.5, pin v0.65.4,
+notes, changelog); release dry-run **41217827358 SUCCESS** (validate,
+windows/ubuntu gates, package; release/pin/canary correctly skipped).
+Owner GO pending; main is not bumped.
+
+### 2026-10-31 addendum -- post-v0.65.4 tail + v0.65.5 prep + kqueue wave
+- **Pool + engine gaps on main:** `a0e91cd` (persistent worker pool, real
+  arg channel, real `spawn_with`) and `1a17405` (`Vec.swap_remove`/
+  `Vec.sort_by`, `io.eprintln`/`flush_stderr`, `io.normalize_path`,
+  backslash-aware `join_paths`). Battery on the official v0.65.4 archive:
+  probes 422/422, smokes 963/963, modules 533/533, barename 0/533, gate9
+  OK (10/10 + 30 pass + 1 intended), coverage/doc ratchets OK.
+- **v0.65.5 prep:** branch `release/v0.65.5-prep`; dry-run 41217827358
+  SUCCESS; owner greenlight item REL-20261031-1706-stdlib. No tag/release
+  until GO.
+- **Gate 9** is still open only on the compiler drop-glue residual
+  (1704 / m375). PULSE re-runs `probe_alloc_aggregate` and the capped
+  bttger leg on the pin that carries the reclaim; stdlib then verifies the
+  10k/256 MB target and flips the gate.
+- **New compiler findings** from the readiness sweep: by-value fn accepted
+  where `fn(&T)` is required and misreads the payload
+  (REL-20261031-1552-stdlib); `Float128 as Int128` emits invalid IR on
+  v0.65.4 (REL-20261031-1600-stdlib). Both are compiler-side and are not
+  in `tools/known_failures` (gate 9 stays at 0 unexpected until the fix
+  direction is chosen).
+- **kqueue wave 178 DELIVERED:** `feat/kqueue-backend` implements the
+  kqueue backend (`EV_RECEIPT` ctl, one-entry-per-fd coalescing) and
+  updates the probe. The focused
+  `.github/workflows/macos-eventloop.yml` witness run **41226381281**
+  (macos-15) is green: compiler build + `p_wave176_shapes` pass. The 2202
+  kqueue residual is resolved.
+- **2202 item 5 (brotli/zstd) SATISFIED BY REGISTRY PACKAGES:** the
+  documented boundary is correct -- stdlib does not reimplement RFC 7932
+  or zstd. `xiom.brotli 0.1.0` (libbrotli v1.2.0; registry sha256
+  `f37f3a39...`) and `xiom.zstd 0.3.0` (zstd 1.5.7; sha256 `6288ac84...`)
+  are live; the routing item REL-20261015-2211-packages-2 is closed as
+  delivered. Brotli/zstd are NOT a 2202 residual and NOT a v0.65.5
+  blocker (REL-20261031-1905-packages). The only 2202 residual is
+  compiler Send/Sync; 1531 and 1807 are unchanged.
+- **Wave 313 module-surface lock:** `smoke_readiness_module_surface`
+  imports the 44 modules that had no smoke reference, so module-smoke
+  coverage is **543/543 (100%)**. Full smoke corpus **964/964** on
+  Windows; the new smoke is green on Linux too. The module-smoke baseline
+  is refreshed to 543 covered modules (function references stay
+  3505/6664; deeper function-call waves follow).
+- **Compiler runtime requests handled:** the Win64
+  `__fixdfti`/`__fixunsdfti`/`__fixsfti`/`__fixunssfti` libcalls are in
+  `runtime/fp128_helpers.c` (REL-20261031-1924-compiler; e2e green with
+  compiler main, waits for the official pin), and
+  `xiom_trampoline_call` installs fault handlers once per thread
+  (REL-20261031-1934-compiler-4): Linux 100k per-call unsafe blocks
+  28-34 ms, one-loop 3-6 ms; guard smokes green on Linux/Windows.
+- **Gate 9 pre-wire:** `tools/probes/p_json_1704_obj.xi` (10k JSON
+  build/parse/stringify by default, `PROBE_ITERS` override) and
+  `tools/json_peak.ps1` (10 ms peak-RSS poll, 256 MB cap) are the
+  repeatable gate-9 witness. Official v0.65.4 archive: **10k 39.7 MB,
+  20k 82.1 MB, 100k 260.3 MB** (linear, ~2.2 KB/iter). The 10k/256 MB cap
+  is met, but the line is not flat, so 1704 is still open. Local compiler
+  main `d4d52e0c9` (partial m375 fix `e875528ce`) still shows obj 10.9 MB
+  at 10k and 40.9 MB at 20k, so the partial fix does not close it. When
+  the full reclaim lands, run the sampler at 10k/20k/100k; a flat peak is
+  the gate-9 flip evidence.
+- **Clean-checkout probes:** `p_wave137_shapes` and `p_wave148_shapes`
+  now create `out/` themselves; the full corpus is **424/424** from a
+  clean checkout (previously those two failed when `out/` was absent).
+- **2156 string copy-leak FIXED on main:** `string.xi` copies then frees
+  the malloc'd buffer at all 10 local `Str.from_cstring(buf)` sites
+  (str_concat/slice/upper/lower/title/swap_case/reverse/pad); `cstring.xi`
+  now calls the runtime `xiom_str_len` + `xiom_str_from_vec` helpers
+  directly, removing the intermediate `Vec[UInt8]`/`from_utf8` copy.
+  Compiler main `d4d52e0c9` + this source: struct-of-Strs 4.9/5.8/13.3 MB
+  and Vec[Str] 6.4/9.7/28.8 MB at 10k/20k/100k; cstring roundtrip
+  5.4/4.5/8.6 MB; str_repeat 39.2 MB at 100k. Official v0.65.4 string
+  smokes 56/56 green. v0.65.5 must be re-cut from main for the rebuild.
+- **1949 t8/t9 runtime pieces:** `__asan_default_options` returns
+  `detect_leaks=0` (env overrides), `XIOM_ALLOC_POISON=1` poisons the
+  first 4 KiB of freed main-heap blocks, and `p_guard_uaf` proves the
+  confined guard-arena UAF faults/contained on Windows and Linux.
 
 ### 2026-10-30 addendum -- v0.65.3 release + v0.65.4 socket patch
 - v0.65.3 released (tag 26ede85) and the registry verified; the compiler
@@ -45,21 +120,24 @@ Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
 gates flip:
 1. Modules type-check clean -- MET (533/533).
-2. Smoke corpus green -- MET: merged 963/963 on v0.64.8 (0/0),
-   including the directory-rename regression; plus 963/963 on both
-   Windows and Ubuntu release gates, no carve-outs.
-3. Probe corpus green -- MET (418/418; the gate-9 set, the h2 frame-I/O
-   probe, p_http_parse_alloc, p_wave298_sse_wire,
-   p_wave298_h2_conn_mux and the earlier waves are included and
-   individually green).
+2. Smoke corpus green -- MET: merged 964/964 on v0.65.4 (0/0),
+   including the directory-rename regression and the wave-313 module
+   surface smoke; plus 963/963 on both Windows and Ubuntu release gates
+   (dry-run 41217827358, pre-wave-313), no carve-outs.
+3. Probe corpus green -- MET (424/424; includes the gate-9 set,
+   p_json_1704_obj (the gate-9 RSS workload), p_guard_uaf, p_wave176_shapes with the
+   kqueue row, p_socket_ffi_width, p_socket_sigpipe, the h2/SSE probes and
+   the earlier waves; 424/424 on the current tree with the official v0.65.4
+   archive).
 4. Strict bare-name scan clean -- MET (0/533).
 5. Coverage ratchet green -- MET (floors197).
 6. Documentation ratchet 100% -- MET.
-7. Module-smoke ratchet green -- MET (499/542 modules, 3501/6575 fns).
+7. Module-smoke ratchet green -- MET (543/543 modules, 100%; function
+   references 3541/6664, 53.1%; wave 315 refreshed the baseline).
 8. Contract coverage 100% outside the documented no-clause tail -- MET
-   (wave 208, 2026-10-25, refreshed 2026-10-28: every non-tail public fn
-   carries a clause; non-tail 100%, global 95.9%, 6697/6982; clauses/fns
-   97.8%, 9224 clauses; floors197). The remaining 285 public fns are the
+   (wave 208, 2026-10-25, refreshed 2026-10-31: every non-tail public fn
+   carries a clause; non-tail 100%, global 95.9%, 6703/6988; clauses/fns
+   97.8%, 9234 clauses; floors197). The remaining 285 public fns are the
    documented no-clause tail: iter 70.5%, os 71.5%, math 90.7%, thread
    91.1%, ffi 94.5%, serialize 94.7%, format 95.2% (no non-tautological
    clauses left; no clause waves in the tail).
@@ -120,11 +198,12 @@ gates flip:
    Historical: v0.65.1 was 9/10 (only 1609); v0.64.8 results are in the
    updates below.
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- MET
-    (stdlib-v0.65.2 released 2026-10-27; tag object `e041aae` -> commit
-    `7d4d48f`; release run 40523878342; assets + SHA256SUMS published;
-    registry xiom-std 0.65.2 live via run 40523878370; compiler v0.65.2
-    pins STDLIB_VERSION; tags frozen. stdlib-v0.65.1 `9dc69b3` and 0.65.0
-    remain released/immutable.)
+    (stdlib-v0.65.4 released 2026-10-30 at `d267317`, run 41117752917;
+    registry xiom-std 0.65.4 live (sha256 `12111688...`, run 41117752919);
+    compiler v0.65.4 pins STDLIB_VERSION; tags frozen. v0.65.5 prep
+    (`release/v0.65.5-prep`) has dry-run 41217827358 green and awaits the
+    owner GO. Earlier 0.65.0/0.65.1/0.65.2/0.65.3 tags remain
+    released/immutable.)
 
 Meter formula: MET gates count 1.0; gate 9 gets no partial credit
 (discrete). 9 / 10 = 90%. Gate 8 is MET via the non-tail 100% rule
@@ -3088,7 +3167,7 @@ corpus + `barename_scan.ps1` + both ratchets. One wave per commit.
 
 ## A. Wave 30+: remaining coverage targets
 
-### A1. `xiom/math/signal.xi` (~40 pub, safest — pure length invariants)
+### A1. `xiom/math/signal.xi` (~40 pub, safest â€” pure length invariants)
 Candidates verified by reading the module: result-length equalities guarded
 by input sizes (convolution `n + kernel - 1`; correlation lags;
 power-spectrum `n/2 + 1`; upsampling `2n`; downsampling `n/2`; mel filterbank
@@ -3118,7 +3197,7 @@ generalizations.
 
 ### A5. Smaller tails if wanted
 `xiom/geom` (mostly 3D helpers), `xiom/math` remaining <15% files, `xiom/net`
-pure helpers. No correctness impact — coverage only.
+pure helpers. No correctness impact â€” coverage only.
 
 ---
 
@@ -3135,18 +3214,18 @@ Helpers to add in `xiom/math/control_theory.xi` (math layer cannot import
 `_ct_copy` (deep copy of a repaired matrix), `_ct_mul`, `_ct_transpose`,
 `_ct_rank` (Gaussian elimination, pivot threshold 1e-12).
 
-- `observability(a, c) -> Bool`: repair A/C; require A square n×n and C p×n;
+- `observability(a, c) -> Bool`: repair A/C; require A square nÃ—n and C pÃ—n;
   build `O = [C; CA; ...; CA^(n-1)]` by push; return `_ct_rank(&O) == n`.
   Guards -> false: empty A or C, non-square A, ragged widths, mult failure.
   Clause: `ensures: !result || a.len() > 0`.
 - `controllability(a, b) -> Bool`: rank of `[B, AB, ...]` equals rank of its
   transpose `[B^T; B^T A^T; ...]`; build stacked rows, same guards
-  (B must be n×m, m > 0). Same clause.
+  (B must be nÃ—m, m > 0). Same clause.
 - `state_space(a,b,c,d)`: DEFER (4-tuple of aggregates has documented
   ABI risk); keep the stub, sharpen its doc comment.
 
 `xiom/math/optimization.xi`:
-- `lp_simplex(c, a, b) -> Vec[Float64]`: dense tableau (m+1)×(n+m+1),
+- `lp_simplex(c, a, b) -> Vec[Float64]`: dense tableau (m+1)Ã—(n+m+1),
   slacks basis, Bland entering + Bland leaving tie-break, Gauss-Jordan
   pivots, 10000-iteration cap. Return conventions: empty vec for empty c,
   no constraints, `b.len() != a.len()`, ragged A, any `b[i] < 0` (no
@@ -3311,3 +3390,4 @@ compiler lane bumps `STDLIB_VERSION`, runs
    probe-first. Relay to packages: grpc publish can proceed once the
    official pin carries m202 (their 36/36 x2 is on the candidate);
    graphql conformance is 10/10 with m206.
+

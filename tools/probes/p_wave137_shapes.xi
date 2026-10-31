@@ -22,6 +22,9 @@ fn eq_bytes(a: &Vec[UInt8], b: &Vec[UInt8]) -> Bool {
 }
 
 fn main() -> Int {
+  // Self-contained in a clean checkout: the fixture dir is untracked.
+  let _ = io.create_dir_all("out");
+
   // PE-magic-like binary fixture with NULs at 3, 7 and a 0xFF.
   var bin: Vec[UInt8] = Vec[UInt8].new();
   bin.push(0x4D as UInt8);

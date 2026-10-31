@@ -306,7 +306,51 @@ long xiom_file_size(const char* path) {
     return size;
 }
 
+/* ASan leak-mode default (REL-20261031-1949-compiler-2): the runtime's
+   intentional startup allocations (string table, arena slabs) are reported as
+   leaks at exit, which masks the t8/t9 panic score. ASAN_OPTIONS still
+   overrides this default, so a leak hunt can opt back in. */
+#if defined(__GNUC__)
+__attribute__((weak))
+#endif
+const char* __asan_default_options(void) {
+    return "detect_leaks=0";
+}
+
+/* Freed-block poisoning (REL-20261031-1949-compiler-2). Opt-in via
+   XIOM_ALLOC_POISON=1 for raw builds; ASan builds should leave it off
+   (ASan owns the quarantine/redzones). Poisoning the first 4 KiB makes an
+   immediate UAF read deterministic instead of allocator-dependent. The
+   deterministic fault path for confined blocks is the guard arena
+   (p_guard_uaf.xi); this is the main-heap complement. */
+#if defined(_WIN32)
+#include <malloc.h>
+static size_t xiom_malloc_usable(void* p) { return _msize(p); }
+#elif defined(__APPLE__)
+#include <malloc/malloc.h>
+static size_t xiom_malloc_usable(void* p) { return malloc_size(p); }
+#elif defined(__GLIBC__)
+#include <malloc.h>
+static size_t xiom_malloc_usable(void* p) { return malloc_usable_size(p); }
+#else
+/* musl/BSD: no portable usable-size; poisoning is a no-op there. */
+static size_t xiom_malloc_usable(void* p) { (void)p; return 0; }
+#endif
+static int xiom_alloc_poison_on(void) {
+    static int cached = -1;
+    if (cached < 0) {
+        const char* v = getenv("XIOM_ALLOC_POISON");
+        cached = (v && v[0] == '1') ? 1 : 0;
+    }
+    return cached;
+}
 void xiom_free(void* ptr) {
+    if (!ptr) return;
+    if (xiom_alloc_poison_on()) {
+        size_t n = xiom_malloc_usable(ptr);
+        if (n > 4096) n = 4096;
+        if (n > 0) memset(ptr, 0xFD, n);
+    }
     free(ptr);
 }
 
@@ -977,6 +1021,7 @@ static __thread int xiom_trampoline_allow_retry = 1;
 /* m351: raw signal + faulting address captured by the handler. */
 static __thread int xiom_trampoline_os_code = 0;
 static __thread uintptr_t xiom_trampoline_fault_addr = 0;
+static __thread int xiom_trampoline_handlers_installed = 0;
 
 static void xiom_trampoline_handler(int sig, siginfo_t* si, void* uc) {
     (void)uc;
@@ -1042,15 +1087,20 @@ void xiom_trap_leave(void) {
 }
 
 int64_t xiom_trampoline_call(xiom_block_fn fn, uint8_t* ctx) {
-    struct sigaction sa;
-    struct sigaction old_segv, old_ill, old_fpe;
-    memset(&sa, 0, sizeof(sa));
-    sa.sa_sigaction = xiom_trampoline_handler;
-    sa.sa_flags = SA_SIGINFO;
-    sigemptyset(&sa.sa_mask);
-    sigaction(SIGSEGV, &sa, &old_segv);
-    sigaction(SIGILL, &sa, &old_ill);
-    sigaction(SIGFPE, &sa, &old_fpe);
+    /* t3 hot-reload floor (REL-20261031-1934-compiler-4): install the
+       containment handlers once per thread, not on every confined-block
+       entry. sigsetjmp below still bounds each call. */
+    if (!xiom_trampoline_handlers_installed) {
+        struct sigaction sa;
+        memset(&sa, 0, sizeof(sa));
+        sa.sa_sigaction = xiom_trampoline_handler;
+        sa.sa_flags = SA_SIGINFO;
+        sigemptyset(&sa.sa_mask);
+        sigaction(SIGSEGV, &sa, NULL);
+        sigaction(SIGILL, &sa, NULL);
+        sigaction(SIGFPE, &sa, NULL);
+        xiom_trampoline_handlers_installed = 1;
+    }
 
     int saved_returned = xiom_trampoline_returned;
     xiom_trampoline_retried = 0;
@@ -1097,9 +1147,6 @@ int64_t xiom_trampoline_call(xiom_block_fn fn, uint8_t* ctx) {
         return fault_code;
     }
     /* never reached */
-    sigaction(SIGSEGV, &old_segv, NULL);
-    sigaction(SIGILL, &old_ill, NULL);
-    sigaction(SIGFPE, &old_fpe, NULL);
 }
 #endif /* end POSIX trampoline */
 
@@ -9530,6 +9577,104 @@ long long xiom_eventloop_wait(int handle, long long timeout_ms, long long* out_f
         out_flags[i] = flags;
     }
     return n;
+}
+int xiom_eventloop_close(int handle) {
+    if (handle < 0) return -1;
+    return close(handle);
+}
+#elif defined(__APPLE__) || defined(__FreeBSD__)
+#include <sys/event.h>
+#include <errno.h>
+/* Apply one kqueue filter change and surface the immediate result. EV_RECEIPT
+   makes kevent return an EV_ERROR event (errno in data) instead of failing the
+   whole batch, so add/modify/remove can be validated synchronously. */
+static int xiom_kq_apply(int kq, int fd, int16_t filter, uint16_t flags) {
+    struct kevent ev;
+    EV_SET(&ev, (uintptr_t)fd, filter, flags | EV_RECEIPT, 0, 0, NULL);
+    if (kevent(kq, &ev, 1, &ev, 1, NULL) < 0) return -1;
+    if (ev.flags & EV_ERROR) {
+        int err = (int)ev.data;
+        /* EV_RECEIPT reports a successful change as data 0, not an error. */
+        if (err == 0) return 0;
+        if (err == ENOENT && (flags & EV_DELETE)) return 2;
+        errno = err;
+        return -1;
+    }
+    return 0;
+}
+int xiom_eventloop_create(void) {
+    return kqueue();
+}
+int xiom_eventloop_ctl(int handle, int op, int fd, int read, int write) {
+    if (handle < 0 || fd < 0) return -1;
+    if (op == 0) {
+        if (!read && !write) return -1;
+        if (read && xiom_kq_apply(handle, fd, EVFILT_READ, EV_ADD | EV_ENABLE) == -1) return -1;
+        if (write && xiom_kq_apply(handle, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE) == -1) return -1;
+        return 0;
+    }
+    if (op == 1) {
+        if (!read && !write) return -1;
+        /* kqueue has no separate MOD: rebuild the interest set exactly. */
+        (void)xiom_kq_apply(handle, fd, EVFILT_READ, EV_DELETE);
+        (void)xiom_kq_apply(handle, fd, EVFILT_WRITE, EV_DELETE);
+        if (read && xiom_kq_apply(handle, fd, EVFILT_READ, EV_ADD | EV_ENABLE) == -1) return -1;
+        if (write && xiom_kq_apply(handle, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE) == -1) return -1;
+        return 0;
+    }
+    if (op == 2) {
+        /* Idempotent removal: a missing filter is not an error. */
+        (void)xiom_kq_apply(handle, fd, EVFILT_READ, EV_DELETE);
+        (void)xiom_kq_apply(handle, fd, EVFILT_WRITE, EV_DELETE);
+        return 0;
+    }
+    return -1;
+}
+long long xiom_eventloop_wait(int handle, long long timeout_ms, long long* out_fds, long long* out_flags, long long max) {
+    struct kevent events[256];
+    struct timespec ts;
+    struct timespec* tsp;
+    int cap;
+    int n;
+    int i;
+    int outn;
+    if (handle < 0 || max <= 0 || out_fds == NULL || out_flags == NULL) return -1;
+    cap = (int)(max > 256 ? 256 : max);
+    if (timeout_ms < 0) {
+        tsp = NULL;
+    } else {
+        ts.tv_sec = (time_t)(timeout_ms / 1000);
+        ts.tv_nsec = (long)((timeout_ms % 1000) * 1000000);
+        tsp = &ts;
+    }
+    n = kevent(handle, NULL, 0, events, cap, tsp);
+    if (n < 0) return -1;
+    outn = 0;
+    for (i = 0; i < n; i++) {
+        long long flags = 0;
+        int j;
+        if (events[i].filter == EVFILT_READ) flags |= 1;
+        if (events[i].filter == EVFILT_WRITE) flags |= 2;
+        if (events[i].flags & (EV_ERROR | EV_EOF)) flags |= 4;
+        if (events[i].flags & EV_EOF) {
+            if (events[i].filter == EVFILT_READ) flags |= 1;
+            if (events[i].filter == EVFILT_WRITE) flags |= 2;
+        }
+        /* Coalesce the two filters of one fd, matching the epoll/WSAPoll
+           one-entry-per-fd contract. */
+        for (j = 0; j < outn; j++) {
+            if (out_fds[j] == (long long)events[i].ident) {
+                out_flags[j] |= flags;
+                break;
+            }
+        }
+        if (j == outn) {
+            out_fds[outn] = (long long)events[i].ident;
+            out_flags[outn] = flags;
+            outn++;
+        }
+    }
+    return outn;
 }
 int xiom_eventloop_close(int handle) {
     if (handle < 0) return -1;

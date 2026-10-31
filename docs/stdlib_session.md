@@ -27,7 +27,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 118 + block 311 + blocks 310/309/308.
+Read docs/stdlib_session.md snapshot 118 + block 315 + blocks 314/313/312.
 
 STATE (2026-10-31):
 - v0.65.4 SHIPPED: stdlib tag stdlib-v0.65.4 -> d267317 (registry xiom-std
@@ -4236,15 +4236,146 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
-**SESSION 2026-10-31 block 311 (v0.65.5 release prep on a branch -- no tag; new compiler finding: by-value fn accepted as fn(&T) and misreads the payload)**
-- **Release prep branch `release/v0.65.5-prep` (NOT main).** One commit
-  carries the owner-decision proposal: `package.xi` 0.65.5,
-  `COMPILER_VERSION` v0.65.4, CHANGELOG [0.65.5], and
-  `release-notes/v0.65.5.md` (two highlights; the compiler notes validator
-  merges it green against a placeholder compiler file). Merge + tag only on
-  the owner's explicit GO; main stays at 7620c64 with package 0.65.4 and
-  COMPILER_VERSION v0.64.8.
-- **v0.65.5 release prep docs (main; no version bump, no tag, no registry
+**SESSION 2026-10-31 block 315 (CRITICAL 2156: str_concat/from_cstring copy-leak fixed; t8/t9 runtime pieces 1949; wave 315 function calls; candidate must be re-cut)**
+- **REL-20261031-2156-compiler (high) -- source leaks fixed on main:**
+  - `xiom/string/string.xi`: every locally malloc'd `Str.from_cstring(buf)`
+    site now copies then `free(buf)` (str_concat, str_slice, upper, lower,
+    title, swap_case, reverse, pad-left/right; 10 sites total).
+  - `xiom/convert/cstring.xi`: `from_cstring` no longer builds a temporary
+    `Vec[UInt8]`; it calls the same runtime helpers the compiler builtin
+    emits (`xiom_str_len` + `xiom_str_from_vec`), so there is no
+    intermediate Vec/from_utf8 copy to drop.
+  - **Measured with compiler main `d4d52e0c9` (contains 683c77d5b) +
+    this source, 256 MB cap:** struct-of-Strs 4.9/5.8/13.3 MB at
+    10k/20k/100k; Vec[Str] 6.4/9.7/28.8 MB at 10k/20k/100k; cstring
+    roundtrip 5.4/4.5/8.6 MB at 10k/20k/100k; str_repeat 5.8 MB at 20k,
+    39.2 MB at 100k. The 2156 temp-fix direction is confirmed; residual
+    slope is now small enough for the compiler's rebuilt probe to judge.
+  - Official v0.65.4 archive: string smokes **56/56** green with the
+    source fixes, so the frees are safe on the released compiler too.
+  - **No tag:** the compiler will not cut v0.65.5 until the rebuilt stdlib
+    and the 600-frame engine soak are green. The v0.65.5 candidate branch
+    is frozen pre-2156; re-cut it from main for the rebuild.
+- **REL-20261031-1949-compiler-2 (t8/t9 runtime split):**
+  - Runtime `__asan_default_options` returns `detect_leaks=0` (env still
+    overrides) so the intentional startup allocations do not mask the
+    t8/t9 panic score.
+  - `XIOM_ALLOC_POISON=1` poisons the first 4 KiB of freed main-heap
+    blocks (platform usable-size: `_msize` / `malloc_size` /
+    `malloc_usable_size`; no-op elsewhere). Default off; ASan builds
+    leave it off.
+  - `tools/probes/p_guard_uaf.xi` proves the deterministic UAF path:
+    allocate in a confined block's guard arena, exit, read the escaped
+    address in a second confined block -> SIGSEGV contained,
+    `GUARD-UAF-OK` on Windows and Linux. Full probes **424/424**.
+- **Wave 315:** one representative call per newly imported module raises
+  module-smoke function references 3505 -> **3541/6664 (53.1%)**; modules
+  remain 543/543 (100%). Full smokes **964/964**, probes **424/424**,
+  modules 533/533, barename 0/533, gate9 and ratchets OK.
+- **Prep branch:** `release/v0.65.5-prep` merged main (2156 + wave 315 +
+  kqueue + runtime fixes); it keeps `package.xi` 0.65.5,
+  `COMPILER_VERSION` v0.65.4, CHANGELOG [0.65.5] and
+  `release-notes/v0.65.5.md`. Re-run the release dry-run on that branch;
+  tag only on owner GO after the compiler rebuild + engine soak.
+- **Next:** share the candidate sha + the four memory probes with
+  compiler, and keep the tag off until compiler rebuild + engine soak.
+
+**SESSION 2026-10-31 block 314 (readiness window: compiler runtime requests 1924/1934 handled -- Win64 __fixdfti family + t3 once-per-thread signal handlers; wave 313 full battery)**
+- **REL-20261031-1924-compiler (1600 stdlib half) DONE:** added the
+  Win64 libcalls `__fixdfti` / `__fixunsdfti` / `__fixsfti` /
+  `__fixunssfti` to `runtime/fp128_helpers.c` (both clang>=21 pointer and
+  clang<=20 XMM branches; plain double/float ABI, forwarding to
+  `xiom_f128_from_f64_impl` + the shared i128/u128 cores). The compiler
+  half is 61f9e3b6a; e2e with the local compiler main `d4d52e0c9` passes
+  3/3 for signed positive/negative, UInt128, and Float32. The item stays
+  acked until the OFFICIAL archive pin carries the fix; add the permanent
+  e2e probe then. **1552 remains compiler checker work** (preserve &/&mut
+  in fn-pointer signatures, reject by-value-to-by-ref); no stdlib change.
+- **REL-20261031-1934-compiler-4 (t3 floor) DONE:** `xiom_trampoline_call`
+  now installs SIGSEGV/SIGILL/SIGFPE once per thread
+  (`xiom_trampoline_handlers_installed`), keeps the per-call sigsetjmp,
+  and drops the unreachable restore. Linux 100k per-call unsafe blocks:
+  **28-34 ms** (was 139-202 ms); one unsafe around the loop 3-6 ms.
+  `smoke_guard_fault` and `smoke_guard_retry` are green on Linux; Windows
+  SEH is unchanged and `smoke_guard_fault` is green there.
+- **Wave 313/314 full battery:** probes **423/423** (new gate-9 witness),
+  smokes **964/964** (new module-surface smoke), modules 533/533, barename
+  0/533, module-smoke 543/543 (100%), gate9 10/10 + 30 pass + 1 intended,
+  coverage/doc/module-smoke ratchets OK. `tools/module_smoke_floors.json`
+  refreshed; `p_wave137/148_shapes` now create `out/` so the corpus is
+  clean-checkout safe.
+- **Gate 9 pre-wire (1704 witness):** `tools/probes/p_json_1704_obj.xi`
+  (10k JSON build/parse/stringify, `PROBE_ITERS` override) and
+  `tools/json_peak.ps1` (10 ms peak-RSS poll, 256 MB cap). Official
+  v0.65.4 archive: **10k 39.7 MB, 20k 82.1 MB, 100k 260.3 MB** (linear
+  ~2.2 KB/iter). 10k/256 MB cap is met, but the trend is not flat, so
+  1704 stays open. Local compiler main `d4d52e0c9` (partial m375
+  `e875528ce`) still shows obj 10.9 MB at 10k / 40.9 MB at 20k. When the
+  full reclaim lands, run the sampler at 10k/20k/100k; a flat peak flips
+  gate 9.
+- **Workspace note:** the untracked `out/` tree (thousands of stale
+  scratch `.xi`/exe files) made a repo-root `--check` hang at the 300 s
+  compiler timeout; deleting `out/` fixed it. Keep `out/` disposable and
+  never put it on a path the module loader scans.
+- **2202 tracking:** brotli/zstd dropped as registry-delivered
+  (REL-20261031-1905-packages); kqueue delivered; only compiler Send/Sync
+  remains on 2202. v0.65.5 prep is frozen pre-wave-313; re-cut/re-run the
+  dry-run if these readiness fixes should ride that tag.
+
+**SESSION 2026-10-31 block 313 (readiness wave 313: module-smoke coverage 543/543 = 100%; full smokes 964/964; 2202 brotli/zstd tracking corrected to registry-delivered)**
+- **Wave 313 module-surface lock:** `tests/smoke/smoke_readiness_module_surface.xi`
+  imports the 44 modules that had no smoke reference. Module-smoke coverage
+  is now **543/543 (100%)** (was 499/543). Full smoke corpus **964/964** on
+  Windows (v0.65.4 official archive); the new smoke is green on Linux in
+  WSL. `tools/module_smoke_floors.json` refreshed to 543 modules; function
+  references stay 3505/6664 (52.6%) -- deeper call waves follow.
+- **2202 item 5 (brotli/zstd) is satisfied by LIVE registry packages**, not
+  a stdlib/compiler fix: `xiom.brotli 0.1.0` (libbrotli v1.2.0, registry
+  sha256 `f37f3a39...`) and `xiom.zstd 0.3.0` (zstd 1.5.7, sha256
+  `6288ac84...`); REL-20261015-2211-packages-2 closed as delivered. Dropped
+  brotli/zstd from the 2202 residual list and the v0.65.5 blocker list
+  (packages correction REL-20261031-1905-packages). Only compiler Send/Sync
+  remains on 2202.
+- **Readiness docs:** gate 2 now 964/964; gate 7 543/543; the readiness
+  queue addendum records both. Gate 9 remains compiler-only (1704/m375).
+- **Next waves:** function-call coverage for the new module surface; gate 9
+  pre-wiring (10k/256 MB witness and flip checklist); compiler runtime
+  requests 1924 (`__fixdfti` family) and 1934 (per-thread signal handler
+  install) are handled in the same readiness window.
+
+**SESSION 2026-10-31 block 312 (readiness wave: kqueue wave 178 DELIVERED -- macOS witness 41226381281 green; full battery green; kqueue is post-v0.65.5-candidate)**
+- **kqueue (2202 item 10) delivered on main `699e73f`** (merged from
+  `feat/kqueue-backend`):
+  - runtime `#elif __APPLE__ || __FreeBSD__` backend: `kqueue()` create;
+    `EVFILT_READ/WRITE` add/delete; modify rebuilds the interest set;
+    remove is idempotent; `EV_RECEIPT` ctl treats a successful change
+    (EV_ERROR data 0) as success; wait coalesces the two filters of one fd
+    into one event, matching epoll/WSAPoll; `EV_EOF` maps to
+    readable/writable + error bit.
+  - `xiom.net.socket`: `eventloop_new` contract no longer asserts macOS
+    Err; the wrapper docs and `docs/EVENT_LOOP_PLAN.md` wave 178 box are
+    updated.
+  - Probe `p_wave176_shapes` now runs the POSIX rows on macOS too.
+  - **macOS witness run 41226381281 (macos-15) GREEN**: compiler build +
+    `p_wave176_shapes` pass. New focused workflow
+    `.github/workflows/macos-eventloop.yml` (macos-15; macos-14 is in
+    brownout).
+  - Full battery on the merged tree with the official v0.65.4 archive:
+    probes **422/422**, smokes **963/963**, modules **533/533**, barename
+    **0/533**, gate9 OK (10/10 + 30 pass + 1 intended), coverage/doc/
+    module-smoke ratchets OK. Linux `p_wave176_shapes` green in WSL.
+  - **Not in the v0.65.5 candidate:** `release/v0.65.5-prep` is frozen at
+    the pre-kqueue commit and its dry-run 41217827358 is green. If kqueue
+    is wanted in v0.65.5, merge main into the prep branch and re-run the
+    dry-run; otherwise it rides the next tag.
+- **Readiness queue refreshed** (`docs/PRODUCTION_READINESS_QUEUE.md`):
+  current pin v0.65.4, gates 422/963/533/0, gate 9 still only 1704/m375,
+  v0.65.5 prep green, new compiler findings 1552/1600, kqueue delivered.
+- **2202 residual status:** kqueue resolved; only packages brotli/zstd and
+  compiler Send/Sync remain on that item. 1704 and 1531 unchanged.
+
+**SESSION 2026-10-31 block 311 (v0.65.5 release prep refreshed -- no bump/tag; new compiler finding: by-value fn accepted as fn(&T) and misreads the payload)**
+- **v0.65.5 release prep (docs only; no version bump, no tag, no registry
   write).** `docs/RELEASE_DRY_RUN.md` now records the candidate as main
   `1a17405` (code) / `ab3bad8` (docs): pool `a0e91cd` + engine P1/P2
   `1a17405`, both post-v0.65.4. Local battery on the official v0.65.4
