@@ -1,0 +1,58 @@
+# Copyright (c) 2026 Eleftherios Notas and The XIOM Authors
+# SPDX-License-Identifier: MIT OR Apache-2.0
+#
+# Focused macOS readiness witness for the kqueue backend. The full heavy
+# macOS leg is red on unrelated smoke rows; this job builds the pinned
+# compiler on macos-14 and runs ONLY p_wave176_shapes, so the kqueue result
+# cannot be masked by those reds.
+
+name: XIOM Stdlib macOS event-loop witness
+
+on:
+  workflow_dispatch:
+    inputs:
+      compiler_ref:
+        description: "xiom ref to test (default: COMPILER_VERSION pin)"
+        required: false
+        default: ""
+
+jobs:
+  eventloop-macos:
+    name: event-loop probe (macos-14)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Read COMPILER_VERSION
+        id: pin
+        shell: bash
+        run: echo "ref=$(tr -d '\r\n ' < COMPILER_VERSION)" >> "$GITHUB_OUTPUT"
+
+      - name: Select compiler ref
+        id: ref
+        shell: bash
+        run: |
+          ref="${{ github.event.inputs.compiler_ref }}"
+          if [ -z "$ref" ]; then
+            ref="${{ steps.pin.outputs.ref }}"
+          fi
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          echo "testing compiler ref: $ref"
+
+      - name: Build compiler
+        id: compiler
+        uses: ./.github/actions/build-compiler
+        with:
+          ref: ${{ steps.ref.outputs.ref }}
+
+      - name: Event-loop probe (kqueue)
+        shell: pwsh
+        run: ./tools/run_smokes.ps1 -Compiler '${{ steps.compiler.outputs.binary }}' -Corpus tools/probes -Filter p_wave176_shapes -Json eventloop-results.json
+
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: macos-eventloop
+          path: eventloop-results.json
+          if-no-files-found: ignore
