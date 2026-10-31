@@ -23,12 +23,12 @@ module xiom.net.socket
 // 1024 fds, bounded timeouts, ready fds in input order). Wave 175 adds
 // socket_listen_fds (systemd socket activation: LISTEN_PID/LISTEN_FDS, fds
 // 3..3+N-1, POSIX-only) so zero-downtime reloads can adopt inherited
-// listeners; LISTEN_FDNAMES is left in place for the caller. Waves 176/177
-// add the eventloop_* readiness layer (Linux epoll, Windows WSAPoll; macOS/
-// BSD Err until the kqueue wave -- see docs/EVENT_LOOP_PLAN.md).
+// listeners; LISTEN_FDNAMES is left in place for the caller. Waves 176/177/178
+// add the eventloop_* readiness layer (Linux epoll, macOS/FreeBSD kqueue,
+// Windows WSAPoll; other POSIX stays the documented Err -- see
+// docs/EVENT_LOOP_PLAN.md).
 
 use xiom.env;
-use xiom.os.platform as plat;
 
 // Handle ABI (REL-20261030-1628): xiom_socket_create/accept/close return
 // int64_t on every target, so their declarations stay `-> Int` (POSIX fd and
@@ -956,7 +956,8 @@ pub fn socket_listen_fds() -> Result[Vec[Int], Str]
 // Event loop (wave 176; Linux epoll backend, other platforms Err)
 // ---------------------------------------------------------------------------
 
-/// Opaque readiness-loop handle (an epoll fd on Linux).
+/// Opaque readiness-loop handle (an epoll fd on Linux, a kqueue fd on
+/// macOS/FreeBSD, a slot handle on Windows).
 pub type EventLoop = { handle: Int; }
 
 /// Readiness batch: parallel fds/flags vectors (no Vec[struct]). Flags:
@@ -971,11 +972,11 @@ pub fn eventbatch_new() -> EventBatch
   return EventBatch{ fds: Vec[Int].new(); flags: Vec[Int].new(); };
 }
 
-/// Create a readiness loop. Linux uses epoll, Windows uses a WSAPoll
-/// readiness shim; macOS/BSD return the documented Err until the kqueue
-/// wave.
+/// Create a readiness loop. Linux uses epoll, macOS/FreeBSD use kqueue,
+/// Windows uses a WSAPoll readiness shim; other POSIX returns the documented
+/// Err.
 pub fn eventloop_new() -> Result[EventLoop, Str]
-  ensures: (plat.platform_is_macos()) => (result.is_err)
+  ensures: true
 {
   var handle: Int = -1;
   unsafe {

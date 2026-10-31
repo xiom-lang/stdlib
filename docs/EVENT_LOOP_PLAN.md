@@ -1,9 +1,11 @@
 # Event loop beyond poll -- scoping plan (2026-10-17)
 
-Status: scoping + Linux/Windows legs. This file records the phase-2 shelf
-plan for REL-20261015-2202-pulse item 10 ("Event loop beyond poll").
+Status: scoping + all three backends (Linux epoll, macOS/FreeBSD kqueue,
+Windows WSAPoll). This file records the phase-2 shelf plan for
+REL-20261015-2202-pulse item 10 ("Event loop beyond poll").
 Wave 175 landed `socket_listen_fds`; wave 176 landed the runtime ABI and
-Linux epoll; wave 177 landed the Windows WSAPoll readiness backend.
+Linux epoll; wave 177 landed the Windows WSAPoll readiness backend; wave
+178 adds kqueue on macOS/FreeBSD and a focused macos-14 witness.
 
 ## Current state (verified 2026-10-17)
 
@@ -17,9 +19,10 @@ Linux epoll; wave 177 landed the Windows WSAPoll readiness backend.
   `3..3+N-1`, max 1024. POSIX-only; consumes `LISTEN_PID`/`LISTEN_FDS` on
   success and leaves `LISTEN_FDNAMES` for the caller.
 - `eventloop_new/add/modify/remove/wait/close` are in-tree: Linux epoll
-  (wave 176) and Windows WSAPoll (wave 177). macOS/BSD still return the
-  documented Err until kqueue; IOCP is a separate completion API, not a
-  readiness drop-in.
+  (wave 176), Windows WSAPoll (wave 177), and macOS/FreeBSD kqueue
+  (wave 178, `EV_RECEIPT` ctl, same one-entry-per-fd contract). Other POSIX
+  still returns the documented Err. IOCP is a separate completion API, not
+  a readiness drop-in.
 
 ## Target shape
 
@@ -82,8 +85,10 @@ xiom_eventloop_close(handle) -> Int
   add/mod/del registry, level-triggered flags); probe extended with
   listener/accept/read rows. Landed 2026-10-17 (out of order because no
   macOS runner was available).
-- [ ] Wave 178: kqueue backend on macOS/BSD; same probe via a macOS
-  runner; keep the poll fallback.
+- [ ] Wave 178: kqueue backend on macOS/FreeBSD; same probe via a macOS
+  runner; keep the poll fallback. Implemented on `feat/kqueue-backend`
+  with the focused `.github/workflows/macos-eventloop.yml` witness; the box
+  flips when that run is green.
 - [ ] Wave 179: `xiom.net.event` wrapper + typed `Event`; adapter from
   `socket_poll_read/write`; PULSE consumer smoke.
 - [ ] Wave 180: `LISTEN_FDS` integration in the server path (adopt

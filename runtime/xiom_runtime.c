@@ -9535,6 +9535,101 @@ int xiom_eventloop_close(int handle) {
     if (handle < 0) return -1;
     return close(handle);
 }
+#elif defined(__APPLE__) || defined(__FreeBSD__)
+#include <sys/event.h>
+#include <errno.h>
+/* Apply one kqueue filter change and surface the immediate result. EV_RECEIPT
+   makes kevent return an EV_ERROR event (errno in data) instead of failing the
+   whole batch, so add/modify/remove can be validated synchronously. */
+static int xiom_kq_apply(int kq, int fd, int16_t filter, uint16_t flags) {
+    struct kevent ev;
+    EV_SET(&ev, (uintptr_t)fd, filter, flags | EV_RECEIPT, 0, 0, NULL);
+    if (kevent(kq, &ev, 1, &ev, 1, NULL) < 0) return -1;
+    if (ev.flags & EV_ERROR) {
+        if ((int)ev.data == ENOENT && (flags & EV_DELETE)) return 2;
+        errno = (int)ev.data;
+        return -1;
+    }
+    return 0;
+}
+int xiom_eventloop_create(void) {
+    return kqueue();
+}
+int xiom_eventloop_ctl(int handle, int op, int fd, int read, int write) {
+    if (handle < 0 || fd < 0) return -1;
+    if (op == 0) {
+        if (!read && !write) return -1;
+        if (read && xiom_kq_apply(handle, fd, EVFILT_READ, EV_ADD | EV_ENABLE) == -1) return -1;
+        if (write && xiom_kq_apply(handle, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE) == -1) return -1;
+        return 0;
+    }
+    if (op == 1) {
+        if (!read && !write) return -1;
+        /* kqueue has no separate MOD: rebuild the interest set exactly. */
+        (void)xiom_kq_apply(handle, fd, EVFILT_READ, EV_DELETE);
+        (void)xiom_kq_apply(handle, fd, EVFILT_WRITE, EV_DELETE);
+        if (read && xiom_kq_apply(handle, fd, EVFILT_READ, EV_ADD | EV_ENABLE) == -1) return -1;
+        if (write && xiom_kq_apply(handle, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE) == -1) return -1;
+        return 0;
+    }
+    if (op == 2) {
+        /* Idempotent removal: a missing filter is not an error. */
+        (void)xiom_kq_apply(handle, fd, EVFILT_READ, EV_DELETE);
+        (void)xiom_kq_apply(handle, fd, EVFILT_WRITE, EV_DELETE);
+        return 0;
+    }
+    return -1;
+}
+long long xiom_eventloop_wait(int handle, long long timeout_ms, long long* out_fds, long long* out_flags, long long max) {
+    struct kevent events[256];
+    struct timespec ts;
+    struct timespec* tsp;
+    int cap;
+    int n;
+    int i;
+    int outn;
+    if (handle < 0 || max <= 0 || out_fds == NULL || out_flags == NULL) return -1;
+    cap = (int)(max > 256 ? 256 : max);
+    if (timeout_ms < 0) {
+        tsp = NULL;
+    } else {
+        ts.tv_sec = (time_t)(timeout_ms / 1000);
+        ts.tv_nsec = (long)((timeout_ms % 1000) * 1000000);
+        tsp = &ts;
+    }
+    n = kevent(handle, NULL, 0, events, cap, tsp);
+    if (n < 0) return -1;
+    outn = 0;
+    for (i = 0; i < n; i++) {
+        long long flags = 0;
+        int j;
+        if (events[i].filter == EVFILT_READ) flags |= 1;
+        if (events[i].filter == EVFILT_WRITE) flags |= 2;
+        if (events[i].flags & (EV_ERROR | EV_EOF)) flags |= 4;
+        if (events[i].flags & EV_EOF) {
+            if (events[i].filter == EVFILT_READ) flags |= 1;
+            if (events[i].filter == EVFILT_WRITE) flags |= 2;
+        }
+        /* Coalesce the two filters of one fd, matching the epoll/WSAPoll
+           one-entry-per-fd contract. */
+        for (j = 0; j < outn; j++) {
+            if (out_fds[j] == (long long)events[i].ident) {
+                out_flags[j] |= flags;
+                break;
+            }
+        }
+        if (j == outn) {
+            out_fds[outn] = (long long)events[i].ident;
+            out_flags[outn] = flags;
+            outn++;
+        }
+    }
+    return outn;
+}
+int xiom_eventloop_close(int handle) {
+    if (handle < 0) return -1;
+    return close(handle);
+}
 #else
 int xiom_eventloop_create(void) { return -1; }
 int xiom_eventloop_ctl(int handle, int op, int fd, int read, int write) {
