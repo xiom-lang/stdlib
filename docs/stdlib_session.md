@@ -27,7 +27,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 118 + block 311 + blocks 310/309/308.
+Read docs/stdlib_session.md snapshot 118 + block 315 + blocks 314/313/312.
 
 STATE (2026-10-31):
 - v0.65.4 SHIPPED: stdlib tag stdlib-v0.65.4 -> d267317 (registry xiom-std
@@ -4235,6 +4235,46 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-31 block 315 (CRITICAL 2156: str_concat/from_cstring copy-leak fixed; t8/t9 runtime pieces 1949; wave 315 function calls; candidate must be re-cut)**
+- **REL-20261031-2156-compiler (high) -- source leaks fixed on main:**
+  - `xiom/string/string.xi`: every locally malloc'd `Str.from_cstring(buf)`
+    site now copies then `free(buf)` (str_concat, str_slice, upper, lower,
+    title, swap_case, reverse, pad-left/right; 10 sites total).
+  - `xiom/convert/cstring.xi`: `from_cstring` no longer builds a temporary
+    `Vec[UInt8]`; it calls the same runtime helpers the compiler builtin
+    emits (`xiom_str_len` + `xiom_str_from_vec`), so there is no
+    intermediate Vec/from_utf8 copy to drop.
+  - **Measured with compiler main `d4d52e0c9` (contains 683c77d5b) +
+    this source, 256 MB cap:** struct-of-Strs 4.9/5.8/13.3 MB at
+    10k/20k/100k; Vec[Str] 6.4/9.7/28.8 MB at 10k/20k/100k; cstring
+    roundtrip 5.4/4.5/8.6 MB at 10k/20k/100k; str_repeat 5.8 MB at 20k,
+    39.2 MB at 100k. The 2156 temp-fix direction is confirmed; residual
+    slope is now small enough for the compiler's rebuilt probe to judge.
+  - Official v0.65.4 archive: string smokes **56/56** green with the
+    source fixes, so the frees are safe on the released compiler too.
+  - **No tag:** the compiler will not cut v0.65.5 until the rebuilt stdlib
+    and the 600-frame engine soak are green. The v0.65.5 candidate branch
+    is frozen pre-2156; re-cut it from main for the rebuild.
+- **REL-20261031-1949-compiler-2 (t8/t9 runtime split):**
+  - Runtime `__asan_default_options` returns `detect_leaks=0` (env still
+    overrides) so the intentional startup allocations do not mask the
+    t8/t9 panic score.
+  - `XIOM_ALLOC_POISON=1` poisons the first 4 KiB of freed main-heap
+    blocks (platform usable-size: `_msize` / `malloc_size` /
+    `malloc_usable_size`; no-op elsewhere). Default off; ASan builds
+    leave it off.
+  - `tools/probes/p_guard_uaf.xi` proves the deterministic UAF path:
+    allocate in a confined block's guard arena, exit, read the escaped
+    address in a second confined block -> SIGSEGV contained,
+    `GUARD-UAF-OK` on Windows and Linux. Full probes **424/424**.
+- **Wave 315:** one representative call per newly imported module raises
+  module-smoke function references 3505 -> **3541/6664 (53.1%)**; modules
+  remain 543/543 (100%). Full smokes **964/964**, probes **424/424**,
+  modules 533/533, barename 0/533, gate9 and ratchets OK.
+- **Next:** re-cut `release/v0.65.5-prep` from main, re-run the release
+  dry-run, share the candidate sha + the four memory probes with compiler,
+  and keep the tag off until compiler rebuild + engine soak.
 
 **SESSION 2026-10-31 block 314 (readiness window: compiler runtime requests 1924/1934 handled -- Win64 __fixdfti family + t3 once-per-thread signal handlers; wave 313 full battery)**
 - **REL-20261031-1924-compiler (1600 stdlib half) DONE:** added the

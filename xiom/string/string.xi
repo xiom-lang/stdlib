@@ -45,7 +45,9 @@ fn _slice_fast(base: *UInt8, start: Int, end: Int) -> Str
       i = i + 1;
     };
     buf[n] = 0;
-    return Str.from_cstring(buf);
+    let out = Str.from_cstring(buf);
+    free(buf);
+    return out;
   }
 }
 
@@ -119,7 +121,9 @@ pub fn str_concat(a: Str, b: Str) -> Str
     var dst2 = (buf as Int + len_a) as *UInt8;
     xiom_memcpy_dispatch(dst2, b as *UInt8, len_b as UInt);
     buf[total] = 0;
-    return Str.from_cstring(buf);
+    let out = Str.from_cstring(buf);
+    free(buf);
+    return out;
   }
 }
 
@@ -144,7 +148,9 @@ pub fn str_slice(s: Str, start: Int, end: Int) -> Str
       i = i + 1;
     }
     buf[slice_len] = 0;
-    return Str.from_cstring(buf);
+    let out = Str.from_cstring(buf);
+    free(buf);
+    return out;
   }
 }
 
@@ -341,7 +347,9 @@ pub fn str_upper(s: Str) -> Str
       i = i + 1;
     }
     buf[len] = 0;
-    return Str.from_cstring(buf);
+    let out = Str.from_cstring(buf);
+    free(buf);
+    return out;
   }
 }
 
@@ -365,7 +373,9 @@ pub fn str_lower(s: Str) -> Str
       i = i + 1;
     }
     buf[len] = 0;
-    return Str.from_cstring(buf);
+    let out = Str.from_cstring(buf);
+    free(buf);
+    return out;
   }
 }
 
@@ -650,6 +660,7 @@ pub fn str_pad_left(s: Str, width: Int, pad: Char) -> Str
     buf[0] = pad as UInt8;
     buf[1] = 0;
     one = Str.from_cstring(buf);
+    free(buf);
   };
   let pad_str = str_repeat(one, pad_len);
   str_concat(pad_str, s)
@@ -671,6 +682,7 @@ pub fn str_pad_right(s: Str, width: Int, pad: Char) -> Str
     buf[0] = pad as UInt8;
     buf[1] = 0;
     one = Str.from_cstring(buf);
+    free(buf);
   };
   let pad_str = str_repeat(one, width - s_len);
   str_concat(s, pad_str)
@@ -837,7 +849,9 @@ pub fn str_title_case(s: Str) -> Str
       i = i + 1;
     };
     buf[len] = 0;
-    return Str.from_cstring(buf);
+    let out = Str.from_cstring(buf);
+    free(buf);
+    return out;
   }
 }
 
@@ -865,7 +879,9 @@ pub fn str_swap_case(s: Str) -> Str
       i = i + 1;
     };
     buf[len] = 0;
-    return Str.from_cstring(buf);
+    let out = Str.from_cstring(buf);
+    free(buf);
+    return out;
   }
 }
 
@@ -951,7 +967,9 @@ pub fn str_reverse(s: Str) -> Str
       };
     };
     buf[out_pos] = 0;
-    return Str.from_cstring(buf);
+    let out = Str.from_cstring(buf);
+    free(buf);
+    return out;
   }
 }
 

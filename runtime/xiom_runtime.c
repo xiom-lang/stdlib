@@ -306,7 +306,51 @@ long xiom_file_size(const char* path) {
     return size;
 }
 
+/* ASan leak-mode default (REL-20261031-1949-compiler-2): the runtime's
+   intentional startup allocations (string table, arena slabs) are reported as
+   leaks at exit, which masks the t8/t9 panic score. ASAN_OPTIONS still
+   overrides this default, so a leak hunt can opt back in. */
+#if defined(__GNUC__)
+__attribute__((weak))
+#endif
+const char* __asan_default_options(void) {
+    return "detect_leaks=0";
+}
+
+/* Freed-block poisoning (REL-20261031-1949-compiler-2). Opt-in via
+   XIOM_ALLOC_POISON=1 for raw builds; ASan builds should leave it off
+   (ASan owns the quarantine/redzones). Poisoning the first 4 KiB makes an
+   immediate UAF read deterministic instead of allocator-dependent. The
+   deterministic fault path for confined blocks is the guard arena
+   (p_guard_uaf.xi); this is the main-heap complement. */
+#if defined(_WIN32)
+#include <malloc.h>
+static size_t xiom_malloc_usable(void* p) { return _msize(p); }
+#elif defined(__APPLE__)
+#include <malloc/malloc.h>
+static size_t xiom_malloc_usable(void* p) { return malloc_size(p); }
+#elif defined(__GLIBC__)
+#include <malloc.h>
+static size_t xiom_malloc_usable(void* p) { return malloc_usable_size(p); }
+#else
+/* musl/BSD: no portable usable-size; poisoning is a no-op there. */
+static size_t xiom_malloc_usable(void* p) { (void)p; return 0; }
+#endif
+static int xiom_alloc_poison_on(void) {
+    static int cached = -1;
+    if (cached < 0) {
+        const char* v = getenv("XIOM_ALLOC_POISON");
+        cached = (v && v[0] == '1') ? 1 : 0;
+    }
+    return cached;
+}
 void xiom_free(void* ptr) {
+    if (!ptr) return;
+    if (xiom_alloc_poison_on()) {
+        size_t n = xiom_malloc_usable(ptr);
+        if (n > 4096) n = 4096;
+        if (n > 0) memset(ptr, 0xFD, n);
+    }
     free(ptr);
 }
 

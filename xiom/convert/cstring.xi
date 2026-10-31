@@ -16,6 +16,11 @@ module xiom.convert.cstring
 extern "C" {
   fn malloc(size: UInt) -> *UInt8;
   fn free(ptr: *UInt8);
+  // The same runtime helpers the compiler's Str.from_cstring builtin emits.
+  // Calling them directly avoids the intermediate Vec[UInt8] copy (and its
+  // drop) that the 2156 memory gate flagged.
+  fn xiom_str_len(p: *UInt8) -> Int;
+  fn xiom_str_from_vec(data: *UInt8, len: Int) -> Str;
 }
 
 /// Copy a NUL-terminated C string into a XIOM string.
@@ -28,23 +33,14 @@ pub fn from_cstring(ptr: Int) -> Str
   if ptr == 0 {
     return "";
   }
-  var buf = Vec[UInt8].new();
   unsafe {
-    var p = ptr as *UInt8;
-    var i: Int = 0;
-    loop {
-      var b = p[i];
-      if b == 0 as UInt8 {
-        break;
-      }
-      buf.push(b);
-      i = i + 1;
+    let p = ptr as *UInt8;
+    let n = xiom_str_len(p);
+    if n <= 0 {
+      return "";
     }
+    return xiom_str_from_vec(p, n);
   }
-  if buf.len() == 0 {
-    return "";
-  }
-  return Str::from_utf8(buf);
 }
 
 /// Allocate a NUL-terminated copy of a XIOM string and return its pointer.

@@ -1,4 +1,4 @@
-# Production-readiness remaining queue (handoff 2026-09-25)
+﻿# Production-readiness remaining queue (handoff 2026-09-25)
 
 **90% -- 9 of 10 gates complete; gate 9 discrete.** (Compiler pin:
 **v0.65.4** (published); stdlib-v0.65.4 released at `d267317` (tag
@@ -8,7 +8,7 @@ REL-20261031-1554-stdlib). The post-release tail is on main: persistent
 worker pool + real thread arguments (`a0e91cd`) and the engine P1/P2 gaps
 (`1a17405`). Those are not in v0.65.4; they ride the v0.65.5 candidate.)
 **Gates on the current tree (official v0.65.4 windows-x64 archive):
-smokes 964/964, modules 533/533, probes 423/423, barename 0/533,
+smokes 964/964, modules 533/533, probes 424/424, barename 0/533,
 module-smoke 543/543 (100%), floors197, gate9 10/10 + 30 known-failure
 repros pass + 1 intended T001 (0 unexpected).**
 **v0.65.5 prep:** `release/v0.65.5-prep` (package 0.65.5, pin v0.65.4,
@@ -74,8 +74,21 @@ Owner GO pending; main is not bumped.
   the full reclaim lands, run the sampler at 10k/20k/100k; a flat peak is
   the gate-9 flip evidence.
 - **Clean-checkout probes:** `p_wave137_shapes` and `p_wave148_shapes`
-  now create `out/` themselves; the full corpus is **423/423** from a
+  now create `out/` themselves; the full corpus is **424/424** from a
   clean checkout (previously those two failed when `out/` was absent).
+- **2156 string copy-leak FIXED on main:** `string.xi` copies then frees
+  the malloc'd buffer at all 10 local `Str.from_cstring(buf)` sites
+  (str_concat/slice/upper/lower/title/swap_case/reverse/pad); `cstring.xi`
+  now calls the runtime `xiom_str_len` + `xiom_str_from_vec` helpers
+  directly, removing the intermediate `Vec[UInt8]`/`from_utf8` copy.
+  Compiler main `d4d52e0c9` + this source: struct-of-Strs 4.9/5.8/13.3 MB
+  and Vec[Str] 6.4/9.7/28.8 MB at 10k/20k/100k; cstring roundtrip
+  5.4/4.5/8.6 MB; str_repeat 39.2 MB at 100k. Official v0.65.4 string
+  smokes 56/56 green. v0.65.5 must be re-cut from main for the rebuild.
+- **1949 t8/t9 runtime pieces:** `__asan_default_options` returns
+  `detect_leaks=0` (env overrides), `XIOM_ALLOC_POISON=1` poisons the
+  first 4 KiB of freed main-heap blocks, and `p_guard_uaf` proves the
+  confined guard-arena UAF faults/contained on Windows and Linux.
 
 ### 2026-10-30 addendum -- v0.65.3 release + v0.65.4 socket patch
 - v0.65.3 released (tag 26ede85) and the registry verified; the compiler
@@ -111,16 +124,16 @@ gates flip:
    including the directory-rename regression and the wave-313 module
    surface smoke; plus 963/963 on both Windows and Ubuntu release gates
    (dry-run 41217827358, pre-wave-313), no carve-outs.
-3. Probe corpus green -- MET (423/423; includes the gate-9 set,
-   p_json_1704_obj (the gate-9 RSS workload), p_wave176_shapes with the
+3. Probe corpus green -- MET (424/424; includes the gate-9 set,
+   p_json_1704_obj (the gate-9 RSS workload), p_guard_uaf, p_wave176_shapes with the
    kqueue row, p_socket_ffi_width, p_socket_sigpipe, the h2/SSE probes and
-   the earlier waves; 423/423 on the current tree with the official v0.65.4
+   the earlier waves; 424/424 on the current tree with the official v0.65.4
    archive).
 4. Strict bare-name scan clean -- MET (0/533).
 5. Coverage ratchet green -- MET (floors197).
 6. Documentation ratchet 100% -- MET.
 7. Module-smoke ratchet green -- MET (543/543 modules, 100%; function
-   references 3505/6664, 52.6%; wave 313 refreshed the baseline).
+   references 3541/6664, 53.1%; wave 315 refreshed the baseline).
 8. Contract coverage 100% outside the documented no-clause tail -- MET
    (wave 208, 2026-10-25, refreshed 2026-10-31: every non-tail public fn
    carries a clause; non-tail 100%, global 95.9%, 6703/6988; clauses/fns
@@ -3154,7 +3167,7 @@ corpus + `barename_scan.ps1` + both ratchets. One wave per commit.
 
 ## A. Wave 30+: remaining coverage targets
 
-### A1. `xiom/math/signal.xi` (~40 pub, safest — pure length invariants)
+### A1. `xiom/math/signal.xi` (~40 pub, safest â€” pure length invariants)
 Candidates verified by reading the module: result-length equalities guarded
 by input sizes (convolution `n + kernel - 1`; correlation lags;
 power-spectrum `n/2 + 1`; upsampling `2n`; downsampling `n/2`; mel filterbank
@@ -3184,7 +3197,7 @@ generalizations.
 
 ### A5. Smaller tails if wanted
 `xiom/geom` (mostly 3D helpers), `xiom/math` remaining <15% files, `xiom/net`
-pure helpers. No correctness impact — coverage only.
+pure helpers. No correctness impact â€” coverage only.
 
 ---
 
@@ -3201,18 +3214,18 @@ Helpers to add in `xiom/math/control_theory.xi` (math layer cannot import
 `_ct_copy` (deep copy of a repaired matrix), `_ct_mul`, `_ct_transpose`,
 `_ct_rank` (Gaussian elimination, pivot threshold 1e-12).
 
-- `observability(a, c) -> Bool`: repair A/C; require A square n×n and C p×n;
+- `observability(a, c) -> Bool`: repair A/C; require A square nÃ—n and C pÃ—n;
   build `O = [C; CA; ...; CA^(n-1)]` by push; return `_ct_rank(&O) == n`.
   Guards -> false: empty A or C, non-square A, ragged widths, mult failure.
   Clause: `ensures: !result || a.len() > 0`.
 - `controllability(a, b) -> Bool`: rank of `[B, AB, ...]` equals rank of its
   transpose `[B^T; B^T A^T; ...]`; build stacked rows, same guards
-  (B must be n×m, m > 0). Same clause.
+  (B must be nÃ—m, m > 0). Same clause.
 - `state_space(a,b,c,d)`: DEFER (4-tuple of aggregates has documented
   ABI risk); keep the stub, sharpen its doc comment.
 
 `xiom/math/optimization.xi`:
-- `lp_simplex(c, a, b) -> Vec[Float64]`: dense tableau (m+1)×(n+m+1),
+- `lp_simplex(c, a, b) -> Vec[Float64]`: dense tableau (m+1)Ã—(n+m+1),
   slacks basis, Bland entering + Bland leaving tie-break, Gauss-Jordan
   pivots, 10000-iteration cap. Return conventions: empty vec for empty c,
   no constraints, `b.len() != a.len()`, ragged A, any `b[i] < 0` (no
@@ -3377,3 +3390,4 @@ compiler lane bumps `STDLIB_VERSION`, runs
    probe-first. Relay to packages: grpc publish can proceed once the
    official pin carries m202 (their 36/36 x2 is on the candidate);
    graphql conformance is 10/10 with m206.
+
