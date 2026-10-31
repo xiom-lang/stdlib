@@ -1,19 +1,47 @@
 # Production-readiness remaining queue (handoff 2026-09-25)
 
 **90% -- 9 of 10 gates complete; gate 9 discrete.** (Compiler pin:
-**v0.64.8**. stdlib-v0.65.3 released at `26ede85` (tag object `7eeea48`,
-run 40986322723); registry xiom-std 0.65.3 live (sha256 `95403d8b...`,
-compiler field v0.64.8); the published compiler v0.65.3 windows asset
-(`8383aa5b...`) is accepted by stdlib. stdlib-v0.65.4 is cut at `d267317`
-(tag `stdlib-v0.65.4`) for the two post-release socket fixes -- arm64
-handle ABI (REL-20261030-1628) and POSIX SIGPIPE
-(REL-20261030-1645); release run 41117752917. The runtime fixes are carried
-by the compiler v0.65.4 build, which pins this tag.)
-**Gates on the 0.65.4 tree (published v0.65.3 compiler): merged corpus
-963/963 (0 compilefail / 0 runfail), modules 533/533, probes 420/420
-(includes p_socket_ffi_width + p_socket_sigpipe), barename 0/533,
+**v0.65.4** (published); stdlib-v0.65.4 released at `d267317` (tag
+`stdlib-v0.65.4`, run 41117752917); registry xiom-std 0.65.4 live (sha256
+`12111688...`, compiler field v0.64.8 -- historical and immutable, see
+REL-20261031-1554-stdlib). The post-release tail is on main: persistent
+worker pool + real thread arguments (`a0e91cd`) and the engine P1/P2 gaps
+(`1a17405`). Those are not in v0.65.4; they ride the v0.65.5 candidate.)
+**Gates on the current tree (official v0.65.4 windows-x64 archive):
+smokes 963/963, modules 533/533, probes 422/422, barename 0/533,
 floors197, gate9 10/10 + 30 known-failure repros pass + 1 intended T001
 (0 unexpected).**
+**v0.65.5 prep:** `release/v0.65.5-prep` (package 0.65.5, pin v0.65.4,
+notes, changelog); release dry-run **41217827358 SUCCESS** (validate,
+windows/ubuntu gates, package; release/pin/canary correctly skipped).
+Owner GO pending; main is not bumped.
+
+### 2026-10-31 addendum -- post-v0.65.4 tail + v0.65.5 prep + kqueue wave
+- **Pool + engine gaps on main:** `a0e91cd` (persistent worker pool, real
+  arg channel, real `spawn_with`) and `1a17405` (`Vec.swap_remove`/
+  `Vec.sort_by`, `io.eprintln`/`flush_stderr`, `io.normalize_path`,
+  backslash-aware `join_paths`). Battery on the official v0.65.4 archive:
+  probes 422/422, smokes 963/963, modules 533/533, barename 0/533, gate9
+  OK (10/10 + 30 pass + 1 intended), coverage/doc ratchets OK.
+- **v0.65.5 prep:** branch `release/v0.65.5-prep`; dry-run 41217827358
+  SUCCESS; owner greenlight item REL-20261031-1706-stdlib. No tag/release
+  until GO.
+- **Gate 9** is still open only on the compiler drop-glue residual
+  (1704 / m375). PULSE re-runs `probe_alloc_aggregate` and the capped
+  bttger leg on the pin that carries the reclaim; stdlib then verifies the
+  10k/256 MB target and flips the gate.
+- **New compiler findings** from the readiness sweep: by-value fn accepted
+  where `fn(&T)` is required and misreads the payload
+  (REL-20261031-1552-stdlib); `Float128 as Int128` emits invalid IR on
+  v0.65.4 (REL-20261031-1600-stdlib). Both are compiler-side and are not
+  in `tools/known_failures` (gate 9 stays at 0 unexpected until the fix
+  direction is chosen).
+- **kqueue wave 178:** `feat/kqueue-backend` implements the kqueue backend
+  (`EV_RECEIPT` ctl, one-entry-per-fd coalescing) and updates the probe;
+  the focused `.github/workflows/macos-eventloop.yml` witness is
+  dispatched on macos-15. The 2202 kqueue residual flips when that run is
+  green. Other residuals unchanged: 1531 xvector verify, 1807 compiler
+  write path, packages brotli/zstd, compiler Send/Sync.
 
 ### 2026-10-30 addendum -- v0.65.3 release + v0.65.4 socket patch
 - v0.65.3 released (tag 26ede85) and the registry verified; the compiler
