@@ -6,6 +6,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Persistent worker pool: `xiom.thread.pool` now owns a real fleet of
+  OS workers (runtime `xiom_workerpool_*`), one bounded FIFO queue guarded
+  by a mutex, condvar wakeups, a true completion point (`tp_join`), and a
+  shutdown that wakes and joins every worker. `tp_submit_with` runs
+  `f(arg)` on a worker; the arg travels through the runtime payload.
+  `tp_active` / `tp_completed` expose the real counters. Probe
+  `p_wave_workerpool` (REL-20261010-1834-engine-6 / 2202 item 4).
+- `thread.spawn_with(f, arg)` is a real OS thread with its argument
+  (runtime `xiom_thread_spawn_with_arg`), not an inline call; join/detach
+  are unchanged. Named/top-level jobs only (a capturing closure is an
+  environment pointer, not bare code). Probe `p_wave145` row 7.
+
 ## [0.65.4] - 2026-10-30
 
 ### Fixed

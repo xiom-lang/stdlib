@@ -12,7 +12,8 @@
 //       each submit up to the 4-worker cap; after tp_join busy == 0 and
 //       idle == 4.
 //  3 -- a pooled task ran on a non-main OS thread (real execution witness).
-//  4 -- tp_submit_with runs its fn with its arg (inline; engine-6 gap).
+//  4 -- tp_submit_with runs its fn with its arg on a worker (real arg
+//       channel; join is the completion point).
 //  5 -- tp_shutdown rejects new submits (both forms).
 //  6 -- tp_size == 4, initial idle == 4, initial busy == 0.
 // Setup failures use 10+ (never a silent pass).
@@ -39,6 +40,7 @@ var _s11: Int = 0;
 var _s12: Int = 0;
 var _worker_tid: Int = 0;
 var _arg_seen: Int = -1;
+var _arg_tid: Int = 0;
 
 fn task1() {
   _s1 = _s1 + 1;
@@ -59,6 +61,7 @@ fn task12() { _s12 = _s12 + 1; }
 
 fn add_arg(x: Int) {
   _arg_seen = x;
+  _arg_tid = thread.current_thread_id();
 }
 
 fn main() -> Int {
@@ -108,8 +111,10 @@ fn main() -> Int {
 
   // Row 4: tp_submit_with runs its fn with its arg.
   if !pool.tp_submit_with(&mut p, add_arg, 77) { return 33; }
-  if _arg_seen != 77 { return 5; }
   pool.tp_join(&mut p);
+  if _arg_seen != 77 { return 5; }
+  if _arg_tid == 0 { return 34; }
+  if _arg_tid == thread.current_thread_id() { return 35; }
 
   // Row 5: shutdown rejects new submits.
   pool.tp_shutdown(&mut p);

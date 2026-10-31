@@ -4,63 +4,66 @@
 
 module xiom.thread.pool
 
-// Depends on: xiom.alloc, xiom.ptr + the runtime spawn-with-result bridge.
+// Depends on: xiom.alloc, xiom.ptr + the runtime worker-pool ABI.
 
 // ============================================================================
-// Fixed-size worker pool with a shared job queue.
+// Fixed-size persistent worker pool.
 //
-// Wave 153 (REL-20261010-1834-engine-6 remainder) flipped the no-arg
-// submit->run path from a deterministic simulation to REAL OS threads:
-// `tp_submit` hands the job to the wave-145 spawn-with-result machinery
-// (xiom_thread_spawn_with_result; the 16-byte result buffer is allocated
-// OUTSIDE the confined block per the wave-131 rule) and `tp_join` blocks on
-// every in-flight OS handle (xiom_thread_spawn_join), then frees its buffer.
-// Every accepted no-arg job therefore runs exactly once on a real thread.
-// The runtime spawn table caps concurrent real workers at 256: a job that
-// cannot get an OS thread (table full or a failed create) falls back to an
-// inline run on the submitting thread -- join periodically to stay under
-// the cap.
+// Since REL-20261010-1834-engine-6 the pool is a REAL persistent fleet, not
+// thread-per-job: `thread_pool_new` creates N OS workers in the runtime
+// (`xiom_workerpool_create`) that block on one condition variable and drain a
+// bounded FIFO queue. Submit never spawns a thread; `tp_join` waits until
+// queued + running reaches zero (a true completion point), and `tp_shutdown`
+// wakes every worker and joins the OS threads.
+//
+// `tp_submit_with(p, f, arg)` runs `f(arg)` on a worker too. The runtime
+// calls the bare code pointer through the same function-pointer ABI the
+// wave-145 spawn trampoline uses; the i64 argument travels in the payload.
+// Send/Sync markers are still documentation-only (compiler scope): a job
+// must itself be safe to run on another thread.
+//
+// JOB FORM: pass a named/top-level function (or an explicit raw code
+// pointer). A capturing closure is represented as an environment, not a
+// bare code pointer, so `job as *UInt8` would hand the worker the env and
+// crash -- the same contract as `spawn`. Non-capturing named jobs only.
 //
 // DETERMINISTIC (legacy contract, smoke-asserted): `idle` / `busy` /
 // `queued` are ASSIGNMENT BOOKKEEPING, not OS scheduling. Each submit moves
 // one free slot to busy (idle-1, busy+1) until none is free; `tp_join`
 // returns all slots to idle (busy == 0, idle == workers). The smokes assert
 // these counts synchronously right after submit, so the counters must not
-// track the workers' real completion timing.
+// track the workers' real completion timing. `tp_active` / `tp_completed`
+// expose the runtime's real outstanding/completed counters.
 //
-// CONTRACT: accepted jobs run exactly once (join is the completion point;
-// there is no ordering guarantee BETWEEN jobs -- they start in submit order,
-// but complete under normal OS scheduling). A pool dropped without tp_join /
-// tp_shutdown keeps its in-flight OS threads and their 16-byte buffers for
-// the process lifetime (the same retained-buffer contract as spawn.detach);
-// call tp_join (or tp_shutdown) to reap and free. XIOM does not enforce
-// Send/Sync markers on closures yet, so a submitted closure must itself be
-// safe to run on another thread (single-writer shared state or equivalent).
-//
-// GAP (documented, not aspirational): thread-per-job, not a persistent
-// worker fleet. A real worker loop is not expressible on this toolchain:
-// XIOM cannot call a closure recovered from a raw pointer (the spawn
-// trampolines pass no argument channel), the pinned runtime's xiom_channel_*
-// family has no close/destroy to wake a blocked worker at shutdown, and the
-// runtime's global xiom_threadpool_* workers expose no join/wait surface --
-// a waiting worker would busy-spin or could never be woken. `tp_submit_with`
-// stays INLINE on the submitting thread (the same engine-6 arg-channel
-// freeze as spawn_with); its fn runs with its arg exactly once.
+// CONTRACT: accepted jobs run exactly once; `tp_join` is the completion
+// point. Submit blocks while the queue is full. A pool destroyed without
+// `tp_destroy` keeps its worker threads (and their stack) until the process
+// exits; call `tp_shutdown`/`tp_destroy` to release them. A job that never
+// returns makes shutdown block (same contract as a non-terminating thread).
+// If the runtime cannot create the workers, the pool degrades to inline
+// execution (documented; submit still runs each accepted job exactly once).
 // ============================================================================
 
 use xiom.alloc;
 use xiom.ptr;
 
 extern "C" {
-  fn xiom_thread_spawn_with_result(fn_ptr: *UInt8, result_buf: *UInt8) -> *UInt8;
-  fn xiom_thread_spawn_join(handle: *UInt8) -> Int;
+  fn xiom_workerpool_create(workers: Int) -> *UInt8;
+  fn xiom_workerpool_submit(pool: *UInt8, fn_ptr: *UInt8) -> Int32;
+  fn xiom_workerpool_submit_with(pool: *UInt8, fn_ptr: *UInt8, arg: Int) -> Int32;
+  fn xiom_workerpool_join(pool: *UInt8) -> Int;
+  fn xiom_workerpool_shutdown(pool: *UInt8);
+  fn xiom_workerpool_destroy(pool: *UInt8);
+  fn xiom_workerpool_size(pool: *UInt8) -> Int32;
+  fn xiom_workerpool_active(pool: *UInt8) -> Int;
+  fn xiom_workerpool_completed(pool: *UInt8) -> Int;
 }
 
-/// One in-flight job: its OS-thread handle plus the 16-byte result buffer
-/// the spawn trampoline writes into (layout: [done: 8][result: 8]).
+/// Legacy per-job record (kept for source compatibility; the persistent
+/// fleet no longer stores per-job handles).
 pub type PoolJob = { handle: *UInt8; buf: *UInt8; }
 
-/// Fixed-size worker pool with a shared job queue.
+/// Fixed-size persistent worker pool.
 pub type ThreadPool = {
   workers: Int;
   idle: Int;
@@ -69,13 +72,16 @@ pub type ThreadPool = {
   next_id: Int;
   completed: Int;
   closed: Bool;
+  /// Legacy, always empty (thread-per-job handles are gone).
   running: Vec[PoolJob];
+  /// Runtime pool handle (0 = degraded inline mode).
+  handle: *UInt8;
 }
 
-/// Create a pool with `workers` threads.
+/// Create a pool with `workers` persistent workers.
 /// Params: workers - fixed number of workers (clamped to >= 1).
 /// Returns: a new pool with all workers idle and no pending jobs.
-/// Complexity: O(1).
+/// Complexity: O(workers) OS thread creation.
 pub fn thread_pool_new(workers: Int) -> ThreadPool
   ensures: result.workers >= 1
   ensures: result.idle == result.workers
@@ -85,6 +91,8 @@ pub fn thread_pool_new(workers: Int) -> ThreadPool
   if w < 1 {
     w = 1;
   }
+  var h: *UInt8 = 0 as *UInt8;
+  unsafe { h = xiom_workerpool_create(w); }
   return ThreadPool{
     workers: w;
     idle: w;
@@ -94,14 +102,35 @@ pub fn thread_pool_new(workers: Int) -> ThreadPool
     completed: 0;
     closed: false;
     running: Vec[PoolJob].new();
+    handle: h;
   };
 }
 
+fn _assign(p: &mut ThreadPool) {
+  if p.idle > 0 {
+    p.idle = p.idle - 1;
+    p.busy = p.busy + 1;
+  }
+}
+
+fn _release(p: &mut ThreadPool) {
+  p.busy = 0;
+  p.idle = p.workers;
+}
+
+fn _drain_queue(p: &mut ThreadPool) {
+  while p.queued.len() > 0 {
+    let _ = p.queued.pop();
+    p.completed = p.completed + 1;
+  }
+}
+
 /// Enqueue a job; false if the pool is shutting down.
-/// Params: p - the pool; job - the closure (REAL: it runs on its own OS
-///          thread through the spawn machinery; `tp_join` waits for it).
+/// Params: p - the pool; job - a named/top-level closure (runs on a
+///         persistent worker; capturing closures are not representable as
+///         bare code pointers -- see the module contract).
 /// Returns: true on acceptance, false if the pool is shut down.
-/// Complexity: O(1) amortized plus one OS thread spawn.
+/// Complexity: O(1) amortized (blocks while the queue is full).
 pub fn tp_submit(p: &mut ThreadPool, job: fn()) -> Bool
   ensures: result == true => p.queued.len() >= 1
   ensures: p.busy + p.idle == p.workers
@@ -109,42 +138,28 @@ pub fn tp_submit(p: &mut ThreadPool, job: fn()) -> Bool
   if p.closed {
     return false;
   }
-  var id = p.next_id;
-  p.next_id = p.next_id + 1;
-  p.queued.push(id);
-  if p.idle > 0 {
-    p.idle = p.idle - 1;
-    p.busy = p.busy + 1;
-  }
-  // Wave 153: run the job for real. The buffer is allocated OUTSIDE the
-  // confined block (wave-131 rule) so the worker trampoline writes into
-  // main-heap memory that tp_join may free.
-  let buf = alloc.alloc(16);
-  var handle: *UInt8 = 0 as *UInt8;
-  unsafe {
-    let done_ptr = buf as *Int;
-    ptr.write(done_ptr, 0);
-    let raw_fn = job as *UInt8;
-    handle = xiom_thread_spawn_with_result(raw_fn, buf);
-  }
-  if handle == 0 {
-    // Spawn table full / thread creation failed: still exactly once --
-    // run inline on the submitting thread and keep no handle.
-    alloc.dealloc(buf, 16);
+  if p.handle != 0 {
+    var ok: Int32 = 0;
+    unsafe { ok = xiom_workerpool_submit(p.handle, job as *UInt8); }
+    if ok == 0 {
+      p.closed = true;
+      return false;
+    }
+  } else {
+    // Degraded mode: no runtime workers.
     job();
-    return true;
   }
-  p.running.push(PoolJob{ handle: handle; buf: buf });
+  _assign(p);
+  p.queued.push(p.next_id);
+  p.next_id = p.next_id + 1;
   return true;
 }
 
 /// Enqueue a job with one argument; false if the pool is shutting down.
 /// Params: p - the pool; job - the closure; arg - its single argument.
-/// REAL but INLINE (engine-6 arg-channel freeze): the spawn trampoline has
-/// no argument channel, so the arg-carrying form runs on the submitting
-/// thread -- exactly once, with its arg.
+/// Runs on a persistent worker with `arg` (no longer inline).
 /// Returns: true on acceptance, false if the pool is shut down.
-/// Complexity: O(1) amortized plus the cost of `job`.
+/// Complexity: O(1) amortized (blocks while the queue is full).
 pub fn tp_submit_with(p: &mut ThreadPool, job: fn(Int), arg: Int) -> Bool
   ensures: (p.closed == true) => (result == false)
   ensures: (p.closed == false) => (result == true)
@@ -152,62 +167,78 @@ pub fn tp_submit_with(p: &mut ThreadPool, job: fn(Int), arg: Int) -> Bool
   if p.closed {
     return false;
   }
-  var id = p.next_id;
-  p.next_id = p.next_id + 1;
-  p.queued.push(id);
-  if p.idle > 0 {
-    p.idle = p.idle - 1;
-    p.busy = p.busy + 1;
+  if p.handle != 0 {
+    var ok: Int32 = 0;
+    unsafe { ok = xiom_workerpool_submit_with(p.handle, job as *UInt8, arg); }
+    if ok == 0 {
+      p.closed = true;
+      return false;
+    }
+  } else {
+    job(arg);
   }
-  job(arg);
+  _assign(p);
+  p.queued.push(p.next_id);
+  p.next_id = p.next_id + 1;
   return true;
 }
 
-/// Block until all queued jobs complete.
+/// Block until all queued and running jobs complete.
 /// Params: p - the pool.
-/// REAL drain: joins every in-flight OS thread (one per accepted no-arg job)
-/// and frees its result buffer; the counters return to busy == 0,
-/// idle == workers.
-/// Complexity: O(n) where n is the number of pending jobs.
+/// REAL drain: waits for the runtime's outstanding counter to reach zero,
+/// then returns the assignment counters to busy == 0, idle == workers.
+/// Complexity: O(1) wait plus the workers' runtime.
 pub fn tp_join(p: &mut ThreadPool)
   ensures: p.queued.len() == 0
   ensures: p.busy == 0
   ensures: p.idle == p.workers
 {
-  while p.running.len() > 0 {
-    let popped = p.running.pop();
-    match popped {
-      Some(rec) => {
-        let rc: Int = unsafe { xiom_thread_spawn_join(rec.handle) };
-        if rc >= 0 {
-          alloc.dealloc(rec.buf, 16);
-        }
-      }
-      None => {}
-    }
+  if p.handle != 0 {
+    unsafe { let _ = xiom_workerpool_join(p.handle); }
   }
-  while p.queued.len() > 0 {
-    var done = p.queued.pop();
-    p.completed = p.completed + 1;
-  }
-  p.busy = 0;
-  p.idle = p.workers;
+  _drain_queue(p);
+  _release(p);
 }
 
-/// Stop accepting jobs, drain the queue, and reap workers.
+/// Stop accepting jobs, drain the queue, and reap the workers.
 /// Params: p - the pool.
-/// Closes the pool (submit returns false afterwards) and drains the pending
-/// work as tp_join does.
-/// Complexity: O(n) where n is the number of pending jobs.
+/// Closes the pool (submit returns false afterwards), waits for completion,
+/// wakes every worker and joins the OS threads.
+/// Complexity: O(n) where n is the pending work.
 pub fn tp_shutdown(p: &mut ThreadPool)
   ensures: p.closed == true
   ensures: p.queued.len() == 0
 {
   p.closed = true;
-  tp_join(p);
+  if p.handle != 0 {
+    unsafe {
+      let _ = xiom_workerpool_join(p.handle);
+      xiom_workerpool_shutdown(p.handle);
+    }
+  }
+  _drain_queue(p);
+  _release(p);
 }
 
-/// The number of worker threads.
+/// Shut the pool down and free its runtime resources.
+/// Params: p - the pool (consumed).
+/// Do not call while another thread may still submit.
+/// Complexity: O(n) where n is the pending work.
+pub fn tp_destroy(p: &mut ThreadPool)
+  ensures: p.closed == true
+  ensures: p.busy == 0
+  ensures: p.idle == p.workers
+{
+  p.closed = true;
+  if p.handle != 0 {
+    unsafe { xiom_workerpool_destroy(p.handle); }
+    p.handle = 0 as *UInt8;
+  }
+  _drain_queue(p);
+  _release(p);
+}
+
+/// The number of persistent workers.
 /// Params: p - the pool.
 /// Returns: the fixed worker count.
 /// Complexity: O(1).
@@ -227,7 +258,7 @@ pub fn tp_idle(p: &ThreadPool) -> Int
   return p.idle;
 }
 
-/// The number of currently running workers.
+/// The number of currently assigned workers.
 /// Params: p - the pool.
 /// Returns: workers currently assigned a job (does not include queued work).
 /// Complexity: O(1).
@@ -235,4 +266,30 @@ pub fn tp_busy(p: &ThreadPool) -> Int
   ensures: result >= 0
 {
   return p.busy;
+}
+
+/// The real number of queued + running jobs.
+/// Params: p - the pool.
+/// Returns: the runtime outstanding count (0 in degraded mode).
+/// Complexity: O(1) plus one lock.
+pub fn tp_active(p: &ThreadPool) -> Int
+  ensures: result >= 0
+{
+  if p.handle == 0 {
+    return 0;
+  }
+  unsafe { return xiom_workerpool_active(p.handle); }
+}
+
+/// The real number of jobs completed by the workers.
+/// Params: p - the pool.
+/// Returns: the runtime completed counter (0 in degraded mode).
+/// Complexity: O(1) plus one lock.
+pub fn tp_completed(p: &ThreadPool) -> Int
+  ensures: result >= 0
+{
+  if p.handle == 0 {
+    return 0;
+  }
+  unsafe { return xiom_workerpool_completed(p.handle); }
 }

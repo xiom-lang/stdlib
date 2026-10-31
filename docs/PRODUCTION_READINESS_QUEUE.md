@@ -29,6 +29,17 @@ floors197, gate9 10/10 + 30 known-failure repros pass + 1 intended T001
   (not reproduced; fixed pending reporter verify), 1807-orbitdb
   (compiler write path), wishlist row 33 (compiler/install lane), kqueue
   (deferred until the heavy macOS leg is green).
+- **2026-10-31, 1834-engine-6 delivered:** a real persistent worker pool
+  (runtime `xiom_workerpool_*`, condvar fleet, bounded FIFO, true join,
+  shutdown wake/join) plus a real arg channel (`tp_submit_with` and
+  `spawn_with`). Probes: `p_wave_workerpool` (new), `p_wave153` row 4,
+  `p_wave145` row 7; `p_wave78` no longer assumes inline. Verified
+  Windows 30/30 + Linux 5/5; the final tree is probes **421/421**,
+  smokes 963/963, modules 533/533, barename 0/533, gate9 OK, ratchets
+  OK. 2202 item 4 done; kqueue still waits on a macOS witness.
+  Hygiene: compiler archives must not be extracted inside the stdlib
+  repo -- duplicate `xiom/*` trees triggered random compiler
+  warnings/crashes; keep them under %TEMP%.
 
 Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as

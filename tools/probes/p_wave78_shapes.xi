@@ -57,11 +57,15 @@ fn main() -> Int {
   if _pf != 3 { return 8; }
   if thread.scope(_scope_fn) != 7 { return 9; }
 
-  // ---- xiom.thread.spawn (simulation)
+  // ---- xiom.thread.spawn (real OS threads; spawn_with carries its arg)
   let t1 = spawn.spawn(_noop);
   if t1.id <= 0 { return 10; }
   let t2 = spawn.spawn_with(_pfor, 3);
   if t2.id <= 0 { return 11; }
+  match spawn.join(t2) {
+    Ok(_) => { },
+    Err(_) => { return 40; },
+  };
   if _pf != 4 { return 12; }
   match spawn.join(t1) {
     Ok(_) => { },
@@ -69,7 +73,8 @@ fn main() -> Int {
   }
   let sr = spawn.spawn_scoped(_noop);
   if sr.is_err { return 14; }
-  spawn.detach(t2);
+  let t3 = spawn.spawn(_noop);
+  spawn.detach(t3);
   spawn.sleep_ms(-5);
   spawn.yield_now();
   if spawn.thread_id() <= 0 { return 15; }

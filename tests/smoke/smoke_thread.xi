@@ -73,8 +73,9 @@ fn main() -> Int {
   pool.tp_join(&mut p);
   if pool.tp_busy(&p) != 0 { io.println("pool:join_busy"); return 17; }
   if pool.tp_idle(&p) != 4 { io.println("pool:join_idle"); return 18; }
-  // wave 153: both accepted jobs really ran exactly once -- tp_submit on
-  // its OS thread (joined above), tp_submit_with inline at submit.
+  // both accepted jobs really ran exactly once on pool workers;
+  // tp_join above is the completion point (tp_submit_with is no longer
+  // inline since the persistent-fleet flip).
   if _n != 2 { io.println("pool:run_once"); return 26; }
   pool.tp_shutdown(&mut p);
   if pool.tp_submit(&mut p, bump) { io.println("pool:shutdown"); return 19; }

@@ -17,9 +17,72 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 116 (updated 2026-10-30; **v0.65.4 CUT: REL-20261030-1832 both fixes landed -- arm64 socket handle ABI (create/accept/close int64_t) and POSIX SIGPIPE (MSG_NOSIGNAL + SIG_IGN); probes p_socket_ffi_width/p_socket_sigpipe; battery probes 420/420, smokes 963/963, modules 533/533, barename 0/533, gate9 OK. Compiler v0.65.3 released and the published stdlib 0.65.3 asset accepted (8383aa5b); tag stdlib-v0.65.4 -> d267317 + registry 0.65.4 live (sha 12111688); pin PR xiom#10; runtime verification rides the compiler v0.65.4 build**)
+## 0A. CONTINUE HERE -- handoff snapshot 117 (updated 2026-10-31; **REL-20261010-1834-engine-6 DELIVERED: real persistent worker pool + real arg channel; `spawn_with` is a real OS thread; Windows 30/30 stress + Linux 5/5; p_wave78 inline assumption fixed. 2202 item 4 done. Residual 2202: kqueue (gated on a macOS witness -- heavy macOS leg still red), RFC brotli/zstd (registry packages), Send/Sync (compiler). v0.65.4 remains the released tag; the pool lands on main for the next release**)
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-30, snapshot 116)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-31, snapshot 117)
+
+```
+Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
+  git pull --ff-only origin main
+  git -C E:\xiom-lang\xiom-relays fetch origin
+  git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
+  python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
+Read docs/stdlib_session.md snapshot 117 + block 308 + blocks 307/306/305.
+
+STATE (2026-10-31):
+- v0.65.4 (tag d267317) is released: registry xiom-std 0.65.4 live, pin PR
+  xiom#10. 1628/1645 are fixed and verified on Windows+Linux.
+- REL-20261010-1834-engine-6 DELIVERED on main:
+  - runtime xiom_workerpool_create/submit/submit_with/join/shutdown/destroy
+    + active/completed: N persistent workers on one condvar, bounded FIFO,
+    true completion accounting, shutdown wake+join.
+  - xiom.thread.pool is a handle to that runtime; tp_submit_with runs on a
+    worker with its arg; tp_active/tp_completed expose real counters.
+  - runtime xiom_thread_spawn_with_arg + spawn_with = real OS thread with
+    its arg (no longer inline).
+  - Probes: p_wave_workerpool (new), p_wave153 row 4, p_wave145 row 7;
+    p_wave78 updated (spawn_with is no longer inline). Windows 30/30
+    stress, Linux 5/5, p_wave78 20/20 both runtimes.
+- 2202 item 4 DONE. Remaining 2202: kqueue (macOS/BSD) is gated on a
+  macOS witness -- the heavy macOS leg is still red and heavy.yml runs
+  smokes, not probes; RFC 7932 brotli/zstd are registry packages
+  (xiom.brotli 0.1.0 / xiom.zstd 0.3.0), not stdlib; Send/Sync is compiler.
+- JOB FORM: pool/spawn jobs must be named/top-level functions; a capturing
+  closure is an env pointer, not bare code (ABI verified).
+
+PRIORITY 0 -- LAND + HAND OFF:
+- Commit the pool (runtime + pool.xi + spawn.xi + probes + docs), run the
+  full battery (probes now 421), and post 1834 fixed with the evidence.
+- Ask engine to swap its spawn+atomics workaround and report numbers.
+- 1550-stdlib (compiler arg/primitives wishlist) is superseded for the
+  worker fleet; spawn_with now has a real arg path.
+
+PRIORITY 1 -- 2202 RESIDUALS:
+- kqueue: only after a green macOS witness; the drafted backend follows the
+  xiom_eventloop_* ABI (EV_RECEIPT ctl, 256-event cap, EOF/ERR parity).
+- brotli/zstd: registry packages; do not reimplement in stdlib.
+- Send/Sync enforcement: compiler scope (language gap), documented.
+
+PRIORITY 2 -- NEXT RELEASE:
+- v0.65.5 candidate can include the pool once the compiler builds it; the
+  runtime is compiled per program from the stdlib tree, so the pool is
+  already exercised by the lane battery.
+
+RULES:
+- No clause waves; io.list_dir runtime-owned; json_clear(&mut) hangs; no
+  mutable-enum recursion.
+- Relay pulls: fetch + merge --ff-only; never move released tags.
+- Untracked out/ + smoke_diag_f128_* are documented leftovers.
+- No tag/release without the owner's GO.
+
+DELIVERABLE: pool + spawn_with landed and green; 1834 closed by engine;
+kqueue holds for the macOS witness.
+```
+---
+
+## 0A-116. PREVIOUS HANDOFF -- snapshot 116 (updated 2026-10-30; **v0.65.4 CUT: REL-20261030-1832 both fixes landed -- arm64 socket handle ABI (create/accept/close int64_t) and POSIX SIGPIPE (MSG_NOSIGNAL + SIG_IGN); probes p_socket_ffi_width/p_socket_sigpipe; battery probes 420/420, smokes 963/963, modules 533/533, barename 0/533, gate9 OK. Compiler v0.65.3 released and the published stdlib 0.65.3 asset accepted (8383aa5b); tag stdlib-v0.65.4 -> d267317 + registry 0.65.4 live (sha 12111688); pin PR xiom#10; runtime verification rides the compiler v0.65.4 build**)
+
+## 0C-116. NEXT-SESSION PROMPT (2026-10-30, snapshot 116 -- SUPERSEDED by snapshot 117)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
@@ -4077,6 +4140,47 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-31 block 308 (REL-20261010-1834-engine-6 delivered: persistent worker pool + real arg channel; spawn_with real)**
+- Runtime: new `xiom_workerpool_*` API in `runtime/xiom_runtime.c` -- N
+  persistent workers on one condition variable, one bounded FIFO guarded by
+  a mutex, `outstanding`/`completed` accounting, `join` waits for zero,
+  `shutdown` wakes and joins every worker, `destroy` frees. `submit_with`
+  carries one i64 and calls a named `fn(Int)` as `void(long long)` (the
+  same bare-code-pointer ABI as the wave-145 trampoline; capturing closures
+  are env pointers and are not supported -- documented).
+- Runtime: `xiom_thread_spawn_with_arg` + `xiom.thread.spawn.spawn_with`
+  now launch a real OS thread with the argument; join/detach unchanged.
+- Stdlib: `xiom.thread.pool` is a handle to the runtime pool. Legacy
+  idle/busy/queued bookkeeping and the smoke contracts are preserved;
+  `tp_active`/`tp_completed` expose the real counters; `tp_destroy` frees.
+- Probes: new `p_wave_workerpool` (100 no-arg + 8 arg jobs, distinct worker
+  tids, sum=36, active=0, completed>=108, 20-job shutdown drain);
+  `p_wave153` row 4 now asserts the arg job runs on a worker after join;
+  `p_wave145` row 7 asserts `spawn_with` runs on a non-main worker with its
+  arg; `p_wave78` no longer assumes spawn_with is inline (join first) and
+  detaches a fresh thread.
+- Verification: p_wave_workerpool 30/30 Windows + 5/5 Linux (A/B: the
+  runtime pool is new, old runtime cannot link it); p_wave145 and p_wave153
+  5/5 both; p_wave78 20/20 new + 10/10 old; p_socket_sigpipe 5/5 Linux with
+  the new runtime and 141 x3 with the bundled old runtime (SIGPIPE fix
+  proven); p_socket_ffi_width 5/5 Linux; p_wave162 5/5 Linux. Windows and
+  POSIX runtime C both compile clean.
+- 2202 item 4 is now DONE. Residual 2202: kqueue (macOS/BSD) remains gated
+  on a green macOS witness (heavy macOS leg red; heavy.yml runs smokes, not
+  probes); RFC 7932 brotli / zstd are registry packages; Send/Sync is
+  compiler. No unverified macOS code is landed.
+- Full battery on the final tree: probes **421/421** (1081.1s), smokes
+  **963/963** (1462.3s), modules **533/533** (919.4s), barename **0/533**
+  (1727.5s), coverage **RATCHET OK** (thread 91.5%), doc **100% OK**,
+  module-smoke **RATCHET OK**. Two apparent battery reds were harness/
+  environment, not code: (a) `check_modules`/`barename` worker-start
+  flakes, (b) **compiler archives extracted inside `out/`** made the
+  compiler discover duplicate `xiom/*` module trees -- that produced
+  random `0xC0000005`/rc=-1 crashes and false "contract clause" leads.
+  Archives now live under `%TEMP%\kilo\stdlib_archives\`; with the repo
+  clean, probes are 421/421 and modules 533/533. Do not extract compiler
+  archives under the stdlib root.
 
 **SESSION 2026-10-30 block 307 (v0.65.4: arm64 socket ABI + POSIX SIGPIPE fixed; battery 420/420; tag/registry)**
 - REL-20261030-1832-compiler asked for stdlib-v0.65.4 with two stdlib-side

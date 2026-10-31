@@ -9,6 +9,7 @@
 //  4 -- is_finished flips true within a 200ms window
 //  5 -- spawn.xi spawn(fn()) completes n=1 on a real thread
 //  6 -- spawn_scoped completes n=2
+//  7 -- spawn_with runs on a real worker with its arg (engine-6 channel)
 // Setup failures use 10+ (never a silent pass).
 
 module p_wave145_shapes
@@ -34,6 +35,14 @@ fn record_id_and_zero() -> Int {
 
 fn bump() {
   _n = _n + 1;
+}
+
+var _seen_arg: Int = -1;
+var _seen_tid: Int = 0;
+
+fn take_arg(x: Int) {
+  _seen_arg = x;
+  _seen_tid = thread.current_thread_id();
 }
 
 fn main() -> Int {
@@ -93,6 +102,14 @@ fn main() -> Int {
   let sr = spawn.spawn_scoped(bump);
   if sr.is_err { return 8; }
   if _n != 2 { return 9; }
+
+  // 7: spawn_with runs on a real worker with its arg
+  let t2 = spawn.spawn_with(take_arg, 55);
+  let jr2 = spawn.join(t2);
+  if jr2.is_err { return 16; }
+  if _seen_arg != 55 { return 17; }
+  if _seen_tid == 0 { return 18; }
+  if _seen_tid == thread.current_thread_id() { return 19; }
 
   return 0;
 }

@@ -16,9 +16,10 @@ use xiom.ptr;
 // and `join` blocks until it exits. The wave-131 rule holds: the 8+8
 // result buffer is allocated OUTSIDE the confined block, so it is
 // main-heap memory the worker may write into and join may free.
-// `spawn_with` (arg-carrying closures) STAYS INLINE -- the runtime's
-// trampoline calls closures with no argument channel; a real arg-carrying
-// spawn is queued behind the engine-6 arg freeze. `detach` releases the
+// `spawn_with` (arg-carrying) is REAL too: the runtime arg trampoline
+// carries one i64 in the payload (REL-20261010-1834-engine-6, 2026-10-30),
+// and join/detach work exactly as for `spawn`. Named/top-level jobs only --
+// a capturing closure is an env pointer, not bare code. `detach` releases the
 // OS handle; the 16-byte result buffer of a detached thread is retained
 // for the process lifetime (documented contract).
 //
@@ -32,6 +33,7 @@ extern "C" {
   fn xiom_thread_yield();
   fn xiom_cpu_count() -> Int32;
   fn xiom_thread_spawn_with_result(fn_ptr: *UInt8, result_buf: *UInt8) -> *UInt8;
+  fn xiom_thread_spawn_with_arg(fn_ptr: *UInt8, arg: Int, result_buf: *UInt8) -> *UInt8;
   fn xiom_thread_spawn_join(handle: *UInt8) -> Int;
   fn xiom_thread_spawn_detach(handle: *UInt8);
   fn xiom_thread_spawn_id(handle: *UInt8) -> Int;
@@ -74,16 +76,28 @@ pub fn spawn(f: fn()) -> SpawnThread
 }
 
 /// Start a new thread running `f(arg)`.
-/// Params: f - the function to run; arg - its single argument.
-/// Returns: a handle to the (INLINE-run) closure -- spawn_with stays inline
-/// until the runtime grows an argument channel (engine-6); the handle
-/// carries no OS thread (join is a no-op Ok, detach a no-op).
-/// Complexity: O(1) plus the cost of `f`.
+/// Params: f - a named/top-level fn(Int) (capturing closures are not bare
+///         code pointers); arg - its single argument.
+/// Returns: a real OS-thread handle; `join` waits and frees the buffer.
+/// The arg travels in the runtime payload (REL-20261010-1834-engine-6:
+/// the arg channel now exists; spawn_with is no longer inline).
+/// Complexity: O(1) plus the cost of `f` on the worker.
 pub fn spawn_with(f: fn(Int), arg: Int) -> SpawnThread
   ensures: result.id > 0
 {
-  f(arg);
-  return SpawnThread{ id: next_thread_id(); handle: 0 as *UInt8; buf: 0 as *UInt8; };
+  let buf = alloc.alloc(16);
+  unsafe {
+    let done_ptr = buf as *Int;
+    ptr.write(done_ptr, 0);
+    let raw_fn = f as *UInt8;
+    let handle = xiom_thread_spawn_with_arg(raw_fn, arg, buf);
+    if handle == 0 {
+      alloc.dealloc(buf, 16);
+      return SpawnThread{ id: next_thread_id(); handle: 0 as *UInt8; buf: 0 as *UInt8; };
+    }
+    let id = xiom_thread_spawn_id(handle);
+    return SpawnThread{ id: id; handle: handle; buf: buf; };
+  }
 }
 
 /// Block until the thread exits; returns Ok(0). REAL since wave 145: waits

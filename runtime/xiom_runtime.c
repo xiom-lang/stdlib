@@ -5998,6 +5998,7 @@ void xiom_cond_init(xiom_cond_t* c) { InitializeConditionVariable(c); }
 void xiom_cond_wait(xiom_cond_t* c, xiom_mutex_t* m) { SleepConditionVariableCS(c, m, INFINITE); }
 void xiom_cond_signal(xiom_cond_t* c) { WakeConditionVariable(c); }
 void xiom_cond_broadcast(xiom_cond_t* c) { WakeAllConditionVariable(c); }
+void xiom_cond_destroy(xiom_cond_t* c) { (void)c; }
 
 void xiom_thread_sleep_ms(long ms) { Sleep((DWORD)ms); }
 void xiom_thread_yield(void) { SwitchToThread(); }
@@ -6044,6 +6045,7 @@ void xiom_cond_init(xiom_cond_t* c) { pthread_cond_init(c, NULL); }
 void xiom_cond_wait(xiom_cond_t* c, xiom_mutex_t* m) { pthread_cond_wait(c, m); }
 void xiom_cond_signal(xiom_cond_t* c) { pthread_cond_signal(c); }
 void xiom_cond_broadcast(xiom_cond_t* c) { pthread_cond_broadcast(c); }
+void xiom_cond_destroy(xiom_cond_t* c) { pthread_cond_destroy(c); }
 
 void xiom_thread_sleep_ms(long ms) { struct timespec ts; ts.tv_sec = ms/1000; ts.tv_nsec = (ms%1000)*1000000L; nanosleep(&ts, NULL); }
 void xiom_thread_yield(void) { sched_yield(); }
@@ -7069,6 +7071,57 @@ void* xiom_thread_spawn_with_result(void* fn, char* result_buf) {
     return (void*)(intptr_t)id;
 }
 
+/* REL-20261010-1834-engine-6: arg-carrying spawn. The IXOM side passes a
+   named fn(Int) code pointer (never a capturing closure -- that is an env
+   pointer, not code). The arg travels as one i64 in the payload; the
+   trampoline calls the Unit-returning body as void(long long), matching the
+   compiler's emitted `void (i64)` ABI. Same 8+8 result-buffer contract as
+   spawn_with_result, so join/detach work unchanged. */
+typedef struct {
+    void (*fn)(long long);
+    long long arg;
+    char* result_buf;
+} xiom_task_arg_payload_t;
+
+static void* xiom_task_arg_trampoline(void* p) {
+    xiom_task_arg_payload_t* payload = (xiom_task_arg_payload_t*)p;
+    payload->fn(payload->arg);
+    if (payload->result_buf) {
+        *(long long*)(payload->result_buf + 8) = 0;
+        *(volatile long long*)payload->result_buf = 1;
+    }
+    return NULL;
+}
+
+void* xiom_thread_spawn_with_arg(void* fn, long long arg, char* result_buf) {
+    xiom_task_arg_payload_t* p = (xiom_task_arg_payload_t*)malloc(sizeof(xiom_task_arg_payload_t));
+    if (!p) return NULL;
+    p->fn = (void (*)(long long))fn;
+    p->arg = arg;
+    p->result_buf = result_buf;
+    xiom_thread_t th = xiom_thread_create((void*)xiom_task_arg_trampoline, p);
+    if (!th) { free(p); return NULL; }
+
+    xiom_spawn_table_init();
+    xiom_mutex_lock(&xiom_spawn_lock);
+    int slot = -1;
+    for (int i = 0; i < XIOM_MAX_SPAWN_THREADS; i++) {
+        if (!xiom_spawn_table[i].active) { slot = i; break; }
+    }
+    if (slot < 0) {
+        xiom_mutex_unlock(&xiom_spawn_lock);
+        xiom_thread_detach(th);
+        free(p);
+        return NULL;
+    }
+    long id = xiom_spawn_next_id++;
+    xiom_spawn_table[slot].id = id;
+    xiom_spawn_table[slot].active = 1;
+    xiom_spawn_table[slot].os_handle = th;
+    xiom_mutex_unlock(&xiom_spawn_lock);
+    return (void*)(intptr_t)id;
+}
+
 /* ================================================================
    Crypto Hardware Acceleration (AES-NI / SHA-NI for x86_64)
    ================================================================ */
@@ -7573,6 +7626,227 @@ void xiom_threadpool_spawn(void (*fn)(void*), void* arg) {
     w->count++;
     xiom_cond_signal(&w->cond_work);
     xiom_mutex_unlock(&w->mutex);
+}
+
+/* ================================================================
+   Explicit persistent worker pool (xiom.thread.pool)
+   REL-20261010-1834-engine-6 / REL-20261015-2202-pulse item 4.
+
+   Unlike the process-global xiom_threadpool_* above (per-worker ring
+   queues, no join/shutdown), this is an OWNED pool:
+     - N persistent workers blocked on one condition variable,
+     - one bounded FIFO queue guarded by a mutex,
+     - outstanding/completed accounting so join is a real completion
+       point (queued + running == outstanding),
+     - shutdown wakes every worker and joins the OS threads,
+     - submit_with carries one i64 argument through a C-level function
+       pointer call (the wave-145 trampoline already calls an XIOM fn()
+       from C; the arg form uses the same bare-code-pointer ABI).
+   Jobs are exactly-once; submit blocks while the queue is full (or
+   returns 0 after shutdown). A job must terminate for shutdown to
+   return. Send/Sync marker enforcement stays a compiler concern; the
+   pool contract is documented on the XIOM side.
+   ================================================================ */
+
+#define XIOM_WORKERPOOL_MAX_WORKERS 256
+#define XIOM_WORKERPOOL_MIN_QUEUE 1024
+
+typedef struct {
+    void* fn;
+    long long arg;
+    int has_arg;
+} xiom_workerpool_task_t;
+
+typedef struct {
+    xiom_mutex_t lock;
+    xiom_cond_t work;
+    xiom_cond_t space;
+    xiom_cond_t done;
+    xiom_workerpool_task_t* tasks;
+    int cap;
+    int head;
+    int tail;
+    int count;
+    int workers;
+    int shutdown;
+    int joined;
+    long long outstanding;
+    long long completed;
+    xiom_thread_t* threads;
+} xiom_workerpool_t;
+
+static void* xiom_workerpool_worker(void* arg) {
+    xiom_workerpool_t* p = (xiom_workerpool_t*)arg;
+    for (;;) {
+        xiom_workerpool_task_t t;
+        xiom_mutex_lock(&p->lock);
+        while (p->count == 0 && !p->shutdown) {
+            xiom_cond_wait(&p->work, &p->lock);
+        }
+        if (p->count == 0 && p->shutdown) {
+            xiom_mutex_unlock(&p->lock);
+            return NULL;
+        }
+        t = p->tasks[p->head];
+        p->head = (p->head + 1) % p->cap;
+        p->count--;
+        xiom_cond_signal(&p->space);
+        xiom_mutex_unlock(&p->lock);
+
+        if (t.has_arg) {
+            ((void (*)(long long))t.fn)(t.arg);
+        } else {
+            ((void (*)(void))t.fn)();
+        }
+
+        xiom_mutex_lock(&p->lock);
+        p->completed++;
+        p->outstanding--;
+        if (p->outstanding == 0) {
+            xiom_cond_broadcast(&p->done);
+        }
+        xiom_mutex_unlock(&p->lock);
+    }
+}
+
+void* xiom_workerpool_create(int workers) {
+    xiom_workerpool_t* p;
+    int started = 0;
+    if (workers < 1) workers = 1;
+    if (workers > XIOM_WORKERPOOL_MAX_WORKERS) workers = XIOM_WORKERPOOL_MAX_WORKERS;
+    p = (xiom_workerpool_t*)calloc(1, sizeof(xiom_workerpool_t));
+    if (!p) return NULL;
+    p->cap = workers * 256;
+    if (p->cap < XIOM_WORKERPOOL_MIN_QUEUE) p->cap = XIOM_WORKERPOOL_MIN_QUEUE;
+    p->tasks = (xiom_workerpool_task_t*)calloc((size_t)p->cap, sizeof(xiom_workerpool_task_t));
+    p->threads = (xiom_thread_t*)calloc((size_t)workers, sizeof(xiom_thread_t));
+    if (!p->tasks || !p->threads) {
+        free(p->tasks);
+        free(p->threads);
+        free(p);
+        return NULL;
+    }
+    xiom_mutex_init(&p->lock);
+    xiom_cond_init(&p->work);
+    xiom_cond_init(&p->space);
+    xiom_cond_init(&p->done);
+    p->workers = workers;
+    for (int i = 0; i < workers; i++) {
+        p->threads[i] = xiom_thread_create((void*)xiom_workerpool_worker, p);
+        if (!p->threads[i]) break;
+        started++;
+    }
+    if (started == 0) {
+        xiom_cond_destroy(&p->done);
+        xiom_cond_destroy(&p->space);
+        xiom_cond_destroy(&p->work);
+        xiom_mutex_destroy(&p->lock);
+        free(p->tasks);
+        free(p->threads);
+        free(p);
+        return NULL;
+    }
+    p->workers = started;
+    return p;
+}
+
+static int xiom_workerpool_submit_impl(void* pool, void* fn, long long arg, int has_arg) {
+    xiom_workerpool_t* p = (xiom_workerpool_t*)pool;
+    if (!p || !fn) return 0;
+    xiom_mutex_lock(&p->lock);
+    while (p->count == p->cap && !p->shutdown) {
+        xiom_cond_wait(&p->space, &p->lock);
+    }
+    if (p->shutdown) {
+        xiom_mutex_unlock(&p->lock);
+        return 0;
+    }
+    p->tasks[p->tail].fn = fn;
+    p->tasks[p->tail].arg = arg;
+    p->tasks[p->tail].has_arg = has_arg;
+    p->tail = (p->tail + 1) % p->cap;
+    p->count++;
+    p->outstanding++;
+    xiom_cond_signal(&p->work);
+    xiom_mutex_unlock(&p->lock);
+    return 1;
+}
+
+int xiom_workerpool_submit(void* pool, void* fn) {
+    return xiom_workerpool_submit_impl(pool, fn, 0, 0);
+}
+
+int xiom_workerpool_submit_with(void* pool, void* fn, long long arg) {
+    return xiom_workerpool_submit_impl(pool, fn, arg, 1);
+}
+
+long long xiom_workerpool_join(void* pool) {
+    xiom_workerpool_t* p = (xiom_workerpool_t*)pool;
+    if (!p) return -1;
+    xiom_mutex_lock(&p->lock);
+    while (p->outstanding > 0) {
+        xiom_cond_wait(&p->done, &p->lock);
+    }
+    xiom_mutex_unlock(&p->lock);
+    return 0;
+}
+
+void xiom_workerpool_shutdown(void* pool) {
+    xiom_workerpool_t* p = (xiom_workerpool_t*)pool;
+    if (!p) return;
+    xiom_mutex_lock(&p->lock);
+    if (!p->shutdown) {
+        p->shutdown = 1;
+        xiom_cond_broadcast(&p->work);
+        xiom_cond_broadcast(&p->space);
+    }
+    if (p->joined) {
+        xiom_mutex_unlock(&p->lock);
+        return;
+    }
+    p->joined = 1;
+    xiom_mutex_unlock(&p->lock);
+    for (int i = 0; i < p->workers; i++) {
+        xiom_thread_join(p->threads[i]);
+    }
+}
+
+void xiom_workerpool_destroy(void* pool) {
+    xiom_workerpool_t* p = (xiom_workerpool_t*)pool;
+    if (!p) return;
+    xiom_workerpool_shutdown(p);
+    xiom_mutex_destroy(&p->lock);
+    xiom_cond_destroy(&p->work);
+    xiom_cond_destroy(&p->space);
+    xiom_cond_destroy(&p->done);
+    free(p->tasks);
+    free(p->threads);
+    free(p);
+}
+
+int xiom_workerpool_size(void* pool) {
+    xiom_workerpool_t* p = (xiom_workerpool_t*)pool;
+    return p ? p->workers : 0;
+}
+
+long long xiom_workerpool_active(void* pool) {
+    xiom_workerpool_t* p = (xiom_workerpool_t*)pool;
+    long long v;
+    if (!p) return 0;
+    xiom_mutex_lock(&p->lock);
+    v = p->outstanding;
+    xiom_mutex_unlock(&p->lock);
+    return v;
+}
+
+long long xiom_workerpool_completed(void* pool) {
+    xiom_workerpool_t* p = (xiom_workerpool_t*)pool;
+    long long v;
+    if (!p) return 0;
+    xiom_mutex_lock(&p->lock);
+    v = p->completed;
+    xiom_mutex_unlock(&p->lock);
+    return v;
 }
 
 /* ================================================================
