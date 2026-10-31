@@ -243,6 +243,7 @@ pub type OrderedStringMap = {
 
 /// Create a Str-keyed map.
 /// O(1).
+#[owns_return]
 pub fn string_map_new() -> OrderedStringMap
   ensures: result.keys.len() == 0
 {
@@ -252,6 +253,7 @@ pub fn string_map_new() -> OrderedStringMap
 /// Insert or overwrite `key` -> `value`. A re-insert of an existing key
 /// updates its value without changing its insertion position.
 /// O(n).
+#[consumes_str]
 pub fn string_map_put(m: &mut OrderedStringMap, key: Str, value: Int)
   ensures: string_map_contains(m, key)
 {

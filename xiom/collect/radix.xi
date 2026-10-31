@@ -108,6 +108,7 @@ fn _common_len(a: Str, b: Str) -> Int {
 
 /// Create a new empty radix trie (root node only).
 /// O(1).
+#[owns_return]
 pub fn radix_new() -> RadixTrie
   ensures: result.size == 0
   ensures: result.root >= 0
@@ -121,6 +122,7 @@ pub fn radix_new() -> RadixTrie
 /// Insert `key` with its value. Empty keys are rejected. Inserting an
 /// existing key is a no-op (the original value is kept).
 /// O(L) where L is the key length (amortized).
+#[consumes_str]
 pub fn radix_insert(r: &mut RadixTrie, key: Str, value: Int)
   ensures: string.str_len(key) > 0 => radix_contains(r, key)
 {

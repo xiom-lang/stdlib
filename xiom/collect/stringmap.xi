@@ -48,6 +48,7 @@ fn _bucket(m: &StringMap, key: Str) -> Int {
 /// Create a new empty string map.
 /// Returns: a map with a small initial table and zero entries.
 /// Complexity: O(1).
+#[owns_return]
 pub fn string_map_new() -> StringMap
   ensures: result.count == 0
 {
@@ -100,6 +101,7 @@ fn _grow(m: &mut StringMap) {
 /// Params: m - the map; key - Str key; value - Int value.
 /// Re-inserting an existing key updates its value.
 /// Complexity: O(1) amortized.
+#[consumes_str]
 pub fn string_map_put(m: &mut StringMap, key: Str, value: Int)
   ensures: m.count >= 1
 {
@@ -203,6 +205,7 @@ pub type StringStrMap = {
 }
 
 /// Create a new empty string->string map.
+#[owns_return]
 pub fn string_str_map_new() -> StringStrMap
   ensures: result.count == 0
 {
@@ -259,6 +262,7 @@ fn _ssm_grow(m: &mut StringStrMap) {
 
 /// Insert or update `key` -> `value`. Re-inserting an existing key updates
 /// its value in place (position kept).
+#[consumes_str]
 pub fn string_str_map_put(m: &mut StringStrMap, key: Str, value: Str)
   ensures: string_str_map_contains(m, key)
 {
