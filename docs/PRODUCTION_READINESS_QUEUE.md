@@ -8,7 +8,7 @@ REL-20261031-1554-stdlib). The post-release tail is on main: persistent
 worker pool + real thread arguments (`a0e91cd`) and the engine P1/P2 gaps
 (`1a17405`). Those are not in v0.65.4; they ride the v0.65.5 candidate.)
 **Gates on the current tree (official v0.65.4 windows-x64 archive):
-smokes 964/964, modules 533/533, probes 422/422, barename 0/533,
+smokes 964/964, modules 533/533, probes 423/423, barename 0/533,
 module-smoke 543/543 (100%), floors197, gate9 10/10 + 30 known-failure
 repros pass + 1 intended T001 (0 unexpected).**
 **v0.65.5 prep:** `release/v0.65.5-prep` (package 0.65.5, pin v0.65.4,
@@ -63,6 +63,19 @@ Owner GO pending; main is not bumped.
   `xiom_trampoline_call` installs fault handlers once per thread
   (REL-20261031-1934-compiler-4): Linux 100k per-call unsafe blocks
   28-34 ms, one-loop 3-6 ms; guard smokes green on Linux/Windows.
+- **Gate 9 pre-wire:** `tools/probes/p_json_1704_obj.xi` (10k JSON
+  build/parse/stringify by default, `PROBE_ITERS` override) and
+  `tools/json_peak.ps1` (10 ms peak-RSS poll, 256 MB cap) are the
+  repeatable gate-9 witness. Official v0.65.4 archive: **10k 39.7 MB,
+  20k 82.1 MB, 100k 260.3 MB** (linear, ~2.2 KB/iter). The 10k/256 MB cap
+  is met, but the line is not flat, so 1704 is still open. Local compiler
+  main `d4d52e0c9` (partial m375 fix `e875528ce`) still shows obj 10.9 MB
+  at 10k and 40.9 MB at 20k, so the partial fix does not close it. When
+  the full reclaim lands, run the sampler at 10k/20k/100k; a flat peak is
+  the gate-9 flip evidence.
+- **Clean-checkout probes:** `p_wave137_shapes` and `p_wave148_shapes`
+  now create `out/` themselves; the full corpus is **423/423** from a
+  clean checkout (previously those two failed when `out/` was absent).
 
 ### 2026-10-30 addendum -- v0.65.3 release + v0.65.4 socket patch
 - v0.65.3 released (tag 26ede85) and the registry verified; the compiler
@@ -98,10 +111,11 @@ gates flip:
    including the directory-rename regression and the wave-313 module
    surface smoke; plus 963/963 on both Windows and Ubuntu release gates
    (dry-run 41217827358, pre-wave-313), no carve-outs.
-3. Probe corpus green -- MET (422/422; includes the gate-9 set,
-   p_wave176_shapes with the kqueue row, p_socket_ffi_width,
-   p_socket_sigpipe, the h2/SSE probes and the earlier waves; 422/422 on
-   the merged kqueue tree with the official v0.65.4 archive).
+3. Probe corpus green -- MET (423/423; includes the gate-9 set,
+   p_json_1704_obj (the gate-9 RSS workload), p_wave176_shapes with the
+   kqueue row, p_socket_ffi_width, p_socket_sigpipe, the h2/SSE probes and
+   the earlier waves; 423/423 on the current tree with the official v0.65.4
+   archive).
 4. Strict bare-name scan clean -- MET (0/533).
 5. Coverage ratchet green -- MET (floors197).
 6. Documentation ratchet 100% -- MET.

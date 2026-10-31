@@ -4254,10 +4254,21 @@ registry pin, agent recon for the rest)**
   **28-34 ms** (was 139-202 ms); one unsafe around the loop 3-6 ms.
   `smoke_guard_fault` and `smoke_guard_retry` are green on Linux; Windows
   SEH is unchanged and `smoke_guard_fault` is green there.
-- **Wave 313 full battery:** probes 422/422, smokes **964/964** (new
-  module-surface smoke), modules 533/533, barename 0/533, module-smoke
-  543/543 (100%), gate9 10/10 + 30 pass + 1 intended, coverage/doc/
-  module-smoke ratchets OK. `tools/module_smoke_floors.json` refreshed.
+- **Wave 313/314 full battery:** probes **423/423** (new gate-9 witness),
+  smokes **964/964** (new module-surface smoke), modules 533/533, barename
+  0/533, module-smoke 543/543 (100%), gate9 10/10 + 30 pass + 1 intended,
+  coverage/doc/module-smoke ratchets OK. `tools/module_smoke_floors.json`
+  refreshed; `p_wave137/148_shapes` now create `out/` so the corpus is
+  clean-checkout safe.
+- **Gate 9 pre-wire (1704 witness):** `tools/probes/p_json_1704_obj.xi`
+  (10k JSON build/parse/stringify, `PROBE_ITERS` override) and
+  `tools/json_peak.ps1` (10 ms peak-RSS poll, 256 MB cap). Official
+  v0.65.4 archive: **10k 39.7 MB, 20k 82.1 MB, 100k 260.3 MB** (linear
+  ~2.2 KB/iter). 10k/256 MB cap is met, but the trend is not flat, so
+  1704 stays open. Local compiler main `d4d52e0c9` (partial m375
+  `e875528ce`) still shows obj 10.9 MB at 10k / 40.9 MB at 20k. When the
+  full reclaim lands, run the sampler at 10k/20k/100k; a flat peak flips
+  gate 9.
 - **Workspace note:** the untracked `out/` tree (thousands of stale
   scratch `.xi`/exe files) made a repo-root `--check` hang at the 300 s
   compiler timeout; deleting `out/` fixed it. Keep `out/` disposable and
