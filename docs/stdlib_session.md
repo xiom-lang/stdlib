@@ -4256,6 +4256,13 @@ registry pin, agent recon for the rest)**
   &(Int,Int))->Bool`, `p.0` auto-derefs); that path is correct. The repro
   is inline in the item, not added to gate9, so gate 9 stays OK until the
   compiler picks reject-vs-adapt.
+- **Second compiler finding REL-20261031-1600-stdlib (bug/medium).** The
+  2026-10-15 Float128-to-Int128 note is superseded: on the published
+  v0.65.4 archive the cast fails before linking, with clang rejecting
+  `store i128 %tmp12` where `%tmp12` is `double` (invalid IR). The runtime
+  already ships f128-to-i128 helpers (`__fixtfti`), so this is the
+  compiler lowering, not a missing runtime symbol. `smoke_darwin_runtime`
+  keeps the cast disabled until it is valid.
 - **Registry compiler-field decision (REL-20261031-1554-stdlib).** The live
   xiom-std 0.65.4 record says compiler v0.64.8. A post-publish override is
   impossible through the API: only the publish path writes the field and
