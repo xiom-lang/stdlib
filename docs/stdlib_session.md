@@ -4261,9 +4261,10 @@ registry pin, agent recon for the rest)**
   the probe paths/commands and the reconciliation. Compiler-side remaining:
   p_mapstr 27/55, p_remove 297/313, plus this JSON shape.
 - **Candidate:** `release/v0.65.5-prep` `7d47924` (docs 673df3d) carries the
-  2156 fixes; dry-run 41248000167 had validate + Ubuntu green, Windows in
-  progress at last check. No tag: compiler rebuild + engine soak + gate 9
-  JSON reclaim still open.
+  2156 fixes; dry-run **41248000167 SUCCESS** (validate, Windows
+  22:24-23:16, Ubuntu 22:24-23:03, package; release/pin/canary skipped).
+  Local probes **425/425** after the 2156 fixes. No tag: the 1704 JSON
+  reclaim, compiler rebuild, and engine 600-frame soak are still open.
 
 **SESSION 2026-10-31 block 315 (CRITICAL 2156: str_concat/from_cstring copy-leak fixed; t8/t9 runtime pieces 1949; wave 315 function calls; candidate must be re-cut)**
 - **REL-20261031-2156-compiler (high) -- source leaks fixed on main:**

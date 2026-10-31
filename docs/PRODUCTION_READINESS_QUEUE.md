@@ -8,11 +8,11 @@ REL-20261031-1554-stdlib). The post-release tail is on main: persistent
 worker pool + real thread arguments (`a0e91cd`) and the engine P1/P2 gaps
 (`1a17405`). Those are not in v0.65.4; they ride the v0.65.5 candidate.)
 **Gates on the current tree (official v0.65.4 windows-x64 archive):
-smokes 964/964, modules 533/533, probes 424/424, barename 0/533,
+smokes 964/964, modules 533/533, probes 425/425, barename 0/533,
 module-smoke 543/543 (100%), floors197, gate9 10/10 + 30 known-failure
 repros pass + 1 intended T001 (0 unexpected).**
 **v0.65.5 prep:** `release/v0.65.5-prep` (package 0.65.5, pin v0.65.4,
-notes, changelog); release dry-run **41217827358 SUCCESS** (validate,
+notes, changelog); release dry-run **41248000167 SUCCESS** on candidate 7d47924 (validate,
 windows/ubuntu gates, package; release/pin/canary correctly skipped).
 Owner GO pending; main is not bumped.
 
@@ -23,7 +23,7 @@ Owner GO pending; main is not bumped.
   backslash-aware `join_paths`). Battery on the official v0.65.4 archive:
   probes 422/422, smokes 963/963, modules 533/533, barename 0/533, gate9
   OK (10/10 + 30 pass + 1 intended), coverage/doc ratchets OK.
-- **v0.65.5 prep:** branch `release/v0.65.5-prep`; dry-run 41217827358
+- **v0.65.5 prep:** branch `release/v0.65.5-prep`; dry-run 41248000167
   SUCCESS; owner greenlight item REL-20261031-1706-stdlib. No tag/release
   until GO.
 - **Gate 9** is still open only on the compiler drop-glue residual
@@ -99,8 +99,14 @@ Owner GO pending; main is not bumped.
   14.1/77.4/271.5 MB at 10k/20k/100k (68.6 MB at 20k paired) -- linear
   ~2-3 KB/iter. The JSON builder/JsonValue aggregate drop is the remaining
   gate-9 blocker and the engine soak risk; compiler item
-  REL-20261031-2308-stdlib. p_mapstr 27/55 and p_remove 297/313 also
-  remain compiler-side.
+  REL-20261031-2308-stdlib. The probe's object is a `Map[Str, JsonValue]`,
+  so this may be the same Map payload slice as p_mapstr 27/55; p_remove
+  297/313 also remains compiler-side.
+- **Release dry-run 41248000167 SUCCESS** on candidate `7d47924`:
+  validate, Windows 22:24-23:16, Ubuntu 22:24-23:03, package staging
+  green; GitHub Release / pin PR / registry canary correctly skipped.
+  Local probes 425/425 after the 2156 fixes. No tag: the 1704 JSON
+  reclaim, compiler rebuild, and engine 600-frame soak are still open.
 
 ### 2026-10-30 addendum -- v0.65.3 release + v0.65.4 socket patch
 - v0.65.3 released (tag 26ede85) and the registry verified; the compiler
@@ -135,12 +141,12 @@ gates flip:
 2. Smoke corpus green -- MET: merged 964/964 on v0.65.4 (0/0),
    including the directory-rename regression and the wave-313 module
    surface smoke; plus 963/963 on both Windows and Ubuntu release gates
-   (dry-run 41217827358, pre-wave-313), no carve-outs.
-3. Probe corpus green -- MET (424/424; includes the gate-9 set,
-   p_json_1704_obj (the gate-9 RSS workload), p_guard_uaf, p_wave176_shapes with the
-   kqueue row, p_socket_ffi_width, p_socket_sigpipe, the h2/SSE probes and
-   the earlier waves; 424/424 on the current tree with the official v0.65.4
-   archive).
+   (dry-run 41248000167 on candidate 7d47924), no carve-outs.
+3. Probe corpus green -- MET (425/425; includes the gate-9 set,
+   p_json_1704_obj (the gate-9 RSS workload), p_2156_memory_shapes,
+   p_guard_uaf, p_wave176_shapes with the kqueue row, p_socket_ffi_width,
+   p_socket_sigpipe, the h2/SSE probes and the earlier waves; 425/425 on
+   the current tree with the official v0.65.4 archive).
 4. Strict bare-name scan clean -- MET (0/533).
 5. Coverage ratchet green -- MET (floors197).
 6. Documentation ratchet 100% -- MET.
@@ -213,7 +219,7 @@ gates flip:
     (stdlib-v0.65.4 released 2026-10-30 at `d267317`, run 41117752917;
     registry xiom-std 0.65.4 live (sha256 `12111688...`, run 41117752919);
     compiler v0.65.4 pins STDLIB_VERSION; tags frozen. v0.65.5 prep
-    (`release/v0.65.5-prep`) has dry-run 41217827358 green and awaits the
+    (`release/v0.65.5-prep`) has dry-run 41248000167 green and awaits the
     owner GO. Earlier 0.65.0/0.65.1/0.65.2/0.65.3 tags remain
     released/immutable.)
 
@@ -3402,4 +3408,6 @@ compiler lane bumps `STDLIB_VERSION`, runs
    probe-first. Relay to packages: grpc publish can proceed once the
    official pin carries m202 (their 36/36 x2 is on the candidate);
    graphql conformance is 10/10 with m206.
+
+
 
