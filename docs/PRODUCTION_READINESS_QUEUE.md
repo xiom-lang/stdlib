@@ -36,12 +36,14 @@ Owner GO pending; main is not bumped.
   v0.65.4 (REL-20261031-1600-stdlib). Both are compiler-side and are not
   in `tools/known_failures` (gate 9 stays at 0 unexpected until the fix
   direction is chosen).
-- **kqueue wave 178:** `feat/kqueue-backend` implements the kqueue backend
-  (`EV_RECEIPT` ctl, one-entry-per-fd coalescing) and updates the probe;
-  the focused `.github/workflows/macos-eventloop.yml` witness is
-  dispatched on macos-15. The 2202 kqueue residual flips when that run is
-  green. Other residuals unchanged: 1531 xvector verify, 1807 compiler
-  write path, packages brotli/zstd, compiler Send/Sync.
+- **kqueue wave 178 DELIVERED:** `feat/kqueue-backend` implements the
+  kqueue backend (`EV_RECEIPT` ctl, one-entry-per-fd coalescing) and
+  updates the probe. The focused
+  `.github/workflows/macos-eventloop.yml` witness run **41226381281**
+  (macos-15) is green: compiler build + `p_wave176_shapes` pass. The 2202
+  kqueue residual is resolved; remaining 2202 residuals are packages
+  brotli/zstd and compiler Send/Sync. Other residuals unchanged: 1531
+  xvector verify, 1807 compiler write path.
 
 ### 2026-10-30 addendum -- v0.65.3 release + v0.65.4 socket patch
 - v0.65.3 released (tag 26ede85) and the registry verified; the compiler
