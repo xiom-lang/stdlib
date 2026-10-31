@@ -977,6 +977,7 @@ static __thread int xiom_trampoline_allow_retry = 1;
 /* m351: raw signal + faulting address captured by the handler. */
 static __thread int xiom_trampoline_os_code = 0;
 static __thread uintptr_t xiom_trampoline_fault_addr = 0;
+static __thread int xiom_trampoline_handlers_installed = 0;
 
 static void xiom_trampoline_handler(int sig, siginfo_t* si, void* uc) {
     (void)uc;
@@ -1042,15 +1043,20 @@ void xiom_trap_leave(void) {
 }
 
 int64_t xiom_trampoline_call(xiom_block_fn fn, uint8_t* ctx) {
-    struct sigaction sa;
-    struct sigaction old_segv, old_ill, old_fpe;
-    memset(&sa, 0, sizeof(sa));
-    sa.sa_sigaction = xiom_trampoline_handler;
-    sa.sa_flags = SA_SIGINFO;
-    sigemptyset(&sa.sa_mask);
-    sigaction(SIGSEGV, &sa, &old_segv);
-    sigaction(SIGILL, &sa, &old_ill);
-    sigaction(SIGFPE, &sa, &old_fpe);
+    /* t3 hot-reload floor (REL-20261031-1934-compiler-4): install the
+       containment handlers once per thread, not on every confined-block
+       entry. sigsetjmp below still bounds each call. */
+    if (!xiom_trampoline_handlers_installed) {
+        struct sigaction sa;
+        memset(&sa, 0, sizeof(sa));
+        sa.sa_sigaction = xiom_trampoline_handler;
+        sa.sa_flags = SA_SIGINFO;
+        sigemptyset(&sa.sa_mask);
+        sigaction(SIGSEGV, &sa, NULL);
+        sigaction(SIGILL, &sa, NULL);
+        sigaction(SIGFPE, &sa, NULL);
+        xiom_trampoline_handlers_installed = 1;
+    }
 
     int saved_returned = xiom_trampoline_returned;
     xiom_trampoline_retried = 0;
@@ -1097,9 +1103,6 @@ int64_t xiom_trampoline_call(xiom_block_fn fn, uint8_t* ctx) {
         return fault_code;
     }
     /* never reached */
-    sigaction(SIGSEGV, &old_segv, NULL);
-    sigaction(SIGILL, &old_ill, NULL);
-    sigaction(SIGFPE, &old_fpe, NULL);
 }
 #endif /* end POSIX trampoline */
 

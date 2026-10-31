@@ -56,6 +56,13 @@ Owner GO pending; main is not bumped.
   Windows; the new smoke is green on Linux too. The module-smoke baseline
   is refreshed to 543 covered modules (function references stay
   3505/6664; deeper function-call waves follow).
+- **Compiler runtime requests handled:** the Win64
+  `__fixdfti`/`__fixunsdfti`/`__fixsfti`/`__fixunssfti` libcalls are in
+  `runtime/fp128_helpers.c` (REL-20261031-1924-compiler; e2e green with
+  compiler main, waits for the official pin), and
+  `xiom_trampoline_call` installs fault handlers once per thread
+  (REL-20261031-1934-compiler-4): Linux 100k per-call unsafe blocks
+  28-34 ms, one-loop 3-6 ms; guard smokes green on Linux/Windows.
 
 ### 2026-10-30 addendum -- v0.65.3 release + v0.65.4 socket patch
 - v0.65.3 released (tag 26ede85) and the registry verified; the compiler

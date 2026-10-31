@@ -779,6 +779,16 @@ uint32_t __fixunstfsi(xiom_f128 f) { return (uint32_t)xiom_f128_to_u64_core(f); 
 __int128 __fixtfti(xiom_f128 f) { return xiom_f128_to_i128_core(f); }
 unsigned __int128 __fixunstfti(xiom_f128 f) { return xiom_f128_to_u128_core(f); }
 
+/* double/float -> 128-bit integer libcalls emitted by LLVM on Win64 for
+ * Float128 -> Int128 casts (REL-20261031-1600). The f128 path already has
+ * __fixtfti/__fixunstfti; these four are the narrowing entries. Their
+ * double/float argument and i128 return use the standard Win64 ABI, so no
+ * XMM/pointer f128 shim is needed. */
+__int128 __fixdfti(double d) { return xiom_f128_to_i128_core(xiom_f128_from_f64_impl(d)); }
+unsigned __int128 __fixunsdfti(double d) { return xiom_f128_to_u128_core(xiom_f128_from_f64_impl(d)); }
+__int128 __fixsfti(float f) { return xiom_f128_to_i128_core(xiom_f128_from_f64_impl((double)f)); }
+unsigned __int128 __fixunssfti(float f) { return xiom_f128_to_u128_core(xiom_f128_from_f64_impl((double)f)); }
+
 /* ========================== COMPARISONS =================================== */
 int __unordtf2(xiom_f128 a, xiom_f128 b) { return xiom_f128_cmp_unord_core(a, b); }
 int __eqtf2(xiom_f128 a, xiom_f128 b) { return xiom_f128_cmp_eq_core(a, b); }
@@ -798,6 +808,13 @@ int __lttf2(xiom_f128 a, xiom_f128 b) { return xiom_f128_cmp_lt_core(a, b); }
  * then place the f128 result in xmm0. The double/float/int/i128-arg shims at
  * the top of this branch are convention-agnostic (their args arrive in
  * xmm0/rcx/ecx in both layouts) and mirror the clang >= 21 branch. */
+
+/* double/float -> 128-bit integer libcalls (REL-20261031-1600); standard
+ * Win64 ABI, convention-agnostic, so plain C definitions work here too. */
+__int128 __fixdfti(double d) { return xiom_f128_to_i128_core(xiom_f128_from_f64_impl(d)); }
+unsigned __int128 __fixunsdfti(double d) { return xiom_f128_to_u128_core(xiom_f128_from_f64_impl(d)); }
+__int128 __fixsfti(float f) { return xiom_f128_to_i128_core(xiom_f128_from_f64_impl((double)f)); }
+unsigned __int128 __fixunssfti(float f) { return xiom_f128_to_u128_core(xiom_f128_from_f64_impl((double)f)); }
 
 __asm__(
     ".text\n\t"

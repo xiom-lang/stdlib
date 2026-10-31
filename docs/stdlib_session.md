@@ -4236,6 +4236,37 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
+**SESSION 2026-10-31 block 314 (readiness window: compiler runtime requests 1924/1934 handled -- Win64 __fixdfti family + t3 once-per-thread signal handlers; wave 313 full battery)**
+- **REL-20261031-1924-compiler (1600 stdlib half) DONE:** added the
+  Win64 libcalls `__fixdfti` / `__fixunsdfti` / `__fixsfti` /
+  `__fixunssfti` to `runtime/fp128_helpers.c` (both clang>=21 pointer and
+  clang<=20 XMM branches; plain double/float ABI, forwarding to
+  `xiom_f128_from_f64_impl` + the shared i128/u128 cores). The compiler
+  half is 61f9e3b6a; e2e with the local compiler main `d4d52e0c9` passes
+  3/3 for signed positive/negative, UInt128, and Float32. The item stays
+  acked until the OFFICIAL archive pin carries the fix; add the permanent
+  e2e probe then. **1552 remains compiler checker work** (preserve &/&mut
+  in fn-pointer signatures, reject by-value-to-by-ref); no stdlib change.
+- **REL-20261031-1934-compiler-4 (t3 floor) DONE:** `xiom_trampoline_call`
+  now installs SIGSEGV/SIGILL/SIGFPE once per thread
+  (`xiom_trampoline_handlers_installed`), keeps the per-call sigsetjmp,
+  and drops the unreachable restore. Linux 100k per-call unsafe blocks:
+  **28-34 ms** (was 139-202 ms); one unsafe around the loop 3-6 ms.
+  `smoke_guard_fault` and `smoke_guard_retry` are green on Linux; Windows
+  SEH is unchanged and `smoke_guard_fault` is green there.
+- **Wave 313 full battery:** probes 422/422, smokes **964/964** (new
+  module-surface smoke), modules 533/533, barename 0/533, module-smoke
+  543/543 (100%), gate9 10/10 + 30 pass + 1 intended, coverage/doc/
+  module-smoke ratchets OK. `tools/module_smoke_floors.json` refreshed.
+- **Workspace note:** the untracked `out/` tree (thousands of stale
+  scratch `.xi`/exe files) made a repo-root `--check` hang at the 300 s
+  compiler timeout; deleting `out/` fixed it. Keep `out/` disposable and
+  never put it on a path the module loader scans.
+- **2202 tracking:** brotli/zstd dropped as registry-delivered
+  (REL-20261031-1905-packages); kqueue delivered; only compiler Send/Sync
+  remains on 2202. v0.65.5 prep is frozen pre-wave-313; re-cut/re-run the
+  dry-run if these readiness fixes should ride that tag.
+
 **SESSION 2026-10-31 block 313 (readiness wave 313: module-smoke coverage 543/543 = 100%; full smokes 964/964; 2202 brotli/zstd tracking corrected to registry-delivered)**
 - **Wave 313 module-surface lock:** `tests/smoke/smoke_readiness_module_surface.xi`
   imports the 44 modules that had no smoke reference. Module-smoke coverage
