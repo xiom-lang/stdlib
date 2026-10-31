@@ -3,7 +3,7 @@
 #
 # Focused macOS readiness witness for the kqueue backend. The full heavy
 # macOS leg is red on unrelated smoke rows; this job builds the pinned
-# compiler on macos-14 and runs ONLY p_wave176_shapes, so the kqueue result
+# compiler on macos-15 and runs ONLY p_wave176_shapes, so the kqueue result
 # cannot be masked by those reds.
 
 name: XIOM Stdlib macOS event-loop witness
@@ -18,8 +18,8 @@ on:
 
 jobs:
   eventloop-macos:
-    name: event-loop probe (macos-14)
-    runs-on: macos-14
+    name: event-loop probe (macos-15)
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
 
