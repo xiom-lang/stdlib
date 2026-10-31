@@ -35,10 +35,21 @@ package staging, **no release, no pin PR, no registry canary**.
 
 ## 2. Dry-run executed (workflow path)
 
-The last workflow dry-run was run 40683465791 for `0.65.2` (validate, both
-gate legs, and package staging green; no release, no pin PR, no registry
-write). A `0.65.5` workflow dry-run needs the owner's version bump first,
-because validate compares `package.xi` to the label.
+The v0.65.5 dry-run was dispatched on `release/v0.65.5-prep` with
+`version=0.65.5` and no `tag` input: run **41217827358** completed
+**success** on 2026-10-31T16:57:36Z.
+
+- **validate package.xi**: green (version 0.65.5, compiler range).
+- **release gates (windows-latest)**: green, 16:04 to 16:57 (compiler build,
+  smoke corpus, modules, barename, coverage, module-smoke).
+- **release gates (ubuntu-latest)**: green, 16:04 to 16:44.
+- **package**: green (deterministic tarball, SHA256SUMS, attestation).
+- **Create GitHub Release**: SKIPPED (no tag input).
+- **STDLIB_VERSION pin PR**: SKIPPED.
+- **staging registry canary**: SKIPPED.
+
+No release, pin PR, or registry write was created. The earlier `0.65.2`
+dry-run (40683465791) also passed and remains history.
 
 Local battery on the candidate tree with the official v0.65.4 windows-x64
 archive and `XIOM_STDLIB` set to this checkout:
