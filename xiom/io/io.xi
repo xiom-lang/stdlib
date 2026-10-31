@@ -59,6 +59,8 @@ extern "C" {
   fn xiom_truncate_path(path: *UInt8, size: Int) -> Int32;
   fn xiom_remove_dir(path: *UInt8) -> Int32;
   fn xiom_fflush_stdout() -> Int32;
+  fn xiom_fflush_stderr() -> Int32;
+  fn xiom_eprintln(s: *UInt8);
   fn xiom_sync_file(stream: *UInt8) -> Int32;
 }
 
@@ -88,6 +90,17 @@ pub fn println(msg: Str)
 {
   unsafe {
     puts(msg.c_str());
+  }
+}
+
+/// Write a line to standard error and flush it immediately. Use this for
+/// crash/diagnostic markers: stdout is buffered, so a later fault can lose
+/// pending `println` output while stderr is already on the sink.
+pub fn eprintln(msg: Str)
+  requires: true
+{
+  unsafe {
+    xiom_eprintln(msg.c_str());
   }
 }
 
@@ -803,6 +816,9 @@ pub fn Cursor.into_inner(self) -> Vec[UInt8]
 }
 
 /// === Path operations ===
+/// Join `child` onto `base`, recognizing BOTH `/` and `\` as separators so a
+/// Windows-style path is not silently treated as one segment. The result keeps
+/// the caller's separator style; a missing separator is added as `/`.
 pub fn join_paths(base: Str, child: Str) -> Str
   ensures: result.len() >= base.len()
 {
@@ -812,8 +828,10 @@ pub fn join_paths(base: Str, child: Str) -> Str
   if child.is_empty() {
     return base;
   }
-  let base_ends_sep = base.byte_at(base.len() - 1) == 47;
-  let child_starts_sep = child.byte_at(0) == 47;
+  let last = base.byte_at(base.len() - 1);
+  let first = child.byte_at(0);
+  let base_ends_sep = last == 47 || last == 92;
+  let child_starts_sep = first == 47 || first == 92;
   if base_ends_sep && child_starts_sep {
     base + child.substr(1, child.len())
   } elif base_ends_sep || child_starts_sep {
@@ -821,6 +839,94 @@ pub fn join_paths(base: Str, child: Str) -> Str
   } else {
     base + "/" + child
   }
+}
+
+/// Normalize a filesystem path lexically without touching the disk. Both `/`
+/// and `\` are accepted as separators and the output uses `/`; repeated
+/// separators and `.` segments are removed; `..` pops the previous segment
+/// (and is dropped at a root). A drive prefix (`C:`) or a leading `/` / `//`
+/// (UNC) root is preserved. An empty or fully-relative-empty path yields `.`.
+/// This is a lexical helper only: it does not resolve symlinks.
+pub fn normalize_path(path: Str) -> Str
+  ensures: result.len() >= 1
+{
+  let n = path.len();
+  if n == 0 { return "."; }
+
+  var prefix = "";
+  var pos = 0;
+
+  // Drive prefix, e.g. C: -- kept verbatim; the separator after it is optional.
+  if n >= 2 && path.byte_at(1) == 58 {
+    prefix = path.substr(0, 2);
+    pos = 2;
+  }
+
+  // Root / UNC prefix.
+  if pos < n && (path.byte_at(pos) == 47 || path.byte_at(pos) == 92) {
+    if pos + 1 < n && (path.byte_at(pos + 1) == 47 || path.byte_at(pos + 1) == 92) {
+      // Preserve a leading double separator as a UNC root.
+      if prefix.is_empty() {
+        prefix = "//";
+        pos = pos + 2;
+      } else {
+        pos = pos + 1;
+      }
+    } else {
+      if prefix.is_empty() { prefix = "/"; }
+      pos = pos + 1;
+    }
+  }
+  while pos < n && (path.byte_at(pos) == 47 || path.byte_at(pos) == 92) {
+    pos = pos + 1;
+  }
+
+  var parts: Vec[Str] = Vec[Str].new();
+  while pos < n {
+    let start = pos;
+    while pos < n && path.byte_at(pos) != 47 && path.byte_at(pos) != 92 {
+      pos = pos + 1;
+    }
+    let seg = path.substr(start, pos);
+    if seg.is_empty() || seg == "." {
+      // skip
+    } elif seg == ".." {
+      if parts.len() > 0 && parts[parts.len() - 1] != ".." {
+        parts.pop();
+      } elif prefix.is_empty() {
+        parts.push("..");
+      }
+    } else {
+      parts.push(seg);
+    }
+    while pos < n && (path.byte_at(pos) == 47 || path.byte_at(pos) == 92) {
+      pos = pos + 1;
+    }
+  }
+
+  var joined = "";
+  var k = 0;
+  while k < parts.len() {
+    if k > 0 { joined = joined + "/"; }
+    joined = joined + parts[k];
+    k = k + 1;
+  }
+
+  if prefix.is_empty() {
+    if joined.is_empty() { return "."; }
+    return joined;
+  }
+  if prefix == "/" {
+    if joined.is_empty() { return "/"; }
+    return "/" + joined;
+  }
+  if prefix == "//" {
+    if joined.is_empty() { return "//"; }
+    return "//" + joined;
+  }
+  // Drive prefix: `C:` or `C:/segments`.
+  if joined.is_empty() { return prefix + "/"; }
+  return prefix + "/" + joined;
 }
 
 /// Parent directory of the path, or None.
@@ -947,6 +1053,16 @@ pub fn flush_stdout()
 {
   unsafe {
     let _ = xiom_fflush_stdout();
+  }
+}
+
+/// flush_stderr flushes the C stderr buffer. `eprintln` already flushes per
+/// line; use this only after writing through a raw stderr FILE* handle.
+pub fn flush_stderr()
+  requires: true
+{
+  unsafe {
+    let _ = xiom_fflush_stderr();
   }
 }
 

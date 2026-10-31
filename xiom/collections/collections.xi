@@ -154,6 +154,18 @@ fn Vec.truncate[T](new_len: Int)
   if new_len < len { len = new_len; }
 }
 
+/// Sort in place with an Int comparator (`< 0` before, `0` equal, `> 0`
+/// after). Same contract as the `vec_sort_by` helper, available as a method.
+/// The comparator must be a NAMED function (inline lambdas crash the current
+/// runtime). Stable order is not promised.
+fn Vec.sort_by[T](&mut self, compare: fn(&T, &T) -> Int)
+  ensures: len() == len()@pre
+{
+  var v = self;
+  vec_sort_by(&mut v, compare);
+  self = v;
+}
+
 /// Shrink capacity to match current length.
 fn Vec.shrink_to_fit[T]()
   ensures: cap >= len
@@ -207,6 +219,24 @@ fn Vec.remove[T](index: Int) -> Option[T]
     while i + 1 < len {
       *(data + i) = *(data + i + 1);
       i = i + 1;
+    }
+    len = len - 1;
+    return Some(val);
+  }
+}
+
+/// Remove the element at `index` by replacing it with the last element. O(1).
+/// Order is not preserved (use `remove` when it must be). Returns None when
+/// the index is out of bounds.
+fn Vec.swap_remove[T](index: Int) -> Option[T]
+  ensures: result is Some => len() == len()@pre - 1
+{
+  if index < 0 || index >= len { return None; }
+  unsafe {
+    let val = *(data + index);
+    let last = len - 1;
+    if index != last {
+      *(data + index) = *(data + last);
     }
     len = len - 1;
     return Some(val);

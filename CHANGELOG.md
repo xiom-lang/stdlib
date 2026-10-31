@@ -19,6 +19,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   (runtime `xiom_thread_spawn_with_arg`), not an inline call; join/detach
   are unchanged. Named/top-level jobs only (a capturing closure is an
   environment pointer, not bare code). Probe `p_wave145` row 7.
+- Engine P1/P2 gaps: `Vec.swap_remove` (O(1) unordered removal) and a
+  `Vec.sort_by` method (named Int comparator; delegates to the existing
+  `vec_sort_by`). `Vec.insert` / `remove` / `reserve` / `truncate` were
+  already present. Probe `p_engine_p1p2_gaps`
+  (REL-20261031-1423-engine-2).
+- `io.eprintln` writes one line to stderr and flushes it immediately, and
+  `io.flush_stderr` exposes the explicit flush (runtime
+  `xiom_eprintln` / `xiom_fflush_stderr`). Diagnostics survive a later
+  crash even when buffered stdout is lost.
+- `io.normalize_path` performs lexical separator/dot/`..` cleanup (drive and
+  `/`, `//` roots preserved), and `io.join_paths` now recognizes `\` as a
+  separator as well as `/`, so Windows-style callers no longer glue two
+  segments together.
 
 ## [0.65.4] - 2026-10-30
 

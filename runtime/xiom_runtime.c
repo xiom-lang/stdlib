@@ -5460,6 +5460,20 @@ int xiom_fflush_stdout(void) {
     return fflush(stdout);
 }
 
+int xiom_fflush_stderr(void) {
+    return fflush(stderr);
+}
+
+/* Diagnostics sink: write one line and flush immediately so a crash later in
+   the process cannot lose the marker. */
+void xiom_eprintln(const char* s) {
+    if (s) {
+        fputs(s, stderr);
+        fputc('\n', stderr);
+    }
+    fflush(stderr);
+}
+
 int xiom_fsync_dir(const char* path) {
     /* Documented Windows behavior: open the directory with backup
        semantics; the flush attempt is a best-effort no-op because
@@ -5648,6 +5662,20 @@ int xiom_sync_file(void* stream) {
 
 int xiom_fflush_stdout(void) {
     return fflush(stdout);
+}
+
+int xiom_fflush_stderr(void) {
+    return fflush(stderr);
+}
+
+/* Diagnostics sink: write one line and flush immediately so a crash later in
+   the process cannot lose the marker. */
+void xiom_eprintln(const char* s) {
+    if (s) {
+        fputs(s, stderr);
+        fputc('\n', stderr);
+    }
+    fflush(stderr);
 }
 
 int xiom_fsync_dir(const char* path) {

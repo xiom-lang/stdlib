@@ -9,6 +9,16 @@ fn main() -> Int {
   if io.join_paths("", "child") != "child" { return 3; }
   if io.join_paths("base", "") != "base" { return 4; }
   if io.join_paths("", "") != "" { return 5; }
+  // Backslash is a separator too (Windows-style callers).
+  if io.join_paths("base\\dir", "child") != "base\\dir/child" { return 20; }
+  if io.join_paths("base\\dir\\", "child") != "base\\dir\\child" { return 21; }
+
+  // normalize_path is lexical: separators, dot segments, roots.
+  if io.normalize_path("a\\b/../c") != "a/c" { return 22; }
+  if io.normalize_path("C:\\foo\\..\\bar") != "C:/bar" { return 23; }
+  if io.normalize_path("//server\\share\\x") != "//server/share/x" { return 24; }
+  if io.normalize_path("/a/./b//") != "/a/b" { return 25; }
+  if io.normalize_path("") != "." { return 26; }
 
   if io.is_absolute("/usr/bin") != true { return 6; }
   if io.is_absolute("relative") != false { return 7; }

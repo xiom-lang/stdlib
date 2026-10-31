@@ -4221,6 +4221,34 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
+**SESSION 2026-10-31 block 310 (relay priority: engine P1/P2 gaps delivered on main -- Vec methods, stderr sink, path normalize; old acked info triaged; no tag)**
+- **REL-20261031-1423-engine-2 delivered** (on main, post-v0.65.4):
+  - `Vec.swap_remove(index) -> Option[T]` (O(1), unordered) and a
+    `Vec.sort_by(compare)` method (named `fn(&T,&T)->Int`, delegates to
+    `vec_sort_by`). `Vec.insert` / `remove` / `reserve` / `truncate` were
+    already present and are now exercised by the new probe.
+  - `io.eprintln(msg)` writes one line to stderr and flushes it; new
+    `io.flush_stderr` exposes the explicit flush. Runtime:
+    `xiom_eprintln` + `xiom_fflush_stderr` in both platform blocks.
+  - `io.normalize_path(path)` lexical cleanup (both separators, `.`/`..`,
+    drive and `/`/`//` roots); `io.join_paths` now treats `\` as a
+    separator too, so Windows-style stores no longer glue segments.
+  - `list_dir` dangling names were already fixed (REL-20261021-0918,
+    `p_io_listdir_roundtrip`); no new change needed.
+  - Probe `p_engine_p1p2_gaps`; smokes
+    `smoke_collections_vec_insert_remove` + `smoke_io_path` extended.
+  - Battery on the v0.65.4 official archive (Windows x64): probes
+    **422/422**, smokes **963/963**, modules **533/533**, barename
+    **0/533**, coverage ratchet **OK** (io/collections 100%), doc **100%**.
+  - Relay: item acked then fixed with commit/probe evidence.
+- **Relay closeout pass:** old acked `info` items (compiler/pulse/
+  packages/xvector/orbitdb coordination notices) were re-read and moved to
+  `fixed` with a resolution note + ref; the reporters close them. 1704
+  stays acked (compiler m375 drop glue = gate 9); 2202 stays acked for the
+  kqueue/packages/Send-Sync residuals. 1531 stays fixed awaiting xvector.
+- **No tag:** this wave is a post-v0.65.4 tail; v0.65.5 still needs the
+  owner GO and a compiler pin.
+
 **SESSION 2026-10-31 block 309 (v0.65.4 shipped + verified; pool on main for v0.65.5; readiness 9/10 -- gate 9 = 1704 only)**
 - **v0.65.4 release verification.** RC windows zip sha256
   `efe7af95...` matched REL-20261030-2212; `xiom --version` 0.65.4;

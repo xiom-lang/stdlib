@@ -43,5 +43,19 @@ fn main() -> Int {
     None => {},
   };
 
+  // swap_remove: O(1) removal by replacing the hole with the tail.
+  // v is [5, 10, 30] here.
+  let sw = v.swap_remove(1);
+  match sw {
+    Some(x) => { if x != 10 { return 12; } },
+    None => { return 13; },
+  };
+  if v.len() != 2 { return 14; }
+  if v[0] != 5 || v[1] != 30 { return 15; }
+  match v.swap_remove(99) {
+    Some(_) => { return 16; },
+    None => {},
+  };
+
   return 0;
 }
