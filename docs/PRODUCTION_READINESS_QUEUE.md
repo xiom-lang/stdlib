@@ -105,11 +105,18 @@ gates flip:
      Heavy 40874531519 failed at checkout because `compiler_ref` accepts
      a branch/tag, not a raw SHA; Linux evidence for this candidate is
      the compiler's own 10/10.
-   Why it stays OPEN: REL-20261028-1641-stdlib (p_wave162) and the
-   compiler-side JsonValue drop residual (1704); the channel items are
-   fixed on main and awaiting the compiler's fixed/close transition.
-   The gate flips when 1641 is fixed and the archive is swept on
-   Windows + Ubuntu.
+   - 2026-10-31 v0.65.4 re-check (dry-run 41134774980; windows zip sha256
+     `efe7af95...`; bundled stdlib 0.65.4): gate-9 set **10/10** green;
+     known_failures **30 pass + 1 intended T001 + 0 unexpected**;
+     p_wave162 **20/20** and the 1641 witness **20/20** on the release
+     tree; the RC targeted set + gate9 are OK with the bundled stdlib.
+   Why it stays OPEN: only the compiler-side JsonValue drop residual
+   (1704 / m375). 1641 was verified fixed on 605c6a879 (p_wave162 20/20,
+   witness 20/20; re-confirmed on fd27be39a and the v0.65.4 tree), and the
+   channel 1533/1617 and huffman 1801 items are verified/closed. The gate
+   flips when the compiler lands the drop-glue reclaim and PULSE re-runs
+   probe_alloc_aggregate / the capped bttger leg on that pin (the
+   10k/256 MB target is already met; the trend is still ~2.3 KB/iter).
    Historical: v0.65.1 was 9/10 (only 1609); v0.64.8 results are in the
    updates below.
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- MET
