@@ -89,6 +89,18 @@ Owner GO pending; main is not bumped.
   `detect_leaks=0` (env overrides), `XIOM_ALLOC_POISON=1` poisons the
   first 4 KiB of freed main-heap blocks, and `p_guard_uaf` proves the
   confined guard-arena UAF faults/contained on Windows and Linux.
+- **2156 VERIFIED on rebuilt compiler f537b1b14 + stdlib 7d47924:**
+  p_structstr 255/259 -> 5/33 MB, p_vecstr 329/364 -> 9/35,
+  str_repeat 210/242 -> 5/33, p_panel_move 337/368 -> 5/34,
+  p_vecrebind 30k -> 5/33. Exact stdlib shapes are committed as
+  `p_2156_memory_shapes` (struct/vecstr/repeat/cstring; 20k: 4.9/4.9/4.4/
+  <1 MB on the paired toolchain).
+- **1704 STILL OPEN on the rebuilt pair:** `p_json_1704_obj` peaks
+  14.1/77.4/271.5 MB at 10k/20k/100k (68.6 MB at 20k paired) -- linear
+  ~2-3 KB/iter. The JSON builder/JsonValue aggregate drop is the remaining
+  gate-9 blocker and the engine soak risk; compiler item
+  REL-20261031-2308-stdlib. p_mapstr 27/55 and p_remove 297/313 also
+  remain compiler-side.
 
 ### 2026-10-30 addendum -- v0.65.3 release + v0.65.4 socket patch
 - v0.65.3 released (tag 26ede85) and the registry verified; the compiler
