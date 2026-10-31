@@ -11,9 +11,11 @@ mismatch fails the release before the gates run.
    `release.yml` greps for `compiler = ">=`.
 2. **`COMPILER_VERSION`** -- must name an *existing* compiler tag (the
    release builds that tag from source: `.github/actions/build-compiler`).
-   Current pin: `v0.64.2`. Do not point it at an unreleased/combined
-   compiler release; the combined compiler cut happens AFTER this release,
-   when the compiler lane bumps `STDLIB_VERSION` to this tag.
+   Current pin: `v0.64.8`; recommended move for the next cut: `v0.65.4`
+   (the current released compiler). Do not point it at an
+   unreleased/combined compiler release; the combined compiler cut happens
+   AFTER this release, when the compiler lane bumps `STDLIB_VERSION` to
+   this tag.
 3. **`release-notes/<tag>.md`** -- present and schema-valid (website
    contract `xiom-lang/website/docs/release-notes-schema.md`): Summary
    <= 240 chars, plain ASCII, no internal IDs; highlights are `### Title` +
@@ -21,7 +23,7 @@ mismatch fails the release before the gates run.
    these with its own; the merged document must keep <= 6 highlights, and
    the compiler lane's draft already carries 4, so the stdlib fragment must
    stay at **2** highlights.
-   Current draft: `release-notes/v0.64.3.md` (2 highlights).
+   Next draft: `release-notes/v0.65.5.md` (2 highlights, created at GO).
    Run the compiler's validator locally BEFORE tagging (it is the
    authority; the v0.64.3 fragment failed it three times -- arrows, an
    `(mNNN)` token, and a `&`):
@@ -56,7 +58,7 @@ mismatch fails the release before the gates run.
    no longer changes the digest; re-canary only if an asset is regenerated.
 9. Hand off to the compiler lane: they bump `STDLIB_VERSION` to this tag,
    run the full gate list on the pin, and cut the single combined compiler
-   release (v0.62.0).
+   release (the next candidate, v0.65.5).
 
 ## Open pin-related dependencies (not blockers for tagging)
 

@@ -27,7 +27,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 118 + block 310 + blocks 309/308/307.
+Read docs/stdlib_session.md snapshot 118 + block 311 + blocks 310/309/308.
 
 STATE (2026-10-31):
 - v0.65.4 SHIPPED: stdlib tag stdlib-v0.65.4 -> d267317 (registry xiom-std
@@ -4235,6 +4235,30 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-31 block 311 (v0.65.5 release prep refreshed -- no bump/tag; new compiler finding: by-value fn accepted as fn(&T) and misreads the payload)**
+- **v0.65.5 release prep (docs only; no version bump, no tag, no registry
+  write).** `docs/RELEASE_DRY_RUN.md` now records the candidate as main
+  `1a17405` (code) / `ab3bad8` (docs): pool `a0e91cd` + engine P1/P2
+  `1a17405`, both post-v0.65.4. Local battery on the official v0.65.4
+  archive: probes 422/422, smokes 963/963, modules 533/533, barename
+  0/533, gate9 OK, coverage/doc OK. The draft keeps two highlights and
+  notes the owner decisions: version (proposed 0.65.5), COMPILER_VERSION
+  (current v0.64.8; recommended v0.65.4), tag commit.
+  `docs/RELEASE_CHECKLIST.md` was refreshed from the stale v0.64.2/v0.64.3
+  references.
+- **New compiler finding REL-20261031-1552-stdlib (bug/high).** On the
+  official v0.65.4 windows archive a by-value fn is accepted where
+  `fn(&(Int,Int))->Bool` is required and then called with the reference
+  ABI: `f((1,10))` is false but `let g: fn(&(Int,Int))->Bool = f; g(&(1,10))`
+  is true, and the same through a generic helper and `ZipIter.find`.
+  Workaround: declare the predicate with a `&` parameter (`fn f(p:
+  &(Int,Int))->Bool`, `p.0` auto-derefs); that path is correct. The repro
+  is inline in the item, not added to gate9, so gate 9 stays OK until the
+  compiler picks reject-vs-adapt.
+- **Remaining:** owner GO for v0.65.5 (then bump/notes/tag/registry);
+  2202 residuals (kqueue macOS witness, packages brotli-zstd, compiler
+  Send-Sync); 1704 compiler m375; 1531 xvector verify.
 
 **SESSION 2026-10-31 block 310 (relay priority: engine P1/P2 gaps delivered on main -- Vec methods, stderr sink, path normalize; old acked info triaged; no tag)**
 - **REL-20261031-1423-engine-2 delivered** (on main, post-v0.65.4):
