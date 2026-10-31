@@ -5,18 +5,24 @@ pre-cut package: what the workflow does, the dry-run that was executed, the
 exact GO checklist, and a draft of the next release notes. The version
 number and `COMPILER_VERSION` pin are the owner's decision.
 
-**Verified candidate (2026-10-31):** stdlib main `1a17405` (code) on top of
-`a0e91cd`; docs head `7620c64`. The tree carries two post-v0.65.4
-deliverables: the persistent worker pool with real arguments (`a0e91cd`)
-and the engine P1/P2 gaps (`1a17405`). Neither is in v0.65.4/d267317.
+**Verified candidate (2026-10-31, updated):** stdlib main `11fb9b2`; the
+candidate branch `release/v0.65.5-prep` is at `7d47924`. It carries the
+persistent worker pool with real arguments (`a0e91cd`), the engine P1/P2
+gaps (`1a17405`), the kqueue backend (wave 178, macOS witness
+41226381281), the readiness wave-313/315 coverage, the Win64
+`__fixdfti` family and per-thread fault handlers, and the critical 2156
+string copy-leak fix (all local `from_cstring(malloc(...))` sites free
+the source; `cstring.from_cstring` no longer builds an intermediate Vec).
+The compiler rebuild (`683c77d5b` or later) is required for the engine
+soak; no tag until that and the soak are green.
 
 **Prepared branch (2026-10-31):** `release/v0.65.5-prep` carries the
-owner-decision proposal in one commit: `package.xi` 0.65.5,
-`COMPILER_VERSION` v0.65.4, CHANGELOG [0.65.5], and
-`release-notes/v0.65.5.md` (two highlights; the local validator merges it
-green against a placeholder compiler file). Main is NOT bumped: merge and
-tag only on the owner's GO. No tag, release, or registry write exists for
-0.65.5.
+owner-decision proposal: `package.xi` 0.65.5, `COMPILER_VERSION` v0.65.4,
+CHANGELOG [0.65.5], and `release-notes/v0.65.5.md` (two highlights; the
+local validator merges it green against a placeholder compiler file).
+Main is NOT bumped: merge and tag only on the owner's GO. No tag,
+release, or registry write exists for 0.65.5. Dry-run **41248000167** is
+running on `7d47924`.
 
 ## 1. What `.github/workflows/release.yml` does
 
