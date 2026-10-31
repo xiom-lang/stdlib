@@ -23,7 +23,8 @@ mismatch fails the release before the gates run.
    these with its own; the merged document must keep <= 6 highlights, and
    the compiler lane's draft already carries 4, so the stdlib fragment must
    stay at **2** highlights.
-   Next draft: `release-notes/v0.65.5.md` (2 highlights, created at GO).
+   Next draft: `release-notes/v0.65.5.md` (2 highlights; drafted on
+   `release/v0.65.5-prep`, merged on GO).
    Run the compiler's validator locally BEFORE tagging (it is the
    authority; the v0.64.3 fragment failed it three times -- arrows, an
    `(mNNN)` token, and a `&`):
