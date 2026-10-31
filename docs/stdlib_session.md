@@ -4236,8 +4236,15 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
-**SESSION 2026-10-31 block 311 (v0.65.5 release prep refreshed -- no bump/tag; new compiler finding: by-value fn accepted as fn(&T) and misreads the payload)**
-- **v0.65.5 release prep (docs only; no version bump, no tag, no registry
+**SESSION 2026-10-31 block 311 (v0.65.5 release prep on a branch -- no tag; new compiler finding: by-value fn accepted as fn(&T) and misreads the payload)**
+- **Release prep branch `release/v0.65.5-prep` (NOT main).** One commit
+  carries the owner-decision proposal: `package.xi` 0.65.5,
+  `COMPILER_VERSION` v0.65.4, CHANGELOG [0.65.5], and
+  `release-notes/v0.65.5.md` (two highlights; the compiler notes validator
+  merges it green against a placeholder compiler file). Merge + tag only on
+  the owner's explicit GO; main stays at 7620c64 with package 0.65.4 and
+  COMPILER_VERSION v0.64.8.
+- **v0.65.5 release prep docs (main; no version bump, no tag, no registry
   write).** `docs/RELEASE_DRY_RUN.md` now records the candidate as main
   `1a17405` (code) / `ab3bad8` (docs): pool `a0e91cd` + engine P1/P2
   `1a17405`, both post-v0.65.4. Local battery on the official v0.65.4

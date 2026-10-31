@@ -6,10 +6,17 @@ exact GO checklist, and a draft of the next release notes. The version
 number and `COMPILER_VERSION` pin are the owner's decision.
 
 **Verified candidate (2026-10-31):** stdlib main `1a17405` (code) on top of
-`a0e91cd`; docs head `ab3bad8`. The tree carries two post-v0.65.4
+`a0e91cd`; docs head `7620c64`. The tree carries two post-v0.65.4
 deliverables: the persistent worker pool with real arguments (`a0e91cd`)
-and the engine P1/P2 gaps (`1a17405`). Neither is in v0.65.4/d267317. The
-package is ready for the owner's GO; the tree is not bumped.
+and the engine P1/P2 gaps (`1a17405`). Neither is in v0.65.4/d267317.
+
+**Prepared branch (2026-10-31):** `release/v0.65.5-prep` carries the
+owner-decision proposal in one commit: `package.xi` 0.65.5,
+`COMPILER_VERSION` v0.65.4, CHANGELOG [0.65.5], and
+`release-notes/v0.65.5.md` (two highlights; the local validator merges it
+green against a placeholder compiler file). Main is NOT bumped: merge and
+tag only on the owner's GO. No tag, release, or registry write exists for
+0.65.5.
 
 ## 1. What `.github/workflows/release.yml` does
 
@@ -55,9 +62,10 @@ archive and `XIOM_STDLIB` set to this checkout:
 ## 3. Preflight for the real cut (owner GO required)
 
 1. **Owner decides**: the version label (proposed `0.65.5`), whether to move
-   `COMPILER_VERSION` (current file: `v0.64.8`; recommended: `v0.65.4`, the
-   current released compiler), and the tag commit.
-2. **Prepare the tree** in one commit:
+   `COMPILER_VERSION` (proposed `v0.65.4`, the current released compiler;
+   main still says `v0.64.8`), and the tag commit.
+2. **Prepare the tree** in one commit (drafted on
+   `release/v0.65.5-prep`; merge it or re-cut on GO):
    - `package.xi` version bump (and compiler range if the pin moves);
    - `CHANGELOG.md` section for the version;
    - `release-notes/v<version>.md` (see the draft below; two highlights);
