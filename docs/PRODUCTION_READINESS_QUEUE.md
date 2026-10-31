@@ -8,9 +8,9 @@ REL-20261031-1554-stdlib). The post-release tail is on main: persistent
 worker pool + real thread arguments (`a0e91cd`) and the engine P1/P2 gaps
 (`1a17405`). Those are not in v0.65.4; they ride the v0.65.5 candidate.)
 **Gates on the current tree (official v0.65.4 windows-x64 archive):
-smokes 963/963, modules 533/533, probes 422/422, barename 0/533,
-floors197, gate9 10/10 + 30 known-failure repros pass + 1 intended T001
-(0 unexpected).**
+smokes 964/964, modules 533/533, probes 422/422, barename 0/533,
+module-smoke 543/543 (100%), floors197, gate9 10/10 + 30 known-failure
+repros pass + 1 intended T001 (0 unexpected).**
 **v0.65.5 prep:** `release/v0.65.5-prep` (package 0.65.5, pin v0.65.4,
 notes, changelog); release dry-run **41217827358 SUCCESS** (validate,
 windows/ubuntu gates, package; release/pin/canary correctly skipped).
@@ -41,9 +41,21 @@ Owner GO pending; main is not bumped.
   updates the probe. The focused
   `.github/workflows/macos-eventloop.yml` witness run **41226381281**
   (macos-15) is green: compiler build + `p_wave176_shapes` pass. The 2202
-  kqueue residual is resolved; remaining 2202 residuals are packages
-  brotli/zstd and compiler Send/Sync. Other residuals unchanged: 1531
-  xvector verify, 1807 compiler write path.
+  kqueue residual is resolved.
+- **2202 item 5 (brotli/zstd) SATISFIED BY REGISTRY PACKAGES:** the
+  documented boundary is correct -- stdlib does not reimplement RFC 7932
+  or zstd. `xiom.brotli 0.1.0` (libbrotli v1.2.0; registry sha256
+  `f37f3a39...`) and `xiom.zstd 0.3.0` (zstd 1.5.7; sha256 `6288ac84...`)
+  are live; the routing item REL-20261015-2211-packages-2 is closed as
+  delivered. Brotli/zstd are NOT a 2202 residual and NOT a v0.65.5
+  blocker (REL-20261031-1905-packages). The only 2202 residual is
+  compiler Send/Sync; 1531 and 1807 are unchanged.
+- **Wave 313 module-surface lock:** `smoke_readiness_module_surface`
+  imports the 44 modules that had no smoke reference, so module-smoke
+  coverage is **543/543 (100%)**. Full smoke corpus **964/964** on
+  Windows; the new smoke is green on Linux too. The module-smoke baseline
+  is refreshed to 543 covered modules (function references stay
+  3505/6664; deeper function-call waves follow).
 
 ### 2026-10-30 addendum -- v0.65.3 release + v0.65.4 socket patch
 - v0.65.3 released (tag 26ede85) and the registry verified; the compiler
@@ -75,9 +87,10 @@ Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
 gates flip:
 1. Modules type-check clean -- MET (533/533).
-2. Smoke corpus green -- MET: merged 963/963 on v0.65.4 (0/0),
-   including the directory-rename regression; plus 963/963 on both
-   Windows and Ubuntu release gates (dry-run 41217827358), no carve-outs.
+2. Smoke corpus green -- MET: merged 964/964 on v0.65.4 (0/0),
+   including the directory-rename regression and the wave-313 module
+   surface smoke; plus 963/963 on both Windows and Ubuntu release gates
+   (dry-run 41217827358, pre-wave-313), no carve-outs.
 3. Probe corpus green -- MET (422/422; includes the gate-9 set,
    p_wave176_shapes with the kqueue row, p_socket_ffi_width,
    p_socket_sigpipe, the h2/SSE probes and the earlier waves; 422/422 on
@@ -85,7 +98,8 @@ gates flip:
 4. Strict bare-name scan clean -- MET (0/533).
 5. Coverage ratchet green -- MET (floors197).
 6. Documentation ratchet 100% -- MET.
-7. Module-smoke ratchet green -- MET (499/543 modules, 3505/6664 fns).
+7. Module-smoke ratchet green -- MET (543/543 modules, 100%; function
+   references 3505/6664, 52.6%; wave 313 refreshed the baseline).
 8. Contract coverage 100% outside the documented no-clause tail -- MET
    (wave 208, 2026-10-25, refreshed 2026-10-31: every non-tail public fn
    carries a clause; non-tail 100%, global 95.9%, 6703/6988; clauses/fns

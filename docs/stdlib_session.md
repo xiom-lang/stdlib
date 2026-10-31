@@ -4236,6 +4236,27 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
+**SESSION 2026-10-31 block 313 (readiness wave 313: module-smoke coverage 543/543 = 100%; full smokes 964/964; 2202 brotli/zstd tracking corrected to registry-delivered)**
+- **Wave 313 module-surface lock:** `tests/smoke/smoke_readiness_module_surface.xi`
+  imports the 44 modules that had no smoke reference. Module-smoke coverage
+  is now **543/543 (100%)** (was 499/543). Full smoke corpus **964/964** on
+  Windows (v0.65.4 official archive); the new smoke is green on Linux in
+  WSL. `tools/module_smoke_floors.json` refreshed to 543 modules; function
+  references stay 3505/6664 (52.6%) -- deeper call waves follow.
+- **2202 item 5 (brotli/zstd) is satisfied by LIVE registry packages**, not
+  a stdlib/compiler fix: `xiom.brotli 0.1.0` (libbrotli v1.2.0, registry
+  sha256 `f37f3a39...`) and `xiom.zstd 0.3.0` (zstd 1.5.7, sha256
+  `6288ac84...`); REL-20261015-2211-packages-2 closed as delivered. Dropped
+  brotli/zstd from the 2202 residual list and the v0.65.5 blocker list
+  (packages correction REL-20261031-1905-packages). Only compiler Send/Sync
+  remains on 2202.
+- **Readiness docs:** gate 2 now 964/964; gate 7 543/543; the readiness
+  queue addendum records both. Gate 9 remains compiler-only (1704/m375).
+- **Next waves:** function-call coverage for the new module surface; gate 9
+  pre-wiring (10k/256 MB witness and flip checklist); compiler runtime
+  requests 1924 (`__fixdfti` family) and 1934 (per-thread signal handler
+  install) are handled in the same readiness window.
+
 **SESSION 2026-10-31 block 312 (readiness wave: kqueue wave 178 DELIVERED -- macOS witness 41226381281 green; full battery green; kqueue is post-v0.65.5-candidate)**
 - **kqueue (2202 item 10) delivered on main `699e73f`** (merged from
   `feat/kqueue-backend`):
