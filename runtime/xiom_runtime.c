@@ -9546,8 +9546,11 @@ static int xiom_kq_apply(int kq, int fd, int16_t filter, uint16_t flags) {
     EV_SET(&ev, (uintptr_t)fd, filter, flags | EV_RECEIPT, 0, 0, NULL);
     if (kevent(kq, &ev, 1, &ev, 1, NULL) < 0) return -1;
     if (ev.flags & EV_ERROR) {
-        if ((int)ev.data == ENOENT && (flags & EV_DELETE)) return 2;
-        errno = (int)ev.data;
+        int err = (int)ev.data;
+        /* EV_RECEIPT reports a successful change as data 0, not an error. */
+        if (err == 0) return 0;
+        if (err == ENOENT && (flags & EV_DELETE)) return 2;
+        errno = err;
         return -1;
     }
     return 0;
