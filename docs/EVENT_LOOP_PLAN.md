@@ -85,10 +85,11 @@ xiom_eventloop_close(handle) -> Int
   add/mod/del registry, level-triggered flags); probe extended with
   listener/accept/read rows. Landed 2026-10-17 (out of order because no
   macOS runner was available).
-- [ ] Wave 178: kqueue backend on macOS/FreeBSD; same probe via a macOS
-  runner; keep the poll fallback. Implemented on `feat/kqueue-backend`
-  with the focused `.github/workflows/macos-eventloop.yml` witness; the box
-  flips when that run is green.
+- [x] Wave 178: kqueue backend on macOS/FreeBSD; same probe via a macOS
+  runner; keep the poll fallback. Landed from `feat/kqueue-backend`; the
+  focused `.github/workflows/macos-eventloop.yml` witness run
+  **41226381281** (macos-15) is green: compiler build + `p_wave176_shapes`
+  pass. Windows/Linux probe rows stay green on the same commit.
 - [ ] Wave 179: `xiom.net.event` wrapper + typed `Event`; adapter from
   `socket_poll_read/write`; PULSE consumer smoke.
 - [ ] Wave 180: `LISTEN_FDS` integration in the server path (adopt
