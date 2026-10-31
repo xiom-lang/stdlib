@@ -4256,6 +4256,14 @@ registry pin, agent recon for the rest)**
   &(Int,Int))->Bool`, `p.0` auto-derefs); that path is correct. The repro
   is inline in the item, not added to gate9, so gate 9 stays OK until the
   compiler picks reject-vs-adapt.
+- **Registry compiler-field decision (REL-20261031-1554-stdlib).** The live
+  xiom-std 0.65.4 record says compiler v0.64.8. A post-publish override is
+  impossible through the API: only the publish path writes the field and
+  versions are immutable (409 version_exists; no metadata-only admin
+  endpoint). Forward path: record v0.65.4 at the FIRST v0.65.5 publish
+  (move COMPILER_VERSION to v0.65.4 before tagging, or pass compiler=v0.65.4
+  on the first dispatch). A 0.65.4 correction would need an explicit
+  registry admin/DB fix and is not a release action.
 - **Remaining:** owner GO for v0.65.5 (then bump/notes/tag/registry);
   2202 residuals (kqueue macOS witness, packages brotli-zstd, compiler
   Send-Sync); 1704 compiler m375; 1531 xvector verify.

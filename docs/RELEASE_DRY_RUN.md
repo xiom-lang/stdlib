@@ -72,9 +72,13 @@ archive and `XIOM_STDLIB` set to this checkout:
 5. **Registry**: dispatch `publish-registry.yml` (the tag path auto-dispatches
    the staging canary), approve the `registry-publish` environment, verify the
    package metadata (sha256, compiler field) at
-   `registry.xiom-lang.org/packages/xiom-std`. If the tag-time
-   `COMPILER_VERSION` stays `v0.64.8` but the cut is verified on `v0.65.4`,
-   use the workflow's `compiler=v0.65.4` override (no retag).
+   `registry.xiom-lang.org/packages/xiom-std`. Record the intended compiler
+   at the FIRST publish: move `COMPILER_VERSION` to `v0.65.4` before
+   tagging, or pass `compiler=v0.65.4` on that first dispatch. Do not plan
+   a post-publish override: versions are immutable and a re-publish returns
+   409 `version_exists`, so the already-live 0.65.4 record (compiler
+   `v0.64.8`) cannot be corrected through the publish API
+   (REL-20261031-1554-stdlib).
 6. **Coordinate**: reply on the relay item with tag/SHA/run/registry; the
    compiler lane pins `STDLIB_VERSION=stdlib-v<version>` (the automated pin
    PR may hit the token-scope gap; the branch is still pushed). The
