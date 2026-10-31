@@ -75,21 +75,21 @@ Readiness gates (the meter above counts these; each is backed by the battery
 recorded in the updates below). Update the two lines above and this list as
 gates flip:
 1. Modules type-check clean -- MET (533/533).
-2. Smoke corpus green -- MET: merged 963/963 on v0.64.8 (0/0),
+2. Smoke corpus green -- MET: merged 963/963 on v0.65.4 (0/0),
    including the directory-rename regression; plus 963/963 on both
-   Windows and Ubuntu release gates, no carve-outs.
-3. Probe corpus green -- MET (418/418; the gate-9 set, the h2 frame-I/O
-   probe, p_http_parse_alloc, p_wave298_sse_wire,
-   p_wave298_h2_conn_mux and the earlier waves are included and
-   individually green).
+   Windows and Ubuntu release gates (dry-run 41217827358), no carve-outs.
+3. Probe corpus green -- MET (422/422; includes the gate-9 set,
+   p_wave176_shapes with the kqueue row, p_socket_ffi_width,
+   p_socket_sigpipe, the h2/SSE probes and the earlier waves; 422/422 on
+   the merged kqueue tree with the official v0.65.4 archive).
 4. Strict bare-name scan clean -- MET (0/533).
 5. Coverage ratchet green -- MET (floors197).
 6. Documentation ratchet 100% -- MET.
-7. Module-smoke ratchet green -- MET (499/542 modules, 3501/6575 fns).
+7. Module-smoke ratchet green -- MET (499/543 modules, 3505/6664 fns).
 8. Contract coverage 100% outside the documented no-clause tail -- MET
-   (wave 208, 2026-10-25, refreshed 2026-10-28: every non-tail public fn
-   carries a clause; non-tail 100%, global 95.9%, 6697/6982; clauses/fns
-   97.8%, 9224 clauses; floors197). The remaining 285 public fns are the
+   (wave 208, 2026-10-25, refreshed 2026-10-31: every non-tail public fn
+   carries a clause; non-tail 100%, global 95.9%, 6703/6988; clauses/fns
+   97.8%, 9234 clauses; floors197). The remaining 285 public fns are the
    documented no-clause tail: iter 70.5%, os 71.5%, math 90.7%, thread
    91.1%, ffi 94.5%, serialize 94.7%, format 95.2% (no non-tautological
    clauses left; no clause waves in the tail).
@@ -150,11 +150,12 @@ gates flip:
    Historical: v0.65.1 was 9/10 (only 1609); v0.64.8 results are in the
    updates below.
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- MET
-    (stdlib-v0.65.2 released 2026-10-27; tag object `e041aae` -> commit
-    `7d4d48f`; release run 40523878342; assets + SHA256SUMS published;
-    registry xiom-std 0.65.2 live via run 40523878370; compiler v0.65.2
-    pins STDLIB_VERSION; tags frozen. stdlib-v0.65.1 `9dc69b3` and 0.65.0
-    remain released/immutable.)
+    (stdlib-v0.65.4 released 2026-10-30 at `d267317`, run 41117752917;
+    registry xiom-std 0.65.4 live (sha256 `12111688...`, run 41117752919);
+    compiler v0.65.4 pins STDLIB_VERSION; tags frozen. v0.65.5 prep
+    (`release/v0.65.5-prep`) has dry-run 41217827358 green and awaits the
+    owner GO. Earlier 0.65.0/0.65.1/0.65.2/0.65.3 tags remain
+    released/immutable.)
 
 Meter formula: MET gates count 1.0; gate 9 gets no partial credit
 (discrete). 9 / 10 = 90%. Gate 8 is MET via the non-tail 100% rule
