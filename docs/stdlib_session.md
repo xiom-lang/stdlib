@@ -27,7 +27,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 118 + block 309 + blocks 308/307/306.
+Read docs/stdlib_session.md snapshot 118 + block 310 + blocks 309/308/307.
 
 STATE (2026-10-31):
 - v0.65.4 SHIPPED: stdlib tag stdlib-v0.65.4 -> d267317 (registry xiom-std
@@ -46,6 +46,17 @@ STATE (2026-10-31):
   coverage OK (thread 91.5%), doc 100%, module-smoke OK, gate9 OK.
   The pool is NOT in v0.65.4/d267317; it needs the next stdlib tag
   (v0.65.5) and a compiler pin/rebuild to reach users.
+- POST-v0.65.4 TAIL (1a17405, block 310): engine P1/P2 gaps delivered --
+  Vec.swap_remove + Vec.sort_by method, io.eprintln/flush_stderr,
+  io.normalize_path + backslash-aware join_paths; probe
+  p_engine_p1p2_gaps. This also rides v0.65.5.
+- RELAY 2026-10-31: every item addressed to stdlib is resolved except
+  2202 (kqueue/packages-brotli-zstd/Send-Sync residuals) and 1704
+  (compiler m375 = gate 9), both intentionally acked. Old acked info
+  items were fixed for reporter closeout; stdlib's own fixed/verified
+  compiler rows were verified+closed on v0.65.4. Compiler was asked
+  (REL-20261031-1542-stdlib) to pin stdlib-v0.65.5 for the next
+  candidate so the pool reaches users.
 - READINESS: 90% -- 9/10 gates MET. Gate 9 (zero open findings) is the
   only open gate and its sole blocker is compiler-side 1704/m375 (JsonValue
   drop glue). Stdlib halves are done; 10k/256 MB target is met; trend
@@ -70,7 +81,8 @@ PRIORITY 0 -- SHIP THE POOL (next release):
   on the tag (probes 421+). The runtime is compiled from the stdlib tree,
   so the compiler build must pin the new tag to carry the pool.
 - Tell the compiler the tag/sha so it can rebuild/pin (needed for arm64 +
-  pool runtime).
+  pool runtime). Pin coordination item is open: REL-20261031-1542-stdlib;
+  v0.65.5 also carries the engine P1/P2 gaps from 1a17405.
 
 PRIORITY 1 -- GATE 9 / READINESS:
 - Drive 1704 to closure with the compiler lane: m375 owned-payload drop
@@ -80,9 +92,12 @@ PRIORITY 1 -- GATE 9 / READINESS:
   runs smokes, not probes). The backend draft follows the xiom_eventloop_*
   ABI (EV_RECEIPT ctl, 256 cap, EOF/ERR parity).
 
-PRIORITY 2 -- CLOSEOUTS:
-- 1531 xvector verify; 2202 residuals (packages/compiler); old acked info
-  items (reporters close); coverage tail stays no-clause.
+PRIORITY 2 -- CLOSEOUTS (mostly done 2026-10-31):
+- DONE: old acked info items fixed for reporter closeout; stdlib's own
+  fixed/verified compiler+registry rows verified+closed on v0.65.4.
+- Remaining: 1531 xvector verify (their side); 2202 residuals
+  (kqueue macOS witness / packages brotli-zstd / compiler Send-Sync);
+  1704 compiler m375. Coverage tail stays no-clause.
 - Registry compiler-field override decision (v0.65.4) if the compiler asks.
 
 RULES:
