@@ -17,9 +17,89 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 117 (updated 2026-10-31; **REL-20261010-1834-engine-6 DELIVERED: real persistent worker pool + real arg channel; `spawn_with` is a real OS thread; Windows 30/30 stress + Linux 5/5; p_wave78 inline assumption fixed. 2202 item 4 done. Residual 2202: kqueue (gated on a macOS witness -- heavy macOS leg still red), RFC brotli/zstd (registry packages), Send/Sync (compiler). v0.65.4 remains the released tag; the pool lands on main for the next release**)
+## 0A. CONTINUE HERE -- handoff snapshot 118 (updated 2026-10-31; **v0.65.4 SHIPPED (stdlib d267317 + compiler v0.65.4 released; registry 0.65.4; pin confirmed; PR #10 closed). 1834 DELIVERED on main a0e91cd -- persistent worker pool + real arg channel + real spawn_with; Windows 30/30, Linux 5/5, final battery probes 421/421, smokes 963/963, modules 533/533. The pool is post-v0.65.4 -> needs stdlib-v0.65.5 + compiler pin. READINESS 9/10: gate 9 blocked ONLY by compiler 1704/m375 drop glue. kqueue gated on a macOS witness; 1531 awaits xvector; 2202 residuals = kqueue/packages-brotli-zstd/Send-Sync**)
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-31, snapshot 117)
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-31, snapshot 118)
+
+```
+Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
+  git pull --ff-only origin main
+  git -C E:\xiom-lang\xiom-relays fetch origin
+  git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
+  python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
+Read docs/stdlib_session.md snapshot 118 + block 309 + blocks 308/307/306.
+
+STATE (2026-10-31):
+- v0.65.4 SHIPPED: stdlib tag stdlib-v0.65.4 -> d267317 (registry xiom-std
+  0.65.4 live, sha 12111688..., compiler field v0.64.8, run 41117752919);
+  compiler v0.65.4 released (2026-10-30T23:35Z) and xiom main pins
+  STDLIB_VERSION=stdlib-v0.65.4. RC windows sha efe7af95 verified; bundled
+  stdlib 0.65.4; stdlib confirmed the pin (REL-20261030-2310-stdlib);
+  pin PR #10 closed as redundant.
+- POST-v0.65.4 MAIN: a0e91cd delivers REL-20261010-1834-engine-6:
+  runtime xiom_workerpool_* (persistent fleet, bounded FIFO, real join,
+  shutdown wake/join, active/completed), xiom.thread.pool handle, real
+  tp_submit_with, real spawn_with via xiom_thread_spawn_with_arg. Probes
+  p_wave_workerpool (new), p_wave153 row 4, p_wave145 row 7; p_wave78
+  updated (no longer inline). Windows 30/30 + Linux 5/5; final tree
+  probes 421/421, smokes 963/963, modules 533/533, barename 0/533,
+  coverage OK (thread 91.5%), doc 100%, module-smoke OK, gate9 OK.
+  The pool is NOT in v0.65.4/d267317; it needs the next stdlib tag
+  (v0.65.5) and a compiler pin/rebuild to reach users.
+- READINESS: 90% -- 9/10 gates MET. Gate 9 (zero open findings) is the
+  only open gate and its sole blocker is compiler-side 1704/m375 (JsonValue
+  drop glue). Stdlib halves are done; 10k/256 MB target is met; trend
+  ~2.3 KB/iter. 1641/channel/huffman are verified+closed; known_failures
+  30 pass + 1 intended, 0 unexpected.
+- 2202: item 4 done (pool). Residuals: kqueue (macOS/BSD) gated on a green
+  macOS witness; RFC 7932 brotli/zstd are registry packages; Send/Sync is
+  compiler. 1550 superseded for the fleet (Send/Sync remains).
+- 1834 is fixed on the bus awaiting engine acceptance/numbers.
+- 1531-xvector is fixed (not reproduced) awaiting xvector verify.
+- Registry: 0.65.4 records compiler v0.64.8; the compiler-field override
+  to v0.65.4 (publish-registry.yml, no retag) is still undecided.
+- HYGIENE: never extract compiler archives under the stdlib repo. Duplicate
+  xiom/* trees caused random compiler warnings/AVs. Archives live under
+  %TEMP%\kilo\stdlib_archives\; out/ leftovers + smoke_diag_f128_* are
+  untracked.
+
+PRIORITY 0 -- SHIP THE POOL (next release):
+- With owner GO and a compiler pin: package.xi 0.65.5, CHANGELOG [0.65.5],
+  release-notes/v0.65.5.md, docs snapshot; tag stdlib-v0.65.5, release run,
+  registry publish, verify, post tag/SHA/run/registry. Re-run the battery
+  on the tag (probes 421+). The runtime is compiled from the stdlib tree,
+  so the compiler build must pin the new tag to carry the pool.
+- Tell the compiler the tag/sha so it can rebuild/pin (needed for arm64 +
+  pool runtime).
+
+PRIORITY 1 -- GATE 9 / READINESS:
+- Drive 1704 to closure with the compiler lane: m375 owned-payload drop
+  glue; then PULSE re-runs probe_alloc_aggregate + capped bttger on that
+  pin; stdlib verifies 10k/256 MB; gate 9 flips and readiness reads 100%.
+- kqueue: only after a green macOS witness (heavy macOS is red; heavy.yml
+  runs smokes, not probes). The backend draft follows the xiom_eventloop_*
+  ABI (EV_RECEIPT ctl, 256 cap, EOF/ERR parity).
+
+PRIORITY 2 -- CLOSEOUTS:
+- 1531 xvector verify; 2202 residuals (packages/compiler); old acked info
+  items (reporters close); coverage tail stays no-clause.
+- Registry compiler-field override decision (v0.65.4) if the compiler asks.
+
+RULES:
+- No clause waves; io.list_dir runtime-owned; json_clear(&mut) hangs; no
+  mutable-enum recursion.
+- Relay pulls: fetch + merge --ff-only; never move released tags.
+- No tag/release without the owner's explicit GO.
+- Compiler archives only under %TEMP%, never inside the repo.
+
+DELIVERABLE: v0.65.5 ships the pool; 1704 closes -> gate 9 -> 100%; kqueue
+waits for macOS.
+```
+---
+
+## 0A-117. PREVIOUS HANDOFF -- snapshot 117 (updated 2026-10-31; **REL-20261010-1834-engine-6 DELIVERED: real persistent worker pool + real arg channel; `spawn_with` is a real OS thread; Windows 30/30 stress + Linux 5/5; p_wave78 inline assumption fixed. 2202 item 4 done. Residual 2202: kqueue (gated on a macOS witness -- heavy macOS leg still red), RFC brotli/zstd (registry packages), Send/Sync (compiler). v0.65.4 remains the released tag; the pool lands on main for the next release**)
+
+## 0C-117. NEXT-SESSION PROMPT (2026-10-31, snapshot 117 -- SUPERSEDED by snapshot 118)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
@@ -4140,6 +4220,50 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-31 block 309 (v0.65.4 shipped + verified; pool on main for v0.65.5; readiness 9/10 -- gate 9 = 1704 only)**
+- **v0.65.4 release verification.** RC windows zip sha256
+  `efe7af95...` matched REL-20261030-2212; `xiom --version` 0.65.4;
+  bundled `lib/package.xi` 0.65.4 (pin stdlib-v0.65.4 = d267317).
+  Against the bundled stdlib: p_wave162 5/5, 1641 witness 5/5,
+  p_socket_ffi_width 5/5, p_socket_sigpipe 5/5, gate9 10/10 + 30 pass +
+  1 intended/0 unexpected. Posted REL-20261030-2310-stdlib; PR #10 closed
+  as redundant (xiom main pins stdlib-v0.65.4). Compiler v0.65.4 released
+  2026-10-30T23:35Z.
+- **1834 delivered on main a0e91cd** (post-v0.65.4):
+  - runtime `xiom_workerpool_create/submit/submit_with/join/shutdown/
+    destroy/active/completed/size`: persistent workers on one condvar,
+    bounded FIFO, true completion point, shutdown wake+join; named
+    `fn(Int)` called as `void(long long)` (capturing closures are env
+    pointers, not bare code).
+  - `xiom.thread.pool` is a handle to that runtime; `tp_submit_with` runs
+    on a worker; `tp_active`/`tp_completed` real; `tp_destroy`.
+  - `xiom_thread_spawn_with_arg` + real `spawn_with`.
+  - Probes: new `p_wave_workerpool`; p_wave153 row 4; p_wave145 row 7;
+    p_wave78 updated to join (no longer inline). A/B: SIGPIPE old runtime
+    141 x3 vs new 0 x5 on Linux; pool 30/30 Windows + 5/5 Linux; fresh
+    pool builds 20/20 each.
+  - Final battery on the pool tree: probes **421/421** (1081.1s), smokes
+    **963/963** (1462.3s), modules **533/533** (919.4s), barename
+    **0/533** (1727.5s), coverage **OK** (thread 91.5%), doc **100%**,
+    module-smoke **OK**, gate9 **OK**.
+  - Relay: 1834 -> fixed; 2202 acked-note item 4 done; 1550 superseded
+    (new REL-20261031-0018-stdlib).
+- **Archive hygiene discovery.** Extracted compiler archives under
+  `out/` made the compiler discover duplicate `xiom/*` module trees,
+  producing W001 warnings and random rc=-1/0xC0000005 crashes (including
+  a false "pointer ensures" lead). Moved to
+  `%TEMP%\kilo\stdlib_archives\`; repo-clean runs are 421/421 and
+  533/533. Never extract archives inside the repo.
+- **Readiness = 9/10 (90%).** Gates 1-8 + release gate MET. Gate 9 (zero
+  open findings) is open solely on compiler 1704/m375 (JsonValue drop
+  glue); 1641/channel/huffman are verified+closed and known_failures are
+  30 pass + 1 intended/0 unexpected. The 10k/256 MB target is met; the
+  trend is ~2.3 KB/iter. Gate 9 flips when the compiler lands drop glue
+  and PULSE re-runs.
+- **Next:** cut stdlib-v0.65.5 (pool) with owner GO; compiler pins it.
+  kqueue waits on a macOS witness; brotli/zstd are packages; Send/Sync
+  is compiler; registry compiler-field override is an open decision.
 
 **SESSION 2026-10-31 block 308 (REL-20261010-1834-engine-6 delivered: persistent worker pool + real arg channel; spawn_with real)**
 - Runtime: new `xiom_workerpool_*` API in `runtime/xiom_runtime.c` -- N
