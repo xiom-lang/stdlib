@@ -4236,6 +4236,37 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
+**SESSION 2026-10-31 block 312 (readiness wave: kqueue wave 178 DELIVERED -- macOS witness 41226381281 green; full battery green; kqueue is post-v0.65.5-candidate)**
+- **kqueue (2202 item 10) delivered on main `699e73f`** (merged from
+  `feat/kqueue-backend`):
+  - runtime `#elif __APPLE__ || __FreeBSD__` backend: `kqueue()` create;
+    `EVFILT_READ/WRITE` add/delete; modify rebuilds the interest set;
+    remove is idempotent; `EV_RECEIPT` ctl treats a successful change
+    (EV_ERROR data 0) as success; wait coalesces the two filters of one fd
+    into one event, matching epoll/WSAPoll; `EV_EOF` maps to
+    readable/writable + error bit.
+  - `xiom.net.socket`: `eventloop_new` contract no longer asserts macOS
+    Err; the wrapper docs and `docs/EVENT_LOOP_PLAN.md` wave 178 box are
+    updated.
+  - Probe `p_wave176_shapes` now runs the POSIX rows on macOS too.
+  - **macOS witness run 41226381281 (macos-15) GREEN**: compiler build +
+    `p_wave176_shapes` pass. New focused workflow
+    `.github/workflows/macos-eventloop.yml` (macos-15; macos-14 is in
+    brownout).
+  - Full battery on the merged tree with the official v0.65.4 archive:
+    probes **422/422**, smokes **963/963**, modules **533/533**, barename
+    **0/533**, gate9 OK (10/10 + 30 pass + 1 intended), coverage/doc/
+    module-smoke ratchets OK. Linux `p_wave176_shapes` green in WSL.
+  - **Not in the v0.65.5 candidate:** `release/v0.65.5-prep` is frozen at
+    the pre-kqueue commit and its dry-run 41217827358 is green. If kqueue
+    is wanted in v0.65.5, merge main into the prep branch and re-run the
+    dry-run; otherwise it rides the next tag.
+- **Readiness queue refreshed** (`docs/PRODUCTION_READINESS_QUEUE.md`):
+  current pin v0.65.4, gates 422/963/533/0, gate 9 still only 1704/m375,
+  v0.65.5 prep green, new compiler findings 1552/1600, kqueue delivered.
+- **2202 residual status:** kqueue resolved; only packages brotli/zstd and
+  compiler Send/Sync remain on that item. 1704 and 1531 unchanged.
+
 **SESSION 2026-10-31 block 311 (v0.65.5 release prep refreshed -- no bump/tag; new compiler finding: by-value fn accepted as fn(&T) and misreads the payload)**
 - **v0.65.5 release prep (docs only; no version bump, no tag, no registry
   write).** `docs/RELEASE_DRY_RUN.md` now records the candidate as main
