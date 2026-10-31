@@ -27,7 +27,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 118 + block 315 + blocks 314/313/312.
+Read docs/stdlib_session.md snapshot 118 + block 316 + blocks 315/314/313.
 
 STATE (2026-10-31):
 - v0.65.4 SHIPPED: stdlib tag stdlib-v0.65.4 -> d267317 (registry xiom-std
@@ -4235,6 +4235,36 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-31 block 316 (compiler verified 2156 on rebuilt f537b1b14+7d47924 -- shapes flat; 1704 JSON path still linear; gate 9 remains the release blocker)**
+- **2156 VERIFIED by compiler on the rebuilt pair** (compiler `f537b1b14`,
+  stdlib `7d47924`, paired toolchain `%TEMP%\kilo\toolchain-7d47924`):
+  p_structstr 255/259 -> **5/33** MB, p_structstr_small 117/151 -> 5/33,
+  p_vecstr 329/364 -> 9/35, isolated str_repeat 210/242 -> 5/33,
+  p_panel_move 337/368 -> 5/34, p_vecrebind 30k -> 5/33. The compiler half
+  of the copy leak (confined-block Str copy-out) is fixed in f537b1b14
+  using `xiom_guard_copy_out_if_arena` + a scope-exit free for non-returned
+  Str rebind accumulators. Item moved fixed -> verified.
+- **2156 reconciliation:** the exact stdlib shapes are committed as
+  `tools/probes/p_2156_memory_shapes.xi` (modes struct|vecstr|repeat|cstring,
+  `PROBE_ITERS`). On the paired rebuilt toolchain at 20k: struct 4.9 MB,
+  vecstr 4.9 MB, repeat 4.4 MB, cstring <1 MB -- matches the compiler's
+  5/33 WS/private. Our earlier 5.8 MB note was the old sampler/iteration
+  count, not a shape difference.
+- **CRITICAL -- 1704 is NOT closed by f537b1b14.** `p_json_1704_obj` on the
+  paired rebuilt toolchain: **14.1 / 77.4 / 271.5 MB at 10k / 20k / 100k**
+  with `XIOM_STDLIB=repo`, and 68.6 MB at 20k with the paired stdlib (no
+  override) -- still linear ~2-3 KB/iter. The string/struct/Vec copy leaks
+  are gone, but the JsonValue/JSON-builder aggregate drop still leaks. This
+  is the remaining gate-9 blocker and the engine 600-frame soak risk if the
+  soak uses JSON. Filed **REL-20261031-2308-stdlib** (high) to compiler with
+  the probe paths/commands and the reconciliation. Compiler-side remaining:
+  p_mapstr 27/55, p_remove 297/313, plus this JSON shape.
+- **Candidate:** `release/v0.65.5-prep` `7d47924` (docs 673df3d) carries the
+  2156 fixes; dry-run **41248000167 SUCCESS** (validate, Windows
+  22:24-23:16, Ubuntu 22:24-23:03, package; release/pin/canary skipped).
+  Local probes **425/425** after the 2156 fixes. No tag: the 1704 JSON
+  reclaim, compiler rebuild, and engine 600-frame soak are still open.
 
 **SESSION 2026-10-31 block 315 (CRITICAL 2156: str_concat/from_cstring copy-leak fixed; t8/t9 runtime pieces 1949; wave 315 function calls; candidate must be re-cut)**
 - **REL-20261031-2156-compiler (high) -- source leaks fixed on main:**

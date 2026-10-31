@@ -48,27 +48,29 @@ package staging, **no release, no pin PR, no registry canary**.
 
 ## 2. Dry-run executed (workflow path)
 
-The v0.65.5 dry-run was dispatched on `release/v0.65.5-prep` with
-`version=0.65.5` and no `tag` input: run **41217827358** completed
-**success** on 2026-10-31T16:57:36Z.
+The current v0.65.5 dry-run was dispatched on `release/v0.65.5-prep`
+(candidate `7d47924`) with `version=0.65.5` and no `tag` input: run
+**41248000167** completed **success** on 2026-10-31T23:16:54Z.
 
 - **validate package.xi**: green (version 0.65.5, compiler range).
-- **release gates (windows-latest)**: green, 16:04 to 16:57 (compiler build,
-  smoke corpus, modules, barename, coverage, module-smoke).
-- **release gates (ubuntu-latest)**: green, 16:04 to 16:44.
+- **release gates (windows-latest)**: green, 22:24 to 23:16 (compiler
+  build, 964 smokes, modules, barename, coverage, module-smoke).
+- **release gates (ubuntu-latest)**: green, 22:24 to 23:03.
 - **package**: green (deterministic tarball, SHA256SUMS, attestation).
 - **Create GitHub Release**: SKIPPED (no tag input).
 - **STDLIB_VERSION pin PR**: SKIPPED.
 - **staging registry canary**: SKIPPED.
 
-No release, pin PR, or registry write was created. The earlier `0.65.2`
-dry-run (40683465791) also passed and remains history.
+No release, pin PR, or registry write was created. The earlier
+`0.65.5` dry-run 41217827358 (pre-kqueue/2156) and `0.65.2` dry-run
+40683465791 also passed and remain history.
 
 Local battery on the candidate tree with the official v0.65.4 windows-x64
 archive and `XIOM_STDLIB` set to this checkout:
 
-- probes **422/422** (new `p_engine_p1p2_gaps` included)
-- smokes **963/963**
+- probes **425/425** (`p_engine_p1p2_gaps`, `p_json_1704_obj`,
+  `p_guard_uaf`, `p_2156_memory_shapes` included)
+- smokes **964/964**
 - modules **533/533**
 - barename **0/533**
 - gate9 **OK**: 10/10 + 30 known-failure pass + 1 intended T001, 0
