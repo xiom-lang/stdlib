@@ -21,8 +21,9 @@ owner-decision proposal: `package.xi` 0.65.5, `COMPILER_VERSION` v0.65.4,
 CHANGELOG [0.65.5], and `release-notes/v0.65.5.md` (two highlights; the
 local validator merges it green against a placeholder compiler file).
 Main is NOT bumped: merge and tag only on the owner's GO. No tag,
-release, or registry write exists for 0.65.5. Dry-run **41248000167** is
-running on `7d47924`.
+release, or registry write exists for 0.65.5. Dry-run **41248000167**
+completed **success** on candidate `7d47924` (validate, Windows/Ubuntu
+gates, package; release/pin/canary skipped).
 
 ## 1. What `.github/workflows/release.yml` does
 
