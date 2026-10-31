@@ -4253,7 +4253,13 @@ registry pin, agent recon for the rest)**
   notes the owner decisions: version (proposed 0.65.5), COMPILER_VERSION
   (current v0.64.8; recommended v0.65.4), tag commit.
   `docs/RELEASE_CHECKLIST.md` was refreshed from the stale v0.64.2/v0.64.3
-  references.
+  references. The owner-decision proposal is on
+  `release/v0.65.5-prep` (package 0.65.5, COMPILER_VERSION v0.65.4,
+  CHANGELOG [0.65.5], release-notes/v0.65.5.md, validator green); main is
+  NOT bumped. Dry-run **41217827358 SUCCESS** on that branch: validate
+  green; windows gates 16:04 to 16:57; ubuntu gates 16:04 to 16:44;
+  package green; GitHub Release, pin PR and registry canary correctly
+  SKIPPED (no tag input). No release or registry write exists.
 - **New compiler finding REL-20261031-1552-stdlib (bug/high).** On the
   official v0.65.4 windows archive a by-value fn is accepted where
   `fn(&(Int,Int))->Bool` is required and then called with the reference
