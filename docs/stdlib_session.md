@@ -27,7 +27,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 118 + block 316 + blocks 315/314/313.
+Read docs/stdlib_session.md snapshot 118 + block 317 + blocks 316/315/314.
 
 STATE (2026-10-31):
 - v0.65.4 SHIPPED: stdlib tag stdlib-v0.65.4 -> d267317 (registry xiom-std
@@ -4235,6 +4235,35 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-10-31 block 317 (2337 Map/Set Str ownership annotations landed; p_mapstr witness; 426/426 probes; candidate 720e578; no tag)**
+- **REL-20261031-2337-compiler (high) stdlib half done** on candidate
+  `9c26a88` (main `448539d`, branch merge `720e578`):
+  - `#[owns_return]`: `string_map_new` in both `xiom.collect.stringmap`
+    and `xiom.collect.intmap` (same leaf, both marked),
+    `string_str_map_new`, `radix_new`.
+  - `#[consumes_str]`: `string_map_put` (both modules),
+    `string_str_map_put`, `radix_insert`. `_grow`/`_ssm_grow` store no
+    Str, so no annotation.
+  - Contract details sent to compiler: StringMap/OrderedStringMap update
+    paths store only the Int value (free the consumed key);
+    StringStrMap update overwrites the old value (free it) and does not
+    store the key (free it); `radix_insert` also overwrites
+    `labels`/`keys` and discards keys on no-op paths (needs owned-overwrite
+    handling or disqualify radix). Gets return borrowed `Option[Str]`
+    pointers; remove retains payloads; aggregate drop frees all Vec
+    elements (live+dead).
+  - Witness `tools/probes/p_mapstr_shapes.xi` (2 KiB key + 2 KiB value,
+    5k) peaks **23.3 MB WS** on f537b1b14, matching the compiler's 27/55;
+    the contract should bring it to the ~20 MB payload floor.
+  - Attributes are accepted by v0.65.4 and f537b1b14 (unknown attrs
+    ignored); intmap/hasharray/radix smokes pass. Full probes
+    **426/426**. Compiler half (the `#[consumes_str]` semantics) is
+    pending.
+- **Dry-run 41254550320** is running on the annotated branch `720e578`
+  (package 0.65.5). The previous 41248000167 on `7d47924` was green.
+- **1704 JSON path remains open** (14.1/77.4/271.5 MB at 10k/20k/100k on
+  the rebuilt pair); `p_mapstr` contract and engine soak remain. No tag.
 
 **SESSION 2026-10-31 block 316 (compiler verified 2156 on rebuilt f537b1b14+7d47924 -- shapes flat; 1704 JSON path still linear; gate 9 remains the release blocker)**
 - **2156 VERIFIED by compiler on the rebuilt pair** (compiler `f537b1b14`,
