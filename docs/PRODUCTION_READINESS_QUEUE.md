@@ -120,10 +120,15 @@ Owner GO pending; main is not bumped.
   (`abe757e`, code `7b7583c`): validate, Ubuntu, Windows, package;
   release/pin/canary skipped. Earlier 41248000167 (`7d47924`) and
   41254550320 (`720e578`) were also green. Local probes **426/426**.
-- **Owner GO relayed** (0201) and **map gate closed** (0232). **Only the
-  engine 600-frame soak + 120-frame control remains** (2243; engine acked
-  at 02:07Z, rebuilding). No tag until the engine numbers + compiler
-  final GO on 0144; v0.65.4 remains current.
+- **Owner GO relayed** (0201) and **map gate closed** (0232). **Engine
+  soak RED** on the older pair (0411): 600 frames killed at 2 GB, slope
+  ~2.9 MB/frame; cause is engine-side `&mut` Vulkan UI builders, not the
+  stdlib map work. Compiler slice **b5b8c66e8** adds `#[borrows_vec]`
+  (caller keeps/drops the Vec header); engine is annotating the six
+  builders and re-soaking on the immutable final pair (b5b8c66e8 +
+  stdlib 7b7583c). Stdlib candidate 7b7583c is accepted and unchanged.
+  No tag until the re-soak is <2 GB and <=0.5 MB/frame + compiler final
+  GO on 0144; v0.65.4 remains current.
 
 ### 2026-10-30 addendum -- v0.65.3 release + v0.65.4 socket patch
 - v0.65.3 released (tag 26ede85) and the registry verified; the compiler
