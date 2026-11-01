@@ -5,15 +5,16 @@ pre-cut package: what the workflow does, the dry-run that was executed, the
 exact GO checklist, and a draft of the next release notes. The version
 number and `COMPILER_VERSION` pin are the owner's decision.
 
-**Verified candidate (2026-10-31, updated):** stdlib main `11fb9b2`; the
-candidate branch `release/v0.65.5-prep` is at `7d47924`. It carries the
-persistent worker pool with real arguments (`a0e91cd`), the engine P1/P2
-gaps (`1a17405`), the kqueue backend (wave 178, macOS witness
-41226381281), the readiness wave-313/315 coverage, the Win64
-`__fixdfti` family and per-thread fault handlers, and the critical 2156
-string copy-leak fix (all local `from_cstring(malloc(...))` sites free
-the source; `cstring.from_cstring` no longer builds an intermediate Vec).
-The compiler rebuild (`683c77d5b` or later) is required for the engine
+**Verified candidate (2026-11-01, updated):** stdlib main `21aef98`
+(code `ec9af22`); the candidate branch `release/v0.65.5-prep` is at
+`abe757e` (code `7b7583c`). It carries the persistent worker pool with
+real arguments (`a0e91cd`), the engine P1/P2 gaps (`1a17405`), the kqueue
+backend (wave 178, macOS witness 41226381281), the readiness wave-313/315
+coverage, the Win64 `__fixdfti` family and per-thread fault handlers, the
+2156 string copy-leak fix, and the 2337/0116 map ownership contract
+(`#[owns_return]` constructors, consuming `_owned` mutators with
+update-path frees; borrowing `put` stays literal-safe; radix unannotated).
+The compiler rebuild (`f3e18120a` or later) is required for the engine
 soak; no tag until that and the soak are green.
 
 **Prepared branch (2026-10-31):** `release/v0.65.5-prep` carries the
@@ -21,9 +22,11 @@ owner-decision proposal: `package.xi` 0.65.5, `COMPILER_VERSION` v0.65.4,
 CHANGELOG [0.65.5], and `release-notes/v0.65.5.md` (two highlights; the
 local validator merges it green against a placeholder compiler file).
 Main is NOT bumped: merge and tag only on the owner's GO. No tag,
-release, or registry write exists for 0.65.5. Dry-run **41248000167**
-completed **success** on candidate `7d47924` (validate, Windows/Ubuntu
-gates, package; release/pin/canary skipped).
+release, or registry write exists for 0.65.5. Dry-runs **41248000167**
+(`7d47924`) and **41254550320** (`720e578`) completed **success**;
+**41263228033** is running on the current `_owned` candidate `7b7583c`
+(validate green; gates in progress). No tag until the engine soak and
+the compiler's final GO.
 
 ## 1. What `.github/workflows/release.yml` does
 
@@ -49,9 +52,11 @@ package staging, **no release, no pin PR, no registry canary**.
 
 ## 2. Dry-run executed (workflow path)
 
-The current v0.65.5 dry-run was dispatched on `release/v0.65.5-prep`
-(candidate `7d47924`) with `version=0.65.5` and no `tag` input: run
-**41248000167** completed **success** on 2026-10-31T23:16:54Z.
+The current v0.65.5 dry-run **41263228033** was dispatched on
+`release/v0.65.5-prep` (candidate `7b7583c`) with `version=0.65.5` and no
+`tag` input; validate is green and the gate legs are in progress. The
+previous **41248000167** (`7d47924`) completed **success** on
+2026-10-31T23:16:54Z: the bullets below are its gate record.
 
 - **validate package.xi**: green (version 0.65.5, compiler range).
 - **release gates (windows-latest)**: green, 22:24 to 23:16 (compiler
