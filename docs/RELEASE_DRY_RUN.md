@@ -62,15 +62,19 @@ The current v0.65.5 dry-run was dispatched on `release/v0.65.5-prep`
 - **STDLIB_VERSION pin PR**: SKIPPED.
 - **staging registry canary**: SKIPPED.
 
-No release, pin PR, or registry write was created. The earlier
-`0.65.5` dry-run 41217827358 (pre-kqueue/2156) and `0.65.2` dry-run
-40683465791 also passed and remain history.
+No release, pin PR, or registry write was created. The annotated
+candidate `720e578` (map/Str ownership `9c26a88` + docs) was dry-run
+again: run **41254550320 SUCCESS** (validate, Ubuntu 23:56-00:19,
+Windows 23:56-00:25, package; release/pin/canary skipped). The earlier
+`0.65.5` dry-runs 41217827358 (pre-kqueue/2156) and 41248000167
+(pre-2337) and `0.65.2` dry-run 40683465791 also passed and remain
+history.
 
 Local battery on the candidate tree with the official v0.65.4 windows-x64
 archive and `XIOM_STDLIB` set to this checkout:
 
-- probes **425/425** (`p_engine_p1p2_gaps`, `p_json_1704_obj`,
-  `p_guard_uaf`, `p_2156_memory_shapes` included)
+- probes **426/426** (`p_engine_p1p2_gaps`, `p_json_1704_obj`,
+  `p_guard_uaf`, `p_2156_memory_shapes`, `p_mapstr_shapes` included)
 - smokes **964/964**
 - modules **533/533**
 - barename **0/533**

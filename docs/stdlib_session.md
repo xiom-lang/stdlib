@@ -4239,31 +4239,23 @@ registry pin, agent recon for the rest)**
 **SESSION 2026-10-31 block 317 (2337 Map/Set Str ownership annotations landed; p_mapstr witness; 426/426 probes; candidate 720e578; no tag)**
 - **REL-20261031-2337-compiler (high) stdlib half done** on candidate
   `9c26a88` (main `448539d`, branch merge `720e578`):
-  - `#[owns_return]`: `string_map_new` in both `xiom.collect.stringmap`
-    and `xiom.collect.intmap` (same leaf, both marked),
-    `string_str_map_new`, `radix_new`.
-  - `#[consumes_str]`: `string_map_put` (both modules),
-    `string_str_map_put`, `radix_insert`. `_grow`/`_ssm_grow` store no
-    Str, so no annotation.
-  - Contract details sent to compiler: StringMap/OrderedStringMap update
-    paths store only the Int value (free the consumed key);
-    StringStrMap update overwrites the old value (free it) and does not
-    store the key (free it); `radix_insert` also overwrites
-    `labels`/`keys` and discards keys on no-op paths (needs owned-overwrite
-    handling or disqualify radix). Gets return borrowed `Option[Str]`
-    pointers; remove retains payloads; aggregate drop frees all Vec
-    elements (live+dead).
-  - Witness `tools/probes/p_mapstr_shapes.xi` (2 KiB key + 2 KiB value,
-    5k) peaks **23.3 MB WS** on f537b1b14, matching the compiler's 27/55;
-    the contract should bring it to the ~20 MB payload floor.
-  - Attributes are accepted by v0.65.4 and f537b1b14 (unknown attrs
-    ignored); intmap/hasharray/radix smokes pass. Full probes
-    **426/426**. Compiler half (the `#[consumes_str]` semantics) is
-    pending.
-- **Dry-run 41254550320** is running on the annotated branch `720e578`
-  (package 0.65.5). The previous 41248000167 on `7d47924` was green.
-- **1704 JSON path remains open** (14.1/77.4/271.5 MB at 10k/20k/100k on
-  the rebuilt pair); `p_mapstr` contract and engine soak remain. No tag.
+  `#[owns_return]` on `string_map_new` (both stringmap and intmap),
+  `string_str_map_new`, `radix_new`; `#[consumes_str]` on
+  `string_map_put` (both), `string_str_map_put`, `radix_insert`.
+  Update paths sent to compiler: non-stored keys must be freed on
+  update/no-op paths; StringStrMap update overwrites the old value (free
+  it); radix labels/keys overwrites need owned-overwrite handling or
+  disqualification. Gets return borrowed `Option[Str]` pointers; remove
+  retains payloads; aggregate drop frees all Vec elements.
+- Witness `tools/probes/p_mapstr_shapes.xi` (2 KiB key + 2 KiB value, 5k)
+  peaks **23.3 MB WS** on f537b1b14, matching the compiler's 27/55; the
+  contract should reach the ~20 MB payload floor. Full probes **426/426**;
+  intmap/hasharray/radix smokes pass on v0.65.4 and f537b1b14.
+- Dry-run **41254550320 SUCCESS** on the annotated branch `720e578`:
+  validate, Ubuntu 23:56-00:19, Windows 23:56-00:25, package; release/
+  pin/canary skipped. Previous 41248000167 on `7d47924` was also green.
+  1704 JSON path remains open (14.1/77.4/271.5 MB at 10k/20k/100k);
+  compiler contract + engine soak still pending. No tag.
 
 **SESSION 2026-10-31 block 316 (compiler verified 2156 on rebuilt f537b1b14+7d47924 -- shapes flat; 1704 JSON path still linear; gate 9 remains the release blocker)**
 - **2156 VERIFIED by compiler on the rebuilt pair** (compiler `f537b1b14`,
@@ -4331,13 +4323,9 @@ registry pin, agent recon for the rest)**
   module-smoke function references 3505 -> **3541/6664 (53.1%)**; modules
   remain 543/543 (100%). Full smokes **964/964**, probes **424/424**,
   modules 533/533, barename 0/533, gate9 and ratchets OK.
-- **Prep branch:** `release/v0.65.5-prep` merged main (2156 + wave 315 +
-  kqueue + runtime fixes); it keeps `package.xi` 0.65.5,
-  `COMPILER_VERSION` v0.65.4, CHANGELOG [0.65.5] and
-  `release-notes/v0.65.5.md`. Re-run the release dry-run on that branch;
-  tag only on owner GO after the compiler rebuild + engine soak.
-- **Next:** share the candidate sha + the four memory probes with
-  compiler, and keep the tag off until compiler rebuild + engine soak.
+- **Next:** re-cut `release/v0.65.5-prep` from main, re-run the release
+  dry-run, share the candidate sha + the four memory probes with compiler,
+  and keep the tag off until compiler rebuild + engine soak.
 
 **SESSION 2026-10-31 block 314 (readiness window: compiler runtime requests 1924/1934 handled -- Win64 __fixdfti family + t3 once-per-thread signal handlers; wave 313 full battery)**
 - **REL-20261031-1924-compiler (1600 stdlib half) DONE:** added the

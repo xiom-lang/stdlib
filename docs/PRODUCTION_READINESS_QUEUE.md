@@ -102,20 +102,20 @@ Owner GO pending; main is not bumped.
   REL-20261031-2308-stdlib. The probe's object is a `Map[Str, JsonValue]`,
   so this may be the same Map payload slice as p_mapstr 27/55; p_remove
   297/313 also remains compiler-side.
-- **2337 Map/Set Str ownership annotations landed** on `9c26a88`
-  (main `448539d`, branch merge `720e578`): `#[owns_return]` on
+- **2337 Map/Set Str ownership annotations landed** on `9c26a88` (main
+  `448539d`, branch merge `720e578`): `#[owns_return]` on
   `string_map_new` (both stringmap and intmap), `string_str_map_new`,
   `radix_new`; `#[consumes_str]` on `string_map_put` (both),
-  `string_str_map_put`, `radix_insert`. The update-path list (non-stored
-  keys, overwritten StringStrMap values, radix label/key overwrites) is in
-  the relay note. Witness `p_mapstr_shapes` (2 KiB + 2 KiB, 5k) = 23.3 MB
-  WS on f537b1b14, matching 27/55; compiler half pending.
+  `string_str_map_put`, `radix_insert`. Witness `p_mapstr_shapes`
+  (2 KiB + 2 KiB, 5k) = 23.3 MB WS on f537b1b14, matching 27/55;
+  compiler half pending.
 - **Release dry-run 41248000167 SUCCESS** on candidate `7d47924`
   (validate, Windows 22:24-23:16, Ubuntu 22:24-23:03, package; release/
-  pin/canary skipped). The annotated candidate `720e578` has dry-run
-  **41254550320** running. Local probes **426/426** after the 2156/map
-  fixes. No tag: the 1704 JSON reclaim, 2337 compiler contract, and
-  engine 600-frame soak are still open.
+  pin/canary skipped). The annotated candidate `720e578` dry-run
+  **41254550320 SUCCESS** (validate, Ubuntu 23:56-00:19, Windows
+  23:56-00:25, package; release/pin/canary skipped). Local probes
+  **426/426** after the 2156/map fixes. No tag: the 1704 JSON reclaim,
+  2337 compiler contract, and engine 600-frame soak are still open.
 
 ### 2026-10-30 addendum -- v0.65.3 release + v0.65.4 socket patch
 - v0.65.3 released (tag 26ede85) and the registry verified; the compiler
