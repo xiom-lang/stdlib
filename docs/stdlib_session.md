@@ -4251,10 +4251,11 @@ registry pin, agent recon for the rest)**
   peaks **23.3 MB WS** on f537b1b14, matching the compiler's 27/55; the
   contract should reach the ~20 MB payload floor. Full probes **426/426**;
   intmap/hasharray/radix smokes pass on v0.65.4 and f537b1b14.
-- Dry-run **41254550320** is running on the annotated branch `720e578`
-  (previous 41248000167 on `7d47924` was green). 1704 JSON path remains
-  open (14.1/77.4/271.5 MB at 10k/20k/100k); compiler contract + engine
-  soak still pending. No tag.
+- Dry-run **41254550320 SUCCESS** on the annotated branch `720e578`:
+  validate, Ubuntu 23:56-00:19, Windows 23:56-00:25, package; release/
+  pin/canary skipped. Previous 41248000167 on `7d47924` was also green.
+  1704 JSON path remains open (14.1/77.4/271.5 MB at 10k/20k/100k);
+  compiler contract + engine soak still pending. No tag.
 
 **SESSION 2026-10-31 block 316 (compiler verified 2156 on rebuilt f537b1b14+7d47924 -- shapes flat; 1704 JSON path still linear; gate 9 remains the release blocker)**
 - **2156 VERIFIED by compiler on the rebuilt pair** (compiler `f537b1b14`,

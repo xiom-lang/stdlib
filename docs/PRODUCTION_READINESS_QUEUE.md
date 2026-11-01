@@ -111,10 +111,11 @@ Owner GO pending; main is not bumped.
   compiler half pending.
 - **Release dry-run 41248000167 SUCCESS** on candidate `7d47924`
   (validate, Windows 22:24-23:16, Ubuntu 22:24-23:03, package; release/
-  pin/canary skipped). The annotated candidate `720e578` has dry-run
-  **41254550320** running. Local probes **426/426** after the 2156/map
-  fixes. No tag: the 1704 JSON reclaim, 2337 compiler contract, and
-  engine 600-frame soak are still open.
+  pin/canary skipped). The annotated candidate `720e578` dry-run
+  **41254550320 SUCCESS** (validate, Ubuntu 23:56-00:19, Windows
+  23:56-00:25, package; release/pin/canary skipped). Local probes
+  **426/426** after the 2156/map fixes. No tag: the 1704 JSON reclaim,
+  2337 compiler contract, and engine 600-frame soak are still open.
 
 ### 2026-10-30 addendum -- v0.65.3 release + v0.65.4 socket patch
 - v0.65.3 released (tag 26ede85) and the registry verified; the compiler
