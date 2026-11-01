@@ -108,7 +108,9 @@ fn _common_len(a: Str, b: Str) -> Int {
 
 /// Create a new empty radix trie (root node only).
 /// O(1).
-#[owns_return]
+/// Unannotated on purpose (REL-20261101-0116): labels hold literal "" seeds,
+/// so a mechanical owned-drop / overwrite free would free non-heap memory.
+/// Revisit after the trie tracks per-label ownership.
 pub fn radix_new() -> RadixTrie
   ensures: result.size == 0
   ensures: result.root >= 0
@@ -122,7 +124,8 @@ pub fn radix_new() -> RadixTrie
 /// Insert `key` with its value. Empty keys are rejected. Inserting an
 /// existing key is a no-op (the original value is kept).
 /// O(L) where L is the key length (amortized).
-#[consumes_str]
+/// Unannotated on purpose (REL-20261101-0116): overwritten labels/keys and
+/// discarded keys need per-entry ownership; leak-only is safe for now.
 pub fn radix_insert(r: &mut RadixTrie, key: Str, value: Int)
   ensures: string.str_len(key) > 0 => radix_contains(r, key)
 {

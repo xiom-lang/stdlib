@@ -28,7 +28,7 @@ fn main() -> Int {
   while i < n {
     let k = string.str_repeat("k", 2048);
     let v = string.str_repeat("v", 2048);
-    stringmap.string_str_map_put(&mut m, k, v);
+    stringmap.string_str_map_put_owned(&mut m, k, v);
     acc = acc + stringmap.string_str_map_size(&m);
     i = i + 1;
   }
