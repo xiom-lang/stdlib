@@ -8,7 +8,7 @@ REL-20261031-1554-stdlib). The post-release tail is on main: persistent
 worker pool + real thread arguments (`a0e91cd`) and the engine P1/P2 gaps
 (`1a17405`). Those are not in v0.65.4; they ride the v0.65.5 candidate.)
 **Gates on the current tree (official v0.65.4 windows-x64 archive):
-smokes 964/964, modules 533/533, probes 425/425, barename 0/533,
+smokes 964/964, modules 533/533, probes 426/426, barename 0/533,
 module-smoke 543/543 (100%), floors197, gate9 10/10 + 30 known-failure
 repros pass + 1 intended T001 (0 unexpected).**
 **v0.65.5 prep:** `release/v0.65.5-prep` (package 0.65.5, pin v0.65.4,
@@ -102,11 +102,19 @@ Owner GO pending; main is not bumped.
   REL-20261031-2308-stdlib. The probe's object is a `Map[Str, JsonValue]`,
   so this may be the same Map payload slice as p_mapstr 27/55; p_remove
   297/313 also remains compiler-side.
-- **Release dry-run 41248000167 SUCCESS** on candidate `7d47924`:
-  validate, Windows 22:24-23:16, Ubuntu 22:24-23:03, package staging
-  green; GitHub Release / pin PR / registry canary correctly skipped.
-  Local probes 425/425 after the 2156 fixes. No tag: the 1704 JSON
-  reclaim, compiler rebuild, and engine 600-frame soak are still open.
+- **2337 Map/Set Str ownership annotations landed** on `9c26a88` (main
+  `448539d`, branch merge `720e578`): `#[owns_return]` on
+  `string_map_new` (both stringmap and intmap), `string_str_map_new`,
+  `radix_new`; `#[consumes_str]` on `string_map_put` (both),
+  `string_str_map_put`, `radix_insert`. Witness `p_mapstr_shapes`
+  (2 KiB + 2 KiB, 5k) = 23.3 MB WS on f537b1b14, matching 27/55;
+  compiler half pending.
+- **Release dry-run 41248000167 SUCCESS** on candidate `7d47924`
+  (validate, Windows 22:24-23:16, Ubuntu 22:24-23:03, package; release/
+  pin/canary skipped). The annotated candidate `720e578` has dry-run
+  **41254550320** running. Local probes **426/426** after the 2156/map
+  fixes. No tag: the 1704 JSON reclaim, 2337 compiler contract, and
+  engine 600-frame soak are still open.
 
 ### 2026-10-30 addendum -- v0.65.3 release + v0.65.4 socket patch
 - v0.65.3 released (tag 26ede85) and the registry verified; the compiler
@@ -142,10 +150,11 @@ gates flip:
    including the directory-rename regression and the wave-313 module
    surface smoke; plus 963/963 on both Windows and Ubuntu release gates
    (dry-run 41248000167 on candidate 7d47924), no carve-outs.
-3. Probe corpus green -- MET (425/425; includes the gate-9 set,
+3. Probe corpus green -- MET (426/426; includes the gate-9 set,
    p_json_1704_obj (the gate-9 RSS workload), p_2156_memory_shapes,
+   p_mapstr_shapes,
    p_guard_uaf, p_wave176_shapes with the kqueue row, p_socket_ffi_width,
-   p_socket_sigpipe, the h2/SSE probes and the earlier waves; 425/425 on
+   p_socket_sigpipe, the h2/SSE probes and the earlier waves; 426/426 on
    the current tree with the official v0.65.4 archive).
 4. Strict bare-name scan clean -- MET (0/533).
 5. Coverage ratchet green -- MET (floors197).
@@ -3408,6 +3417,7 @@ compiler lane bumps `STDLIB_VERSION`, runs
    probe-first. Relay to packages: grpc publish can proceed once the
    official pin carries m202 (their 36/36 x2 is on the candidate);
    graphql conformance is 10/10 with m206.
+
 
 
 
