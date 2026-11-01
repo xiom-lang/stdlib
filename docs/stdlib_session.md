@@ -27,7 +27,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 118 + block 319 + blocks 318/317/316.
+Read docs/stdlib_session.md snapshot 118 + block 320 + blocks 319/318/317.
 
 STATE (2026-10-31):
 - v0.65.4 SHIPPED: stdlib tag stdlib-v0.65.4 -> d267317 (registry xiom-std
@@ -4235,6 +4235,27 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-11-01 block 320 (engine soak RED on the older pair; compiler borrows_vec slice b5b8c66e8; re-soak pending; candidate accepted; no tag)**
+- **Engine soak 600-frame RED** on the older pair (compiler 2e8193e2b +
+  a lib junction that had moved to de9407e, not a frozen 7d47924):
+  120=683/1116 MB, 300=1333/1789, 600=KILLED at 2 GB (2066/2570);
+  slope ~2.9 MB/frame WS vs target <=0.5. **Cause is not the stdlib map
+  work:** the per-frame Vulkan UI batches are filled through `&mut`
+  builders (vulkan_ui_rect/text/text_clip/tex) and submitted by value
+  (`vk_scene_submit_core`); every `&mut` callee is classified retaining,
+  disarming the caller's uv/uvo/iv drop.
+- **Compiler slice `b5b8c66e8`** adds `#[borrows_vec]` (callee may
+  mutate/read a Vec arg but does not retain the header; caller keeps
+  ownership and drops). `p_ffi_vec_borrow`: control 20/49 MB -> annotated
+  flat. Engine asked to annotate those six functions and re-soak on an
+  immutable final-pair toolchain (compiler `b5b8c66e8` + stdlib
+  `7b7583c` extracted, not a live junction).
+- **Stdlib candidate unchanged/accepted:** `7b7583c` (branch docs
+  `a9cffc3`/`8c59d5d`, main `de9407e`); map gate closed; dry-run
+  41263228033 SUCCESS. Owner GO 0201 stands; **tag blocked** until the
+  re-soak posts 600 <2 GB and <=0.5 MB/frame (or an explicit owner
+  decision to ship with the leak) and the compiler final GO on 0144.
 
 **SESSION 2026-11-01 block 319 (0116 VERIFIED + dry-run 41263228033 SUCCESS + owner GO relayed; only the engine 600/120 soak remains before the v0.65.5 tag)**
 - **0116 VERIFIED by compiler** on `7b7583c` (main `ec9af22`) +
