@@ -4,6 +4,8 @@
 
 module xiom.collect.intmap
 
+use xiom.string;
+
 // Depends on: xiom.string
 
 /// Optimized keyed maps. int_map uses a flat open-addressing table sized for the
@@ -253,7 +255,6 @@ pub fn string_map_new() -> OrderedStringMap
 /// Insert or overwrite `key` -> `value`. A re-insert of an existing key
 /// updates its value without changing its insertion position.
 /// O(n).
-#[consumes_str]
 pub fn string_map_put(m: &mut OrderedStringMap, key: Str, value: Int)
   ensures: string_map_contains(m, key)
 {
@@ -261,6 +262,27 @@ pub fn string_map_put(m: &mut OrderedStringMap, key: Str, value: Int)
   while i < m.keys.len() {
     var k = m.keys[i];
     if k == key {
+      m.vals[i] = value;
+      return;
+    }
+    i = i + 1;
+  }
+  m.keys.push(key);
+  m.vals.push(value);
+}
+
+/// Consuming variant of `string_map_put`. `key` must be a fresh owned Str.
+/// On an update the key is not stored (freed); on insert the map owns it.
+/// Use only for maps built exclusively with the `_owned` mutator.
+#[consumes_str]
+pub fn string_map_put_owned(m: &mut OrderedStringMap, key: Str, value: Int)
+  ensures: string_map_contains(m, key)
+{
+  var i = 0;
+  while i < m.keys.len() {
+    var k = m.keys[i];
+    if k == key {
+      string.str_free(key);
       m.vals[i] = value;
       return;
     }

@@ -17,6 +17,17 @@ extern "C" {
   fn xiom_byte_at(s: Str, pos: Int) -> Int;
 }
 
+/// Free a Str payload owned by the caller. Only for strings created by an
+/// owning constructor/concat/repeat; NEVER pass a literal or borrowed Str.
+/// The `_owned` map mutators are the intended callers (REL-20261101-0116).
+pub fn str_free(s: Str)
+  requires: true
+{
+  unsafe {
+    free(s as *UInt8);
+  }
+}
+
 // Wave 111 (xvector REL-20261011-1453): raw byte access over a cached
 // (base, len) view for slice copies. byte_at re-scans the whole string per
 // call (runtime strnlen), so byte-stepped copies were O(k*n) -- the json

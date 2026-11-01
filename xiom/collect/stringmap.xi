@@ -101,12 +101,39 @@ fn _grow(m: &mut StringMap) {
 /// Params: m - the map; key - Str key; value - Int value.
 /// Re-inserting an existing key updates its value.
 /// Complexity: O(1) amortized.
-#[consumes_str]
 pub fn string_map_put(m: &mut StringMap, key: Str, value: Int)
   ensures: m.count >= 1
 {
   var idx = _find(m, key);
   if idx >= 0 {
+    m.values[idx] = value;
+    return;
+  }
+  if m.count * 4 > m.buckets.len() * 3 {
+    _grow(m);
+  }
+  var b = _bucket(m, key);
+  var id = m.keys.len();
+  m.keys.push(key);
+  m.values.push(value);
+  m.next.push(m.buckets[b]);
+  m.live.push(true);
+  m.buckets[b] = id;
+  m.count = m.count + 1;
+}
+
+/// Consuming variant of `string_map_put`. The caller transfers ownership of
+/// `key` (must be a fresh, owned Str; never a literal or borrowed Str). On an
+/// update the key is not stored and is freed; on insert the map owns it.
+/// Use this only for maps built exclusively with the `_owned` mutator; a map
+/// with any borrowing put is not ownership-dropped by the compiler.
+#[consumes_str]
+pub fn string_map_put_owned(m: &mut StringMap, key: Str, value: Int)
+  ensures: m.count >= 1
+{
+  var idx = _find(m, key);
+  if idx >= 0 {
+    string.str_free(key);
     m.values[idx] = value;
     return;
   }
@@ -262,12 +289,39 @@ fn _ssm_grow(m: &mut StringStrMap) {
 
 /// Insert or update `key` -> `value`. Re-inserting an existing key updates
 /// its value in place (position kept).
-#[consumes_str]
 pub fn string_str_map_put(m: &mut StringStrMap, key: Str, value: Str)
   ensures: string_str_map_contains(m, key)
 {
   var idx = _ssm_find(m, key);
   if idx >= 0 {
+    m.values[idx] = value;
+    return;
+  }
+  if m.count * 4 > m.buckets.len() * 3 {
+    _ssm_grow(m);
+  }
+  var b = _bucket_ss(m, key);
+  var id = m.keys.len();
+  m.keys.push(key);
+  m.values.push(value);
+  m.next.push(m.buckets[b]);
+  m.live.push(true);
+  m.buckets[b] = id;
+  m.count = m.count + 1;
+}
+
+/// Consuming variant of `string_str_map_put`. Both args must be fresh owned
+/// Str values. On an update the key is not stored and is freed, and the
+/// overwritten old value is freed; on insert the map owns both. Use only for
+/// maps built exclusively with the `_owned` mutator (no borrowing puts).
+#[consumes_str]
+pub fn string_str_map_put_owned(m: &mut StringStrMap, key: Str, value: Str)
+  ensures: string_str_map_contains(m, key)
+{
+  var idx = _ssm_find(m, key);
+  if idx >= 0 {
+    string.str_free(key);
+    string.str_free(m.values[idx]);
     m.values[idx] = value;
     return;
   }
