@@ -24,9 +24,10 @@ local validator merges it green against a placeholder compiler file).
 Main is NOT bumped: merge and tag only on the owner's GO. No tag,
 release, or registry write exists for 0.65.5. Dry-runs **41248000167**
 (`7d47924`) and **41254550320** (`720e578`) completed **success**;
-**41263228033** is running on the current `_owned` candidate `7b7583c`
-(validate green; gates in progress). No tag until the engine soak and
-the compiler's final GO.
+**41263228033 SUCCESS** on the current `_owned` candidate `7b7583c`
+(validate; Ubuntu 01:58-02:22; Windows 01:58-02:49; package;
+release/pin/canary skipped). No tag until the engine soak and the
+compiler's final GO.
 
 ## 1. What `.github/workflows/release.yml` does
 
@@ -54,9 +55,10 @@ package staging, **no release, no pin PR, no registry canary**.
 
 The current v0.65.5 dry-run **41263228033** was dispatched on
 `release/v0.65.5-prep` (candidate `7b7583c`) with `version=0.65.5` and no
-`tag` input; validate is green and the gate legs are in progress. The
-previous **41248000167** (`7d47924`) completed **success** on
-2026-10-31T23:16:54Z: the bullets below are its gate record.
+`tag` input and completed **success** on 2026-11-01T02:49:49Z: validate,
+Ubuntu 01:58-02:22, Windows 01:58-02:49, package; release/pin/canary
+skipped. The previous **41248000167** (`7d47924`) completed **success**
+on 2026-10-31T23:16:54Z: the bullets below are its gate record.
 
 - **validate package.xi**: green (version 0.65.5, compiler range).
 - **release gates (windows-latest)**: green, 22:24 to 23:16 (compiler
