@@ -27,7 +27,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 118 + block 317 + blocks 316/315/314.
+Read docs/stdlib_session.md snapshot 118 + block 318 + blocks 317/316/315.
 
 STATE (2026-10-31):
 - v0.65.4 SHIPPED: stdlib tag stdlib-v0.65.4 -> d267317 (registry xiom-std
@@ -4235,6 +4235,35 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-11-01 block 318 (0116 map update-path leak fixed with explicit _owned mutators; 2337 verified; engine soak is the last gate; no tag)**
+- **REL-20261101-0116-compiler (high) fixed on candidate `7b7583c`
+  (main `ec9af22`).** The update path cannot be fixed by blindly freeing in
+  the existing `put`: callers use literal keys, so the callee would free
+  non-heap memory. Sound split:
+  - `string.str_free(s)` frees an owned Str only.
+  - Existing `string_map_put` / `string_str_map_put` stay the BORROWING
+    API (unannotated, no frees; maps using them stay leak-only, preserving
+    literal callers).
+  - New consuming `#[consumes_str]` mutators:
+    `string_map_put_owned` (stringmap + intmap) and
+    `string_str_map_put_owned`; on update they free the discarded fresh
+    key and (StringStrMap) the overwritten old value, then assign; on
+    insert the map owns both.
+  - `radix_new`/`radix_insert` annotations REMOVED: labels hold literal
+    `""` seeds, so mechanical owned-drop would free non-heap memory.
+  - Evidence on toolchain-map (compiler f3e18120a): `p_mapstr_shapes`
+    with `_owned` at 5000 = **5.5 MB WS** (was 23.5; compiler's 8/36
+    update-path leak). Literal smokes `smoke_collect_intmap`,
+    `smoke_collect_hasharray`, `p_wave167_shapes` pass.
+- **2337 verified** by compiler in `f3e18120a`: insert path
+  p_mapstr 27/55 -> 5/34 flat. **2308 acked** by compiler: the 1704 JSON
+  path is a distinct JsonValue/JSON-builder drop kind, queued after the
+  engine soak. **0144 acked**: GO on the contract; v0.65.5 tag remains
+  gated on the `_owned` re-run + engine 600/120 soak + owner GO.
+- **Action for compiler:** point `p_mapstr` and `p_mapstr_shapes` at the
+  `_owned` mutators and re-run on `7b7583c`; engine soak is the last
+  gate. No tag now.
 
 **SESSION 2026-10-31 block 317 (2337 Map/Set Str ownership annotations landed; p_mapstr witness; 426/426 probes; candidate 720e578; no tag)**
 - **REL-20261031-2337-compiler (high) stdlib half done** on candidate
