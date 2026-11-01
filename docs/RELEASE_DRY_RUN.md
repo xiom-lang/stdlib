@@ -5,11 +5,29 @@ pre-cut package: what the workflow does, the dry-run that was executed, the
 exact GO checklist, and a draft of the next release notes. The version
 number and `COMPILER_VERSION` pin are the owner's decision.
 
-**Verified candidate (2026-10-31):** stdlib main `1a17405` (code) on top of
-`a0e91cd`; docs head `ab3bad8`. The tree carries two post-v0.65.4
-deliverables: the persistent worker pool with real arguments (`a0e91cd`)
-and the engine P1/P2 gaps (`1a17405`). Neither is in v0.65.4/d267317. The
-package is ready for the owner's GO; the tree is not bumped.
+**Verified candidate (2026-11-01, updated):** stdlib main `21aef98`
+(code `ec9af22`); the candidate branch `release/v0.65.5-prep` is at
+`abe757e` (code `7b7583c`). It carries the persistent worker pool with
+real arguments (`a0e91cd`), the engine P1/P2 gaps (`1a17405`), the kqueue
+backend (wave 178, macOS witness 41226381281), the readiness wave-313/315
+coverage, the Win64 `__fixdfti` family and per-thread fault handlers, the
+2156 string copy-leak fix, and the 2337/0116 map ownership contract
+(`#[owns_return]` constructors, consuming `_owned` mutators with
+update-path frees; borrowing `put` stays literal-safe; radix unannotated).
+The compiler rebuild (`f3e18120a` or later) is required for the engine
+soak; no tag until that and the soak are green.
+
+**Prepared branch (2026-10-31):** `release/v0.65.5-prep` carries the
+owner-decision proposal: `package.xi` 0.65.5, `COMPILER_VERSION` v0.65.4,
+CHANGELOG [0.65.5], and `release-notes/v0.65.5.md` (two highlights; the
+local validator merges it green against a placeholder compiler file).
+Main is NOT bumped: merge and tag only on the owner's GO. No tag,
+release, or registry write exists for 0.65.5. Dry-runs **41248000167**
+(`7d47924`) and **41254550320** (`720e578`) completed **success**;
+**41263228033 SUCCESS** on the current `_owned` candidate `7b7583c`
+(validate; Ubuntu 01:58-02:22; Windows 01:58-02:49; package;
+release/pin/canary skipped). No tag until the engine soak and the
+compiler's final GO.
 
 ## 1. What `.github/workflows/release.yml` does
 
@@ -35,9 +53,12 @@ package staging, **no release, no pin PR, no registry canary**.
 
 ## 2. Dry-run executed (workflow path)
 
-The current v0.65.5 dry-run was dispatched on `release/v0.65.5-prep`
-(candidate `7d47924`) with `version=0.65.5` and no `tag` input: run
-**41248000167** completed **success** on 2026-10-31T23:16:54Z.
+The current v0.65.5 dry-run **41263228033** was dispatched on
+`release/v0.65.5-prep` (candidate `7b7583c`) with `version=0.65.5` and no
+`tag` input and completed **success** on 2026-11-01T02:49:49Z: validate,
+Ubuntu 01:58-02:22, Windows 01:58-02:49, package; release/pin/canary
+skipped. The previous **41248000167** (`7d47924`) completed **success**
+on 2026-10-31T23:16:54Z: the bullets below are its gate record.
 
 - **validate package.xi**: green (version 0.65.5, compiler range).
 - **release gates (windows-latest)**: green, 22:24 to 23:16 (compiler
@@ -72,9 +93,10 @@ archive and `XIOM_STDLIB` set to this checkout:
 ## 3. Preflight for the real cut (owner GO required)
 
 1. **Owner decides**: the version label (proposed `0.65.5`), whether to move
-   `COMPILER_VERSION` (current file: `v0.64.8`; recommended: `v0.65.4`, the
-   current released compiler), and the tag commit.
-2. **Prepare the tree** in one commit:
+   `COMPILER_VERSION` (proposed `v0.65.4`, the current released compiler;
+   main still says `v0.64.8`), and the tag commit.
+2. **Prepare the tree** in one commit (drafted on
+   `release/v0.65.5-prep`; merge it or re-cut on GO):
    - `package.xi` version bump (and compiler range if the pin moves);
    - `CHANGELOG.md` section for the version;
    - `release-notes/v<version>.md` (see the draft below; two highlights);

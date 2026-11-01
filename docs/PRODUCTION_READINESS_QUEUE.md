@@ -109,18 +109,21 @@ Owner GO pending; main is not bumped.
   `string_str_map_put`, `radix_insert`. Witness `p_mapstr_shapes`
   (2 KiB + 2 KiB, 5k) = 23.3 MB WS on f537b1b14, matching 27/55;
   compiler half pending.
-- **0116 map update-path leak fixed** on candidate `7b7583c` (main
-  `ec9af22`): existing put stays the borrowing/literal-safe API; new
-  consuming `#[consumes_str]` `string_map_put_owned` (stringmap + intmap)
-  and `string_str_map_put_owned` free the discarded key and overwritten
-  old value on update. `radix_new`/`radix_insert` unannotated (literal
-  `""` label seeds). `p_mapstr_shapes` with `_owned` on toolchain-map =
-  **5.5 MB WS** at 5k (was 23.5; compiler 8/36); literal smokes pass.
-- **Release dry-run 41248000167 SUCCESS** on `7d47924`; 41254550320
-  SUCCESS on `720e578` (annotated 2337 candidate). The 0116 `_owned`
-  candidate `7b7583c` needs its own dry-run. Local probes **426/426**
-  after the 2156/map fixes. No tag: the 1704 JSON reclaim, the compiler's
-  `_owned` re-run, and engine 600-frame soak are still open.
+- **0116 map update-path leak VERIFIED** on candidate `7b7583c` (main
+  `ec9af22`) + compiler `f3e18120a`: `p_mapstr_owned` insert flat;
+  `p_mapstr_shapes_owned` update **5/34 MB WS/private at 5k** (was 8/36);
+  borrowing controls `p_mapstr` 25/54 and `p_mapstr_shapes` 6/34 are
+  leak-only with no crash; radix unannotated accepted. Existing put stays
+  the borrowing/literal-safe API; the new `_owned` mutators free the
+  discarded key and overwritten value. The Map gate is closed.
+- **Release dry-run 41263228033 SUCCESS** on the `_owned` candidate
+  (`abe757e`, code `7b7583c`): validate, Ubuntu, Windows, package;
+  release/pin/canary skipped. Earlier 41248000167 (`7d47924`) and
+  41254550320 (`720e578`) were also green. Local probes **426/426**.
+- **Owner GO relayed** (0201) and **map gate closed** (0232). **Only the
+  engine 600-frame soak + 120-frame control remains** (2243; engine acked
+  at 02:07Z, rebuilding). No tag until the engine numbers + compiler
+  final GO on 0144; v0.65.4 remains current.
 
 ### 2026-10-30 addendum -- v0.65.3 release + v0.65.4 socket patch
 - v0.65.3 released (tag 26ede85) and the registry verified; the compiler

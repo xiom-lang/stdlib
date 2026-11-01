@@ -27,7 +27,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 118 + block 318 + blocks 317/316/315.
+Read docs/stdlib_session.md snapshot 118 + block 319 + blocks 318/317/316.
 
 STATE (2026-10-31):
 - v0.65.4 SHIPPED: stdlib tag stdlib-v0.65.4 -> d267317 (registry xiom-std
@@ -4235,6 +4235,27 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-11-01 block 319 (0116 VERIFIED + dry-run 41263228033 SUCCESS + owner GO relayed; only the engine 600/120 soak remains before the v0.65.5 tag)**
+- **0116 VERIFIED by compiler** on `7b7583c` (main `ec9af22`) +
+  compiler `f3e18120a`: `p_mapstr_owned` insert flat;
+  `p_mapstr_shapes_owned` update **5/34 MB WS/private at 5k** (was 8/36);
+  borrowing controls `p_mapstr` 25/54 and `p_mapstr_shapes` 6/34 are
+  leak-only, no crash; radix unannotated accepted. The Map/update-path
+  gate is closed.
+- **Release dry-run 41263228033 SUCCESS** on the `_owned` candidate
+  (`abe757e`, code `7b7583c`): validate, Ubuntu, Windows, package;
+  GitHub Release / pin PR / registry canary correctly skipped. Candidate
+  branch docs head is `8c59d5d` (code `7b7583c`).
+- **Owner GO relayed** (REL-20261101-0201-compiler): v0.65.5 may be
+  tagged/published once the memory-leak gate is green, no further owner
+  approval. **Map gate closed** (0232). **Only the engine 600-frame soak +
+  120-frame control remains** (REL-20261031-2243-compiler; engine acked at
+  02:07Z and rebuilding). v0.65.4 remains current until then.
+- **No tag:** wait for the engine soak numbers + the compiler's final GO
+  on 0144, then tag `release/v0.65.5-prep` (or the final docs head), run
+  the release, publish the registry recording compiler v0.65.4, and tell
+  the compiler to pin STDLIB_VERSION=stdlib-v0.65.5.
 
 **SESSION 2026-11-01 block 318 (0116 map update-path leak fixed with explicit _owned mutators; 2337 verified; engine soak is the last gate; no tag)**
 - **REL-20261101-0116-compiler (high) fixed on candidate `7b7583c`
