@@ -60,6 +60,25 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   verification record. `out/` and `tests/smoke/smoke_diag_f128_l*` are
   untracked scratch; keep `out/` disposable and never put compiler
   archives inside the repo.
+- **RELAY WORKTREE CAVEAT (2026-11-02, own answer):** the shared relay
+  clone `E:\xiom-lang\xiom-relays` has a **local-only, uncommitted
+  2026-10-21-era edit** to
+  `release-checks/compiler-v0.64.8.md` (+24/-16: re-adds verdict notes,
+  reverts the created timestamp, flips some rows back to acked/open).
+  HEAD == origin/main, so this is **not bus content**. It is a
+  compiler-lane release-check file; `relay.py validate` reads the
+  working tree, so it can produce a false RED on this host. **Decision:
+  do not revert another lane's uncommitted work.** Leave it untouched;
+  validate from a clean clone/worktree or ask the compiler lane to
+  stash/commit/revert. Flagged here so the next session does not misread
+  it.
+- **Relay HEAD is `2cb7bd7`** (`compiler: fix 1605 orbitdb vec rebind;
+  v0.65.6 pending`), newer than the release list above:
+  - `REL-20261102-1605-orbitdb` **fixed** on compiler main `1df9bd5af`
+    (Vec rebind now reads the current `%struct.Vec` header;
+    `p_vec_rebind_grow` exits 0; memory gates 21/21; v0.65.6 not cut).
+  - `REL-20261102-1716-orbitdb` **acked**; orbitdb re-verifies once
+    v0.65.6 assets exist. **v0.65.4 remains orbitdb's accepted release.**
 - **No active cron/watch:** the 30-min relay watch was stopped after the
   release completed. Next release/tag needs a fresh owner GO.
 
@@ -89,6 +108,16 @@ STATE (2026-11-02):
 - LANE RELAY QUEUE: only 2202 (compiler Send/Sync; brotli/zstd live;
   kqueue done) and 1704 (compiler JSON drop) acked. 1531/1807/row33
   external; fixed/verified rows await reporters.
+- RELAY WORKTREE: E:\xiom-lang\xiom-relays has a LOCAL-ONLY uncommitted
+  2026-10-21 edit to release-checks/compiler-v0.64.8.md (+24/-16; re-adds
+  verdict notes, reverts created timestamp, flips rows). HEAD ==
+  origin/main; this is not bus content. It is compiler-lane drift and
+  relay.py validate reads the working tree -> possible false RED. DO NOT
+  revert another lane's uncommitted work; validate from a clean clone or
+  ask the compiler lane to stash/commit/revert. Relay HEAD is 2cb7bd7:
+  REL-20261102-1605-orbitdb fixed on compiler main 1df9bd5af
+  (p_vec_rebind_grow 0, memory gates 21/21); REL-20261102-1716-orbitdb
+  acked; v0.65.6 pending and orbitdb remains on v0.65.4 accepted.
 
 PRIORITY:
 1. 1704 -> gate 9 -> 100%: when the compiler lands the JSON/JsonValue
@@ -109,6 +138,9 @@ PRIORITY:
 RULES:
 - No tag/release without a fresh owner GO; released tags are immutable.
 - Relay: fetch + merge --ff-only; never edit another lane's item.
+- Before `relay.py validate`, check `git -C E:\xiom-lang\xiom-relays
+  status`; the compiler-lane release-check drift is local-only and must
+  not be reverted without its owner.
 - Compiler archives only under %TEMP%, never inside the repo; keep out/
   disposable.
 - No clause waves; io.list_dir runtime-owned; json_clear(&mut) hangs; no
