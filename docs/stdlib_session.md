@@ -27,7 +27,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 118 + block 321 + blocks 320/319/318.
+Read docs/stdlib_session.md snapshot 118 + block 322 + blocks 321/320/319.
 
 STATE (2026-10-31):
 - v0.65.4 SHIPPED: stdlib tag stdlib-v0.65.4 -> d267317 (registry xiom-std
@@ -4235,6 +4235,31 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-11-02 block 322 (official v0.65.5 verification: 1600 e2e GREEN; 1704 JSON still linear; lane queue = 2202/1704 only)**
+- **Official compiler v0.65.5 verified:** `xiom-0.65.5-windows-x64.zip`
+  sha256 `86a253a5...` matches the release asset. **1600 e2e GREEN**:
+  `Float128 -> Int128` signed positive/negative, `UInt128`, and `Float32`
+  compile rc 0 and run 3/3 rc 0 with the bundled stdlib. The
+  `__fixdfti`/`__fixunsdfti`/`__fixsfti`/`__fixunssfti` helpers are in the
+  v0.65.5 pin. **REL-20261031-1924-compiler moved fixed**; 1552 remains
+  compiler checker work.
+- **1704 JSON still linear on the official v0.65.5 archive:**
+  `p_json_1704_obj` peaks **33.6 / 78.3 / 275.7 MB** at 10k / 20k / 100k
+  (~2.5 KB/iter). The release shipped with this as the accepted
+  post-release follow-up; **gate 9 remains open on 1704 alone**.
+- **Lane relay queue:** only **2202** (compiler Send/Sync residual;
+  brotli/zstd live packages; kqueue done) and **1704** (compiler
+  JsonValue/JSON-builder drop) remain acked. 1531 (xvector verify), 1807
+  (orbitdb compiler write path), and wishlist row 33 (compiler/install)
+  are external. Everything else is fixed/verified awaiting reporter
+  closeout.
+- **Readiness remains 9/10 (90%):** gates 1-8 and 10 MET; gate 9 only
+  1704. Gate 7 function refs 3541/6664 (53.1%) is ratchet-green, not a
+  100% requirement; gate 8's 285-fn no-clause tail is documented policy
+  (no clause waves).
+- **Release state:** stdlib-v0.65.5 published, registry 0.65.5 live,
+  compiler pin PR #12 merged (compiler main pins stdlib-v0.65.5).
 
 **SESSION 2026-11-02 block 321 (v0.65.5 TAGGED -- owner GO confirmed, engine soak green; release run 41447551297)**
 - **FINAL RELEASE GO** (REL-20261102-1246-compiler; 0144 closed):

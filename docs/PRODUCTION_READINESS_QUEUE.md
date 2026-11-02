@@ -1,7 +1,7 @@
 ﻿# Production-readiness remaining queue (handoff 2026-09-25)
 
 **90% -- 9 of 10 gates complete; gate 9 discrete.** (Compiler pin:
-**v0.65.4** published; v0.65.5 pin PR **#12** (chore/pin-stdlib-v0.65.5-compiler, all checks green) awaits the compiler merge; #11 was superseded.
+**v0.65.4** published; v0.65.5 pin PR **#12** (chore/pin-stdlib-v0.65.5-compiler) **MERGED**; compiler main pins STDLIB_VERSION=stdlib-v0.65.5.
  **stdlib-v0.65.5 PUBLISHED** at
 `d1e4b36`/`88f3c12` (code `7b7583c`, release run 41447551297); registry
 xiom-std 0.65.5 live (sha256 `e8aa1bd7...`, compiler field v0.65.4, run
@@ -16,6 +16,26 @@ release 41447551297 succeeded (validate, Ubuntu, Windows, package,
 GitHub Release, pin branch, staging canary); registry published after
 environment approval. Engine soak green (600 419/826 MB, slope 0.037).
 Post-release: JSON 1704, 2117 aggregate contract, compiler pin merge.
+
+### 2026-11-02 addendum -- v0.65.5 published + official-pin verification
+- **Official compiler v0.65.5** (windows-x64 zip sha256 `86a253a5...`,
+  matches the release asset) with the bundled v0.65.5 stdlib:
+  **1600 e2e GREEN** -- `Float128 -> Int128` signed positive/negative,
+  `UInt128`, and `Float32` compile and run 3/3. **REL-20261031-1924
+  fixed**; 1552 remains compiler checker work.
+- **1704 JSON is still linear:** `p_json_1704_obj` peaks **33.6 / 78.3 /
+  275.7 MB** at 10k / 20k / 100k (~2.5 KB/iter) on the official archive.
+  **Gate 9 remains open on 1704 alone** (the release shipped it as the
+  accepted post-release follow-up).
+- **Lane queue:** only **2202** (compiler Send/Sync; brotli/zstd are live
+  packages; kqueue done) and **1704** (compiler JsonValue/JSON-builder
+  drop) remain acked. 1531 (xvector verify), 1807 (orbitdb compiler write
+  path), and wishlist row 33 (compiler/install) are external.
+- **Readiness 9/10 (90%)**: gates 1-8 and 10 MET. Gate 7 is ratchet-green
+  at 3541/6664 function refs (53.1%); gate 8's 285-fn no-clause tail is
+  documented policy (no clause waves). Only gate 9 (1704) is discrete.
+- **Release:** stdlib-v0.65.5 published, registry 0.65.5 live, compiler
+  pin PR #12 merged (compiler main pins stdlib-v0.65.5).
 
 ### 2026-10-31 addendum -- post-v0.65.4 tail + v0.65.5 prep + kqueue wave
 - **Pool + engine gaps on main:** `a0e91cd` (persistent worker pool, real
@@ -244,7 +264,7 @@ gates flip:
     `7b7583c`; run 41447551297 success; assets
     `xiom-std-0.65.5.tar.gz` sha256 `0ed34f95...` + `SHA256SUMS`;
     registry xiom-std 0.65.5 live sha256 `e8aa1bd7...`, compiler field
-    v0.65.4, run 41447551299 after environment approval. The compiler pin PR **#12** (chore/pin-stdlib-v0.65.5-compiler) awaits merge; tags frozen.
+    v0.65.4, run 41447551299 after environment approval. The compiler pin PR **#12** merged (compiler main pins v0.65.5); tags frozen.
     Earlier 0.65.0-0.65.4 tags remain released/immutable.)
 
 Meter formula: MET gates count 1.0; gate 9 gets no partial credit
@@ -3432,6 +3452,7 @@ compiler lane bumps `STDLIB_VERSION`, runs
    probe-first. Relay to packages: grpc publish can proceed once the
    official pin carries m202 (their 36/36 x2 is on the candidate);
    graphql conformance is 10/10 with m206.
+
 
 
 
