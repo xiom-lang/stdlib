@@ -1,9 +1,24 @@
-# Release dry-run (next stdlib cut)
+﻿# Release dry-run (next stdlib cut)
 
-Status: **no tag, no release, no registry write.** This document is the
-pre-cut package: what the workflow does, the dry-run that was executed, the
-exact GO checklist, and a draft of the next release notes. The version
-number and `COMPILER_VERSION` pin are the owner's decision.
+Status: **RELEASED 2026-11-02.** This document retains the pre-cut
+record: what the workflow does, the dry-runs that were executed, the GO
+checklist, and the release notes.
+
+**Release result:** annotated tag `stdlib-v0.65.5` (object `d1e4b36`) at
+`release/v0.65.5-prep` `88f3c12` (code `7b7583c`, package 0.65.5).
+Tag-triggered run **41447551297 SUCCESS** (validate, Ubuntu, Windows,
+package + GitHub Release, pin branch, staging canary):
+`https://github.com/xiom-lang/stdlib/releases/tag/stdlib-v0.65.5`.
+Assets: `xiom-std-0.65.5.tar.gz` sha256
+`0ed34f959064c5753678b53d42a6a1dcb306b5457005eecb8b85160795d866d4`
+(1,296,943 bytes); `SHA256SUMS` sha256
+`e345e3e34b7dc529cf2eec1d8f1dca97d6802fdd8623c9ba606af97fb4ae3140`.
+Registry: xiom-std 0.65.5 **LIVE**, sha256
+`e8aa1bd7a123529bb1c2995d422ca429d4bd5ae751ddc7b86a6a7cd0dd960214`,
+compiler field v0.65.4, run 41447551299 (registry-publish approved).
+Pin: branch `chore/pin-stdlib-v0.65.5` (`35ca93f`); PR **#11** is open at
+`https://github.com/xiom-lang/xiom/pull/11` (automated creation failed on
+the workflow token; stdlib opened it with the review token).
 
 **Verified candidate (2026-11-01, updated):** stdlib main `21aef98`
 (code `ec9af22`); the candidate branch `release/v0.65.5-prep` is at
@@ -181,3 +196,4 @@ p_engine_p1p2_gaps.
 - No `package.xi` bump, no `COMPILER_VERSION` change, no tag, no release,
   no registry write until the owner's GO.
 - The local battery above creates no release and touches no registry.
+

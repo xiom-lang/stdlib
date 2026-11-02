@@ -4244,16 +4244,26 @@ registry pin, agent recon for the rest)**
   300 405/815, 600 **419/826 MB WS/private**, exit 0 all; slope
   0.037 MB/frame (target <=0.5), <2 GB at 600. Shell-on canvas 120
   426/848, exit 0.
-- **Tag:** annotated `stdlib-v0.65.5` (tag object `d1e4b36`) at
+- **PUBLISHED:** annotated `stdlib-v0.65.5` (tag object `d1e4b36`) at
   `release/v0.65.5-prep` `88f3c12` (code `7b7583c`, package 0.65.5,
-  COMPILER_VERSION v0.65.4). Pushed; release workflow run **41447551297**
-  in progress (validate green; gates running). Tag is immutable.
+  COMPILER_VERSION v0.65.4). Release run **41447551297 SUCCESS** at
+  13:20Z (validate, Ubuntu, Windows, package + GitHub Release; pin branch;
+  staging canary). Release:
+  `https://github.com/xiom-lang/stdlib/releases/tag/stdlib-v0.65.5`.
+  Asset `xiom-std-0.65.5.tar.gz` sha256 `0ed34f95...d866d4`;
+  `SHA256SUMS` sha256 `e345e3e3...4ae3140`.
+- **Registry 0.65.5 LIVE:** run 41447551299 (registry-publish environment
+  approved; success 13:31Z), sha256
+  `e8aa1bd7...dd960214`, compiler field v0.65.4.
+- **Pin:** branch `chore/pin-stdlib-v0.65.5` at `35ca93f`; PR **#11** open at
+  `https://github.com/xiom-lang/xiom/pull/11` (automated creation failed on
+  the workflow token; stdlib opened it with the review token).
 - **HOLD lifted:** REL-20261101-1343-compiler-2 superseded by 1246/0144,
   marked fixed. The older 2.9 MB/frame red is historical.
 - **Post-release follow-ups:** 2117 aggregate contract; JSON 1704
   (REL-20261031-2308-stdlib) distinct JsonValue drop; 1924 1600 e2e on
-  the official pin; p_mapstr/update witnesses remain in the corpus.
-  Registry + compiler pin recorded when the release finishes.
+  the official v0.65.5 pin; compiler pin branch merge; p_mapstr/update
+  witnesses remain in the corpus.
 
 **SESSION 2026-11-01 block 320 (engine soak RED on the older pair; compiler borrows_vec slice b5b8c66e8; re-soak pending; candidate accepted; no tag)**
 - **Engine soak 600-frame RED** on the older pair (compiler 2e8193e2b +
@@ -15806,4 +15816,5 @@ policy applied (`docs/CI.md`, attestations, dispatch-gated registry
 publish). The single-param sweep repro remains the one open
 stdlib->compiler handoff (fails/hangs on main R45 `483f283e`; repro and
 current evidence in `tools/known_failures/README.md`).
+
 

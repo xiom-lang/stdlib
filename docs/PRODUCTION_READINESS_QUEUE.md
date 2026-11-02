@@ -1,20 +1,21 @@
 ﻿# Production-readiness remaining queue (handoff 2026-09-25)
 
 **90% -- 9 of 10 gates complete; gate 9 discrete.** (Compiler pin:
-**v0.65.4** (published); stdlib-v0.65.4 released at `d267317` (tag
-`stdlib-v0.65.4`, run 41117752917); registry xiom-std 0.65.4 live (sha256
-`12111688...`, compiler field v0.64.8 -- historical and immutable, see
-REL-20261031-1554-stdlib). The post-release tail is on main: persistent
-worker pool + real thread arguments (`a0e91cd`) and the engine P1/P2 gaps
-(`1a17405`). Those are not in v0.65.4; they ride the v0.65.5 candidate.)
+**v0.65.4** published; v0.65.5 pin PR **#11** (chore/pin-stdlib-v0.65.5, 35ca93f) awaits the compiler merge.
+ **stdlib-v0.65.5 PUBLISHED** at
+`d1e4b36`/`88f3c12` (code `7b7583c`, release run 41447551297); registry
+xiom-std 0.65.5 live (sha256 `e8aa1bd7...`, compiler field v0.65.4, run
+41447551299). The release carries the pool (`a0e91cd`), engine P1/P2
+gaps (`1a17405`), kqueue, and the 2156/2337/0116 memory fixes.)
 **Gates on the current tree (official v0.65.4 windows-x64 archive):
 smokes 964/964, modules 533/533, probes 426/426, barename 0/533,
 module-smoke 543/543 (100%), floors197, gate9 10/10 + 30 known-failure
 repros pass + 1 intended T001 (0 unexpected).**
-**v0.65.5 prep:** `release/v0.65.5-prep` (package 0.65.5, pin v0.65.4,
-notes, changelog); release dry-run **41248000167 SUCCESS** on candidate 7d47924 (validate,
-windows/ubuntu gates, package; release/pin/canary correctly skipped).
-Owner GO pending; main is not bumped.
+**v0.65.5 release:** dry-run 41263228033 green on `7b7583c`; tag-triggered
+release 41447551297 succeeded (validate, Ubuntu, Windows, package,
+GitHub Release, pin branch, staging canary); registry published after
+environment approval. Engine soak green (600 419/826 MB, slope 0.037).
+Post-release: JSON 1704, 2117 aggregate contract, compiler pin merge.
 
 ### 2026-10-31 addendum -- post-v0.65.4 tail + v0.65.5 prep + kqueue wave
 - **Pool + engine gaps on main:** `a0e91cd` (persistent worker pool, real
@@ -239,12 +240,12 @@ gates flip:
    Historical: v0.65.1 was 9/10 (only 1609); v0.64.8 results are in the
    updates below.
 10. Beta-exit release cut green (`docs/RELEASE_CHECKLIST.md`) -- MET
-    (stdlib-v0.65.4 released 2026-10-30 at `d267317`, run 41117752917;
-    registry xiom-std 0.65.4 live (sha256 `12111688...`, run 41117752919);
-    compiler v0.65.4 pins STDLIB_VERSION; tags frozen. v0.65.5 prep
-    (`release/v0.65.5-prep`) has dry-run 41248000167 green and awaits the
-    owner GO. Earlier 0.65.0/0.65.1/0.65.2/0.65.3 tags remain
-    released/immutable.)
+    (stdlib-v0.65.5 released 2026-11-02 at `88f3c12`/tag `d1e4b36`, code
+    `7b7583c`; run 41447551297 success; assets
+    `xiom-std-0.65.5.tar.gz` sha256 `0ed34f95...` + `SHA256SUMS`;
+    registry xiom-std 0.65.5 live sha256 `e8aa1bd7...`, compiler field
+    v0.65.4, run 41447551299 after environment approval. The compiler pin PR **#11** (35ca93f) awaits merge; tags frozen.
+    Earlier 0.65.0-0.65.4 tags remain released/immutable.)
 
 Meter formula: MET gates count 1.0; gate 9 gets no partial credit
 (discrete). 9 / 10 = 90%. Gate 8 is MET via the non-tail 100% rule
@@ -3431,6 +3432,7 @@ compiler lane bumps `STDLIB_VERSION`, runs
    probe-first. Relay to packages: grpc publish can proceed once the
    official pin carries m202 (their 36/36 x2 is on the candidate);
    graphql conformance is 10/10 with m206.
+
 
 
 
