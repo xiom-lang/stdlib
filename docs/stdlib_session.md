@@ -4257,13 +4257,13 @@ registry pin, agent recon for the rest)**
   `e8aa1bd7...dd960214`, compiler field v0.65.4.
 - **Pin:** #11 was superseded by **#12** (branch
   `chore/pin-stdlib-v0.65.5-compiler`, STDLIB_VERSION v0.65.5, all checks
-  green): `https://github.com/xiom-lang/xiom/pull/12`. Awaiting the
-  compiler merge.
+  green): `https://github.com/xiom-lang/xiom/pull/12`. **MERGED**
+  2026-11-02T14:00:52Z; compiler main now pins STDLIB_VERSION=stdlib-v0.65.5.
 - **HOLD lifted:** REL-20261101-1343-compiler-2 superseded by 1246/0144,
   marked fixed. The older 2.9 MB/frame red is historical.
 - **Post-release follow-ups:** 2117 aggregate contract; JSON 1704
   (REL-20261031-2308-stdlib) distinct JsonValue drop; 1924 1600 e2e on
-  the official v0.65.5 pin; compiler pin branch merge; p_mapstr/update
+  the official v0.65.5 pin; p_mapstr/update
   witnesses remain in the corpus.
 
 **SESSION 2026-11-01 block 320 (engine soak RED on the older pair; compiler borrows_vec slice b5b8c66e8; re-soak pending; candidate accepted; no tag)**
@@ -15817,6 +15817,8 @@ policy applied (`docs/CI.md`, attestations, dispatch-gated registry
 publish). The single-param sweep repro remains the one open
 stdlib->compiler handoff (fails/hangs on main R45 `483f283e`; repro and
 current evidence in `tools/known_failures/README.md`).
+
+
 
 
 

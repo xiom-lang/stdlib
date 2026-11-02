@@ -18,8 +18,8 @@ Registry: xiom-std 0.65.5 **LIVE**, sha256
 compiler field v0.65.4, run 41447551299 (registry-publish approved).
 Pin: #11 was superseded by **#12** (branch
 `chore/pin-stdlib-v0.65.5-compiler`, STDLIB_VERSION v0.65.5, all checks
-green): `https://github.com/xiom-lang/xiom/pull/12`. Awaiting the compiler
-merge.
+green): `https://github.com/xiom-lang/xiom/pull/12`. **MERGED**
+2026-11-02T14:00:52Z; compiler main pins STDLIB_VERSION=stdlib-v0.65.5.
 
 **Verified candidate (2026-11-01, updated):** stdlib main `21aef98`
 (code `ec9af22`); the candidate branch `release/v0.65.5-prep` is at
@@ -197,4 +197,5 @@ p_engine_p1p2_gaps.
 - No `package.xi` bump, no `COMPILER_VERSION` change, no tag, no release,
   no registry write until the owner's GO.
 - The local battery above creates no release and touches no registry.
+
 
