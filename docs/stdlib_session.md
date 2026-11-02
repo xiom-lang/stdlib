@@ -4416,7 +4416,15 @@ registry pin, agent recon for the rest)**
   peaks. It prints `samples=` and warns when under-sampled.
 - **Artifacts:** `tools/known_failures/p_enum_payload_drop_leak.xi`
   (JSON-free witness), README entry, relay item
-  **REL-20261102-1800-stdlib** (to: compiler, bug high).
+  **REL-20261102-1800-stdlib** (to: compiler, bug high). Landed in
+  stdlib `28fe9cf`.
+- **Worktree hazard seen in this block:** while block 323 ran,
+  `CHANGELOG.md` and `runtime/xiom_runtime.c` acquired an uncommitted t3
+  trampoline-floor change from another actor (REL-20261010-1554-benchmark
+  shape: `sigsetjmp(..., 0)` + `xiom_unblock_signal_before_jump`). It was
+  left untouched; only the lane's four paths were staged. Re-check
+  `git status` and stage explicit paths before any commit in this shared
+  checkout.
 - **Readiness unchanged at 9/10; the open gate is now precisely pinned
   to the compiler.** The 1605 Vec-rebind hotfix does not cover this class
   (element drop, not rebind).
