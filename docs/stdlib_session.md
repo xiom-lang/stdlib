@@ -27,7 +27,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 118 + block 320 + blocks 319/318/317.
+Read docs/stdlib_session.md snapshot 118 + block 321 + blocks 320/319/318.
 
 STATE (2026-10-31):
 - v0.65.4 SHIPPED: stdlib tag stdlib-v0.65.4 -> d267317 (registry xiom-std
@@ -4235,6 +4235,25 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-11-02 block 321 (v0.65.5 TAGGED -- owner GO confirmed, engine soak green; release run 41447551297)**
+- **FINAL RELEASE GO** (REL-20261102-1246-compiler; 0144 closed):
+  owner confirmed tag/publish v0.65.5. Pair: compiler `a28cb352a` (docs
+  `5d97e379d`), stdlib code `7b7583c`, engine soak tree `94a2fc4`.
+- **Engine soak GREEN:** SHELL_UI=0 run_capped 2048: 120 399/809,
+  300 405/815, 600 **419/826 MB WS/private**, exit 0 all; slope
+  0.037 MB/frame (target <=0.5), <2 GB at 600. Shell-on canvas 120
+  426/848, exit 0.
+- **Tag:** annotated `stdlib-v0.65.5` (tag object `d1e4b36`) at
+  `release/v0.65.5-prep` `88f3c12` (code `7b7583c`, package 0.65.5,
+  COMPILER_VERSION v0.65.4). Pushed; release workflow run **41447551297**
+  in progress (validate green; gates running). Tag is immutable.
+- **HOLD lifted:** REL-20261101-1343-compiler-2 superseded by 1246/0144,
+  marked fixed. The older 2.9 MB/frame red is historical.
+- **Post-release follow-ups:** 2117 aggregate contract; JSON 1704
+  (REL-20261031-2308-stdlib) distinct JsonValue drop; 1924 1600 e2e on
+  the official pin; p_mapstr/update witnesses remain in the corpus.
+  Registry + compiler pin recorded when the release finishes.
 
 **SESSION 2026-11-01 block 320 (engine soak RED on the older pair; compiler borrows_vec slice b5b8c66e8; re-soak pending; candidate accepted; no tag)**
 - **Engine soak 600-frame RED** on the older pair (compiler 2e8193e2b +
