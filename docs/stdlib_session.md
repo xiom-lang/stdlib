@@ -17,9 +17,110 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 118 (updated 2026-10-31; **v0.65.4 SHIPPED (stdlib d267317 + compiler v0.65.4 released; registry 0.65.4; pin confirmed; PR #10 closed). 1834 DELIVERED on main a0e91cd -- persistent worker pool + real arg channel + real spawn_with; Windows 30/30, Linux 5/5, final battery probes 421/421, smokes 963/963, modules 533/533. The pool is post-v0.65.4 -> needs stdlib-v0.65.5 + compiler pin. READINESS 9/10: gate 9 blocked ONLY by compiler 1704/m375 drop glue. kqueue gated on a macOS witness; 1531 awaits xvector; 2202 residuals = kqueue/packages-brotli-zstd/Send-Sync**)
+## 0A. CONTINUE HERE -- handoff snapshot 119 (updated 2026-11-02; **v0.65.5 SHIPPED: stdlib tag `d1e4b36`@`88f3c12`, release 41447551297, registry 0.65.5 live, compiler v0.65.5 released, pin PR #12 MERGED. Official v0.65.5 verification: 1600 e2e GREEN (1924 fixed); 1704 JSON still linear 33.6/78.3/275.7 MB at 10k/20k/100k. READINESS 9/10: gate 9 open ONLY on 1704 JSON/JsonValue drop. Lane queue = 2202 (compiler Send/Sync; brotli/zstd live; kqueue done) + 1704. 1531/1807/wishlist33 external.**)
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-10-31, snapshot 118)
+- **v0.65.5 release (2026-11-02):** annotated tag `stdlib-v0.65.5`
+  (object `d1e4b36`) at `88f3c12` (code `7b7583c`, package 0.65.5,
+  `COMPILER_VERSION` v0.65.4). Release run **41447551297 SUCCESS**
+  (validate, Ubuntu 12:47-13:18, Windows 12:47-13:20, package + GitHub
+  Release, pin branch, staging canary):
+  `https://github.com/xiom-lang/stdlib/releases/tag/stdlib-v0.65.5`.
+  Assets: `xiom-std-0.65.5.tar.gz` sha256 `0ed34f95...d866d4`;
+  `SHA256SUMS` sha256 `e345e3e3...4ae3140`.
+- **Registry:** xiom-std 0.65.5 **LIVE**, sha256 `e8aa1bd7...dd960214`,
+  compiler field v0.65.4, run 41447551299 (registry-publish environment
+  approved 13:31Z).
+- **Compiler pin:** PR **#12 MERGED** 14:00:52Z; compiler main pins
+  `STDLIB_VERSION=stdlib-v0.65.5`. Compiler v0.65.5 released (Windows zip
+  sha256 `86a253a5...`).
+- **Official v0.65.5 verification:** downloaded the official Windows archive
+  (sha matches), ran the e2e with the bundled stdlib:
+  `Float128 -> Int128` signed positive/negative, `UInt128`, `Float32`
+  compile rc 0 and run 3/3 rc 0. **REL-20261031-1924 fixed** (1600 also
+  has the stdlib `__fixdfti` family in the pin). Permanent probe can land
+  when `COMPILER_VERSION` moves to v0.65.5 (current main still v0.65.4).
+- **Gate 9 evidence:** `p_json_1704_obj` on the official v0.65.5 archive:
+  **33.6 / 78.3 / 275.7 MB** at 10k / 20k / 100k (~2.5 KB/iter). The
+  10k/256 MB target is met, but the line is not flat; the JsonValue/
+  JSON-builder aggregate drop is still compiler-side. **Gate 9 remains
+  open on 1704 alone.**
+- **Readiness 9/10 (90%):** gates 1-8 and 10 MET. Gate 7 is
+  ratchet-green (modules 543/543 = 100%; function refs 3541/6664 =
+  53.1%). Gate 8 is MET outside the documented 285-fn no-clause tail
+  (iter 70.5, os 71.5, math 90.7, thread 91.1, ffi 94.5, serialize 94.7,
+  format 95.2; no clause waves). Gate 9 = 1704.
+- **Relay queue:** only **2202** (compiler `Send`/`Sync`; brotli/zstd are
+  live registry packages; kqueue delivered) and **1704** (compiler JSON
+  drop) remain acked. 1924 fixed; 1552 fixed; 1600 verified on the
+  official pin (compiler closeout). 1531 (xvector verify), 1807 (orbitdb
+  compiler write path), and wishlist row 33 (compiler/install) are
+  external. Fixed/verified rows awaiting reporter closeout are not lane
+  work.
+- **Main/docs:** main `7e49a41`; block 322 is the official-pin
+  verification record. `out/` and `tests/smoke/smoke_diag_f128_l*` are
+  untracked scratch; keep `out/` disposable and never put compiler
+  archives inside the repo.
+- **No active cron/watch:** the 30-min relay watch was stopped after the
+  release completed. Next release/tag needs a fresh owner GO.
+
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-11-02, snapshot 119)
+
+```
+Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
+  git pull --ff-only origin main
+  git -C E:\xiom-lang\xiom-relays fetch origin
+  git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
+  python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
+Read docs/stdlib_session.md snapshot 119 + block 322 + blocks 321/320.
+
+STATE (2026-11-02):
+- v0.65.5 SHIPPED: tag stdlib-v0.65.5 (object d1e4b36) at 88f3c12
+  (code 7b7583c); release run 41447551297 SUCCESS; assets live; registry
+  xiom-std 0.65.5 live (sha e8aa1bd7..., compiler field v0.65.4, run
+  41447551299); compiler v0.65.5 released (win zip sha 86a253a5...);
+  pin PR #12 MERGED, compiler main pins STDLIB_VERSION=stdlib-v0.65.5.
+  No tag/release action remains for v0.65.5.
+- OFFICIAL v0.65.5 VERIFY: 1600 e2e GREEN 3/3 (signed +/-, UInt128,
+  Float32) -> REL-20261031-1924 fixed. 1704 JSON still linear:
+  p_json_1704_obj 33.6/78.3/275.7 MB at 10k/20k/100k (~2.5 KB/iter).
+- READINESS 9/10 (90%): gates 1-8,10 MET; gate 9 open ONLY on 1704
+  JsonValue/JSON-builder drop. Gate 7 function refs 3541/6664 (53.1%)
+  ratchet-green; gate 8 285-fn no-clause tail is documented policy.
+- LANE RELAY QUEUE: only 2202 (compiler Send/Sync; brotli/zstd live;
+  kqueue done) and 1704 (compiler JSON drop) acked. 1531/1807/row33
+  external; fixed/verified rows await reporters.
+
+PRIORITY:
+1. 1704 -> gate 9 -> 100%: when the compiler lands the JSON/JsonValue
+   drop reclaim, run:
+     xiom tools/probes/p_json_1704_obj.xi -o out/p1704.exe
+     ./tools/json_peak.ps1 -Exe out/p1704.exe -Iters 10000
+     ... -Iters 20000, 100000   (256 MB cap)
+   A flat peak (not linear) + PULSE confirmation flips gate 9. Update
+   docs/session and the readiness queue.
+2. 2202 residual is compiler Send/Sync only; no stdlib code. Brotli/zstd
+   are live registry packages; kqueue delivered.
+3. External: 1531 xvector verify; 1807 orbitdb compiler write path;
+   wishlist row 33 compiler/install; 1600 compiler closeout.
+4. Optional readiness waves: function-level smoke coverage (53.1%);
+   permanent p_f128_i128_e2e once COMPILER_VERSION moves to v0.65.5;
+   no clause waves in the documented tail.
+
+RULES:
+- No tag/release without a fresh owner GO; released tags are immutable.
+- Relay: fetch + merge --ff-only; never edit another lane's item.
+- Compiler archives only under %TEMP%, never inside the repo; keep out/
+  disposable.
+- No clause waves; io.list_dir runtime-owned; json_clear(&mut) hangs; no
+  mutable-enum recursion.
+
+DELIVERABLE: 1704 closes -> gate 9 -> readiness 100%. No other stdlib
+blockers remain.
+```
+
+## 0A-118. PREVIOUS HANDOFF -- snapshot 118 (updated 2026-10-31; **v0.65.4 SHIPPED (stdlib d267317 + compiler v0.65.4 released; registry 0.65.4; pin confirmed; PR #10 closed). 1834 DELIVERED on main a0e91cd -- persistent worker pool + real arg channel + real spawn_with; Windows 30/30, Linux 5/5, final battery probes 421/421, smokes 963/963, modules 533/533. The pool is post-v0.65.4 -> needs stdlib-v0.65.5 + compiler pin. READINESS 9/10: gate 9 blocked ONLY by compiler 1704/m375 drop glue. kqueue gated on a macOS witness; 1531 awaits xvector; 2202 residuals = kqueue/packages-brotli-zstd/Send-Sync**)
+
+## 0C-118. NEXT-SESSION PROMPT (paste-ready 2026-10-31, snapshot 118 -- SUPERSEDED by snapshot 119)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
