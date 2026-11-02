@@ -16,9 +16,10 @@ Assets: `xiom-std-0.65.5.tar.gz` sha256
 Registry: xiom-std 0.65.5 **LIVE**, sha256
 `e8aa1bd7a123529bb1c2995d422ca429d4bd5ae751ddc7b86a6a7cd0dd960214`,
 compiler field v0.65.4, run 41447551299 (registry-publish approved).
-Pin: branch `chore/pin-stdlib-v0.65.5` (`35ca93f`); PR **#11** is open at
-`https://github.com/xiom-lang/xiom/pull/11` (automated creation failed on
-the workflow token; stdlib opened it with the review token).
+Pin: #11 was superseded by **#12** (branch
+`chore/pin-stdlib-v0.65.5-compiler`, STDLIB_VERSION v0.65.5, all checks
+green): `https://github.com/xiom-lang/xiom/pull/12`. Awaiting the compiler
+merge.
 
 **Verified candidate (2026-11-01, updated):** stdlib main `21aef98`
 (code `ec9af22`); the candidate branch `release/v0.65.5-prep` is at

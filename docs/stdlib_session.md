@@ -4255,9 +4255,10 @@ registry pin, agent recon for the rest)**
 - **Registry 0.65.5 LIVE:** run 41447551299 (registry-publish environment
   approved; success 13:31Z), sha256
   `e8aa1bd7...dd960214`, compiler field v0.65.4.
-- **Pin:** branch `chore/pin-stdlib-v0.65.5` at `35ca93f`; PR **#11** open at
-  `https://github.com/xiom-lang/xiom/pull/11` (automated creation failed on
-  the workflow token; stdlib opened it with the review token).
+- **Pin:** #11 was superseded by **#12** (branch
+  `chore/pin-stdlib-v0.65.5-compiler`, STDLIB_VERSION v0.65.5, all checks
+  green): `https://github.com/xiom-lang/xiom/pull/12`. Awaiting the
+  compiler merge.
 - **HOLD lifted:** REL-20261101-1343-compiler-2 superseded by 1246/0144,
   marked fixed. The older 2.9 MB/frame red is historical.
 - **Post-release follow-ups:** 2117 aggregate contract; JSON 1704
@@ -15816,5 +15817,6 @@ policy applied (`docs/CI.md`, attestations, dispatch-gated registry
 publish). The single-param sweep repro remains the one open
 stdlib->compiler handoff (fails/hangs on main R45 `483f283e`; repro and
 current evidence in `tools/known_failures/README.md`).
+
 
 

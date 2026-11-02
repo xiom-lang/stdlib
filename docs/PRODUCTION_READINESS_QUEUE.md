@@ -1,7 +1,7 @@
 ﻿# Production-readiness remaining queue (handoff 2026-09-25)
 
 **90% -- 9 of 10 gates complete; gate 9 discrete.** (Compiler pin:
-**v0.65.4** published; v0.65.5 pin PR **#11** (chore/pin-stdlib-v0.65.5, 35ca93f) awaits the compiler merge.
+**v0.65.4** published; v0.65.5 pin PR **#12** (chore/pin-stdlib-v0.65.5-compiler, all checks green) awaits the compiler merge; #11 was superseded.
  **stdlib-v0.65.5 PUBLISHED** at
 `d1e4b36`/`88f3c12` (code `7b7583c`, release run 41447551297); registry
 xiom-std 0.65.5 live (sha256 `e8aa1bd7...`, compiler field v0.65.4, run
@@ -244,7 +244,7 @@ gates flip:
     `7b7583c`; run 41447551297 success; assets
     `xiom-std-0.65.5.tar.gz` sha256 `0ed34f95...` + `SHA256SUMS`;
     registry xiom-std 0.65.5 live sha256 `e8aa1bd7...`, compiler field
-    v0.65.4, run 41447551299 after environment approval. The compiler pin PR **#11** (35ca93f) awaits merge; tags frozen.
+    v0.65.4, run 41447551299 after environment approval. The compiler pin PR **#12** (chore/pin-stdlib-v0.65.5-compiler) awaits merge; tags frozen.
     Earlier 0.65.0-0.65.4 tags remain released/immutable.)
 
 Meter formula: MET gates count 1.0; gate 9 gets no partial credit
@@ -3432,6 +3432,7 @@ compiler lane bumps `STDLIB_VERSION`, runs
    probe-first. Relay to packages: grpc publish can proceed once the
    official pin carries m202 (their 36/36 x2 is on the candidate);
    graphql conformance is 10/10 with m206.
+
 
 
 
