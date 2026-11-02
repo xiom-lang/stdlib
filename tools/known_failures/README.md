@@ -39,6 +39,22 @@ bug). Status lives
 on the bus; this section closes an entry only when its item closes.
 The stdlib algorithm entry (polygon) is not cross-lane and stays here.
 
+2026-11-02 finding: `p_enum_payload_drop_leak.xi` -- dropping an owned
+aggregate payload nested in an enum variant does not release it, and a
+recursive enum never bottoms out. JSON-free repro on the official v0.65.5
+archive: `Vec[Big]` (`Str | Vec[Int]`) 0.14 KB/iter and `Vec[R]`
+(`Str | Vec[R]`) 0.75 KB/iter; the JSON workload is the same class
+(`Vec[JsonValue]` 1.73, `Map[Str,JsonValue]` 1.87). Scalar
+`JsonValue.Number`, `Vec[Int]`, `Vec[Str]` and `json_stringify` are flat;
+`--release` and `--no-contracts` are identical to debug. This replaces
+"JSON tree drop" as the 1704 root-cause description and is item
+REL-20261102-1800-stdlib (to: compiler, bug high). The gate-9 baseline
+was re-measured with the fixed sampler (`tools/json_peak.ps1`, now
+K32GetProcessMemoryInfo): 45.1 / 85.9 / 408.8 MB at 10k / 20k / 100k
+= 4.04 KB/iter exactly; the old 2.5 KB/iter figures were under-sampled.
+The 1605 Vec-rebind hotfix does not cover this class (element drop, not
+rebind).
+
 2026-10-28 finding: `p_result_bool_pattern.xi` -- a match on
 `Result[Bool, Str]` with nested literal Bool patterns takes the
 `Ok(false)` arm for an `Ok(true)` value (compile rc 0, run rc 2 on the

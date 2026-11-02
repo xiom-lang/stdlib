@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 119 (updated 2026-11-02; **v0.65.5 SHIPPED: stdlib tag `d1e4b36`@`88f3c12`, release 41447551297, registry 0.65.5 live, compiler v0.65.5 released, pin PR #12 MERGED. Official v0.65.5 verification: 1600 e2e GREEN (1924 fixed); 1704 JSON still linear 33.6/78.3/275.7 MB at 10k/20k/100k. READINESS 9/10: gate 9 open ONLY on 1704 JSON/JsonValue drop. Lane queue = 2202 (compiler Send/Sync; brotli/zstd live; kqueue done) + 1704. 1531/1807/wishlist33 external.**)
+## 0A. CONTINUE HERE -- handoff snapshot 119 (updated 2026-11-02; **v0.65.5 SHIPPED: stdlib tag `d1e4b36`@`88f3c12`, release 41447551297, registry 0.65.5 live, compiler v0.65.5 released, pin PR #12 MERGED. Official v0.65.5 verification: 1600 e2e GREEN (1924 fixed); 1704 root-caused to enum-variant aggregate payload drop -- gate probe 45.1/85.9/408.8 MB at 10k/20k/100k (4.04 KB/iter; the old 2.5 KB/iter baseline was under-sampled). READINESS 9/10: gate 9 open ONLY on the compiler drop glue (REL-20261102-1800-stdlib). Lane queue = 2202 (compiler Send/Sync; brotli/zstd live; kqueue done) + 1704. 1531/1807/wishlist33 external.**)
 
 - **v0.65.5 release (2026-11-02):** annotated tag `stdlib-v0.65.5`
   (object `d1e4b36`) at `88f3c12` (code `7b7583c`, package 0.65.5,
@@ -39,26 +39,36 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   compile rc 0 and run 3/3 rc 0. **REL-20261031-1924 fixed** (1600 also
   has the stdlib `__fixdfti` family in the pin). Permanent probe can land
   when `COMPILER_VERSION` moves to v0.65.5 (current main still v0.65.4).
-- **Gate 9 evidence:** `p_json_1704_obj` on the official v0.65.5 archive:
-  **33.6 / 78.3 / 275.7 MB** at 10k / 20k / 100k (~2.5 KB/iter). The
-  10k/256 MB target is met, but the line is not flat; the JsonValue/
-  JSON-builder aggregate drop is still compiler-side. **Gate 9 remains
-  open on 1704 alone.**
+- **Gate 9 evidence (refreshed 2026-11-02, block 323):** the 1704 root
+  cause is not "JSON tree drop" specifically -- owned aggregate payloads
+  nested in enum variants are never released, and a recursive enum never
+  bottoms out. It reproduces JSON-free (`Vec[Big]` 0.14 KB/iter,
+  `Vec[R]` 0.75). The gate probe `p_json_1704_obj` on the official
+  v0.65.5 archive is exactly linear at **4.04 KB/iter**:
+  **45.1 / 85.9 / 166.6 / 408.8 / 812.8 MB** at 10k / 20k / 40k / 100k /
+  200k. The earlier 33.6 / 78.3 / 275.7 MB was under-sampled by the old
+  `json_peak.ps1` poll (stale cached working set + abort-on-exception);
+  the tool now reads `K32GetProcessMemoryInfo` and prints `samples=`.
+  **Gate 9 remains open on the compiler drop glue alone**; stdlib API work
+  is done (build 1.87 + parse 2.08 + stringify 0.12 = full 4.07 KB/iter;
+  scalar enums and stringify are flat).
 - **Readiness 9/10 (90%):** gates 1-8 and 10 MET. Gate 7 is
   ratchet-green (modules 543/543 = 100%; function refs 3541/6664 =
   53.1%). Gate 8 is MET outside the documented 285-fn no-clause tail
   (iter 70.5, os 71.5, math 90.7, thread 91.1, ffi 94.5, serialize 94.7,
   format 95.2; no clause waves). Gate 9 = 1704.
 - **Relay queue:** only **2202** (compiler `Send`/`Sync`; brotli/zstd are
-  live registry packages; kqueue delivered) and **1704** (compiler JSON
-  drop) remain acked. 1924 fixed; 1552 fixed; 1600 verified on the
+  live registry packages; kqueue delivered) and **1704** (compiler
+  enum-variant payload drop; now filed to compiler as
+  **REL-20261102-1800-stdlib** with the JSON-free repro) remain acked.
+  1924 fixed; 1552 fixed; 1600 verified on the
   official pin (compiler closeout). 1531 (xvector verify), 1807 (orbitdb
   compiler write path), and wishlist row 33 (compiler/install) are
   external. Fixed/verified rows awaiting reporter closeout are not lane
   work.
-- **Main/docs:** main `7e49a41`; block 322 is the official-pin
-  verification record. `out/` and `tests/smoke/smoke_diag_f128_l*` are
-  untracked scratch; keep `out/` disposable and never put compiler
+- **Main/docs:** block 323 is the gate-9 root-cause record (block 322 the
+  official-pin verification). `out/` and `tests/smoke/smoke_diag_f128_l*`
+  are untracked scratch; keep `out/` disposable and never put compiler
   archives inside the repo.
 - **RELAY WORKTREE CAVEAT (2026-11-02, own answer):** the shared relay
   clone `E:\xiom-lang\xiom-relays` has a **local-only, uncommitted
@@ -100,14 +110,20 @@ STATE (2026-11-02):
   pin PR #12 MERGED, compiler main pins STDLIB_VERSION=stdlib-v0.65.5.
   No tag/release action remains for v0.65.5.
 - OFFICIAL v0.65.5 VERIFY: 1600 e2e GREEN 3/3 (signed +/-, UInt128,
-  Float32) -> REL-20261031-1924 fixed. 1704 JSON still linear:
-  p_json_1704_obj 33.6/78.3/275.7 MB at 10k/20k/100k (~2.5 KB/iter).
+  Float32) -> REL-20261031-1924 fixed. 1704 ROOT-CAUSED (block 323):
+  enum-variant aggregate payload drop; p_json_1704_obj is linear at
+  4.04 KB/iter -- 45.1/85.9/166.6/408.8/812.8 MB at 10k/20k/40k/100k/
+  200k (the old 33.6/78.3/275.7 baseline was under-sampled). Filed to
+  compiler as REL-20261102-1800-stdlib; JSON-free repro
+  tools/known_failures/p_enum_payload_drop_leak.xi.
 - READINESS 9/10 (90%): gates 1-8,10 MET; gate 9 open ONLY on 1704
-  JsonValue/JSON-builder drop. Gate 7 function refs 3541/6664 (53.1%)
-  ratchet-green; gate 8 285-fn no-clause tail is documented policy.
+  enum-variant payload drop (REL-20261102-1800-stdlib). Gate 7 function
+  refs 3541/6664 (53.1%) ratchet-green; gate 8 285-fn no-clause tail is
+  documented policy.
 - LANE RELAY QUEUE: only 2202 (compiler Send/Sync; brotli/zstd live;
-  kqueue done) and 1704 (compiler JSON drop) acked. 1531/1807/row33
-  external; fixed/verified rows await reporters.
+  kqueue done) and 1704 (compiler enum-payload drop; filed as
+  REL-20261102-1800-stdlib) acked. 1531/1807/row33 external;
+  fixed/verified rows await reporters.
 - RELAY WORKTREE: E:\xiom-lang\xiom-relays has a LOCAL-ONLY uncommitted
   2026-10-21 edit to release-checks/compiler-v0.64.8.md (+24/-16; re-adds
   verdict notes, reverts created timestamp, flips rows). HEAD ==
@@ -120,13 +136,16 @@ STATE (2026-11-02):
   acked; v0.65.6 pending and orbitdb remains on v0.65.4 accepted.
 
 PRIORITY:
-1. 1704 -> gate 9 -> 100%: when the compiler lands the JSON/JsonValue
-   drop reclaim, run:
+1. 1704 -> gate 9 -> 100%: when the compiler lands enum-variant aggregate
+   payload drop glue (REL-20261102-1800-stdlib; the 1605 Vec-rebind hotfix
+   does NOT cover it), run:
      xiom tools/probes/p_json_1704_obj.xi -o out/p1704.exe
      ./tools/json_peak.ps1 -Exe out/p1704.exe -Iters 10000
-     ... -Iters 20000, 100000   (256 MB cap)
+     ... -Iters 20000, 100000   (256 MB cap; add -MaxMB 512 to see the
+     true 100k peak, which is 408.8 MB today)
    A flat peak (not linear) + PULSE confirmation flips gate 9. Update
-   docs/session and the readiness queue.
+   docs/session and the readiness queue. Cross-check the JSON-free witness
+   tools/known_failures/p_enum_payload_drop_leak.xi (bigenum/recenum).
 2. 2202 residual is compiler Send/Sync only; no stdlib code. Brotli/zstd
    are live registry packages; kqueue delivered.
 3. External: 1531 xvector verify; 1807 orbitdb compiler write path;
@@ -4368,6 +4387,39 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-11-02 block 323 (gate-9 root cause isolated: enum-variant aggregate payload drop, not JSON tree drop; baseline corrected to 4.04 KB/iter; filed REL-20261102-1800-stdlib)**
+- **Method:** phase matrix on the official v0.65.5 win-x64 archive
+  (exe `02f294a9...`), one binary per matrix, two repeats, baseline
+  subtracted; peak working set via `K32GetProcessMemoryInfo`.
+- **Finding:** an owned aggregate payload nested in an enum variant is not
+  released on drop, and a recursive enum never bottoms out. JSON-free
+  repro: `Vec[Big]` (`Str | Vec[Int]`) and `Vec[R]` (`Str | Vec[R]`).
+  Magnitude is module-shape sensitive (0.89/1.50 KB/iter in the matrix
+  binary; 0.14/0.75 in the committed witness at 40k/100k); the linear
+  growth is the invariant.
+- **Container split (20k, KB/iter):** `Vec[Int]` 0.14, `Vec[Str]` 0.14,
+  `Map[Str,Int]` 0.29, `Vec[E]` 0.40, `Map[Str,E]` 0.54, `Vec[Big]` 0.89,
+  `Vec[R]` 1.50, `Vec[JsonValue]` 1.73, `Map[Str,JsonValue]` 1.87.
+- **JSON decomposition:** builder 1.87 + parse 2.08 + stringify 0.12 =
+  full 4.07 (additive). Scalar `JsonValue.Number` 0.00; `json_stringify`
+  and `json_stringify_ref` flat at 0.12.
+- **Gate baseline corrected:** `p_json_1704_obj` =
+  45.1 / 85.9 / 166.6 / 408.8 / 812.8 MB at 10k / 20k / 40k / 100k /
+  200k = exactly 4.04 KB/iter. The old 33.6 / 78.3 / 275.7 was
+  under-sampled (100k true peak 408.8, not 275.7).
+- **Not contracts/debug:** `--release` and `--no-contracts` are
+  byte-identical to debug; scalar enums and the render path are flat.
+- **Tool fix:** `tools/json_peak.ps1` now queries
+  `K32GetProcessMemoryInfo`; the old `Process.Refresh` poll cached stale
+  values and aborted on a transient exception, producing 0.0/partial
+  peaks. It prints `samples=` and warns when under-sampled.
+- **Artifacts:** `tools/known_failures/p_enum_payload_drop_leak.xi`
+  (JSON-free witness), README entry, relay item
+  **REL-20261102-1800-stdlib** (to: compiler, bug high).
+- **Readiness unchanged at 9/10; the open gate is now precisely pinned
+  to the compiler.** The 1605 Vec-rebind hotfix does not cover this class
+  (element drop, not rebind).
 
 **SESSION 2026-11-02 block 322 (official v0.65.5 verification: 1600 e2e GREEN; 1704 JSON still linear; lane queue = 2202/1704 only)**
 - **Official compiler v0.65.5 verified:** `xiom-0.65.5-windows-x64.zip`
