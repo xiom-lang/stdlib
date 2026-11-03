@@ -12,6 +12,7 @@ All scripts are repo-relative: they work from any CWD and from CI checkouts.
 | Coverage ratchet | `coverage_scan.ps1` | contract-clause coverage never falls below the recorded floors |
 | Bare-name scan | `barename_scan.ps1` | strict catalog-body findings across all manifest modules (0 expected) |
 | Module check | `check_modules.ps1` | `xiom --check` type-checks every manifest module |
+| Roadmap tracker | `check_roadmap.ps1` | roadmap rows have valid unique IDs, horizons, statuses, exit criteria, and evidence on `in_progress`/`blocked`/`done` |
 | Probes | `run_smokes.ps1 -Corpus tools/probes` | re-run the per-lock probes after a compiler bump |
 | Gate 9 evidence | `gate9_scan.ps1` | the 10-probe gate-9 set plus every `tools/known_failures` repro on a given compiler archive; the intended T001 negative is allowlisted and any other failure exits 1 |
 
