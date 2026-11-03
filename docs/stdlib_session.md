@@ -4447,6 +4447,10 @@ registry pin, agent recon for the rest)**
   `release-notes/v0.65.5.md` added, all taken from tag
   `stdlib-v0.65.5`. CI now fetches the current compiler pin (v0.65.5)
   for the corpus instead of the stale v0.64.8.
+- **CI-equivalent validation on committed HEAD with the official
+  v0.65.5:** `check_modules` **533/533** type-check clean (267.7 s) and
+  the KAT gate **15/15** (42 s). `XIOM_STDLIB=<clean HEAD extract>` was
+  used so the repo modules, not the archive copy, were checked.
 - **Release topology found:** `stdlib-v0.65.5` (`88f3c12`,
   `release/v0.65.5-prep`) is **not an ancestor of main**. The code trees
   are identical; the release-side differences were exactly the four
