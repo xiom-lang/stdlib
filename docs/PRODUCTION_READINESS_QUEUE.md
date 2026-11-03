@@ -17,6 +17,40 @@ GitHub Release, pin branch, staging canary); registry published after
 environment approval. Engine soak green (600 419/826 MB, slope 0.037).
 Post-release: JSON 1704, 2117 aggregate contract, compiler pin merge.
 
+### 2026-11-03 addendum -- gate-9 baseline corrected + contract-pair collision
+- **Baseline correction:** `p_json_1704_obj` on the official v0.65.5
+  archive is exactly linear at **4.04 KB/iter** -- 45.1 / 85.9 / 166.6 /
+  408.8 / 812.8 MB at 10k / 20k / 40k / 100k / 200k. The 33.6 / 78.3 /
+  275.7 numbers below were under-sampled by the old `json_peak.ps1` poll
+  (stale cached working set + abort-on-exception); the tool now reads
+  `K32GetProcessMemoryInfo` and prints `samples=`. The 10k/256 MB target
+  is still met; the line is not flat.
+- **Root cause narrowed:** not "JSON tree drop" specifically -- owned
+  aggregate payloads inside enum variants are not released, and a
+  recursive enum never bottoms out. JSON-free witness
+  `tools/known_failures/p_enum_payload_drop_leak.xi`: `Vec[Big]` 0.14,
+  `Vec[R]` 0.75 KB/iter. Scalar enums, `Vec[Int]`/`Vec[Str]` and
+  `json_stringify` are flat; `--release`/`--no-contracts` are identical.
+  (REL-20261102-1800-stdlib.)
+- **Contract pair -- flat result retracted:** with the in-flight compiler
+  `#[consumes_agg]`/`#[owns_return]`/`#[borrows_vec]` codegen plus the
+  annotated stdlib the gate first measured flat, but that is a
+  **leaf-name collision artifact** between the two `json_parse`
+  declarations (`serialize.json` -> `Result[JsonValue, Str]`,
+  `serialize.serialize` -> `Result[JsonValue, SerializeError]`); the same
+  collision makes a nested-scope `json_parse` binding fail with
+  `Instruction does not dominate all uses!`. With
+  `serialize.serialize.json_parse` unannotated the repro compiles and the
+  gate is **25.3 / 44.7 / 205.4 MB** at 10k / 20k / 100k = **2.0
+  KB/iter** (parse tree; build is reclaimed via stringify's
+  `consumes_agg`, stringify is flat). The flat number is not evidence of a
+  reclaim.
+- **Next:** compiler qualifies annotation keys (same class for
+  `json_escape` x4 and `build` x2) -- REL-20261103-1557-stdlib. Then
+  re-run the minimal nested repro and the gate curve; gate 9 stays open
+  until a correct flat measurement and PULSE confirmation exist.
+- **Readiness unchanged at 9/10.**
+
 ### 2026-11-02 addendum -- v0.65.5 published + official-pin verification
 - **Official compiler v0.65.5** (windows-x64 zip sha256 `86a253a5...`,
   matches the release asset) with the bundled v0.65.5 stdlib:
