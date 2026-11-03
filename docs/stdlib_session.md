@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 119 (updated 2026-11-02; **v0.65.5 SHIPPED: stdlib tag `d1e4b36`@`88f3c12`, release 41447551297, registry 0.65.5 live, compiler v0.65.5 released, pin PR #12 MERGED. Official v0.65.5 verification: 1600 e2e GREEN (1924 fixed); 1704 root-caused and the ownership-contract pair is VERIFIED FLAT -- gate probe 5.7/5.6/9.3/13.9 MB at 10k/20k/100k/200k vs 45.1/85.9/408.8/812.8 on v0.65.5 -- but blocked on a compiler IR-dominance regression (REL-20261103-1551-stdlib). READINESS 9/10: gate 9 open pending that fix. Lane queue = 2202 (compiler Send/Sync; brotli/zstd live; kqueue done) + 1704. 1531/1807/wishlist33 external.**)
+## 0A. CONTINUE HERE -- handoff snapshot 119 (updated 2026-11-02; **v0.65.5 SHIPPED: stdlib tag `d1e4b36`@`88f3c12`, release 41447551297, registry 0.65.5 live, compiler v0.65.5 released, pin PR #12 MERGED. Official v0.65.5 verification: 1600 e2e GREEN (1924 fixed); 1704 root-caused. The contract pair's "flat" gate result was RETRACTED (REL-20261103-1557-stdlib): it came from a `json_parse` leaf-name collision, not a correct reclaim. Collision-free the pair is 25.3/44.7/205.4 MB at 10k/20k/100k (2.0 KB/iter, parse tree). READINESS 9/10: gate 9 open pending qualified annotation keys + re-verification. Lane queue = 2202 (compiler Send/Sync; brotli/zstd live; kqueue done) + 1704. 1531/1807/wishlist33 external.**)
 
 - **v0.65.5 release (2026-11-02):** annotated tag `stdlib-v0.65.5`
   (object `d1e4b36`) at `88f3c12` (code `7b7583c`, package 0.65.5,
@@ -52,20 +52,21 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   **Gate 9 remains open on the compiler drop glue alone**; stdlib API work
   is done (build 1.87 + parse 2.08 + stringify 0.12 = full 4.07 KB/iter;
   scalar enums and stringify are flat).
-- **Gate 9 PAIR VERIFIED (2026-11-03, block 324):** the in-flight
-  ownership-contract pair -- stdlib annotations (`#[owns_return]`,
-  `#[consumes_agg]`, `#[borrows_vec]`, `#[owns_str]`, `#[borrows_str]`)
-  plus compiler codegen -- makes `p_json_1704_obj` **flat**:
-  5.7 / 5.6 / 9.3 / 13.9 MB at 10k / 20k / 100k / 200k (was
-  45.1 / 85.9 / 408.8 / 812.8). The annotations are required: the same
-  compiler binary with the committed stdlib still leaks 45.5 / 85.7 at
-  10k / 20k. **Blocking:** with `smoke_stress_serialize_json_nested` the
-  pair fails to compile -- `Instruction does not dominate all uses` on
-  `%struct.Result__JsonValue__Str` (the `#[owns_return]` `json_parse`
-  path). Filed as **REL-20261103-1551-stdlib**. Both sides are
-  uncommitted WIP; do not commit the stdlib half until the compiler
-  dominance fix lands (CHANGELOG/runtime are interleaved with the foreign
-  t3 change).
+- **Gate 9 PAIR RESULT -- RETRACTED (2026-11-03, block 325):** the earlier
+  "flat" measurement (5.6 / 5.6 / 9.3 / 13.9 MB) is withdrawn. It is
+  produced by a leaf-name collision between the two `json_parse`
+  declarations (`xiom.serialize.json` -> `Result[JsonValue, Str]` and
+  `xiom.serialize.serialize` -> `Result[JsonValue, SerializeError]`);
+  the same collision causes the IR dominance failure on
+  `smoke_stress_serialize_json_nested`. With
+  `xiom.serialize.serialize.json_parse` unannotated (collision removed):
+  nested repro compiles and the gate is **25.3 / 44.7 / 205.4 MB** at
+  10k / 20k / 100k = **2.0 KB/iter** (parse tree; build is reclaimed by
+  stringify's `consumes_agg`, stringify is flat). Filed as
+  **REL-20261103-1557-stdlib**; the fix is module-qualified annotation
+  keys (also for `json_escape` x4 and `build` x2). **Gate 9 remains
+  open**; the flat outcome is plausible after a correct fix but is not
+  measured.
 - **Readiness 9/10 (90%):** gates 1-8 and 10 MET. Gate 7 is
   ratchet-green (modules 543/543 = 100%; function refs 3541/6664 =
   53.1%). Gate 8 is MET outside the documented 285-fn no-clause tail
@@ -73,26 +74,26 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   format 95.2; no clause waves). Gate 9 = 1704.
 - **Relay queue:** only **2202** (compiler `Send`/`Sync`; brotli/zstd are
   live registry packages; kqueue delivered) and **1704** (compiler
-  enum-variant payload drop; filed as **REL-20261102-1800-stdlib**, then
-  superseded in approach by **REL-20261103-1551-stdlib** -- the contract
-  pair is verified flat) remain acked.
+  annotation resolution; **REL-20261102-1800-stdlib** ->
+  **REL-20261103-1551-stdlib** -> corrected by
+  **REL-20261103-1557-stdlib**) remain acked.
   1924 fixed; 1552 fixed; 1600 verified on the
   official pin (compiler closeout). 1531 (xvector verify), 1807 (orbitdb
   compiler write path), and wishlist row 33 (compiler/install) are
   external. Fixed/verified rows awaiting reporter closeout are not lane
   work.
-- **Main/docs:** block 324 is the contract-pair verification record
-  (block 323 the root-cause isolation, block 322 the official-pin
-  verification). `out/` and `tests/smoke/smoke_diag_f128_l*`
-  are untracked scratch; keep `out/` disposable and never put compiler
-  archives inside the repo.
+- **Main/docs:** block 325 is the correction (collision artifact; gate
+  2.0 KB/iter collision-free), block 324 the superseded pair measurement,
+  block 323 the root-cause isolation. `out/` and
+  `tests/smoke/smoke_diag_f128_l*` are untracked scratch; keep `out/`
+  disposable and never put compiler archives inside the repo.
 - **CONTRACT-PAIR WIP (2026-11-03):** `E:\xiom-lang\stdlib` carries 5
   annotated JSON/builder sources + `CHANGELOG.md`/`runtime/xiom_runtime.c`
   WIP; `E:\xiom-lang\xiom` carries 26 uncommitted codegen/test files
   (HEAD `c54ee9f8b`). The stdlib annotations alone are green on the
   v0.65.5 pin (9/9 probes, 21/21 smokes; gate still linear
   43.9/82.3/159.8, because v0.65.5 has no `consumes_agg`). The compiler
-  binary used for the flat measurements is sha256 `ea950174...`
+  binary used for the pair measurements is sha256 `ea950174...`
   (2026-11-03 13:49Z). Do not `git add .` in either tree.
 - **RELAY WORKTREE CAVEAT (2026-11-02, own answer):** the shared relay
   clone `E:\xiom-lang\xiom-relays` has a **local-only, uncommitted
@@ -144,18 +145,19 @@ STATE (2026-11-03):
   enum-variant payload drop. Gate 7 function
   refs 3541/6664 (53.1%) ratchet-green; gate 8 285-fn no-clause tail is
   documented policy.
-- CONTRACT PAIR (2026-11-03, block 324): stdlib annotations + compiler
-  contract codegen make p_json_1704_obj FLAT -- 5.7/5.6/9.3/13.9 MB at
-  10k/20k/100k/200k (vs 45.1/85.9/408.8/812.8). BLOCKER: the pair fails to
-  compile smoke_stress_serialize_json_nested (IR dominance on
-  Result[JsonValue, Str], the #[owns_return] json_parse path) --
-  REL-20261103-1551-stdlib. Both sides are uncommitted WIP; annotations
-  alone are green on v0.65.5 (9/9 probes, 21/21 smokes) but the gate stays
+- CONTRACT PAIR (2026-11-03, blocks 324-325): the pair's "flat" gate
+  (5.6/5.6/9.3/13.9) is RETRACTED -- it is a json_parse leaf-name
+  collision artifact. Collision-free (serialize.serialize.json_parse
+  unannotated) the nested repro compiles and the gate is
+  25.3/44.7/205.4 MB at 10k/20k/100k = 2.0 KB/iter (parse tree); build is
+  reclaimed via stringify's consumes_agg, stringify is flat. Fix:
+  module-qualified annotation keys (json_escape x4, build x2 also
+  collide). REL-20261103-1557-stdlib supersedes 1551. Annotations alone
+  are green on v0.65.5 (9/9 probes, 21/21 smokes) but the gate stays
   linear there (no consumes_agg).
 - LANE RELAY QUEUE: only 2202 (compiler Send/Sync; brotli/zstd live;
-  kqueue done) and 1704 (contract pair verified; blocked on the dominance
-  fix in REL-20261103-1551-stdlib) acked. 1531/1807/row33 external;
-  fixed/verified rows await reporters.
+  kqueue done) and 1704 (annotation resolution; REL-20261103-1557-stdlib)
+  acked. 1531/1807/row33 external; fixed/verified rows await reporters.
 - RELAY WORKTREE: E:\xiom-lang\xiom-relays has a LOCAL-ONLY uncommitted
   2026-10-21 edit to release-checks/compiler-v0.64.8.md (+24/-16; re-adds
   verdict notes, reverts created timestamp, flips rows). HEAD ==
@@ -168,18 +170,21 @@ STATE (2026-11-03):
   acked; v0.65.6 pending and orbitdb remains on v0.65.4 accepted.
 
 PRIORITY:
-1. 1704 -> gate 9 -> 100%: the contract pair is verified flat (block 324);
-   the only blocker is the IR dominance fix for owned Result[enum, Str]
-   returns (REL-20261103-1551-stdlib). When the compiler lands it and cuts
-   v0.65.6:
+1. 1704 -> gate 9 -> 100%: the flat gate result was a collision artifact
+   (REL-20261103-1557-stdlib). The fix is module-qualified annotation
+   keys; after the compiler lands it and cuts v0.65.6, re-run BOTH:
      xiom tools/probes/p_json_1704_obj.xi -o out/p1704.exe
      ./tools/json_peak.ps1 -Exe out/p1704.exe -Iters 10000
      ... -Iters 20000, 100000   (256 MB cap; add -MaxMB 512 for the true
-     100k peak -- 408.8 MB on v0.65.5, 9.3 MB on the pair)
-   Then: commit the stdlib annotation set (currently WIP; CHANGELOG and
-   runtime are interleaved with the foreign t3 change -- split before
-   staging), pin the stdlib, and re-run the JSON corpus + the JSON-free
-   witness. A flat peak + PULSE confirmation flips gate 9.
+     100k peak)
+   and the minimal nested repro:
+     let s = "{\"a\":1}"; if s.len() > 0 { var r = json_parse(s);
+     if r.is_ok { return 0; } }
+   (must compile and run; it currently fails while the collision is
+   present). Collision-free today: 2.0 KB/iter, parse tree -- so a correct
+   owns_return application still has to be proven, not assumed. Then
+   commit the stdlib annotation set (split CHANGELOG/runtime from the
+   foreign t3 change), pin, and get PULSE confirmation.
 2. 2202 residual is compiler Send/Sync only; no stdlib code. Brotli/zstd
    are live registry packages; kqueue delivered.
 3. External: 1531 xvector verify; 1807 orbitdb compiler write path;
@@ -4426,7 +4431,48 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
-**SESSION 2026-11-03 block 324 (gate-9 contract pair verified FLAT; blocked on an IR dominance regression in json_parse's owns_return Result)**
+**SESSION 2026-11-03 block 325 (CORRECTION: the "flat" gate was a json_parse leaf-name collision; collision-free pair is 2.0 KB/iter, parse tree; filed REL-20261103-1557-stdlib)**
+- **Retraction:** block 324's flat `p_json_1704_obj` result
+  (5.6 / 5.6 / 9.3 / 13.9 MB) is **withdrawn**. It is produced by a
+  leaf-name collision between the two `json_parse` declarations
+  (`xiom.serialize.json` -> `Result[JsonValue, Str]` and
+  `xiom.serialize.serialize` -> `Result[JsonValue, SerializeError]`),
+  and the same collision is what breaks `smoke_stress_serialize_json_nested`
+  with `Instruction does not dominate all uses`.
+- **Single-tree experiment (probe copied inside the install root; no
+  duplicate module roots):**
+  - both `json_parse` annotated (repo WIP): nested repro FAILS, gate
+    5.6/5.6/9.3 (flat).
+  - `serialize.serialize.json_parse` unannotated:
+    25.3 / 44.7 / 205.4 MB at 10k / 20k / 100k = **2.0 KB/iter**;
+    nested repro compiles and runs rc 0.
+  - `serialize.serialize.json_parse` with `#[owns_return]` only: nested
+    repro FAILS, gate 5.8/6.1/12.3 (flat).
+  - committed stdlib + same binary: 45.5/85.7 (4.0 KB/iter).
+  - official v0.65.5 + annotated stdlib: 43.9/82.3/159.8 (3.9 KB/iter),
+    corpus green.
+- **Phase split with the collision removed (20k, baseline subtracted):**
+  build 1.89, parse 1.95, stringify 0.07 KB/iter; full ~2.0 because
+  stringify's `consumes_agg` reclaims the builder tree. The residual is
+  the parse tree -- the correctly-resolved `#[owns_return]` is not being
+  applied.
+- **Diagnosis:** annotation lookup is leaf-keyed. Qualify it by module/decl
+  so an unannotated same-named decl cannot shadow an annotated one. The
+  same collision class exists for `json_escape` (`#[owns_str]` in four
+  modules) and `build` (object/array builder, both `#[consumes_agg]`).
+- **Minimal repro (collision present):**
+  `let s = "{\"a\":1}"; if s.len() > 0 { var r = json_parse(s);
+  if r.is_ok { return 0; } }` -> IR dominance failure.
+- **Status:** gate 9 stays open. The corrected fix may well produce a flat
+  gate, but that must be measured after the key qualification -- the
+  current flat number is not evidence of a reclaim. Filed
+  **REL-20261103-1557-stdlib** (correction to 1551).
+- **Do not commit the stdlib annotation WIP yet:** the scope is still
+  being corrected (e.g. whether `serialize.serialize.json_parse` should
+  carry `#[owns_return]` at all, and the `json_escape`/`build`
+  collisions). Re-verify after the compiler fix.
+
+**SESSION 2026-11-03 block 324 (SUPERSEDED by block 325 -- "flat" was a collision artifact; pair blocked on an IR dominance regression in json_parse's owns_return Result)**
 - **Pair under test (uncommitted WIP on both sides):** stdlib carries 5
   annotated JSON/builder sources + `runtime`/`CHANGELOG` WIP (HEAD
   `0dd7166`); compiler carries 26 uncommitted codegen/test files (HEAD
