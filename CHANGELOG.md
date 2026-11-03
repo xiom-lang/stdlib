@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.65.5] - 2026-10-31
+
 ### Added
 
 - Persistent worker pool: `xiom.thread.pool` now owns a real fleet of
