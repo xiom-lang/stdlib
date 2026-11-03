@@ -112,12 +112,6 @@ Horizons: H1 = 0-30 days, H2 = 30-90, H3 = 90-180, H4 = 6-12 months.
 | G3 | Release automation: "main contains the last release", compiler+stdlib pair CI, pin/version automation, no merge commits | H1 | planned | Automated checks catch the v0.65.5 branch-drift class | |
 | G4 | Security policy: disclosure, constant-time/zeroization guidance, dependency review/SBOM | H4 | planned | Policy published; SBOM produced per release | |
 
-### RF-0 -- the pre-roadmap carry-over
-
-| ID | Initiative | Horizon | Status | Exit criterion | Evidence |
-|---|---|---|---|---|---|
-| RF-0 | Flip gate 9: v0.65.6 archive, `COMPILER_VERSION` bump, archive re-run, mark 1704 fixed, PULSE confirmation, readiness 10/10 | H1 | in_progress | Flat archive run + PULSE verified + queue at 10/10 | REL-20261103-1626 verified; contracts `9de28f1`; PULSE request `REL-20261103-1807-stdlib` |
-
 ## 3. Growth and expansion (post-1.0)
 
 Growth is demand-driven and boundary-governed. Relay wishlists are **inputs**,
@@ -228,6 +222,11 @@ starts after 1.0 (H4) so the stability and SLO work is not diluted.
 - An initiative is `done` only with evidence: commit, run id, dashboard, or doc.
 - Never close a row by lowering its exit criterion; amend the criterion first
   and record why.
+- `tools/check_roadmap.ps1` runs in the CI static job and rejects duplicate or
+  malformed IDs, bad horizons/statuses, empty exit criteria, and missing
+  evidence on `in_progress` / `blocked` / `done` rows.
+- Append a row to the review log (section 7) at every review; do not rewrite
+  earlier entries.
 
 ## 5. Non-goals
 
@@ -252,3 +251,9 @@ starts after 1.0 (H4) so the stability and SLO work is not diluted.
 6. Run **X1** (growth policy) and **X5** (data-format policy) in H2 so relay
    wishlists have a decision path; do not start expansion (**X2-X8**) before
    1.0, and keep the API-surface budget (**X8**) in the release checklist.
+
+## 7. Review log
+
+| Date | Event | Outcome |
+|---|---|---|
+| 2026-11-03 | Roadmap created; 	ools/check_roadmap.ps1 added and wired into the static CI job | RF-0 in_progress (blocked on v0.65.6 + PULSE); A-G and X1-X8 planned; next review when RF-0 lands |

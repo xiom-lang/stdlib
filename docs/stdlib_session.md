@@ -86,9 +86,9 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   (orbitdb compiler write path), and wishlist row 33 (compiler/install)
   are external. Fixed/verified rows awaiting reporter closeout are not
   lane work.
-- **Main/docs:** block 330 is the post-10/10 roadmap (`docs/STDLIB_ROADMAP.md`),
-  block 329 the verified gate-9 fix + committed contracts, block 328 the
-  release-branch landing, block 327 the 1600 probe + metadata sync.
+- **Main/docs:** block 331 is the roadmap tracker/CI enforcement, block 330
+  the post-10/10 roadmap (`docs/STDLIB_ROADMAP.md`), block 329 the verified
+  gate-9 fix + committed contracts, block 328 the release-branch landing.
   `out/` and `tests/smoke/smoke_diag_f128_l*` are untracked scratch; keep
   `out/` disposable and never put compiler archives inside the repo.
 - **Release metadata landed linearly (2026-11-03, block 328):** the
@@ -204,6 +204,9 @@ PRIORITY:
 RULES:
 - No tag/release without a fresh owner GO; released tags are immutable.
 - Relay: fetch + merge --ff-only; never edit another lane's item.
+- Roadmap: docs/STDLIB_ROADMAP.md is the tracker. Run
+  tools/check_roadmap.ps1 before/after editing it; update rows with
+  evidence and append to the section 7 review log.
 - Before `relay.py validate`, check `git -C E:\xiom-lang\xiom-relays
   status`; the compiler-lane release-check drift is local-only and must
   not be reverted without its owner.
@@ -4441,6 +4444,19 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-11-03 block 331 (roadmap tracker enforced in CI; v0.65.6 still pending)**
+- `tools/check_roadmap.ps1` validates `docs/STDLIB_ROADMAP.md`: unique and
+  well-formed IDs, horizons H1-H4 (ranges allowed), the status set,
+  non-empty initiative/exit criteria, and Evidence for
+  `in_progress`/`blocked`/`done` rows. Wired into the CI static job.
+  Current table: 36 rows, 35 planned, 1 in_progress (RF-0).
+- The roadmap gained a **Review log** (section 7); conventions require the
+  validator plus a review-log row at each review.
+- **RF-0 is still blocked on the compiler:** as of 18:46Z there is no
+  v0.65.6 tag and no archive, and the 1626 fix is uncommitted on compiler
+  main. The PULSE request `REL-20261103-1807-stdlib` stands.
+- Readiness unchanged at 9/10.
 
 **SESSION 2026-11-03 block 330 (post-10/10 roadmap added: docs/STDLIB_ROADMAP.md)**
 - **Created `docs/STDLIB_ROADMAP.md`.** Its initiative table is the

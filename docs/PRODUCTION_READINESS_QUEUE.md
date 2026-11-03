@@ -71,7 +71,8 @@ Post-release: JSON 1704, 2117 aggregate contract, compiler pin merge.
   and governance. Section 3 governs growth/expansion (portfolio tiers,
   admission test, relay intake, X1-X8); expansion starts after 1.0. The
   initiative table is the checklist (update with evidence; do not delete
-  rows).
+  rows). Enforced by `tools/check_roadmap.ps1` in the CI static job; the
+  review log is section 7.
 
 ### 2026-11-02 addendum -- v0.65.5 published + official-pin verification
 - **Official compiler v0.65.5** (windows-x64 zip sha256 `86a253a5...`,

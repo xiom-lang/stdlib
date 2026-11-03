@@ -33,6 +33,10 @@ jobs:
         shell: pwsh
         run: ./tools/module_smoke_scan.ps1 -BaselineFile ./tools/module_smoke_floors.json
 
+      - name: Roadmap tracker
+        shell: pwsh
+        run: ./tools/check_roadmap.ps1
+
   compiler-gates:
     name: compiler gates (ubuntu)
     runs-on: ubuntu-latest
