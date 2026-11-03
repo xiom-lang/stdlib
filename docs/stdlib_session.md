@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 119 (updated 2026-11-02; **v0.65.5 SHIPPED: stdlib tag `d1e4b36`@`88f3c12`, release 41447551297, registry 0.65.5 live, compiler v0.65.5 released, pin PR #12 MERGED. Official v0.65.5 verification: 1600 e2e GREEN (1924 fixed); 1704 root-caused. The contract pair's "flat" gate result was RETRACTED (REL-20261103-1557-stdlib): it came from a `json_parse` leaf-name collision, not a correct reclaim. Collision-free the pair is 25.3/44.7/205.4 MB at 10k/20k/100k (2.0 KB/iter, parse tree). READINESS 9/10: gate 9 open pending qualified annotation keys + re-verification. Lane queue = 2202 (compiler Send/Sync; brotli/zstd live; kqueue done) + 1704. 1531/1807/wishlist33 external.**)
+## 0A. CONTINUE HERE -- handoff snapshot 119 (updated 2026-11-02; **v0.65.5 SHIPPED: stdlib tag `d1e4b36`@`88f3c12`, release 41447551297, registry 0.65.5 live, compiler v0.65.5 released, pin PR #12 MERGED. Official v0.65.5 verification: 1600 e2e GREEN (1924 fixed); 1704 root-caused. The contract pair's flat gate is a REAL reclaim, but the same `#[owns_return]` path emits an invalid-IR drop alloca for a Result bound inside a nested block (REL-20261103-1626-stdlib). With the contract inactive the gate leaks 25.3/44.7/205.4 MB at 10k/20k/100k (2.0 KB/iter, parse tree). READINESS 9/10: gate 9 open pending the nested-scope alloca fix + re-verification. Lane queue = 2202 (compiler Send/Sync; brotli/zstd live; kqueue done) + 1704. 1531/1807/wishlist33 external.**)
 
 - **v0.65.5 release (2026-11-02):** annotated tag `stdlib-v0.65.5`
   (object `d1e4b36`) at `88f3c12` (code `7b7583c`, package 0.65.5,
@@ -52,21 +52,25 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   **Gate 9 remains open on the compiler drop glue alone**; stdlib API work
   is done (build 1.87 + parse 2.08 + stringify 0.12 = full 4.07 KB/iter;
   scalar enums and stringify are flat).
-- **Gate 9 PAIR RESULT -- RETRACTED (2026-11-03, block 325):** the earlier
-  "flat" measurement (5.6 / 5.6 / 9.3 / 13.9 MB) is withdrawn. It is
-  produced by a leaf-name collision between the two `json_parse`
-  declarations (`xiom.serialize.json` -> `Result[JsonValue, Str]` and
-  `xiom.serialize.serialize` -> `Result[JsonValue, SerializeError]`);
-  the same collision causes the IR dominance failure on
-  `smoke_stress_serialize_json_nested`. With
-  `xiom.serialize.serialize.json_parse` unannotated (collision removed):
-  nested repro compiles and the gate is **25.3 / 44.7 / 205.4 MB** at
-  10k / 20k / 100k = **2.0 KB/iter** (parse tree; build is reclaimed by
-  stringify's `consumes_agg`, stringify is flat). Filed as
-  **REL-20261103-1557-stdlib**; the fix is module-qualified annotation
-  keys (also for `json_escape` x4 and `build` x2). **Gate 9 remains
-  open**; the flat outcome is plausible after a correct fix but is not
-  measured.
+- **Gate 9 PAIR RESULT (2026-11-03, block 326):** the contract pair's flat
+  gate (5.5 / 5.0 / 9.4 MB at 10k / 20k / 100k) is a **real reclaim** --
+  `#[owns_return]` releases the parse tree. It is not shippable yet: the
+  same codegen emits the Result drop `alloca` after its GEP uses when the
+  binding is inside a nested block, so
+  `smoke_stress_serialize_json_nested` fails with
+  `Instruction does not dominate all uses!`. Top-level bindings, `match`,
+  and builder+stringify+parse shapes compile.
+  - Contract **inactive** (unannotated same-leaf sibling, or annotation
+    removed): the repro compiles and the gate leaks
+    **25.3 / 44.7 / 205.4 MB** at 10k / 20k / 100k = **2.0 KB/iter**
+    (parse tree; build is reclaimed by stringify's `consumes_agg`).
+  - The same-leaf group rule rejects a leaf if any same-named declaration
+    lacks the attribute; that is why the duplicate `json_parse` masked the
+    bug. Renaming the duplicate does **not** fix the IR failure (tested),
+    so qualified annotation keys are not the fix.
+  - Filed **REL-20261103-1626-stdlib** (correction to 1557): fix the
+    nested-block drop alloca placement, keep the reclaim, then re-run the
+    nested repro + gate. **Gate 9 remains open.**
 - **Readiness 9/10 (90%):** gates 1-8 and 10 MET. Gate 7 is
   ratchet-green (modules 543/543 = 100%; function refs 3541/6664 =
   53.1%). Gate 8 is MET outside the documented 285-fn no-clause tail
@@ -74,19 +78,18 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   format 95.2; no clause waves). Gate 9 = 1704.
 - **Relay queue:** only **2202** (compiler `Send`/`Sync`; brotli/zstd are
   live registry packages; kqueue delivered) and **1704** (compiler
-  annotation resolution; **REL-20261102-1800-stdlib** ->
-  **REL-20261103-1551-stdlib** -> corrected by
-  **REL-20261103-1557-stdlib**) remain acked.
+  nested-scope owns_return codegen; **REL-20261102-1800-stdlib** ->
+  1551 -> 1557 -> corrected by **REL-20261103-1626-stdlib**) remain acked.
   1924 fixed; 1552 fixed; 1600 verified on the
   official pin (compiler closeout). 1531 (xvector verify), 1807 (orbitdb
   compiler write path), and wishlist row 33 (compiler/install) are
   external. Fixed/verified rows awaiting reporter closeout are not lane
   work.
-- **Main/docs:** block 325 is the correction (collision artifact; gate
-  2.0 KB/iter collision-free), block 324 the superseded pair measurement,
-  block 323 the root-cause isolation. `out/` and
-  `tests/smoke/smoke_diag_f128_l*` are untracked scratch; keep `out/`
-  disposable and never put compiler archives inside the repo.
+- **Main/docs:** block 326 is the corrected mechanism (nested-scope
+  owns_return alloca), block 325 the superseded collision framing, block
+  324 the first pair measurement, block 323 the root-cause isolation.
+  `out/` and `tests/smoke/smoke_diag_f128_l*` are untracked scratch; keep
+  `out/` disposable and never put compiler archives inside the repo.
 - **CONTRACT-PAIR WIP (2026-11-03):** `E:\xiom-lang\stdlib` carries 5
   annotated JSON/builder sources + `CHANGELOG.md`/`runtime/xiom_runtime.c`
   WIP; `E:\xiom-lang\xiom` carries 26 uncommitted codegen/test files
@@ -145,19 +148,21 @@ STATE (2026-11-03):
   enum-variant payload drop. Gate 7 function
   refs 3541/6664 (53.1%) ratchet-green; gate 8 285-fn no-clause tail is
   documented policy.
-- CONTRACT PAIR (2026-11-03, blocks 324-325): the pair's "flat" gate
-  (5.6/5.6/9.3/13.9) is RETRACTED -- it is a json_parse leaf-name
-  collision artifact. Collision-free (serialize.serialize.json_parse
-  unannotated) the nested repro compiles and the gate is
-  25.3/44.7/205.4 MB at 10k/20k/100k = 2.0 KB/iter (parse tree); build is
-  reclaimed via stringify's consumes_agg, stringify is flat. Fix:
-  module-qualified annotation keys (json_escape x4, build x2 also
-  collide). REL-20261103-1557-stdlib supersedes 1551. Annotations alone
-  are green on v0.65.5 (9/9 probes, 21/21 smokes) but the gate stays
-  linear there (no consumes_agg).
+- CONTRACT PAIR (2026-11-03, block 326): the contract's reclaim works
+  (gate flat 5.5/5.0/9.4 at 10k/20k/100k) but its owns_return drop alloca
+  is emitted after its uses when the Result binding is inside a nested
+  block -> `Instruction does not dominate all uses` on
+  smoke_stress_serialize_json_nested. Top-level bindings/match compile.
+  Contract inactive: gate leaks 25.3/44.7/205.4 (2.0 KB/iter, parse
+  tree); build is reclaimed via stringify's consumes_agg, stringify is
+  flat. The duplicate json_parse only masks the bug via the conservative
+  same-leaf rule; renaming does not fix it. REL-20261103-1626-stdlib
+  supersedes 1557. Annotations alone are green on v0.65.5 (9/9 probes,
+  21/21 smokes) but the gate stays linear there (no consumes_agg).
 - LANE RELAY QUEUE: only 2202 (compiler Send/Sync; brotli/zstd live;
-  kqueue done) and 1704 (annotation resolution; REL-20261103-1557-stdlib)
-  acked. 1531/1807/row33 external; fixed/verified rows await reporters.
+  kqueue done) and 1704 (nested-scope owns_return alloca;
+  REL-20261103-1626-stdlib) acked. 1531/1807/row33 external;
+  fixed/verified rows await reporters.
 - RELAY WORKTREE: E:\xiom-lang\xiom-relays has a LOCAL-ONLY uncommitted
   2026-10-21 edit to release-checks/compiler-v0.64.8.md (+24/-16; re-adds
   verdict notes, reverts created timestamp, flips rows). HEAD ==
@@ -170,21 +175,19 @@ STATE (2026-11-03):
   acked; v0.65.6 pending and orbitdb remains on v0.65.4 accepted.
 
 PRIORITY:
-1. 1704 -> gate 9 -> 100%: the flat gate result was a collision artifact
-   (REL-20261103-1557-stdlib). The fix is module-qualified annotation
-   keys; after the compiler lands it and cuts v0.65.6, re-run BOTH:
-     xiom tools/probes/p_json_1704_obj.xi -o out/p1704.exe
-     ./tools/json_peak.ps1 -Exe out/p1704.exe -Iters 10000
-     ... -Iters 20000, 100000   (256 MB cap; add -MaxMB 512 for the true
-     100k peak)
-   and the minimal nested repro:
-     let s = "{\"a\":1}"; if s.len() > 0 { var r = json_parse(s);
-     if r.is_ok { return 0; } }
-   (must compile and run; it currently fails while the collision is
-   present). Collision-free today: 2.0 KB/iter, parse tree -- so a correct
-   owns_return application still has to be proven, not assumed. Then
-   commit the stdlib annotation set (split CHANGELOG/runtime from the
-   foreign t3 change), pin, and get PULSE confirmation.
+1. 1704 -> gate 9 -> 100%: the reclaim works, but the owns_return Result
+   drop alloca is placed after its uses for a nested-scope binding
+   (REL-20261103-1626-stdlib). The fix is compiler codegen, not
+   annotation keys and not a stdlib rename. After the fix + v0.65.6:
+     - nested acceptance: let s = "{\"a\":1}"; if s.len() > 0 {
+       let r = json_parse(s); if r.is_ok { return 0; } }  -> must compile
+       and run (top-level bindings already do).
+     - gate curve: tools/probes/p_json_1704_obj.xi at 10k/20k/100k with
+       tools/json_peak.ps1 (256 MB cap; -MaxMB 512 for the true peak).
+       Expect flat (~5 MB baseline); contract-inactive today leaks
+       25.3/44.7/205.4 (2.0 KB/iter).
+   Then commit the stdlib annotation set (split CHANGELOG/runtime from
+   the foreign t3 change), pin, and get PULSE confirmation.
 2. 2202 residual is compiler Send/Sync only; no stdlib code. Brotli/zstd
    are live registry packages; kqueue delivered.
 3. External: 1531 xvector verify; 1807 orbitdb compiler write path;
@@ -4431,7 +4434,36 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
-**SESSION 2026-11-03 block 325 (CORRECTION: the "flat" gate was a json_parse leaf-name collision; collision-free pair is 2.0 KB/iter, parse tree; filed REL-20261103-1557-stdlib)**
+**SESSION 2026-11-03 block 326 (corrected mechanism: the flat gate is a real reclaim; the blocker is the owns_return Result drop alloca in a nested scope -- REL-20261103-1626-stdlib)**
+- **Supersedes block 325.** The leaf-name-collision explanation was wrong:
+  renaming `xiom.serialize.serialize.json_parse` to `json_parse_doc`
+  (unique leaf) still fails. Qualified annotation keys are not the fix.
+- **Trigger:** a `#[owns_return]` Result bound inside a nested block.
+  `%tmp52 = alloca %struct.Result__JsonValue__Str` is placed after its
+  `getelementptr` uses -> `Instruction does not dominate all uses!`.
+  Top-level `let p = json_parse(...)`, `match`, and
+  builder+stringify+parse all compile; nested `let` and `var` both fail.
+- **Matrix (single-tree roots, compiler `ea950174...`):**
+  - contract active (`json.xi` annotated, duplicate annotated or
+    renamed): nested FAIL; gate 5.5 / 5.0 / 9.4 MB at 10k / 20k / 100k
+    (flat -- the reclaim is real).
+  - contract inactive (unannotated same-leaf sibling): nested passes;
+    gate 25.3 / 44.7 / 205.4 MB = 2.0 KB/iter (parse tree).
+  - import-only program: compiles (bug is at the call binding, not in
+    the library body).
+- **Why the duplicate mattered:** `collect_fresh_enum_tree_returns`
+  rejects a leaf if any same-named declaration lacks the attribute, so
+  an unannotated `json_parse` sibling disables the contract and masks the
+  IR bug. That is a conservative safety rule, not a collision bug.
+- **Fix (compiler):** emit the owns_return Result drop alloca at block
+  entry (before any GEP uses) for locals in nested scopes; keep the
+  reclaim. Acceptance: the nested repro compiles and
+  `smoke_stress_serialize_json_nested` is green; gate stays flat.
+- **Do not** rename stdlib APIs or qualify annotation keys as a
+  workaround. The annotations are correct; their intended reclaim is
+  exactly what gate 9 needs.
+
+**SESSION 2026-11-03 block 325 (SUPERSEDED by block 326 -- the flat gate is a nested-scope owns_return IR bug, not a json_parse leaf-name collision)**
 - **Retraction:** block 324's flat `p_json_1704_obj` result
   (5.6 / 5.6 / 9.3 / 13.9 MB) is **withdrawn**. It is produced by a
   leaf-name collision between the two `json_parse` declarations

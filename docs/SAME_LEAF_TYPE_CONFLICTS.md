@@ -38,34 +38,32 @@ reclassified by the audit parser fix for inline bodies:
 
 ## Same-leaf *function* annotations (2026-11-03)
 
-A distinct collision was found in the gate-9 / 1704 ownership-contract work:
-the annotation maps (`owns_return`, `consumes_agg`, `borrows_vec`,
-`borrows_str`, `owns_str`) are keyed by **leaf function name**, not by a
-module-qualified declaration. `json_parse` is declared in both
-`xiom/serialize/json.xi` (`Result[JsonValue, Str]`) and
-`xiom/serialize/serialize.xi` (`Result[JsonValue, SerializeError]`). With
-both carrying `#[owns_return]`, the compiler applies one declaration's
-return layout to calls of the other.
+The gate-9 / 1704 ownership-contract work exposed two separate interactions
+between same-leaf functions and annotations. Only one is a defect.
 
-Evidence (compiler main WIP, single-tree install roots):
+1. **Defect (compiler codegen):** when the `#[owns_return]` contract is
+   active, a Result bound inside a **nested block** gets its drop `alloca`
+   after its GEP uses -> `Instruction does not dominate all uses!`.
+   Top-level bindings and `match` compile; nested `let`/`var` fail.
+   Repro: `let s = "{\"a\":1}"; if s.len() > 0 { let r = json_parse(s);
+   if r.is_ok { return 0; } }`. The reclaim itself works (gate flat at
+   5.5 / 5.0 / 9.4 MB at 10k / 20k / 100k). Item REL-20261103-1626-stdlib.
+2. **Masking rule (not a defect):** `collect_fresh_enum_tree_returns`
+   groups by leaf and rejects the whole leaf if any same-named declaration
+   lacks `#[owns_return]`. `json_parse` is declared in both
+   `xiom/serialize/json.xi` (annotated, `Result[JsonValue, Str]`) and
+   `xiom/serialize/serialize.xi` (annotated, `Result[JsonValue,
+   SerializeError]`); making the latter unannotated disables the contract,
+   which makes the nested repro compile again and the gate leak
+   2.0 KB/iter. Renaming the duplicate does **not** fix (1), so qualified
+   annotation keys are not the fix.
 
-- Both annotated: the gate probe looks "flat" (5.6 / 5.6 / 9.3 MB at
-  10k / 20k / 100k) but a nested-scope `json_parse` binding fails to
-  compile with `Instruction does not dominate all uses!`.
-- `serialize.serialize.json_parse` unannotated: the nested repro compiles
-  and runs, and the gate is 25.3 / 44.7 / 205.4 MB (2.0 KB/iter, parse
-  tree). The "flat" number was therefore the collision, not a reclaim.
-- `serialize.serialize.json_parse` with `#[owns_return]` only: the nested
-  repro fails again and the gate is flat (5.8 / 6.1 / 12.3).
+Same-leaf `#[owns_str]` functions (`json_escape` in four modules) and
+`#[consumes_agg]` builders (`build` in both JSON builder types) follow the
+same conservative group rule; no defect has been attributed to them.
 
-Same class: `json_escape` (`#[owns_str]` in `serialize/json.xi`,
-`serialize/serialize.xi`, `convert/json.xi`, `log/json.xi`) and `build`
-(`JsonObjectBuilder.build` / `JsonArrayBuilder.build`, both
-`#[consumes_agg]`).
-
-This is compiler-side annotation resolution, not a type-shape conflict, so
-the type-level conflict count above stays at 0. Item:
-REL-20261103-1557-stdlib (correction to 1551).
+This is compiler-side annotation codegen, not a type-shape conflict, so the
+type-level conflict count above stays at 0.
 
 ## Rules for the slice (kept for future regressions)
 

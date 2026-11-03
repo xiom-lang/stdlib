@@ -32,23 +32,25 @@ Post-release: JSON 1704, 2117 aggregate contract, compiler pin merge.
   `Vec[R]` 0.75 KB/iter. Scalar enums, `Vec[Int]`/`Vec[Str]` and
   `json_stringify` are flat; `--release`/`--no-contracts` are identical.
   (REL-20261102-1800-stdlib.)
-- **Contract pair -- flat result retracted:** with the in-flight compiler
+- **Contract pair -- reclaim works, nested binding does not compile:**
+  with the in-flight compiler
   `#[consumes_agg]`/`#[owns_return]`/`#[borrows_vec]` codegen plus the
-  annotated stdlib the gate first measured flat, but that is a
-  **leaf-name collision artifact** between the two `json_parse`
-  declarations (`serialize.json` -> `Result[JsonValue, Str]`,
-  `serialize.serialize` -> `Result[JsonValue, SerializeError]`); the same
-  collision makes a nested-scope `json_parse` binding fail with
-  `Instruction does not dominate all uses!`. With
-  `serialize.serialize.json_parse` unannotated the repro compiles and the
-  gate is **25.3 / 44.7 / 205.4 MB** at 10k / 20k / 100k = **2.0
-  KB/iter** (parse tree; build is reclaimed via stringify's
-  `consumes_agg`, stringify is flat). The flat number is not evidence of a
-  reclaim.
-- **Next:** compiler qualifies annotation keys (same class for
-  `json_escape` x4 and `build` x2) -- REL-20261103-1557-stdlib. Then
-  re-run the minimal nested repro and the gate curve; gate 9 stays open
-  until a correct flat measurement and PULSE confirmation exist.
+  annotated stdlib the gate is **flat (5.5 / 5.0 / 9.4 MB at 10k / 20k /
+  100k)** -- the `#[owns_return]` reclaim of the parse tree is real. The
+  same codegen emits the Result drop `alloca` after its GEP uses when the
+  binding is inside a nested block, so
+  `smoke_stress_serialize_json_nested` fails with
+  `Instruction does not dominate all uses!`. Top-level bindings, `match`,
+  and builder+stringify+parse shapes compile. With the contract inactive
+  (unannotated same-leaf sibling) the repro compiles and the gate leaks
+  **25.3 / 44.7 / 205.4 MB** at 10k / 20k / 100k = **2.0 KB/iter**
+  (parse tree; build is reclaimed via stringify's `consumes_agg`).
+  Renaming the duplicate does not fix the IR failure (tested), so
+  qualified annotation keys are not the fix.
+- **Next:** compiler fixes the nested-scope owns_return drop alloca
+  placement (keep the reclaim) -- REL-20261103-1626-stdlib (corrects
+  1557). Then re-run the nested repro and the gate curve; gate 9 stays
+  open until the nested smoke compiles and PULSE confirms.
 - **Readiness unchanged at 9/10.**
 
 ### 2026-11-02 addendum -- v0.65.5 published + official-pin verification
