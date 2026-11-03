@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 119 (updated 2026-11-02; **v0.65.5 SHIPPED: stdlib tag `d1e4b36`@`88f3c12`, release 41447551297, registry 0.65.5 live, compiler v0.65.5 released, pin PR #12 MERGED. Official v0.65.5 verification: 1600 e2e GREEN (1924 fixed); 1704 root-caused to enum-variant aggregate payload drop -- gate probe 45.1/85.9/408.8 MB at 10k/20k/100k (4.04 KB/iter; the old 2.5 KB/iter baseline was under-sampled). READINESS 9/10: gate 9 open ONLY on the compiler drop glue (REL-20261102-1800-stdlib). Lane queue = 2202 (compiler Send/Sync; brotli/zstd live; kqueue done) + 1704. 1531/1807/wishlist33 external.**)
+## 0A. CONTINUE HERE -- handoff snapshot 119 (updated 2026-11-02; **v0.65.5 SHIPPED: stdlib tag `d1e4b36`@`88f3c12`, release 41447551297, registry 0.65.5 live, compiler v0.65.5 released, pin PR #12 MERGED. Official v0.65.5 verification: 1600 e2e GREEN (1924 fixed); 1704 root-caused and the ownership-contract pair is VERIFIED FLAT -- gate probe 5.7/5.6/9.3/13.9 MB at 10k/20k/100k/200k vs 45.1/85.9/408.8/812.8 on v0.65.5 -- but blocked on a compiler IR-dominance regression (REL-20261103-1551-stdlib). READINESS 9/10: gate 9 open pending that fix. Lane queue = 2202 (compiler Send/Sync; brotli/zstd live; kqueue done) + 1704. 1531/1807/wishlist33 external.**)
 
 - **v0.65.5 release (2026-11-02):** annotated tag `stdlib-v0.65.5`
   (object `d1e4b36`) at `88f3c12` (code `7b7583c`, package 0.65.5,
@@ -52,6 +52,20 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   **Gate 9 remains open on the compiler drop glue alone**; stdlib API work
   is done (build 1.87 + parse 2.08 + stringify 0.12 = full 4.07 KB/iter;
   scalar enums and stringify are flat).
+- **Gate 9 PAIR VERIFIED (2026-11-03, block 324):** the in-flight
+  ownership-contract pair -- stdlib annotations (`#[owns_return]`,
+  `#[consumes_agg]`, `#[borrows_vec]`, `#[owns_str]`, `#[borrows_str]`)
+  plus compiler codegen -- makes `p_json_1704_obj` **flat**:
+  5.7 / 5.6 / 9.3 / 13.9 MB at 10k / 20k / 100k / 200k (was
+  45.1 / 85.9 / 408.8 / 812.8). The annotations are required: the same
+  compiler binary with the committed stdlib still leaks 45.5 / 85.7 at
+  10k / 20k. **Blocking:** with `smoke_stress_serialize_json_nested` the
+  pair fails to compile -- `Instruction does not dominate all uses` on
+  `%struct.Result__JsonValue__Str` (the `#[owns_return]` `json_parse`
+  path). Filed as **REL-20261103-1551-stdlib**. Both sides are
+  uncommitted WIP; do not commit the stdlib half until the compiler
+  dominance fix lands (CHANGELOG/runtime are interleaved with the foreign
+  t3 change).
 - **Readiness 9/10 (90%):** gates 1-8 and 10 MET. Gate 7 is
   ratchet-green (modules 543/543 = 100%; function refs 3541/6664 =
   53.1%). Gate 8 is MET outside the documented 285-fn no-clause tail
@@ -59,17 +73,27 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   format 95.2; no clause waves). Gate 9 = 1704.
 - **Relay queue:** only **2202** (compiler `Send`/`Sync`; brotli/zstd are
   live registry packages; kqueue delivered) and **1704** (compiler
-  enum-variant payload drop; now filed to compiler as
-  **REL-20261102-1800-stdlib** with the JSON-free repro) remain acked.
+  enum-variant payload drop; filed as **REL-20261102-1800-stdlib**, then
+  superseded in approach by **REL-20261103-1551-stdlib** -- the contract
+  pair is verified flat) remain acked.
   1924 fixed; 1552 fixed; 1600 verified on the
   official pin (compiler closeout). 1531 (xvector verify), 1807 (orbitdb
   compiler write path), and wishlist row 33 (compiler/install) are
   external. Fixed/verified rows awaiting reporter closeout are not lane
   work.
-- **Main/docs:** block 323 is the gate-9 root-cause record (block 322 the
-  official-pin verification). `out/` and `tests/smoke/smoke_diag_f128_l*`
+- **Main/docs:** block 324 is the contract-pair verification record
+  (block 323 the root-cause isolation, block 322 the official-pin
+  verification). `out/` and `tests/smoke/smoke_diag_f128_l*`
   are untracked scratch; keep `out/` disposable and never put compiler
   archives inside the repo.
+- **CONTRACT-PAIR WIP (2026-11-03):** `E:\xiom-lang\stdlib` carries 5
+  annotated JSON/builder sources + `CHANGELOG.md`/`runtime/xiom_runtime.c`
+  WIP; `E:\xiom-lang\xiom` carries 26 uncommitted codegen/test files
+  (HEAD `c54ee9f8b`). The stdlib annotations alone are green on the
+  v0.65.5 pin (9/9 probes, 21/21 smokes; gate still linear
+  43.9/82.3/159.8, because v0.65.5 has no `consumes_agg`). The compiler
+  binary used for the flat measurements is sha256 `ea950174...`
+  (2026-11-03 13:49Z). Do not `git add .` in either tree.
 - **RELAY WORKTREE CAVEAT (2026-11-02, own answer):** the shared relay
   clone `E:\xiom-lang\xiom-relays` has a **local-only, uncommitted
   2026-10-21-era edit** to
@@ -100,9 +124,9 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 119 + block 322 + blocks 321/320.
+Read docs/stdlib_session.md block 324 + blocks 323/322/321.
 
-STATE (2026-11-02):
+STATE (2026-11-03):
 - v0.65.5 SHIPPED: tag stdlib-v0.65.5 (object d1e4b36) at 88f3c12
   (code 7b7583c); release run 41447551297 SUCCESS; assets live; registry
   xiom-std 0.65.5 live (sha e8aa1bd7..., compiler field v0.65.4, run
@@ -117,12 +141,20 @@ STATE (2026-11-02):
   compiler as REL-20261102-1800-stdlib; JSON-free repro
   tools/known_failures/p_enum_payload_drop_leak.xi.
 - READINESS 9/10 (90%): gates 1-8,10 MET; gate 9 open ONLY on 1704
-  enum-variant payload drop (REL-20261102-1800-stdlib). Gate 7 function
+  enum-variant payload drop. Gate 7 function
   refs 3541/6664 (53.1%) ratchet-green; gate 8 285-fn no-clause tail is
   documented policy.
+- CONTRACT PAIR (2026-11-03, block 324): stdlib annotations + compiler
+  contract codegen make p_json_1704_obj FLAT -- 5.7/5.6/9.3/13.9 MB at
+  10k/20k/100k/200k (vs 45.1/85.9/408.8/812.8). BLOCKER: the pair fails to
+  compile smoke_stress_serialize_json_nested (IR dominance on
+  Result[JsonValue, Str], the #[owns_return] json_parse path) --
+  REL-20261103-1551-stdlib. Both sides are uncommitted WIP; annotations
+  alone are green on v0.65.5 (9/9 probes, 21/21 smokes) but the gate stays
+  linear there (no consumes_agg).
 - LANE RELAY QUEUE: only 2202 (compiler Send/Sync; brotli/zstd live;
-  kqueue done) and 1704 (compiler enum-payload drop; filed as
-  REL-20261102-1800-stdlib) acked. 1531/1807/row33 external;
+  kqueue done) and 1704 (contract pair verified; blocked on the dominance
+  fix in REL-20261103-1551-stdlib) acked. 1531/1807/row33 external;
   fixed/verified rows await reporters.
 - RELAY WORKTREE: E:\xiom-lang\xiom-relays has a LOCAL-ONLY uncommitted
   2026-10-21 edit to release-checks/compiler-v0.64.8.md (+24/-16; re-adds
@@ -136,16 +168,18 @@ STATE (2026-11-02):
   acked; v0.65.6 pending and orbitdb remains on v0.65.4 accepted.
 
 PRIORITY:
-1. 1704 -> gate 9 -> 100%: when the compiler lands enum-variant aggregate
-   payload drop glue (REL-20261102-1800-stdlib; the 1605 Vec-rebind hotfix
-   does NOT cover it), run:
+1. 1704 -> gate 9 -> 100%: the contract pair is verified flat (block 324);
+   the only blocker is the IR dominance fix for owned Result[enum, Str]
+   returns (REL-20261103-1551-stdlib). When the compiler lands it and cuts
+   v0.65.6:
      xiom tools/probes/p_json_1704_obj.xi -o out/p1704.exe
      ./tools/json_peak.ps1 -Exe out/p1704.exe -Iters 10000
-     ... -Iters 20000, 100000   (256 MB cap; add -MaxMB 512 to see the
-     true 100k peak, which is 408.8 MB today)
-   A flat peak (not linear) + PULSE confirmation flips gate 9. Update
-   docs/session and the readiness queue. Cross-check the JSON-free witness
-   tools/known_failures/p_enum_payload_drop_leak.xi (bigenum/recenum).
+     ... -Iters 20000, 100000   (256 MB cap; add -MaxMB 512 for the true
+     100k peak -- 408.8 MB on v0.65.5, 9.3 MB on the pair)
+   Then: commit the stdlib annotation set (currently WIP; CHANGELOG and
+   runtime are interleaved with the foreign t3 change -- split before
+   staging), pin the stdlib, and re-run the JSON corpus + the JSON-free
+   witness. A flat peak + PULSE confirmation flips gate 9.
 2. 2202 residual is compiler Send/Sync only; no stdlib code. Brotli/zstd
    are live registry packages; kqueue delivered.
 3. External: 1531 xvector verify; 1807 orbitdb compiler write path;
@@ -162,6 +196,10 @@ RULES:
   not be reverted without its owner.
 - Compiler archives only under %TEMP%, never inside the repo; keep out/
   disposable.
+- Contract-pair WIP (2026-11-03): the compiler tree has 26 uncommitted
+  files and stdlib has 5 annotated sources + CHANGELOG/runtime WIP. Stage
+  explicit paths only; CHANGELOG and runtime are interleaved with the
+  foreign t3 change and must be split before either side is committed.
 - No clause waves; io.list_dir runtime-owned; json_clear(&mut) hangs; no
   mutable-enum recursion.
 
@@ -4387,6 +4425,46 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-11-03 block 324 (gate-9 contract pair verified FLAT; blocked on an IR dominance regression in json_parse's owns_return Result)**
+- **Pair under test (uncommitted WIP on both sides):** stdlib carries 5
+  annotated JSON/builder sources + `runtime`/`CHANGELOG` WIP (HEAD
+  `0dd7166`); compiler carries 26 uncommitted codegen/test files (HEAD
+  `c54ee9f8b`). Compiler binary sha256 `ea950174...` built 2026-11-03
+  13:49Z, after the last codegen edit (`vec_drop.rs` 13:47Z). Measured in
+  isolated install roots under `%TEMP%\kilo\stdlib_ws\gate9_r34`
+  (annotated stdlib) and `gate9_head` (committed stdlib); the repo
+  worktree was not modified.
+- **Gate-9 witness is FLAT on the pair:** `p_json_1704_obj` =
+  5.7 / 5.6 / 9.3 / 13.9 MB at 10k / 20k / 100k / 200k (v0.65.5:
+  45.1 / 85.9 / 408.8 / 812.8). 100k/200k no longer hit the 256 MB cap.
+  Rebuilt after the 15:40Z runtime edit: same curve.
+- **The annotations are required:** the same compiler binary with the
+  committed stdlib (`gate9_head`) measures 45.5 / 85.7 at 10k / 20k --
+  the leak is unchanged without them.
+- **Official v0.65.5 + annotated stdlib:** 43.9 / 82.3 / 159.8 MB at
+  10k / 20k / 40k (still linear; v0.65.5 has no `consumes_agg`), and
+  9/9 JSON probes + 21/21 JSON/serialize smokes are green. The
+  annotations are therefore safe to land ahead of the compiler.
+- **BLOCKER (compiler codegen):** with the pair,
+  `tests/smoke/smoke_stress_serialize_json_nested.xi` fails to compile:
+  `Instruction does not dominate all uses!` on
+  `%struct.Result__JsonValue__Str` (alloca `tmp52`, GEPs `tmp74`/`tmp77`).
+  Same binaries + committed stdlib compile it and run rc 0; official
+  v0.65.5 + annotations also rc 0. The tagged type is the
+  `#[owns_return]` `json_parse` return, so the owned `Result[enum, Str]`
+  transfer path is the suspect. Filed **REL-20261103-1551-stdlib**.
+- **General drop glue is NOT fixed:** the JSON-free witness `Vec[R]` is
+  unchanged on the pair (34.5 / 79.4 MB at 40k / 100k). The flat gate is
+  contract-driven, which is sufficient for gate 9; do not claim general
+  recursive-enum drop glue.
+- **Decision:** this lane does not commit either WIP half. The stdlib
+  `CHANGELOG`/`runtime` edits are interleaved with the foreign t3 change
+  (split before staging); the compiler tree belongs to its lane. Next:
+  compiler fixes the dominance error and cuts v0.65.6; stdlib stages the
+  annotation set, pins, and re-runs the gate curve + corpus + witness.
+- **Caveat:** every number here is a snapshot of uncommitted WIP.
+  Re-measure on the v0.65.6 archive before flipping gate 9.
 
 **SESSION 2026-11-02 block 323 (gate-9 root cause isolated: enum-variant aggregate payload drop, not JSON tree drop; baseline corrected to 4.04 KB/iter; filed REL-20261102-1800-stdlib)**
 - **Method:** phase matrix on the official v0.65.5 win-x64 archive
