@@ -1,22 +1,31 @@
 # Release checklist (next stdlib tag)
 
 Mechanical steps for cutting the next release once the readiness plan is
-100% complete. `release.yml` validates the first three items, so any
-mismatch fails the release before the gates run.
+100% complete. `release.yml` validates the package, compiler and notes
+items, so any mismatch fails the release before the gates run.
 
 ## Before tagging
 
-1. **`package.xi`** -- set `version: "X.Y.Z"` to the exact tag suffix
+1. **`main` contains the previous release** -- merge the last
+   `release/vX.Y.Z-prep` branch (or sync its metadata) before starting.
+   The v0.65.5 branch (`release/v0.65.5-prep`, tag `stdlib-v0.65.5`) was
+   cut and never merged. Its code tree equals main, and main now carries
+   the `package.xi` 0.65.5, `COMPILER_VERSION` v0.65.5 and
+   `release-notes/v0.65.5.md` metadata. The only piece still missing on
+   main is the v0.65.5 `CHANGELOG.md` section: merge the branch (resolve
+   the `COMPILER_VERSION` conflict by keeping main's v0.65.5) once the
+   worktree WIP is cleared. Do not start the next cut from a stale main.
+2. **`package.xi`** -- set `version: "X.Y.Z"` to the exact tag suffix
    (`stdlib-vX.Y.Z`). Keep `compiler = ">=0.60.0 <1.0.0"` in range form;
    `release.yml` greps for `compiler = ">=`.
-2. **`COMPILER_VERSION`** -- must name an *existing* compiler tag (the
+3. **`COMPILER_VERSION`** -- must name an *existing* compiler tag (the
    release builds that tag from source: `.github/actions/build-compiler`).
-   Current pin: `v0.64.8`; recommended move for the next cut: `v0.65.4`
-   (the current released compiler). Do not point it at an
+   Current pin: `v0.65.5`. For the next cut, point it at the
+   then-current released compiler. Do not point it at an
    unreleased/combined compiler release; the combined compiler cut happens
    AFTER this release, when the compiler lane bumps `STDLIB_VERSION` to
    this tag.
-3. **`release-notes/<tag>.md`** -- present and schema-valid (website
+4. **`release-notes/<tag>.md`** -- present and schema-valid (website
    contract `xiom-lang/website/docs/release-notes-schema.md`): Summary
    <= 240 chars, plain ASCII, no internal IDs; highlights are `### Title` +
    `kind:` + body (<= 320 chars, title <= 60). The compiler release merges

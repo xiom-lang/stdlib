@@ -4461,6 +4461,9 @@ registry pin, agent recon for the rest)**
   v0.65.5). Still blocked in this worktree by the foreign uncommitted
   CHANGELOG (t3 + sb_to_str): the WIP owner stashes/commits it, then
   `git merge --no-ff release/v0.65.5-prep`.
+- **`docs/RELEASE_CHECKLIST.md` gained step 1:** main must contain the
+  previous release branch before the next cut (records the v0.65.5
+  branch-merge gap and the COMPILER_VERSION conflict rule).
 - **Readiness unchanged at 9/10**; gate 9 still awaits the compiler
   nested-scope owns_return fix (REL-20261103-1626-stdlib).
 
