@@ -13,7 +13,7 @@ compiler's codegen targets.
 | `runtime/` | C/asm runtime (cross-repo API: compiler codegen references it) |
 | `tests/smoke/` | executable corpus (`smoke_*.xi`, `kat_*.xi`, `smoke_prop_*.xi`, `smoke_stress_*.xi`) |
 | `tools/` | verification tooling + versioned probes (see `tools/README.md`) |
-| `docs/` | design, readiness, dedup, limitations, session handoffs |
+| `docs/` | design, readiness, roadmap, dedup, limitations, session handoffs |
 | `package.xi` | package identity + compiler compatibility range |
 
 ## Requirements
@@ -60,6 +60,10 @@ CI lives in `.github/workflows/` (PR gates, weekly heavy suites, release).
 
 See `docs/STDLIB_BETA_LIMITATIONS.md` (TLS, full tzdata, parser fuzzing)
 and `docs/STDLIB_READINESS_PLAN.md` for the production gate status.
+After the readiness gates close, execution is tracked in
+`docs/STDLIB_ROADMAP.md` (RF-0 carry-over, then pillars A-G: adversarial
+verification, contracts, perf/memory SLOs, platform parity, 1.0, dogfood,
+governance).
 
 ## License
 

@@ -65,6 +65,13 @@ Post-release: JSON 1704, 2117 aggregate contract, compiler pin merge.
   commit remains on main (ruleset satisfied). The foreign Unreleased
   CHANGELOG WIP remains uncommitted.
 - **Readiness unchanged at 9/10.**
+- **Post-10/10 roadmap:** `docs/STDLIB_ROADMAP.md` (created 2026-11-03).
+  RF-0 is the gate-9 carry-over; pillars A-G track adversarial correctness,
+  contracts, perf/memory SLOs, platform/ABI parity, 1.0/stability, dogfood,
+  and governance. Section 3 governs growth/expansion (portfolio tiers,
+  admission test, relay intake, X1-X8); expansion starts after 1.0. The
+  initiative table is the checklist (update with evidence; do not delete
+  rows).
 
 ### 2026-11-02 addendum -- v0.65.5 published + official-pin verification
 - **Official compiler v0.65.5** (windows-x64 zip sha256 `86a253a5...`,

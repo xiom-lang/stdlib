@@ -86,24 +86,22 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   (orbitdb compiler write path), and wishlist row 33 (compiler/install)
   are external. Fixed/verified rows awaiting reporter closeout are not
   lane work.
-- **Main/docs:** block 329 is the verified gate-9 fix + committed
-  contracts, block 328 the release-branch landing, block 327 the 1600
-  probe + metadata sync. `out/` and `tests/smoke/smoke_diag_f128_l*` are
-  untracked scratch; keep `out/` disposable and never put compiler
-  archives inside the repo.
+- **Main/docs:** block 330 is the post-10/10 roadmap (`docs/STDLIB_ROADMAP.md`),
+  block 329 the verified gate-9 fix + committed contracts, block 328 the
+  release-branch landing, block 327 the 1600 probe + metadata sync.
+  `out/` and `tests/smoke/smoke_diag_f128_l*` are untracked scratch; keep
+  `out/` disposable and never put compiler archives inside the repo.
 - **Release metadata landed linearly (2026-11-03, block 328):** the
   `release/v0.65.5-prep` content is on main as `062d660` (parent
   `8adb6a2`; tree equal to the former merge `74330e4`), with
   `COMPILER_VERSION` v0.65.5. No merge commits remain on main (ruleset
   satisfied). The foreign Unreleased CHANGELOG entries were stashed and
   restored under `[Unreleased]`; they remain uncommitted.
-- **Worktree WIP (2026-11-03, block 329):** the JSON ownership contracts
-  are committed (`9de28f1`). Remaining uncommitted: the foreign t3 change
-  (`CHANGELOG.md`, `runtime/xiom_runtime.c`, `xiom/net/server.xi`) and
-  the compiler-side WIP (the verified nested-scope fix + sibling
-  changes, uncommitted). Do not `git add .` in either tree. Pair
-  measurements use compiler sha256 `272BE59C...` (2026-11-03 17:50Z),
-  which carries the fix; the earlier `ea950174...` binary did not.
+- **Worktree WIP (2026-11-03, blocks 329/330):** the JSON ownership
+  contracts are committed (`9de28f1`). An active foreign wave is editing
+  `CHANGELOG.md`, `runtime/xiom_runtime.c`, and a growing set of `xiom/*`
+  modules (t3/hot-reload and follow-ups); the compiler-side WIP is
+  separate. Do not `git add .` in either tree; stage explicit paths.
 - **RELAY WORKTREE CAVEAT (2026-11-02, own answer):** the shared relay
   clone `E:\xiom-lang\xiom-relays` has a **local-only, uncommitted
   2026-10-21-era edit** to
@@ -134,7 +132,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md block 329 + blocks 328/327/326.
+Read docs/stdlib_session.md block 330 + blocks 329/328/327.
 
 STATE (2026-11-03):
 - v0.65.5 SHIPPED: tag stdlib-v0.65.5 (object d1e4b36) at 88f3c12
@@ -212,14 +210,17 @@ RULES:
 - Compiler archives only under %TEMP%, never inside the repo; keep out/
   disposable.
 - Worktree WIP (2026-11-03): the JSON annotations are committed
-  (9de28f1); the remaining uncommitted files are the foreign t3 change
-  (CHANGELOG.md, runtime/xiom_runtime.c, xiom/net/server.xi) plus the
-  compiler-side WIP. Stage explicit paths only.
+  (9de28f1); an active foreign wave edits CHANGELOG.md,
+  runtime/xiom_runtime.c and a growing `xiom/*` set, plus the
+  compiler-side WIP. Stage explicit paths only; never `git add .`.
 - No clause waves; io.list_dir runtime-owned; json_clear(&mut) hangs; no
   mutable-enum recursion.
 
 DELIVERABLE: 1704 closes -> gate 9 -> readiness 100%. No other stdlib
 blockers remain.
+AFTER THE FLIP: execute docs/STDLIB_ROADMAP.md (RF-0 is the carry-over;
+pillars A-G). Start A1 (sanitizer corpus), A3 (JSON/parser fuzzing), and
+A5 (allocator stats + per-subsystem memory gates) in parallel.
 ```
 
 ## 0A-118. PREVIOUS HANDOFF -- snapshot 118 (updated 2026-10-31; **v0.65.4 SHIPPED (stdlib d267317 + compiler v0.65.4 released; registry 0.65.4; pin confirmed; PR #10 closed). 1834 DELIVERED on main a0e91cd -- persistent worker pool + real arg channel + real spawn_with; Windows 30/30, Linux 5/5, final battery probes 421/421, smokes 963/963, modules 533/533. The pool is post-v0.65.4 -> needs stdlib-v0.65.5 + compiler pin. READINESS 9/10: gate 9 blocked ONLY by compiler 1704/m375 drop glue. kqueue gated on a macOS witness; 1531 awaits xvector; 2202 residuals = kqueue/packages-brotli-zstd/Send-Sync**)
@@ -2800,7 +2801,7 @@ registry-publish
 workflow verifies the downloaded
 `xiom-<version>-linux-x64.tar.gz` against the release's published
 `SHA256SUMS` (registry lane independently verified the manifest
-`8839e5ccâ€¦` and the archive `4cc5d62bâ€¦`). The nightly heavy CI already
+`8839e5cc…` and the archive `4cc5d62b…`). The nightly heavy CI already
 tests compiler `main`. NOTE: history was rewritten 2026-09-20
 (owner-authorized): every author/committer/tagger is
 `Lefteris Notas <lefterisnotas@gmail.com>`, `main` force-pushed to HEAD
@@ -4440,6 +4441,32 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-11-03 block 330 (post-10/10 roadmap added: docs/STDLIB_ROADMAP.md)**
+- **Created `docs/STDLIB_ROADMAP.md`.** Its initiative table is the
+  tracker (update with evidence; never delete rows or lower an exit
+  criterion). Principles: adversarial verification, contracts as the API
+  spec, perf/memory SLOs, lean core + registry, platform/ABI parity, 1.0
+  compatibility guarantees, dogfood, defect-to-probe.
+- **Pillars:** A adversarial correctness (sanitizer corpus, fuzzers,
+  fault/OOM injection, per-subsystem memory gates, allocator stats);
+  B contracts (policy, 100% public-API coverage, generated docs);
+  C perf/memory SLOs + dashboard; D platform/ABI matrix + reproducible
+  builds; E 1.0 freeze, stability tiers, "what stdlib is not", same-leaf
+  dedup, registry boundary; F selfhost dogfood + tooling gap log;
+  G SLO dashboard, ownership/SLAs, release automation, security policy.
+- **RF-0** is the pre-roadmap carry-over: v0.65.6 archive,
+  COMPILER_VERSION bump, archive re-run, 1704 fixed, PULSE confirmation,
+  readiness 10/10 (in_progress; fix verified, contracts `9de28f1`).
+- **Growth/expansion (section 3, X1-X8):** demand-driven, ecosystem-first,
+  admission-tested. Relay wishlists are inputs, not commitments; the default
+  destination is a registry package. Policy starts in H2; no expansion
+  before 1.0. Candidate dispositions cover TLS/ALPN, compression, data
+  formats, HTTP/2-3, observability, i18n, numerics, bindings, tooling.
+- **Immediate sequence:** RF-0, then A1+A3 in parallel with the release,
+  A5 early, B1+G3 drafts, then E1/E4.
+- **Linked from** README, the readiness queue's 2026-11-03 addendum, and
+  the 0C prompt.
 
 **SESSION 2026-11-03 block 329 (compiler 1704 fix verified; stdlib contracts committed; gate 9 flat, formal flip pending v0.65.6 + PULSE)**
 - **Compiler fix (REL-20261103-1626, fixed 17:53Z):** a nested-block
@@ -13675,7 +13702,7 @@ smoke, 3,332/6,200 public fns referenced). Readiness meter in the queue:
 release). Packages intake lives at `docs/STDLIB-WISHLIST.md` (32 rows from
 the four relays; full sheet `xiom-packages/packages` @ `66f26e1`).
 
-**Shipped**: stdlib **0.62.0 released** â€” tag `stdlib-v0.62.0` force-updated
+**Shipped**: stdlib **0.62.0 released** — tag `stdlib-v0.62.0` force-updated
 to `0e63101` (ruleset bypass), GitHub Release published 2026-09-29 00:10Z
 with `xiom-std-0.62.0.tar.gz` + `SHA256SUMS`, staging canary dispatched;
 registry lane has the subject sha and re-dispatches its publish. Two release
@@ -13729,7 +13756,7 @@ module must have a smoke).
 
 **Owner directives in force**: (1) family batching allowed, 40-60 pub per
 wave to shorten the path; (2) ensure every module/function has smoke
-coverage â€” grow the module-smoke ratchet alongside contract waves; (3)
+coverage — grow the module-smoke ratchet alongside contract waves; (3)
 release before 100% is acceptable when all gates are green, coverage
 continues toward 100% in the next release.
 
