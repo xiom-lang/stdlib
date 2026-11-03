@@ -86,12 +86,16 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   compiler write path), and wishlist row 33 (compiler/install) are
   external. Fixed/verified rows awaiting reporter closeout are not lane
   work.
-- **Main/docs:** block 327 is the 1600 probe + metadata sync, block 326
-  the corrected gate-9 mechanism, block 325 the superseded collision
-  framing, block 324 the first pair measurement, block 323 the root-cause
-  isolation. `out/` and `tests/smoke/smoke_diag_f128_l*` are untracked
-  scratch; keep `out/` disposable and never put compiler archives inside
-  the repo.
+- **Main/docs:** block 328 is the release-branch merge, block 327 the
+  1600 probe + metadata sync, block 326 the corrected gate-9 mechanism.
+  `out/` and `tests/smoke/smoke_diag_f128_l*` are untracked scratch; keep
+  `out/` disposable and never put compiler archives inside the repo.
+- **Release metadata landed linearly (2026-11-03, block 328):** the
+  `release/v0.65.5-prep` content is on main as `062d660` (parent
+  `8adb6a2`; tree equal to the former merge `74330e4`), with
+  `COMPILER_VERSION` v0.65.5. No merge commits remain on main (ruleset
+  satisfied). The foreign Unreleased CHANGELOG entries were stashed and
+  restored under `[Unreleased]`; they remain uncommitted.
 - **CONTRACT-PAIR WIP (2026-11-03):** `E:\xiom-lang\stdlib` carries 5
   annotated JSON/builder sources + `CHANGELOG.md`/`runtime/xiom_runtime.c`
   WIP; `E:\xiom-lang\xiom` carries 26 uncommitted codegen/test files
@@ -161,6 +165,12 @@ STATE (2026-11-03):
   same-leaf rule; renaming does not fix it. REL-20261103-1626-stdlib
   supersedes 1557. Annotations alone are green on v0.65.5 (9/9 probes,
   21/21 smokes) but the gate stays linear there (no consumes_agg).
+- RELEASE BRANCH: the v0.65.5 release content landed linearly on main
+  (062d660): CHANGELOG 0.65.5 section, COMPILER_VERSION v0.65.5,
+  package 0.65.5, release-notes/v0.65.5.md. Main has no merge commits
+  (ruleset satisfied); use a linear cherry-pick/rebase for future
+  releases. The foreign Unreleased CHANGELOG WIP is uncommitted and
+  preserved.
 - LANE RELAY QUEUE: only 2202 (compiler Send/Sync; brotli/zstd live;
   kqueue done) and 1704 (nested-scope owns_return alloca;
   REL-20261103-1626-stdlib) acked. 1531/1807/row33 external;
@@ -4435,6 +4445,30 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-11-03 block 328 (v0.65.5 release metadata landed linearly on main; no merge commit; foreign CHANGELOG WIP preserved)**
+- **Landing:** the release-branch content landed as `062d660` (parent
+  `8adb6a2`; tree equal to the former merge `74330e4`). It adds the
+  `## [0.65.5] - 2026-10-31` CHANGELOG section; `package.xi` 0.65.5 and
+  `release-notes/v0.65.5.md` were already synced; `COMPILER_VERSION`
+  stays **v0.65.5** (the branch recorded v0.65.4 at cut time). The
+  release code tree already matched main.
+- **History policy:** the first attempt used `git merge --no-ff`
+  (`74330e4`); the remote ruleset forbids merge commits on main, so on
+  owner GO the merge was replaced by the linear `062d660` +
+  force-with-lease (the remote was exactly `2fb538c`). `git log --merges
+  main` is now empty. Tag `stdlib-v0.65.5` (`88f3c12`) still marks the
+  release branch; its commits are not in main's ancestry, but the
+  content is identical plus the metadata.
+- **Foreign WIP preserved:** only `CHANGELOG.md` was stashed
+  (`git stash push -- CHANGELOG.md`); the other WIP files were never
+  touched; the stash popped cleanly. The two Unreleased entries (t3
+  trampoline + `sb_to_str`) sit under `[Unreleased]` above
+  `## [0.65.5]`. They remain **uncommitted** foreign work; the diff is
+  exactly 17 lines.
+- **Validation:** the linear tree equals the merged tree, so the
+  533/533 module check and KAT 15/15 from block 327 still apply.
+- **Readiness unchanged at 9/10** (gate 9 awaits REL-20261103-1626).
 
 **SESSION 2026-11-03 block 327 (unblocked wave: permanent 1600 e2e + main metadata synced to the v0.65.5 release)**
 - **Probe:** `tools/probes/p_f128_i128_e2e.xi` covers Float64

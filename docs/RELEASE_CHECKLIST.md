@@ -8,13 +8,11 @@ items, so any mismatch fails the release before the gates run.
 
 1. **`main` contains the previous release** -- merge the last
    `release/vX.Y.Z-prep` branch (or sync its metadata) before starting.
-   The v0.65.5 branch (`release/v0.65.5-prep`, tag `stdlib-v0.65.5`) was
-   cut and never merged. Its code tree equals main, and main now carries
-   the `package.xi` 0.65.5, `COMPILER_VERSION` v0.65.5 and
-   `release-notes/v0.65.5.md` metadata. The only piece still missing on
-   main is the v0.65.5 `CHANGELOG.md` section: merge the branch (resolve
-   the `COMPILER_VERSION` conflict by keeping main's v0.65.5) once the
-   worktree WIP is cleared. Do not start the next cut from a stale main.
+   The v0.65.5 branch (`release/v0.65.5-prep`, tag `stdlib-v0.65.5`)
+   landed linearly as `062d660` on 2026-11-03 (COMPILER_VERSION kept at
+   v0.65.5; CHANGELOG gained the 0.65.5 section). The remote ruleset
+   forbids merge commits on main -- use a linear cherry-pick/rebase.
+   Do not start the next cut from a stale main.
 2. **`package.xi`** -- set `version: "X.Y.Z"` to the exact tag suffix
    (`stdlib-vX.Y.Z`). Keep `compiler = ">=0.60.0 <1.0.0"` in range form;
    `release.yml` greps for `compiler = ">=`.
