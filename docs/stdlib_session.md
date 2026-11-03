@@ -37,8 +37,9 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   (sha matches), ran the e2e with the bundled stdlib:
   `Float128 -> Int128` signed positive/negative, `UInt128`, `Float32`
   compile rc 0 and run 3/3 rc 0. **REL-20261031-1924 fixed** (1600 also
-  has the stdlib `__fixdfti` family in the pin). Permanent probe can land
-  when `COMPILER_VERSION` moves to v0.65.5 (current main still v0.65.4).
+  has the stdlib `__fixdfti` family in the pin). The permanent probe
+  landed as `tools/probes/p_f128_i128_e2e.xi` (block 327): green on the
+  official v0.65.5, red on v0.65.2. `COMPILER_VERSION` is now v0.65.5.
 - **Gate 9 evidence (refreshed 2026-11-02, block 323):** the 1704 root
   cause is not "JSON tree drop" specifically -- owned aggregate payloads
   nested in enum variants are never released, and a recursive enum never
@@ -85,11 +86,12 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   compiler write path), and wishlist row 33 (compiler/install) are
   external. Fixed/verified rows awaiting reporter closeout are not lane
   work.
-- **Main/docs:** block 326 is the corrected mechanism (nested-scope
-  owns_return alloca), block 325 the superseded collision framing, block
-  324 the first pair measurement, block 323 the root-cause isolation.
-  `out/` and `tests/smoke/smoke_diag_f128_l*` are untracked scratch; keep
-  `out/` disposable and never put compiler archives inside the repo.
+- **Main/docs:** block 327 is the 1600 probe + metadata sync, block 326
+  the corrected gate-9 mechanism, block 325 the superseded collision
+  framing, block 324 the first pair measurement, block 323 the root-cause
+  isolation. `out/` and `tests/smoke/smoke_diag_f128_l*` are untracked
+  scratch; keep `out/` disposable and never put compiler archives inside
+  the repo.
 - **CONTRACT-PAIR WIP (2026-11-03):** `E:\xiom-lang\stdlib` carries 5
   annotated JSON/builder sources + `CHANGELOG.md`/`runtime/xiom_runtime.c`
   WIP; `E:\xiom-lang\xiom` carries 26 uncommitted codegen/test files
@@ -193,8 +195,8 @@ PRIORITY:
 3. External: 1531 xvector verify; 1807 orbitdb compiler write path;
    wishlist row 33 compiler/install; 1600 compiler closeout.
 4. Optional readiness waves: function-level smoke coverage (53.1%);
-   permanent p_f128_i128_e2e once COMPILER_VERSION moves to v0.65.5;
-   no clause waves in the documented tail.
+   permanent `p_f128_i128_e2e` LANDED (block 327; `COMPILER_VERSION`
+   v0.65.5); no clause waves in the documented tail.
 
 RULES:
 - No tag/release without a fresh owner GO; released tags are immutable.
@@ -4433,6 +4435,30 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-11-03 block 327 (unblocked wave: permanent 1600 e2e + main metadata synced to the v0.65.5 release)**
+- **Probe:** `tools/probes/p_f128_i128_e2e.xi` covers Float64
+  /Float128/Float32 -> Int128 and UInt128, signed positive and negative.
+  Official v0.65.5: compile rc 0, run rc 0. Pre-fix v0.65.2: compile
+  fails (`ret i128 %tmp4` from a `double`), so it is a real regression
+  test. Now part of the probe corpus.
+- **Metadata sync (safe subset of the release-branch merge):**
+  `package.xi` -> 0.65.5, `COMPILER_VERSION` -> v0.65.5,
+  `release-notes/v0.65.5.md` added, all taken from tag
+  `stdlib-v0.65.5`. CI now fetches the current compiler pin (v0.65.5)
+  for the corpus instead of the stale v0.64.8.
+- **Release topology found:** `stdlib-v0.65.5` (`88f3c12`,
+  `release/v0.65.5-prep`) is **not an ancestor of main**. The code trees
+  are identical; the release-side differences were exactly the four
+  metadata files, now synced except `CHANGELOG.md`.
+  `git merge-tree --write-tree main stdlib-v0.65.5` was clean before the
+  sync; after it, the remaining merge content is `CHANGELOG.md` plus a
+  `COMPILER_VERSION` conflict (main v0.65.5 vs tag v0.65.4 -- keep
+  v0.65.5). Still blocked in this worktree by the foreign uncommitted
+  CHANGELOG (t3 + sb_to_str): the WIP owner stashes/commits it, then
+  `git merge --no-ff release/v0.65.5-prep`.
+- **Readiness unchanged at 9/10**; gate 9 still awaits the compiler
+  nested-scope owns_return fix (REL-20261103-1626-stdlib).
 
 **SESSION 2026-11-03 block 326 (corrected mechanism: the flat gate is a real reclaim; the blocker is the owns_return Result drop alloca in a nested scope -- REL-20261103-1626-stdlib)**
 - **Supersedes block 325.** The leaf-name-collision explanation was wrong:

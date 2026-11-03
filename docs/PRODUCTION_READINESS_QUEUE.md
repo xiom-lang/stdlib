@@ -51,6 +51,16 @@ Post-release: JSON 1704, 2117 aggregate contract, compiler pin merge.
   placement (keep the reclaim) -- REL-20261103-1626-stdlib (corrects
   1557). Then re-run the nested repro and the gate curve; gate 9 stays
   open until the nested smoke compiles and PULSE confirms.
+- **Unblocked work landed (2026-11-03, block 327):** permanent
+  `tools/probes/p_f128_i128_e2e.xi` (Float64/Float128/Float32 ->
+  Int128/UInt128, signed +/-) is green on the official v0.65.5 and fails
+  to compile on v0.65.2, locking REL-20261031-1600. Main metadata synced
+  from tag `stdlib-v0.65.5`: `package.xi` 0.65.5,
+  `COMPILER_VERSION` v0.65.5, `release-notes/v0.65.5.md` added. The
+  release branch (`release/v0.65.5-prep`, tag `88f3c12`) is not an
+  ancestor of main; only `CHANGELOG.md` remains to merge (plus keep
+  v0.65.5 on the COMPILER_VERSION conflict), blocked by the foreign
+  uncommitted CHANGELOG.
 - **Readiness unchanged at 9/10.**
 
 ### 2026-11-02 addendum -- v0.65.5 published + official-pin verification
