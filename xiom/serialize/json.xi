@@ -83,6 +83,7 @@ fn _json_push_range(buf: &mut Vec[UInt8], base: *UInt8, start: Int, end: Int) {
   }
 }
 
+#[borrows_vec]
 fn _json_buf_str(buf: Vec[UInt8]) -> Str {
   if buf.len() == 0 {
     return "";
@@ -470,6 +471,10 @@ fn _json_parse_number(base: *UInt8, n: Int, pos: &mut Int) -> Result[JsonValue, 
 /// NOTE: the name `json_parse` collides with the parent module's own
 /// json_parse and direct calls can misresolve under the current compiler
 /// (BUG 25 #1). The parsing logic lives in the uniquely-named helpers above.
+/// The Ok payload is a fresh main-heap JsonValue tree owned by the caller
+/// (R3): a direct `let p = json_parse(s)` binding reclaims it at scope exit.
+#[owns_return]
+#[borrows_str]
 pub fn json_parse(s: Str) -> Result[JsonValue, Str]
   ensures: (s.len() == 0) => (result.is_err == true)
   ensures: (s == "null") => (result.is_ok == true)
@@ -491,7 +496,13 @@ pub fn json_parse(s: Str) -> Result[JsonValue, Str]
 }
 
 /// Serialize `v` as compact JSON (no insignificant whitespace).
+/// The by-value argument is CONSUMED for the call and not retained (R4): a
+/// proven-owned temporary from a builder's `build()` has its Vec/Map data
+/// buffers reclaimed after this call, while String leaves are borrowed and
+/// stay alive. A variable argument stays leak-only (no move proof).
 /// Complexity: O(n), n = number of nodes.
+#[consumes_agg]
+#[owns_str]
 pub fn json_stringify(v: JsonValue) -> Str
   ensures: result.len() > 0  // every JSON value renders to at least one byte
 {
@@ -502,6 +513,7 @@ pub fn json_stringify(v: JsonValue) -> Str
 /// tree (PULSE request handlers) use this to avoid the by-value deep copy
 /// at the call boundary (REL-20261020-1704-pulse).
 /// Complexity: O(n), n = number of nodes.
+#[owns_str]
 pub fn json_stringify_ref(v: &JsonValue) -> Str
   ensures: result.len() > 0  // every JSON value renders to at least one byte
 {
@@ -792,6 +804,7 @@ fn _json_escape_into(s: Str, sb: &mut Vec[UInt8]) {
 
 /// Serialize `v` as indented JSON (2 spaces per level).
 /// Complexity: O(n), n = number of nodes.
+#[owns_str]
 pub fn json_pretty(v: JsonValue) -> Str
   ensures: result.len() > 0  // every JSON value renders to at least one byte
 {
@@ -800,6 +813,7 @@ pub fn json_pretty(v: JsonValue) -> Str
 
 /// Serialize `v` by reference as indented JSON. See json_stringify_ref.
 /// Complexity: O(n), n = number of nodes.
+#[owns_str]
 pub fn json_pretty_ref(v: &JsonValue) -> Str
   ensures: result.len() > 0  // every JSON value renders to at least one byte
 {
@@ -1032,6 +1046,10 @@ pub fn JsonObjectBuilder.put(&mut self, key: Str, value: JsonValue)
 }
 
 /// Wrap the object builder's entries as a JSON object.
+/// The receiver is CONSUMED: the returned tree owns the Map's data buffers.
+/// R4 contract: a direct `json_stringify(b.build())` reclaims those buffers
+/// after the call; literal keys and borrowed String values are never freed.
+#[consumes_agg]
 pub fn JsonObjectBuilder.build(self) -> JsonValue
   ensures: json_type(result) == "object"
 {
@@ -1056,6 +1074,10 @@ pub fn JsonArrayBuilder.push(&mut self, item: JsonValue)
 }
 
 /// Wrap the array builder's items as a JSON array.
+/// The receiver is CONSUMED: the returned tree owns the Vec data buffer.
+/// R4 contract: a direct `json_stringify(a.build())` reclaims it after the
+/// call; borrowed String elements are never freed.
+#[consumes_agg]
 pub fn JsonArrayBuilder.build(self) -> JsonValue
   ensures: json_type(result) == "array"
 {
@@ -1131,6 +1153,7 @@ pub fn json_type_ref(v: &JsonValue) -> Str
 ///
 /// NOTE: the name `json_escape` collides with the parent module's own
 /// json_escape; the logic lives in the uniquely-named _json_escape_impl.
+#[owns_str]
 pub fn json_escape(s: Str) -> Str
   ensures: (s.len() == 0) => (result == "")
   ensures: result.len() >= s.len()

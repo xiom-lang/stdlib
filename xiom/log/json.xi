@@ -42,6 +42,7 @@ fn _raw_byte(base: *UInt8, i: Int) -> UInt8
 
 /// Escape a value for inclusion in a JSON string (`"` and `\`).
 /// Complexity: O(len(s)). Wave 126: single-Vec builder over the cached view.
+#[owns_str]
 fn json_escape(s: Str) -> Str {
   var out: Vec[UInt8] = Vec[UInt8].new();
   let len = s.len();

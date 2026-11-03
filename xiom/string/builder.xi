@@ -113,6 +113,7 @@ pub fn sb_push_int(sb: &mut Vec[UInt8], v: Int)
 /// NUL-terminated buffer moves into the result Str ([XFER]). The builder
 /// vector is untouched and remains usable.
 /// Complexity: O(n).
+#[borrows_vec]
 pub fn sb_to_str(sb: &Vec[UInt8]) -> Str
   ensures: result.len() == sb.len()
 {

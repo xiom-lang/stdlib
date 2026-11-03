@@ -33,6 +33,7 @@ fn _raw_byte(base: *UInt8, i: Int) -> UInt8
 /// Complexity: O(n), n = string length.
 /// Wave 126: single-Vec builder over the cached (base, len) view (the
 /// previous concat-per-byte loop was quadratic in scans and allocations).
+#[owns_str]
 pub fn json_escape(s: Str) -> Str
   ensures: (s.len() == 0) => (result == "")
   ensures: result.len() >= s.len()

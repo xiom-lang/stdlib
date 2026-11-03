@@ -477,6 +477,10 @@ fn parse_number(s: Str, pos: &mut Int) -> Result[JsonValue, SerializeError] {
 }
 
 /// Parse JSON text into a JsonValue; Err with position info.
+/// The Ok payload is a fresh main-heap JsonValue tree owned by the caller
+/// (R3): a direct `let p = json_parse(s)` binding reclaims it at scope exit.
+#[owns_return]
+#[borrows_str]
 pub fn json_parse(data: Str) -> Result[JsonValue, SerializeError]
   ensures: (data.len() == 0) => (result.is_err == true)
   ensures: (data == "null") => (result.is_ok == true)
@@ -604,6 +608,7 @@ pub fn big_endian() -> Bool
 /// Complexity: O(n), n = string length.
 /// Wave 126: single-Vec builder over the cached (base, len) view (the
 /// previous concat-per-char loop was quadratic in scans and allocations).
+#[owns_str]
 pub fn json_escape(s: Str) -> Str
   ensures: (s.len() == 0) => (result == "")
   ensures: result.len() >= s.len()
@@ -698,14 +703,14 @@ pub fn json_minify(s: Str) -> Result[Str, Str]
   var in_string: Bool = false;
   while i < len {
     let c = get_char(s, i);
-    let b: UInt8;
+    var b: UInt8;
     unsafe { b = *(base + i); }
     if in_string {
       builder.sb_push_byte(sb, b);
       if c == '\\' {
         i = i + 1;
         if i < len {
-          let b2: UInt8;
+          var b2: UInt8;
           unsafe { b2 = *(base + i); }
           builder.sb_push_byte(sb, b2);
         };
@@ -747,14 +752,14 @@ pub fn json_pretty(s: Str) -> Result[Str, Str]
   var need_indent: Bool = false;
   while i < len {
     let c = get_char(s, i);
-    let b: UInt8;
+    var b: UInt8;
     unsafe { b = *(base + i); }
     if in_string {
       builder.sb_push_byte(sb, b);
       if c == '\\' {
         i = i + 1;
         if i < len {
-          let b2: UInt8;
+          var b2: UInt8;
           unsafe { b2 = *(base + i); }
           builder.sb_push_byte(sb, b2);
         };
