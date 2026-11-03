@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 119 (updated 2026-11-02; **v0.65.5 SHIPPED: stdlib tag `d1e4b36`@`88f3c12`, release 41447551297, registry 0.65.5 live, compiler v0.65.5 released, pin PR #12 MERGED. Official v0.65.5 verification: 1600 e2e GREEN (1924 fixed); 1704 root-caused. The contract pair's flat gate is a REAL reclaim, but the same `#[owns_return]` path emits an invalid-IR drop alloca for a Result bound inside a nested block (REL-20261103-1626-stdlib). With the contract inactive the gate leaks 25.3/44.7/205.4 MB at 10k/20k/100k (2.0 KB/iter, parse tree). READINESS 9/10: gate 9 open pending the nested-scope alloca fix + re-verification. Lane queue = 2202 (compiler Send/Sync; brotli/zstd live; kqueue done) + 1704. 1531/1807/wishlist33 external.**)
+## 0A. CONTINUE HERE -- handoff snapshot 119 (updated 2026-11-02; **v0.65.5 SHIPPED: stdlib tag `d1e4b36`@`88f3c12`, release 41447551297, registry 0.65.5 live, compiler v0.65.5 released, pin PR #12 MERGED. Official v0.65.5 verification: 1600 e2e GREEN (1924 fixed); 1704 root-caused. The compiler fixed the nested-scope `#[owns_return]` drop alloca (REL-20261103-1626 **verified**) and the pair is flat: 5.6/5.6/6.4/9.2/14.0 MB at 10k/20k/40k/100k/200k (v0.65.5: 45.1/85.9/166.6/408.8/812.8). Stdlib contracts committed `9de28f1`. READINESS 9/10: flip pending the v0.65.6 archive + PULSE confirmation (REL-20261103-1807-stdlib). Lane queue = 2202 (compiler Send/Sync; brotli/zstd live; kqueue done) + 1704. 1531/1807/wishlist33 external.**)
 
 - **v0.65.5 release (2026-11-02):** annotated tag `stdlib-v0.65.5`
   (object `d1e4b36`) at `88f3c12` (code `7b7583c`, package 0.65.5,
@@ -53,57 +53,57 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   **Gate 9 remains open on the compiler drop glue alone**; stdlib API work
   is done (build 1.87 + parse 2.08 + stringify 0.12 = full 4.07 KB/iter;
   scalar enums and stringify are flat).
-- **Gate 9 PAIR RESULT (2026-11-03, block 326):** the contract pair's flat
-  gate (5.5 / 5.0 / 9.4 MB at 10k / 20k / 100k) is a **real reclaim** --
-  `#[owns_return]` releases the parse tree. It is not shippable yet: the
-  same codegen emits the Result drop `alloca` after its GEP uses when the
-  binding is inside a nested block, so
-  `smoke_stress_serialize_json_nested` fails with
-  `Instruction does not dominate all uses!`. Top-level bindings, `match`,
-  and builder+stringify+parse shapes compile.
-  - Contract **inactive** (unannotated same-leaf sibling, or annotation
-    removed): the repro compiles and the gate leaks
-    **25.3 / 44.7 / 205.4 MB** at 10k / 20k / 100k = **2.0 KB/iter**
-    (parse tree; build is reclaimed by stringify's `consumes_agg`).
-  - The same-leaf group rule rejects a leaf if any same-named declaration
-    lacks the attribute; that is why the duplicate `json_parse` masked the
-    bug. Renaming the duplicate does **not** fix the IR failure (tested),
-    so qualified annotation keys are not the fix.
-  - Filed **REL-20261103-1626-stdlib** (correction to 1557): fix the
-    nested-block drop alloca placement, keep the reclaim, then re-run the
-    nested repro + gate. **Gate 9 remains open.**
+- **Gate 9 RESULT (2026-11-03, blocks 326/329):** the contract pair's flat
+  gate is a **real reclaim**, and the compiler fixed the nested-block IR
+  bug (REL-20261103-1626: entry-hoisted pointer slot so the exit GEPs
+  dominate the binding alloca; ships in v0.65.6). Verified on the fixed
+  compiler (sha `272BE59C...`, 17:50Z) with the annotated stdlib:
+  `p_json_1704_obj` = **5.6 / 5.6 / 6.4 / 9.2 / 14.0 MB** at
+  10k / 20k / 40k / 100k / 200k (v0.65.5: 45.1 / 85.9 / 166.6 / 408.8 /
+  812.8); `smoke_stress_serialize_json_nested` compiles/runs rc 0; JSON
+  corpus 30/30. Item 1626 moved fixed -> **verified**.
+  - Contracts are **committed** on stdlib main `9de28f1`; pre-commit
+    clean-extract validation on v0.65.5: `check_modules` 533/533, KAT
+    15/15.
+  - Remaining for 10/10: compiler commits + cuts v0.65.6; stdlib bumps
+    `COMPILER_VERSION`; re-run the gate on the archive; mark 1704 fixed;
+    PULSE re-runs `probe_alloc_aggregate` + capped bttger and verifies
+    (requested REL-20261103-1807-stdlib). **Readiness stays 9/10 until
+    the archive run + PULSE confirmation.**
 - **Readiness 9/10 (90%):** gates 1-8 and 10 MET. Gate 7 is
   ratchet-green (modules 543/543 = 100%; function refs 3541/6664 =
   53.1%). Gate 8 is MET outside the documented 285-fn no-clause tail
   (iter 70.5, os 71.5, math 90.7, thread 91.1, ffi 94.5, serialize 94.7,
-  format 95.2; no clause waves). Gate 9 = 1704.
+  format 95.2; no clause waves). Gate 9 = 1704 (fix verified; flip
+  pending v0.65.6 + PULSE).
 - **Relay queue:** only **2202** (compiler `Send`/`Sync`; brotli/zstd are
   live registry packages; kqueue delivered) and **1704** (compiler
   nested-scope owns_return codegen; **REL-20261102-1800-stdlib** ->
-  1551 -> 1557 -> corrected by **REL-20261103-1626-stdlib**) remain acked.
-  1924 fixed; 1552 fixed; 1600 verified on the
-  official pin (compiler closeout). 1531 (xvector verify), 1807 (orbitdb
-  compiler write path), and wishlist row 33 (compiler/install) are
-  external. Fixed/verified rows awaiting reporter closeout are not lane
-  work.
-- **Main/docs:** block 328 is the release-branch merge, block 327 the
-  1600 probe + metadata sync, block 326 the corrected gate-9 mechanism.
-  `out/` and `tests/smoke/smoke_diag_f128_l*` are untracked scratch; keep
-  `out/` disposable and never put compiler archives inside the repo.
+  1551 -> 1557 -> 1626 **verified**). New request to PULSE:
+  **REL-20261103-1807-stdlib** (post-v0.65.6 `probe_alloc_aggregate` +
+  capped bttger confirmation). 1924 fixed; 1552 fixed; 1600 verified on
+  the official pin (compiler closeout). 1531 (xvector verify), 1807
+  (orbitdb compiler write path), and wishlist row 33 (compiler/install)
+  are external. Fixed/verified rows awaiting reporter closeout are not
+  lane work.
+- **Main/docs:** block 329 is the verified gate-9 fix + committed
+  contracts, block 328 the release-branch landing, block 327 the 1600
+  probe + metadata sync. `out/` and `tests/smoke/smoke_diag_f128_l*` are
+  untracked scratch; keep `out/` disposable and never put compiler
+  archives inside the repo.
 - **Release metadata landed linearly (2026-11-03, block 328):** the
   `release/v0.65.5-prep` content is on main as `062d660` (parent
   `8adb6a2`; tree equal to the former merge `74330e4`), with
   `COMPILER_VERSION` v0.65.5. No merge commits remain on main (ruleset
   satisfied). The foreign Unreleased CHANGELOG entries were stashed and
   restored under `[Unreleased]`; they remain uncommitted.
-- **CONTRACT-PAIR WIP (2026-11-03):** `E:\xiom-lang\stdlib` carries 5
-  annotated JSON/builder sources + `CHANGELOG.md`/`runtime/xiom_runtime.c`
-  WIP; `E:\xiom-lang\xiom` carries 26 uncommitted codegen/test files
-  (HEAD `c54ee9f8b`). The stdlib annotations alone are green on the
-  v0.65.5 pin (9/9 probes, 21/21 smokes; gate still linear
-  43.9/82.3/159.8, because v0.65.5 has no `consumes_agg`). The compiler
-  binary used for the pair measurements is sha256 `ea950174...`
-  (2026-11-03 13:49Z). Do not `git add .` in either tree.
+- **Worktree WIP (2026-11-03, block 329):** the JSON ownership contracts
+  are committed (`9de28f1`). Remaining uncommitted: the foreign t3 change
+  (`CHANGELOG.md`, `runtime/xiom_runtime.c`, `xiom/net/server.xi`) and
+  the compiler-side WIP (the verified nested-scope fix + sibling
+  changes, uncommitted). Do not `git add .` in either tree. Pair
+  measurements use compiler sha256 `272BE59C...` (2026-11-03 17:50Z),
+  which carries the fix; the earlier `ea950174...` binary did not.
 - **RELAY WORKTREE CAVEAT (2026-11-02, own answer):** the shared relay
   clone `E:\xiom-lang\xiom-relays` has a **local-only, uncommitted
   2026-10-21-era edit** to
@@ -134,7 +134,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\xiom-relays fetch origin
   git -C E:\xiom-lang\xiom-relays merge --ff-only origin/main
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md block 324 + blocks 323/322/321.
+Read docs/stdlib_session.md block 329 + blocks 328/327/326.
 
 STATE (2026-11-03):
 - v0.65.5 SHIPPED: tag stdlib-v0.65.5 (object d1e4b36) at 88f3c12
@@ -145,26 +145,22 @@ STATE (2026-11-03):
   No tag/release action remains for v0.65.5.
 - OFFICIAL v0.65.5 VERIFY: 1600 e2e GREEN 3/3 (signed +/-, UInt128,
   Float32) -> REL-20261031-1924 fixed. 1704 ROOT-CAUSED (block 323):
-  enum-variant aggregate payload drop; p_json_1704_obj is linear at
+  enum-variant aggregate payload drop; p_json_1704_obj was linear at
   4.04 KB/iter -- 45.1/85.9/166.6/408.8/812.8 MB at 10k/20k/40k/100k/
-  200k (the old 33.6/78.3/275.7 baseline was under-sampled). Filed to
-  compiler as REL-20261102-1800-stdlib; JSON-free repro
-  tools/known_failures/p_enum_payload_drop_leak.xi.
-- READINESS 9/10 (90%): gates 1-8,10 MET; gate 9 open ONLY on 1704
-  enum-variant payload drop. Gate 7 function
-  refs 3541/6664 (53.1%) ratchet-green; gate 8 285-fn no-clause tail is
-  documented policy.
-- CONTRACT PAIR (2026-11-03, block 326): the contract's reclaim works
-  (gate flat 5.5/5.0/9.4 at 10k/20k/100k) but its owns_return drop alloca
-  is emitted after its uses when the Result binding is inside a nested
-  block -> `Instruction does not dominate all uses` on
-  smoke_stress_serialize_json_nested. Top-level bindings/match compile.
-  Contract inactive: gate leaks 25.3/44.7/205.4 (2.0 KB/iter, parse
-  tree); build is reclaimed via stringify's consumes_agg, stringify is
-  flat. The duplicate json_parse only masks the bug via the conservative
-  same-leaf rule; renaming does not fix it. REL-20261103-1626-stdlib
-  supersedes 1557. Annotations alone are green on v0.65.5 (9/9 probes,
-  21/21 smokes) but the gate stays linear there (no consumes_agg).
+  200k. JSON-free repro tools/known_failures/p_enum_payload_drop_leak.xi.
+- 1704 FIXED + VERIFIED (blocks 326/329): compiler REL-20261103-1626
+  fixed the nested-scope owns_return drop alloca (entry-hoisted pointer
+  slot; ships v0.65.6). On the fixed binary (sha 272BE59C..., 17:50Z)
+  with the annotated stdlib the gate is FLAT: 5.6/5.6/6.4/9.2/14.0 MB at
+  10k/20k/40k/100k/200k; nested smoke compiles/runs; JSON corpus 30/30.
+  Stdlib contracts are COMMITTED (9de28f1; v0.65.5 check_modules 533/533,
+  KAT 15/15 pre-commit). Item 1626 fixed -> verified.
+- READINESS 9/10 (90%): gates 1-8,10 MET; gate 9 is now only the
+  release/confirmation step -- bump COMPILER_VERSION to v0.65.6, re-run
+  the gate on the archive, mark 1704 fixed, PULSE re-runs
+  probe_alloc_aggregate + capped bttger and verifies
+  (REL-20261103-1807-stdlib). Gate 7 refs 3541/6664 (53.1%)
+  ratchet-green; gate 8 285-fn no-clause tail is documented policy.
 - RELEASE BRANCH: the v0.65.5 release content landed linearly on main
   (062d660): CHANGELOG 0.65.5 section, COMPILER_VERSION v0.65.5,
   package 0.65.5, release-notes/v0.65.5.md. Main has no merge commits
@@ -172,9 +168,9 @@ STATE (2026-11-03):
   releases. The foreign Unreleased CHANGELOG WIP is uncommitted and
   preserved.
 - LANE RELAY QUEUE: only 2202 (compiler Send/Sync; brotli/zstd live;
-  kqueue done) and 1704 (nested-scope owns_return alloca;
-  REL-20261103-1626-stdlib) acked. 1531/1807/row33 external;
-  fixed/verified rows await reporters.
+  kqueue done) and 1704 (fix verified; archive + PULSE confirmation
+  pending) acked. PULSE request REL-20261103-1807-stdlib.
+  1531/1807-orbitdb/row33 external; fixed/verified rows await reporters.
 - RELAY WORKTREE: E:\xiom-lang\xiom-relays has a LOCAL-ONLY uncommitted
   2026-10-21 edit to release-checks/compiler-v0.64.8.md (+24/-16; re-adds
   verdict notes, reverts created timestamp, flips rows). HEAD ==
@@ -187,19 +183,18 @@ STATE (2026-11-03):
   acked; v0.65.6 pending and orbitdb remains on v0.65.4 accepted.
 
 PRIORITY:
-1. 1704 -> gate 9 -> 100%: the reclaim works, but the owns_return Result
-   drop alloca is placed after its uses for a nested-scope binding
-   (REL-20261103-1626-stdlib). The fix is compiler codegen, not
-   annotation keys and not a stdlib rename. After the fix + v0.65.6:
-     - nested acceptance: let s = "{\"a\":1}"; if s.len() > 0 {
-       let r = json_parse(s); if r.is_ok { return 0; } }  -> must compile
-       and run (top-level bindings already do).
-     - gate curve: tools/probes/p_json_1704_obj.xi at 10k/20k/100k with
-       tools/json_peak.ps1 (256 MB cap; -MaxMB 512 for the true peak).
-       Expect flat (~5 MB baseline); contract-inactive today leaks
-       25.3/44.7/205.4 (2.0 KB/iter).
-   Then commit the stdlib annotation set (split CHANGELOG/runtime from
-   the foreign t3 change), pin, and get PULSE confirmation.
+1. 1704 -> gate 9 -> 100%: the fix is verified and the stdlib contracts
+   are committed (9de28f1). Remaining release/confirmation sequence:
+     a. compiler commits the 1626 fix and cuts v0.65.6 (the fix is
+        currently uncommitted on compiler main).
+     b. bump COMPILER_VERSION to v0.65.6.
+     c. re-run on the v0.65.6 archive: the nested smoke must compile/run,
+        and tools/probes/p_json_1704_obj.xi must stay flat at
+        10k/20k/100k (5.6/5.6/6.4/9.2/14.0 MB on the fixed pair today).
+     d. mark REL-20261020-1704-pulse fixed with the release refs; PULSE
+        re-runs probe_alloc_aggregate + capped bttger and verifies
+        (REL-20261103-1807-stdlib).
+     e. update the readiness queue to 10/10.
 2. 2202 residual is compiler Send/Sync only; no stdlib code. Brotli/zstd
    are live registry packages; kqueue delivered.
 3. External: 1531 xvector verify; 1807 orbitdb compiler write path;
@@ -216,10 +211,10 @@ RULES:
   not be reverted without its owner.
 - Compiler archives only under %TEMP%, never inside the repo; keep out/
   disposable.
-- Contract-pair WIP (2026-11-03): the compiler tree has 26 uncommitted
-  files and stdlib has 5 annotated sources + CHANGELOG/runtime WIP. Stage
-  explicit paths only; CHANGELOG and runtime are interleaved with the
-  foreign t3 change and must be split before either side is committed.
+- Worktree WIP (2026-11-03): the JSON annotations are committed
+  (9de28f1); the remaining uncommitted files are the foreign t3 change
+  (CHANGELOG.md, runtime/xiom_runtime.c, xiom/net/server.xi) plus the
+  compiler-side WIP. Stage explicit paths only.
 - No clause waves; io.list_dir runtime-owned; json_clear(&mut) hangs; no
   mutable-enum recursion.
 
@@ -4445,6 +4440,30 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-11-03 block 329 (compiler 1704 fix verified; stdlib contracts committed; gate 9 flat, formal flip pending v0.65.6 + PULSE)**
+- **Compiler fix (REL-20261103-1626, fixed 17:53Z):** a nested-block
+  `#[owns_return]` Result now drops via an entry-hoisted pointer slot
+  (`context.rs`/`vec_drop.rs`), so the exit GEPs dominate the binding
+  alloca. Uncommitted on compiler main; ships in v0.65.6.
+- **Independent verification** (compiler sha `272BE59C...`, built 17:50Z,
+  `XIOM_STDLIB` = annotated working tree): the minimal nested repro and
+  `smoke_stress_serialize_json_nested` compile and run rc 0;
+  `p_json_1704_obj` = **5.6 / 5.6 / 6.4 / 9.2 / 14.0 MB** at
+  10k / 20k / 40k / 100k / 200k (v0.65.5: 45.1 / 85.9 / 166.6 / 408.8 /
+  812.8); JSON probe+smoke corpus 30/30. Item 1626 moved fixed ->
+  **verified**.
+- **Stdlib half committed `9de28f1`** (5 files): `json_parse`
+  `#[owns_return] #[borrows_str]`; stringify/pretty/escape `#[owns_str]`;
+  builder `build()` `#[consumes_agg]`; `sb_to_str`/`_json_buf_str`
+  `#[borrows_vec]`; convert/log `json_escape` `#[owns_str]`; plus the
+  minify/pretty uninitialized `let b: UInt8` -> `var` fix. Pre-commit
+  clean-extract validation on v0.65.5: check_modules 533/533, KAT 15/15.
+  The foreign t3 CHANGELOG/runtime WIP was left untouched.
+- **Remaining for 10/10:** compiler commits + cuts v0.65.6; bump
+  COMPILER_VERSION; re-run the gate on the archive; mark 1704 fixed;
+  PULSE re-runs `probe_alloc_aggregate` + capped bttger and verifies
+  (REL-20261103-1807-stdlib). Readiness stays 9/10 until then.
 
 **SESSION 2026-11-03 block 328 (v0.65.5 release metadata landed linearly on main; no merge commit; foreign CHANGELOG WIP preserved)**
 - **Landing:** the release-branch content landed as `062d660` (parent

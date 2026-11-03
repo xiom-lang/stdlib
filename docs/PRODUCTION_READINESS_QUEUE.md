@@ -47,10 +47,13 @@ Post-release: JSON 1704, 2117 aggregate contract, compiler pin merge.
   (parse tree; build is reclaimed via stringify's `consumes_agg`).
   Renaming the duplicate does not fix the IR failure (tested), so
   qualified annotation keys are not the fix.
-- **Next:** compiler fixes the nested-scope owns_return drop alloca
-  placement (keep the reclaim) -- REL-20261103-1626-stdlib (corrects
-  1557). Then re-run the nested repro and the gate curve; gate 9 stays
-  open until the nested smoke compiles and PULSE confirms.
+- **Next (block 329):** the compiler fixed the nested-scope `owns_return`
+  drop alloca (REL-20261103-1626 **verified**) and stdlib committed the
+  ownership contracts (`9de28f1`). On the fixed pair the gate is flat
+  (5.6 / 5.6 / 6.4 / 9.2 / 14.0 MB at 10k / 20k / 40k / 100k / 200k).
+  Remaining for gate 9: v0.65.6 release, `COMPILER_VERSION` bump, archive
+  re-run, mark 1704 fixed, then PULSE confirmation
+  (REL-20261103-1807-stdlib). Gate 9 stays open until then.
 - **Unblocked work landed (2026-11-03, blocks 327-328):** permanent
   `tools/probes/p_f128_i128_e2e.xi` (Float64/Float128/Float32 ->
   Int128/UInt128, signed +/-) is green on the official v0.65.5 and fails
