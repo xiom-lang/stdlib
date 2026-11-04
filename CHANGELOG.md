@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Formatter heap corruption (`0xC0000374`): `bool_to_string` and the float
+  conversion paths return owned copies instead of static literals, which the
+  v0.65.5+ compiler frees on scope exit; guard free-list reuse now zeroes only
+  the payload, not the next block's header.
 - The POSIX confinement trampoline no longer saves the signal mask on every
   confined-block entry: `xiom_trap_enter` and `xiom_trampoline_call` use
   `sigsetjmp(..., 0)` (the per-entry `sigprocmask` was the t3-hot-reload
