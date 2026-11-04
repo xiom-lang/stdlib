@@ -4,6 +4,18 @@ All notable changes to the XIOM standard library are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+## [0.65.7] - 2026-11-04
+
+### Fixed
+
+- Formatter heap corruption (`0xC0000374`): `bool_to_string` and the float
+  conversion paths return owned copies instead of static literals, which the
+  v0.65.5+ compiler frees on scope exit.
+- Guard free-list reuse zeroed the full block from the payload pointer,
+  overrunning 16 bytes into the next block; it now zeroes only the payload.
+
 ## [0.65.6] - 2026-11-04
 
 ### Fixed
