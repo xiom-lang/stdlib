@@ -22,6 +22,10 @@ fn bump() {
   _n = _n + 1;
 }
 
+fn bump_arg(n: Int) {
+  _n = _n + 1;
+}
+
 fn main() -> Int {
   // thread local: set/get/replace/take/clear
   // (the lazy init path stores fn() -> T and calls it on first access; that
@@ -69,7 +73,7 @@ fn main() -> Int {
   if !pool.tp_submit(&mut p, bump) { io.println("pool:submit"); return 13; }
   if pool.tp_busy(&p) != 1 { io.println("pool:busy"); return 14; }
   if pool.tp_idle(&p) != 3 { io.println("pool:idle"); return 15; }
-  if !pool.tp_submit_with(&mut p, bump, 7) { io.println("pool:submit_with"); return 16; }
+  if !pool.tp_submit_with(&mut p, bump_arg, 7) { io.println("pool:submit_with"); return 16; }
   pool.tp_join(&mut p);
   if pool.tp_busy(&p) != 0 { io.println("pool:join_busy"); return 17; }
   if pool.tp_idle(&p) != 4 { io.println("pool:join_idle"); return 18; }

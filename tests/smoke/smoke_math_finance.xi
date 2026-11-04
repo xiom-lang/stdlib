@@ -239,6 +239,6 @@ fn main() -> Int {
   return 0;
 }
 
-fn sqobj_local(x: &Vec[Float64]) -> Float64 {
+fn sqobj_local(x: &Vec[Float64], p: &Vec[Float64]) -> Float64 {
   return x[0] * x[0];
 }
