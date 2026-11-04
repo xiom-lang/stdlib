@@ -564,7 +564,9 @@ static void* xiom_guard_take_free(XiomGuardArena* a, long block_bytes) {
         XiomGuardHdr* h = ((XiomGuardHdr*)p) - 1;
         h->magic = XIOM_GUARD_MAGIC;
         h->size = (unsigned long long)block_bytes;
-        memset(p, 0, (size_t)block_bytes);
+        /* `block_bytes` includes the 16-byte header; `p` is the payload.
+           Zero only the payload, never the first 16 bytes of the next block. */
+        memset(p, 0, (size_t)(block_bytes - XIOM_GUARD_HDR));
         return p;
     }
     /* Large blocks: exact-size scan (their headers survive the free). */
@@ -576,7 +578,7 @@ static void* xiom_guard_take_free(XiomGuardArena* a, long block_bytes) {
             *link = *(void**)p;
             h->magic = XIOM_GUARD_MAGIC;
             h->size = (unsigned long long)block_bytes;
-            memset(p, 0, (size_t)block_bytes);
+            memset(p, 0, (size_t)(block_bytes - XIOM_GUARD_HDR));
             return p;
         }
         link = (void**)p;

@@ -261,9 +261,9 @@ pub fn float_to_fixed_str(f: Float64, decimals: Int) -> Str
 {
   var neg = false;
   var v = f;
-  if f != f { return "nan"; }
-  if f > 1.7976931348623157e308 { return "inf"; }
-  if f < -1.7976931348623157e308 { return "-inf"; }
+  if f != f { return str_concat("", "nan"); }
+  if f > 1.7976931348623157e308 { return str_concat("", "inf"); }
+  if f < -1.7976931348623157e308 { return str_concat("", "-inf"); }
   if f < 0.0 {
     neg = true;
     v = -f;
@@ -280,9 +280,9 @@ pub fn float_to_sci_str(f: Float64, decimals: Int) -> Str
   ensures: (f != f) => (result == "nan")
   ensures: (f == 1.5 && decimals == 1) => (result == "1.5e+00")
 {
-  if f != f { return "nan"; }
-  if f > 1.7976931348623157e308 { return "inf"; }
-  if f < -1.7976931348623157e308 { return "-inf"; }
+  if f != f { return str_concat("", "nan"); }
+  if f > 1.7976931348623157e308 { return str_concat("", "inf"); }
+  if f < -1.7976931348623157e308 { return str_concat("", "-inf"); }
   var neg = false;
   var v = f;
   if f < 0.0 {
@@ -307,9 +307,9 @@ pub fn float_to_sci_str(f: Float64, decimals: Int) -> Str
 pub fn float_to_string(f: Float64) -> Str
   ensures: result.len() > 0
 {
-  if f != f { return "nan"; }
-  if f > 1.7976931348623157e308 { return "inf"; }
-  if f < -1.7976931348623157e308 { return "-inf"; }
+  if f != f { return str_concat("", "nan"); }
+  if f > 1.7976931348623157e308 { return str_concat("", "inf"); }
+  if f < -1.7976931348623157e308 { return str_concat("", "-inf"); }
   var neg = false;
   var v = f;
   if f < 0.0 {
@@ -318,7 +318,7 @@ pub fn float_to_string(f: Float64) -> Str
   }
   var body = "";
   if v == 0.0 {
-    body = "0";
+    body = str_concat("", "0");
   } else {
     var e = _f64_exp10(v);
     if e >= 15 || e < -4 {
@@ -339,8 +339,12 @@ pub fn bool_to_string(b: Bool) -> Str
   ensures: (b == true) => (result == "true")
   ensures: (b == false) => (result == "false")
 {
-  if b { return "true"; };
-  return "false";
+  // Return an owned copy, never the static literal: the 0.65.5 compiler
+  // treats a returned string literal as owned and frees the rodata on scope
+  // exit, which heap-corrupts the formatter smokes (0xC0000374). The
+  // formatter calls this on every write_bool.
+  if b { return string.str_concat("", "true"); };
+  return string.str_concat("", "false");
 }
 
 /// Unicode code point of a Char.
