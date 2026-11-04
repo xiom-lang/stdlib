@@ -4483,6 +4483,11 @@ registry pin, agent recon for the rest)**
 - **Decision:** the tag is **HELD** until the dry-run is green (compiler
   fix, or an explicit owner decision on the pin/waiver). No tag, release,
   registry write or pin PR was created.
+- **Concurrent-edit hazard:** main's `package.xi` is also **0.65.6**
+  uncommitted (mtime 2026-11-04 13:21Z, before this session's prep) and
+  was not made or staged here. The release branch is the source of truth;
+  do not commit main's `package.xi` until the release is tagged, and
+  reconcile with whoever made the edit.
 
 **SESSION 2026-11-03 block 331 (roadmap tracker enforced in CI; v0.65.6 still pending)**
 - `tools/check_roadmap.ps1` validates `docs/STDLIB_ROADMAP.md`: unique and
