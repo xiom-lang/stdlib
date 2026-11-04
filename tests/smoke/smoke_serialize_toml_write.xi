@@ -29,7 +29,7 @@ fn main() -> Int {
       match toml_parse(out) {
         Ok(t2) => {
           if toml_keys(&t2).len() != toml_keys(&t).len() {
-            io.println("keys " + toml_keys(&t2).len());
+            io.println("keys " + toml_keys(&t2).len().to_str());
             return 9;
           }
           match toml_get_str(&t2, "title") {

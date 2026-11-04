@@ -19,7 +19,7 @@ fn main() -> Int {
     Ok(t) => {
       if !toml_has(&t, "package.name") { io.println("has name"); return 2; }
       if toml_has(&t, "package.missing") { io.println("has missing"); return 3; }
-      if toml_keys(&t).len() != 8 { io.println("keys=" + toml_keys(&t).len()); return 4; }
+      if toml_keys(&t).len() != 8 { io.println("keys=" + toml_keys(&t).len().to_str()); return 4; }
 
       match toml_get_str(&t, "package.name") {
         Some(s) => { if s != "xiom" { io.println("name=" + s); return 5; } },
@@ -30,7 +30,7 @@ fn main() -> Int {
         None => { return 8; },
       }
       match toml_get_int(&t, "package.count") {
-        Some(n) => { if n != 1024 { io.println("count=" + n); return 9; } },
+        Some(n) => { if n != 1024 { io.println("count=" + n.to_str()); return 9; } },
         None => { return 10; },
       }
       match toml_get_float(&t, "package.ratio") {
@@ -47,7 +47,7 @@ fn main() -> Int {
       }
       match toml_get_str_array(&t, "build.targets") {
         Some(a) => {
-          if a.len() != 2 { io.println("targets len=" + a.len()); return 17; }
+          if a.len() != 2 { io.println("targets len=" + a.len().to_str()); return 17; }
           if a[0] != "core" || a[1] != "jit" { io.println("targets vals"); return 18; }
         },
         None => { return 19; },

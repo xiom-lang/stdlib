@@ -15,3 +15,11 @@
 # archive (verified 2026-10-04), so it rejoins the release gate.
 # smoke_iter_range.xi -- re-added to the gate on v0.63.1 (C001 fixed)
 # smoke_iter_find_all_any.xi -- re-added on v0.63.1 (C001 fixed)
+
+# Release-gate carve-out (owner decision 2026-11-04, v0.65.6): the three net
+# smokes fail on the Ubuntu runner (network/Str-lifetime; http_build_request
+# is tracked in REL-20261104-1551-stdlib). They pass locally on Windows and
+# remain in the full CI/heavy corpora.
+smoke_net_address.xi
+smoke_net_folder.xi
+smoke_net_http.xi

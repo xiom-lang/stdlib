@@ -183,6 +183,6 @@ fn main() -> Int {
     iter = iter + 1;
   };
 
-  io.println("fuzz: 600 inputs, json=" + ok_json + " toml=" + ok_toml + " csv=" + ok_csv + " url=" + ok_url + " http=" + ok_http);
+  io.println("fuzz: 600 inputs, json=" + ok_json.to_str() + " toml=" + ok_toml.to_str() + " csv=" + ok_csv.to_str() + " url=" + ok_url.to_str() + " http=" + ok_http.to_str());
   return 0;
 }

@@ -63,7 +63,7 @@ fn main() -> Int {
 
   var one = csv.csv_parse("\"\"");
   match one {
-    Ok(rows) => { if rows.len() != 1 { io.println("quoted-empty rows=" + rows.len()); return 9; } },
+    Ok(rows) => { if rows.len() != 1 { io.println("quoted-empty rows=" + rows.len().to_str()); return 9; } },
     Err(e) => { io.println("quoted-empty Err " + e); return 10; },
   }
 
