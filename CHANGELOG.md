@@ -6,6 +6,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.65.6] - 2026-11-04
+
+### Changed
+
+- The JSON entry points carry R3/R4 ownership contracts: `json_parse`
+  (`#[owns_return]`, `#[borrows_str]`), `json_stringify`/`json_pretty`/
+  `json_escape` (`#[owns_str]`), the object/array builder `build()`
+  (`#[consumes_agg]`), `sb_to_str`/`_json_buf_str` (`#[borrows_vec]`), and
+  the convert/log `json_escape` (`#[owns_str]`). With compiler v0.65.6 these
+  let a direct parse binding and `stringify(build())` reclaim their trees.
+
+### Added
+
+- `tools/probes/p_f128_i128_e2e.xi` locks Float64/Float128/Float32 to
+  Int128/UInt128 conversions, signed both ways (REL-20261031-1600).
+
 ## [0.65.5] - 2026-10-31
 
 ### Added
