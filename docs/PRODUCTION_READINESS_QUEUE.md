@@ -54,6 +54,13 @@ Post-release: JSON 1704, 2117 aggregate contract, compiler pin merge.
   Remaining for gate 9: v0.65.6 release, `COMPILER_VERSION` bump, archive
   re-run, mark 1704 fixed, then PULSE confirmation
   (REL-20261103-1807-stdlib). Gate 9 stays open until then.
+- **Release prep (block 332):** stdlib v0.65.6 branch prepared
+  (`release/v0.65.6-prep`, `c73327b` + `837e9be`; package 0.65.6,
+  COMPILER_VERSION v0.65.5, 2-highlight notes). Dry-run 41837914655 is
+  **red** on 4 formatter smokes (pre-existing v0.65.5 heap corruption,
+  both OSes; the v0.65.5 stdlib release dry-run was green on v0.65.4).
+  Tag held; compiler item REL-20261104-1401-stdlib. Two stale smoke
+  signatures are fixed (`6dadc22`).
 - **Unblocked work landed (2026-11-03, blocks 327-328):** permanent
   `tools/probes/p_f128_i128_e2e.xi` (Float64/Float128/Float32 ->
   Int128/UInt128, signed +/-) is green on the official v0.65.5 and fails

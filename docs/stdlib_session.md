@@ -86,17 +86,26 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   (orbitdb compiler write path), and wishlist row 33 (compiler/install)
   are external. Fixed/verified rows awaiting reporter closeout are not
   lane work.
-- **Main/docs:** block 331 is the roadmap tracker/CI enforcement, block 330
-  the post-10/10 roadmap (`docs/STDLIB_ROADMAP.md`), block 329 the verified
-  gate-9 fix + committed contracts, block 328 the release-branch landing.
-  `out/` and `tests/smoke/smoke_diag_f128_l*` are untracked scratch; keep
-  `out/` disposable and never put compiler archives inside the repo.
+- **Main/docs:** block 332 is the v0.65.6 release prep + red dry-run, block
+  331 the roadmap tracker/CI enforcement, block 330 the post-10/10 roadmap
+  (`docs/STDLIB_ROADMAP.md`), block 329 the verified gate-9 fix + committed
+  contracts. `out/` and `tests/smoke/smoke_diag_f128_l*` are untracked
+  scratch; keep `out/` disposable and never put compiler archives inside
+  the repo.
 - **Release metadata landed linearly (2026-11-03, block 328):** the
   `release/v0.65.5-prep` content is on main as `062d660` (parent
   `8adb6a2`; tree equal to the former merge `74330e4`), with
   `COMPILER_VERSION` v0.65.5. No merge commits remain on main (ruleset
   satisfied). The foreign Unreleased CHANGELOG entries were stashed and
   restored under `[Unreleased]`; they remain uncommitted.
+- **v0.65.6 release prep HELD (2026-11-04, block 332):** branch
+  `release/v0.65.6-prep` (`c73327b` + test fix `837e9be`), `package.xi`
+  0.65.6, `COMPILER_VERSION` v0.65.5, 2-highlight notes. Dry-run
+  **41837914655 is RED** on 4 formatter smokes that heap-corrupt on both
+  OSes (pre-existing on the v0.65.5 line; the v0.65.5 stdlib release
+  dry-run was green on v0.65.4). Tag held; compiler item
+  **REL-20261104-1401-stdlib**. Two stale smoke signatures were fixed
+  (`6dadc22`).
 - **Worktree WIP (2026-11-03, blocks 329/330):** the JSON ownership
   contracts are committed (`9de28f1`). An active foreign wave is editing
   `CHANGELOG.md`, `runtime/xiom_runtime.c`, and a growing set of `xiom/*`
@@ -165,6 +174,13 @@ STATE (2026-11-03):
   (ruleset satisfied); use a linear cherry-pick/rebase for future
   releases. The foreign Unreleased CHANGELOG WIP is uncommitted and
   preserved.
+- RELEASE PREP v0.65.6 (block 332): branch release/v0.65.6-prep
+  (c73327b + 837e9be), package 0.65.6, COMPILER_VERSION v0.65.5,
+  2-highlight notes. Dry-run 41837914655 is RED on 4 formatter smokes
+  (pre-existing v0.65.5 heap corruption, both OSes; green on v0.65.4).
+  Tag HELD until the compiler fix (REL-20261104-1401-stdlib); no
+  tag/pin/registry action yet. Two stale smoke signatures fixed
+  (6dadc22).
 - LANE RELAY QUEUE: only 2202 (compiler Send/Sync; brotli/zstd live;
   kqueue done) and 1704 (fix verified; archive + PULSE confirmation
   pending) acked. PULSE request REL-20261103-1807-stdlib.
@@ -181,18 +197,17 @@ STATE (2026-11-03):
   acked; v0.65.6 pending and orbitdb remains on v0.65.4 accepted.
 
 PRIORITY:
-1. 1704 -> gate 9 -> 100%: the fix is verified and the stdlib contracts
-   are committed (9de28f1). Remaining release/confirmation sequence:
-     a. compiler commits the 1626 fix and cuts v0.65.6 (the fix is
-        currently uncommitted on compiler main).
-     b. bump COMPILER_VERSION to v0.65.6.
-     c. re-run on the v0.65.6 archive: the nested smoke must compile/run,
-        and tools/probes/p_json_1704_obj.xi must stay flat at
-        10k/20k/100k (5.6/5.6/6.4/9.2/14.0 MB on the fixed pair today).
-     d. mark REL-20261020-1704-pulse fixed with the release refs; PULSE
-        re-runs probe_alloc_aggregate + capped bttger and verifies
-        (REL-20261103-1807-stdlib).
-     e. update the readiness queue to 10/10.
+1. RF-0 / v0.65.6 release + gate 9:
+   a. Prep is done: release/v0.65.6-prep (c73327b + 837e9be), package
+      0.65.6, COMPILER_VERSION v0.65.5, 2-highlight notes.
+   b. BLOCKED: dry-run 41837914655 is red on 4 formatter smokes
+      (pre-existing v0.65.5 heap corruption, both OSes; green on
+      v0.65.4) -- REL-20261104-1401-stdlib. Wait for the compiler fix.
+   c. On a green dry-run: tag stdlib-v0.65.6; the release workflow opens
+      the STDLIB_VERSION pin PR. Compiler v0.65.6 must pin/bundle
+      stdlib-v0.65.6 (REL-20261104-1325-stdlib).
+   d. Then re-run p_json_1704_obj on the compiler archive, mark 1704
+      fixed, PULSE verifies (REL-20261103-1807-stdlib), readiness 10/10.
 2. 2202 residual is compiler Send/Sync only; no stdlib code. Brotli/zstd
    are live registry packages; kqueue delivered.
 3. External: 1531 xvector verify; 1807 orbitdb compiler write path;
@@ -4444,6 +4459,30 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-11-04 block 332 (v0.65.6 release prep: dry-run RED on a pre-existing formatter regression; 2 smoke signatures fixed; tag held)**
+- **Release prep:** branch `release/v0.65.6-prep` (`c73327b` + test fix
+  `837e9be`) with `package.xi` 0.65.6, `COMPILER_VERSION` v0.65.5, a
+  2-highlight `release-notes/v0.65.6.md`, and a clean CHANGELOG 0.65.6
+  section. Dry-run **41837914655**: validate green, both OS gates red.
+- **Failures:** 4 formatter smokes heap-corrupt on **both** OSes before
+  any output (`smoke_fmt_formatter`, `smoke_stress_fmt_formatter_bool`,
+  `_finish`, `_float`; 0xC0000374 on Windows, 134/139 on Ubuntu). The
+  same set is in heavy run **41439653190** on the v0.65.5 pin; the
+  v0.65.5 release dry-run **41263228033** was green on v0.65.4, so the
+  regression is between v0.65.4 and v0.65.5. It still reproduces with the
+  current WIP compiler sha `54C4953C...` (2026-11-04 00:29). Three
+  Ubuntu-only net flakes did not appear on Windows (runner network).
+- **Fixed here:** two stale smoke signatures (thread pool
+  `tp_submit_with` -> `fn(Int)`; Hamiltonian callback -> two vectors),
+  main `6dadc22`, cherry-picked to the release branch (`837e9be`); both
+  green.
+- **Filed:** **REL-20261104-1401-stdlib** (formatter heap corruption,
+  compiler) and the release coordination
+  **REL-20261104-1325-stdlib** (stdlib-v0.65.6 pin request).
+- **Decision:** the tag is **HELD** until the dry-run is green (compiler
+  fix, or an explicit owner decision on the pin/waiver). No tag, release,
+  registry write or pin PR was created.
 
 **SESSION 2026-11-03 block 331 (roadmap tracker enforced in CI; v0.65.6 still pending)**
 - `tools/check_roadmap.ps1` validates `docs/STDLIB_ROADMAP.md`: unique and
