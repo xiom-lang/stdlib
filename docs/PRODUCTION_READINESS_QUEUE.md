@@ -1,4 +1,4 @@
-﻿# Production-readiness remaining queue (handoff 2026-09-25)
+# Production-readiness remaining queue (handoff 2026-09-25)
 
 **90% -- 9 of 10 gates complete; gate 9 discrete.** (Compiler pin:
 **v0.65.4** published; v0.65.5 pin PR **#12** (chore/pin-stdlib-v0.65.5-compiler) **MERGED**; compiler main pins STDLIB_VERSION=stdlib-v0.65.5.
@@ -71,6 +71,7 @@ Post-release: JSON 1704, 2117 aggregate contract, compiler pin merge.
   (CHANGELOG 0.65.5 section; COMPILER_VERSION kept v0.65.5). No merge
   commit remains on main (ruleset satisfied). The foreign Unreleased
   CHANGELOG WIP remains uncommitted.
+- **PUBLISHED (block 333):** stdlib 0.65.6 tag 6fdde4e; release 41873341844 SUCCESS; registry 41873341859 SUCCESS: xiom-std 0.65.6, compiler v0.65.6, sha 7f6475d4, published 2026-11-04T17:54:33Z. Gate 9 flat on the archive; PULSE verification pending -> 10/10 after it.
 - **Readiness unchanged at 9/10.**
 - **Post-10/10 roadmap:** `docs/STDLIB_ROADMAP.md` (created 2026-11-03).
   RF-0 is the gate-9 carry-over; pillars A-G track adversarial correctness,

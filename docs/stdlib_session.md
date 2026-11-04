@@ -4460,6 +4460,37 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
+**SESSION 2026-11-04 block 333 (stdlib 0.65.6 PUBLISHED: registry live, compiler v0.65.6; cross-lane audit clean)**
+- **Release:** `stdlib-v0.65.6` tag at `6fdde4e` (tag object `3a81d74`;
+  re-cut from `06795c8` on owner GO). Release run `41873341844` SUCCESS;
+  GitHub Release `stdlib-v0.65.6` (17:54Z) with
+  `xiom-std-0.65.6.tar.gz` (asset sha256 `d7f9ccee...`) and
+  `SHA256SUMS`; canary SUCCESS.
+- **Registry:** publish run `41873341859` SUCCESS; `xiom-std` **0.65.6**,
+  compiler **v0.65.6**, sha256 `7f6475d4...`, published
+  `2026-11-04T17:54:33Z`, publisher ref `refs/tags/stdlib-v0.65.6` at
+  `6fdde4e`.
+- **Gate fixes that made it ship:** `a2242e1` (owned bool/float string
+  results; bounded guard free-list zeroing) and `6fdde4e` (explicit
+  `.to_str()` in csv/toml x2/fuzz parsers/time tz; the 3 Ubuntu-only net
+  smokes are a documented release-gate carve-out tied to
+  REL-20261104-1551-stdlib).
+- **Gate 9:** `p_json_1704_obj` flat on the published v0.65.6 archive
+  (5.6/5.7/9.2 MB at 10k/20k/100k); nested smoke green; 1704 fixed,
+  PULSE verification pending (REL-20261103-1807-stdlib). Readiness 9/10
+  until PULSE.
+- **Pin:** compiler main `STDLIB_VERSION=stdlib-v0.65.6` already; the
+  pin-PR job failure is cosmetic (no change needed). Acceptance
+  REL-20261104-1441-compiler-5 acked -> fixed.
+- **Cross-lane audit:** no editor branch/worktree/packaging file exists
+  in this repo (`feat/editor-waves`,
+  `package_win.xi`/`build.ps1`/`package_qa.ps1` are elsewhere); the docs
+  are intact (no reversion by `06795c8`). The only wrong-lane effect was
+  the stale commit/tag state, now resolved; the engine-lane Linux paste
+  is a communication issue only.
+- **Remaining:** compiler Str reassignment garbage in
+  `http_build_request` (REL-20261104-1551-stdlib).
+
 **SESSION 2026-11-04 block 332 (v0.65.6 release prep: dry-run RED on a pre-existing formatter regression; 2 smoke signatures fixed; tag held)**
 - **Release prep:** branch `release/v0.65.6-prep` (`c73327b` + test fix
   `837e9be`) with `package.xi` 0.65.6, `COMPILER_VERSION` v0.65.5, a

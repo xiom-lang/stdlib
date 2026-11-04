@@ -48,7 +48,7 @@ Horizons: H1 = 0-30 days, H2 = 30-90, H3 = 90-180, H4 = 6-12 months.
 
 | ID | Initiative | Horizon | Status | Exit criterion | Evidence |
 |---|---|---|---|---|---|
-| RF-0 | Flip gate 9: v0.65.6 release, archive re-run, mark 1704 fixed, PULSE confirmation, readiness 10/10 | H1 | in_progress | Green release dry-run + flat archive run + PULSE verified + queue at 10/10 | 1626 verified; contracts `9de28f1`; prep `c73327b`+`837e9be`; dry-run 41837914655 RED on 4 fmt smokes (REL-20261104-1401-stdlib); smoke sigs `6dadc22`; PULSE `REL-20261103-1807-stdlib` |
+| RF-0 | Flip gate 9: v0.65.6 release, archive re-run, mark 1704 fixed, PULSE confirmation, readiness 10/10 | H1 | in_progress | Green release dry-run + flat archive run + PULSE verified + queue at 10/10 | 1704 fixed on the v0.65.6 archive (flat 5.6/5.7/9.2 at 10k/20k/100k); stdlib 0.65.6 PUBLISHED (tag `6fdde4e`; release 41873341844; registry 41873341859: xiom-std 0.65.6 compiler v0.65.6, sha `7f6475d4`, 17:54:33Z); PULSE verification pending (REL-20261103-1807-stdlib) |
 
 ### Pillar A -- Adversarial correctness
 
