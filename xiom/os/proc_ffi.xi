@@ -144,7 +144,7 @@ pub fn spawn_with_pipes(cmd: Str, dir: Str) -> Result[PipedChild, Str]
   fds[0] = -1;
   fds[1] = -1;
   fds[2] = -1;
-  let pid64: Int64;
+  var pid64: Int64;
   unsafe {
     pid64 = xiom_process_spawn_pipes(cstr(cmd), cstr_dir(dir), &fds[0]);
   }
@@ -197,7 +197,7 @@ pub fn drain_fd(fd: Int, buf: &mut Vec[UInt8]) -> Result[Int, Str]
 pub fn PipedChild.wait(self) -> Result[Int, Str]
   requires: self.pid > 0
 {
-  let st: Int64;
+  var st: Int64;
   unsafe {
     st = xiom_process_wait_status(self.pid as Int64);
   }
@@ -226,7 +226,7 @@ pub fn kill(pid: Int, sig: Int) -> Result[Unit, Str]
   if sig != 9 {
     return Err("kill: only SIGKILL (9) is available in the spawn-based model");
   }
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_process_kill(pid as Int64);
   }
@@ -265,7 +265,7 @@ pub fn PipedChild.close_pipes(self)
 pub fn PipedChild.is_running(self) -> Bool
   requires: self.pid > 0
 {
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_process_running(self.pid as Int64);
   }
@@ -321,7 +321,7 @@ fn spawn_exec(file: Str, args: &Vec[Str], search_path: Bool) -> Result[Int, Str]
   if search_path {
     sp = 1;
   }
-  let pid64: Int64;
+  var pid64: Int64;
   unsafe {
     pid64 = xiom_process_spawn_args(cstr(file), blob.as_ptr(), cstr_dir(""), sp);
   }
@@ -368,7 +368,7 @@ pub fn posix_spawnp(file: Str, args: &Vec[Str]) -> Result[Int, Str]
 pub fn wait_status(pid: Int) -> Result[Int, Str]
   requires: pid > 0
 {
-  let st: Int64;
+  var st: Int64;
   unsafe {
     st = xiom_process_wait_status(pid as Int64);
   }

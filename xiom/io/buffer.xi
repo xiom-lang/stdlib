@@ -299,7 +299,7 @@ pub fn bw_flush(w: &mut BufWriter) -> Result[Unit, Str]
   var i: Int = 0;
   while i < w.buf.len() {
     let b = w.buf[i];
-    let written: UInt;
+    var written: UInt;
     unsafe {
       written = fwrite(&b, 1 as UInt, 1 as UInt, w.inner as *UInt8);
     }

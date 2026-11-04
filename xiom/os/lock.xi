@@ -96,7 +96,7 @@ pub fn file_lock_try(path: Str) -> Result[FileLock, Str]
   if path.len() == 0 {
     return Err("file_lock_try: empty path");
   }
-  let fd32: Int32;
+  var fd32: Int32;
   unsafe {
     fd32 = xiom_open_rw_existing(path.c_str());
   }
@@ -104,7 +104,7 @@ pub fn file_lock_try(path: Str) -> Result[FileLock, Str]
   if fd < 0 {
     return Err("file_lock_try: open failed (the file must exist and be writable)");
   }
-  let rc: Int;
+  var rc: Int;
   unsafe {
     rc = xiom_file_lock_try(fd as Int32);
   }
@@ -138,7 +138,7 @@ pub fn file_lock(path: Str) -> Result[FileLock, Str]
   if path.len() == 0 {
     return Err("file_lock: empty path");
   }
-  let fd32: Int32;
+  var fd32: Int32;
   unsafe {
     fd32 = xiom_open_rw_existing(path.c_str());
   }
@@ -146,7 +146,7 @@ pub fn file_lock(path: Str) -> Result[FileLock, Str]
   if fd < 0 {
     return Err("file_lock: open failed (the file must exist and be writable)");
   }
-  let rc: Int;
+  var rc: Int;
   unsafe {
     rc = xiom_file_lock_wait(fd as Int32);
   }
@@ -168,7 +168,7 @@ pub fn file_lock_release(l: FileLock) {
   if l.fd < 0 {
     return;
   }
-  let rc: Int;
+  var rc: Int;
   unsafe {
     rc = xiom_file_unlock(l.fd as Int32);
   }

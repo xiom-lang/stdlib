@@ -499,7 +499,7 @@ fn _toml_push_escape(s: Str, sb: &mut Vec[UInt8]) {
   let base: *UInt8 = s.c_str();
   var i = 0;
   while i < s.len() {
-    let b: UInt8;
+    var b: UInt8;
     unsafe { b = *(base + i); }
     if b == 92 {
       builder.sb_push_byte(sb, 92);
@@ -539,7 +539,7 @@ fn _toml_push_key(k: Str, sb: &mut Vec[UInt8]) {
   let base: *UInt8 = k.c_str();
   var i = 0;
   while i < len {
-    let b: UInt8;
+    var b: UInt8;
     unsafe { b = *(base + i); }
     if !_toml_bare_byte(b as Int) {
       builder.sb_push_byte(sb, 34);

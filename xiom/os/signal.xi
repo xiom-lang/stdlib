@@ -150,14 +150,14 @@ pub fn signal_raise(num: Int) -> Result[Unit, Str]
   if !signal_is_catchable(num) {
     return Err("signal_raise: signal is not catchable");
   }
-  let st: Int32;
+  var st: Int32;
   unsafe {
     st = xiom_signal_installed();
   }
   if st != 1 {
     return Err("signal_raise: install the handlers first (signal_install)");
   }
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_signal_raise(num as Int32);
   }
@@ -177,7 +177,7 @@ pub fn signal_raise(num: Int) -> Result[Unit, Str]
 pub fn signal_install() -> Result[Unit, Str]
   ensures: result is Ok => signal_installed_marker()
 {
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_signal_install();
   }
@@ -191,7 +191,7 @@ pub fn signal_install() -> Result[Unit, Str]
 // signal_install Ok-side clause proves the install landed.
 fn signal_installed_marker() -> Bool
 {
-  let st: Int32;
+  var st: Int32;
   unsafe {
     st = xiom_signal_installed();
   }
@@ -214,7 +214,7 @@ pub fn signal_wait(timeout_ms: Int) -> Result[Int, Str]
   if timeout_ms < 0 {
     return Err("signal_wait: negative timeout");
   }
-  let rc: Int;
+  var rc: Int;
   unsafe {
     rc = xiom_signal_wait(timeout_ms);
   }

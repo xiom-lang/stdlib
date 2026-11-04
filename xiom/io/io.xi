@@ -114,7 +114,7 @@ pub fn read_line() -> Str
   ensures: result.len() >= 0
 {
   var buf: Vec[UInt8] = Vec[UInt8]::with_capacity(4096);
-  let ptr: *UInt8;
+  var ptr: *UInt8;
   unsafe {
     ptr = fgets(buf.as_mut_ptr(), 4096 as Int32, xiom_stdin());
   }
@@ -257,8 +257,8 @@ pub fn read_file(path: Str) -> Result[Str, IOError]
   ensures:  result is Ok => result.len() >= 0
 {
   let c_path = path.c_str();
-  let ptr: *UInt8;
-  let size: Int;
+  var ptr: *UInt8;
+  var size: Int;
   unsafe {
     ptr = xiom_read_file(c_path);
     if ptr == 0 {
@@ -285,7 +285,7 @@ pub fn write_file(path: Str, content: Str) -> Result[Unit, IOError]
   requires: path.len() > 0
   ensures:  result is Ok => file_exists(path)
 {
-  let file: *UInt8;
+  var file: *UInt8;
   unsafe {
     file = fopen(path.c_str(), "wb");
   }
@@ -294,7 +294,7 @@ pub fn write_file(path: Str, content: Str) -> Result[Unit, IOError]
   }
   let c_content = content.c_str();
   let content_len = content.len() as UInt;
-  let written: UInt;
+  var written: UInt;
   unsafe {
     written = fwrite(c_content, 1 as UInt, content_len, file);
     let _ = fclose(file);
@@ -311,7 +311,7 @@ pub fn append_file(path: Str, content: Str) -> Result[Unit, IOError]
   requires: path.len() > 0
   ensures:  result is Ok => file_exists(path)
 {
-  let file: *UInt8;
+  var file: *UInt8;
   unsafe {
     file = fopen(path.c_str(), "ab");
   }
@@ -320,7 +320,7 @@ pub fn append_file(path: Str, content: Str) -> Result[Unit, IOError]
   }
   let c_content = content.c_str();
   let content_len = content.len() as UInt;
-  let written: UInt;
+  var written: UInt;
   unsafe {
     written = fwrite(c_content, 1 as UInt, content_len, file);
     let _ = fclose(file);
@@ -337,7 +337,7 @@ pub fn file_exists(path: Str) -> Bool
   // smoke_io_file_exists) -- deliberately no path requires.
   ensures: (path.len() == 0) => (result == false)
 {
-  let file: *UInt8;
+  var file: *UInt8;
   unsafe {
     file = fopen(path.c_str(), "r");
   }
@@ -355,7 +355,7 @@ pub fn is_dir(path: Str) -> Bool
   // Graceful query (false on any unusable path) -- deliberately no requires.
   ensures: (path.len() == 0) => (result == false)
 {
-  let result: Int32;
+  var result: Int32;
   unsafe {
     result = xiom_stat_is_dir(path.c_str());
   }
@@ -368,7 +368,7 @@ pub fn create_dir(path: Str) -> Result[Unit, IOError]
   requires: !file_exists(path)
   ensures:  result is Ok => is_dir(path)
 {
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_mkdir(path.c_str());
   }
@@ -384,7 +384,7 @@ pub fn list_dir(path: Str) -> Result[Vec[Str], IOError]
   requires: is_dir(path)
   ensures:  result is Ok => result.len() >= 0
 {
-  let ptr: *UInt8;
+  var ptr: *UInt8;
   unsafe {
     ptr = xiom_list_dir_names(path.c_str());
   }
@@ -414,7 +414,7 @@ pub fn remove_file(path: Str) -> Result[Unit, IOError]
   requires: path.len() > 0
   ensures:  result is Ok => !file_exists(path)
 {
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = remove(path.c_str());
   }
@@ -447,7 +447,7 @@ pub fn rename(src: Str, dst: Str) -> Result[Unit, IOError]
   requires: dst.len() > 0
   ensures:  result is Ok => !fs_exists(src) && fs_exists(dst)
 {
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_rename(src.c_str(), dst.c_str());
   }
@@ -470,14 +470,14 @@ pub fn exit(code: Int)
 pub fn args() -> Vec[Str]
   ensures: result.len() >= 0
 {
-  let argc: Int;
+  var argc: Int;
   unsafe {
     argc = xiom_get_argc();
   }
   var result: Vec[Str] = Vec[Str]::with_capacity(argc as UInt);
   var i = 0;
   while i < argc {
-    let arg_ptr: *UInt8;
+    var arg_ptr: *UInt8;
     unsafe {
       arg_ptr = xiom_get_argv(i);
     }
@@ -491,7 +491,7 @@ pub fn args() -> Vec[Str]
 pub fn env_var(name: Str) -> Option[Str]
   requires: name.len() > 0
 {
-  let ptr: *UInt8;
+  var ptr: *UInt8;
   unsafe {
     ptr = getenv(name.c_str());
   }
@@ -549,7 +549,7 @@ pub fn open(path: Str, mode: Str) -> Result[Int, IOError]
   requires: path.len() > 0
   requires: mode.len() > 0
 {
-  let file: *UInt8;
+  var file: *UInt8;
   unsafe {
     file = fopen(path.c_str(), mode.c_str());
   }
@@ -566,7 +566,7 @@ pub fn open(path: Str, mode: Str) -> Result[Int, IOError]
 pub fn close(handle: Int) -> Result[Unit, IOError]
   requires: handle != 0
 {
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = fclose(handle as *UInt8);
   }
@@ -601,7 +601,7 @@ pub fn BufReader.read_line(self, buf: &mut Str) -> Result[Int, IOError]
   var total: Int = 0;
   while !found_nl {
     var byte_buf: Vec[UInt8] = Vec[UInt8]::with_capacity(1);
-    let nread: UInt;
+    var nread: UInt;
     unsafe {
       nread = fread(byte_buf.as_mut_ptr(), 1 as UInt, 1 as UInt, self.inner as *UInt8);
     }
@@ -626,7 +626,7 @@ pub fn BufReader.lines(self) -> Vec[Str]
 {
   var result: Vec[Str] = Vec[Str]::new();
   var raw: Vec[UInt8] = Vec[UInt8]::with_capacity(4096);
-  let nread: UInt;
+  var nread: UInt;
   unsafe {
     nread = fread(raw.as_mut_ptr(), 1 as UInt, 4096 as UInt, self.inner as *UInt8);
   }
@@ -684,12 +684,12 @@ pub fn metadata(path: Str) -> Result[Metadata, IOError]
   ensures:  result is Ok => result.size >= 0
 {
   let c_path = path.c_str();
-  let is_f: Int32;
-  let is_d: Int32;
-  let sz: Int;
-  let mt: Int;
-  let ct: Int;
-  let mode: Int;
+  var is_f: Int32;
+  var is_d: Int32;
+  var sz: Int;
+  var mt: Int;
+  var ct: Int;
+  var mode: Int;
   unsafe {
     is_f = xiom_stat_is_file(c_path);
     is_d = xiom_stat_is_dir(c_path);
@@ -716,7 +716,7 @@ pub fn set_permissions(path: Str, perm: Int) -> Result[Unit, IOError]
   requires: path.len() > 0
   requires: perm >= 0
 {
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = chmod(path.c_str(), perm as Int32);
   }
@@ -1076,7 +1076,7 @@ pub fn flush_stderr()
 pub fn write_file_bytes(path: Str, data: &Vec[UInt8]) -> Result[Unit, IOError]
   ensures: result is Ok => file_exists(path)
 {
-  let file: *UInt8;
+  var file: *UInt8;
   unsafe {
     file = fopen(path.c_str(), "wb");
   }
@@ -1087,7 +1087,7 @@ pub fn write_file_bytes(path: Str, data: &Vec[UInt8]) -> Result[Unit, IOError]
   let n = data.len() as UInt;
   while i < n {
     let b = data[i];
-    let written: UInt;
+    var written: UInt;
     unsafe {
       written = fwrite(&b, 1 as UInt, 1 as UInt, file);
     }
@@ -1107,8 +1107,8 @@ pub fn read_file_bytes(path: Str) -> Result[Vec[UInt8], IOError]
   ensures: (path.len() == 0) => (result.is_err == true)
 {
   let c_path = path.c_str();
-  let ptr: *UInt8;
-  let size: Int;
+  var ptr: *UInt8;
+  var size: Int;
   unsafe {
     ptr = xiom_read_file(c_path);
     if ptr == 0 {
@@ -1135,7 +1135,7 @@ pub fn read_file_bytes(path: Str) -> Result[Vec[UInt8], IOError]
 pub fn fsync(handle: Int) -> Result[Unit, IOError]
   requires: handle != 0
 {
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_sync_file(handle as *UInt8);
   }
@@ -1159,7 +1159,7 @@ pub fn read_at(path: Str, offset: Int, len: Int) -> Result[Vec[UInt8], IOError]
   if len == 0 {
     return Ok(Vec[UInt8].new());
   }
-  let size: Int;
+  var size: Int;
   unsafe {
     size = xiom_file_size(path.c_str());
   }
@@ -1178,7 +1178,7 @@ pub fn read_at(path: Str, offset: Int, len: Int) -> Result[Vec[UInt8], IOError]
   if count == 0 {
     return Ok(Vec[UInt8].new());
   }
-  let ptr: *UInt8;
+  var ptr: *UInt8;
   unsafe {
     ptr = xiom_read_at(path.c_str(), offset, count);
   }
@@ -1212,7 +1212,7 @@ pub fn read_at_into(path: Str, offset: Int, buf: &mut Vec[UInt8], len: Int) -> R
   if len == 0 {
     return Ok(0);
   }
-  let size: Int;
+  var size: Int;
   unsafe {
     size = xiom_file_size(path.c_str());
   }
@@ -1231,7 +1231,7 @@ pub fn read_at_into(path: Str, offset: Int, buf: &mut Vec[UInt8], len: Int) -> R
   if count == 0 {
     return Ok(0);
   }
-  let ptr: *UInt8;
+  var ptr: *UInt8;
   unsafe {
     ptr = xiom_read_at(path.c_str(), offset, count);
   }
@@ -1260,7 +1260,7 @@ pub fn write_at(path: Str, offset: Int, data: &Vec[UInt8]) -> Result[Unit, IOErr
   if n == 0 {
     return Ok(());
   }
-  let wrote: Int;
+  var wrote: Int;
   unsafe {
     wrote = xiom_write_at(path.c_str(), offset, &data[0] as *UInt8, n);
   }
@@ -1280,7 +1280,7 @@ pub fn append_file_bytes(path: Str, data: &Vec[UInt8]) -> Result[Unit, IOError]
   if n == 0 {
     return Ok(());
   }
-  let wrote: Int;
+  var wrote: Int;
   unsafe {
     wrote = xiom_append_bytes(path.c_str(), &data[0] as *UInt8, n);
   }
@@ -1297,7 +1297,7 @@ pub fn truncate_file(path: Str, size: Int) -> Result[Unit, IOError]
   requires: size >= 0
   ensures: result is Ok => file_exists(path)
 {
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_truncate_path(path.c_str(), size);
   }
@@ -1357,7 +1357,7 @@ pub fn remove_dir(path: Str) -> Result[Unit, IOError]
   requires: path.len() > 0
   ensures: result is Ok => !dir_exists(path)
 {
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_remove_dir(path.c_str());
   }
@@ -1396,7 +1396,7 @@ pub fn append_line_sync(path: Str, line: Str) -> Result[Unit, IOError]
     Ok(handle) => {
       let c_payload = payload.c_str();
       let plen = payload.len() as UInt;
-      let written: UInt;
+      var written: UInt;
       unsafe {
         written = fwrite(c_payload, 1 as UInt, plen, handle as *UInt8);
       }

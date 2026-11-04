@@ -42,14 +42,14 @@ pub fn mmap_anonymous(length: Int) -> Result[Int, Str]
   if length <= 0 {
     return Err("mmap_anonymous: length must be positive");
   }
-  let p: *UInt8;
+  var p: *UInt8;
   unsafe {
     p = xiom_mmap_anon(length);
   }
   if p == 0 {
     return Err("mmap_anonymous: map failed");
   }
-  let addr: Int;
+  var addr: Int;
   unsafe {
     addr = (p as *UInt8) as Int;
   }
@@ -68,14 +68,14 @@ pub fn mmap_file(fd: Int, offset: Int, length: Int) -> Result[Int, Str]
   if fd < 0 || offset < 0 || length <= 0 {
     return Err("mmap_file: bad fd, offset or length");
   }
-  let p: *UInt8;
+  var p: *UInt8;
   unsafe {
     p = xiom_mmap_file(fd as Int32, offset, length, 0);
   }
   if p == 0 {
     return Err("mmap_file: map failed");
   }
-  let addr: Int;
+  var addr: Int;
   unsafe {
     addr = (p as *UInt8) as Int;
   }
@@ -94,14 +94,14 @@ pub fn mmap_writeable(fd: Int, offset: Int, length: Int) -> Result[Int, Str]
   if fd < 0 || offset < 0 || length <= 0 {
     return Err("mmap_writeable: bad fd, offset or length");
   }
-  let p: *UInt8;
+  var p: *UInt8;
   unsafe {
     p = xiom_mmap_file(fd as Int32, offset, length, 1);
   }
   if p == 0 {
     return Err("mmap_writeable: map failed");
   }
-  let addr: Int;
+  var addr: Int;
   unsafe {
     addr = (p as *UInt8) as Int;
   }
@@ -119,7 +119,7 @@ pub fn mmap_unmap(ptr: Int, length: Int) -> Result[Unit, Str]
   if ptr <= 0 || length <= 0 {
     return Err("mmap_unmap: bad arguments");
   }
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_munmap(ptr as *UInt8, length);
   }
@@ -141,7 +141,7 @@ pub fn mmap_sync(ptr: Int, length: Int, flags: Int) -> Result[Unit, Str]
   if ptr <= 0 || length <= 0 {
     return Err("mmap_sync: bad arguments");
   }
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_msync(ptr as *UInt8, length, flags as Int32);
   }
@@ -164,7 +164,7 @@ pub fn mmap_advise(ptr: Int, length: Int, advice: Int) -> Result[Unit, Str]
   if ptr <= 0 || length <= 0 {
     return Err("mmap_advise: bad arguments");
   }
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_madvise(ptr as *UInt8, length, advice as Int32);
   }
@@ -186,7 +186,7 @@ pub fn mmap_protect(ptr: Int, length: Int, prot: Int) -> Result[Unit, Str]
   if ptr <= 0 || length <= 0 {
     return Err("mmap_protect: bad arguments");
   }
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_mprotect(ptr as *UInt8, length, prot as Int32);
   }
@@ -208,7 +208,7 @@ pub fn mmap_lock(ptr: Int, length: Int) -> Result[Unit, Str]
   if ptr <= 0 || length <= 0 {
     return Err("mmap_lock: bad arguments");
   }
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_mlock(ptr as *UInt8, length);
   }
@@ -229,7 +229,7 @@ pub fn mmap_unlock(ptr: Int, length: Int) -> Result[Unit, Str]
   if ptr <= 0 || length <= 0 {
     return Err("mmap_unlock: bad arguments");
   }
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_munlock(ptr as *UInt8, length);
   }
@@ -279,7 +279,7 @@ pub fn mmap_write(ptr: Int, data: &Vec[UInt8]) -> Result[Unit, Str]
   if n == 0 {
     return Ok(());
   }
-  let wrote: Int;
+  var wrote: Int;
   unsafe {
     wrote = xiom_mem_write(ptr as *UInt8, &data[0] as *UInt8, n);
   }

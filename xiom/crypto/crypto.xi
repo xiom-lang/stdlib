@@ -1450,7 +1450,7 @@ fn _aes_decrypt_block(block: &Vec[UInt8], start: Int, expanded_key: &Vec[UInt8],
 
 fn _pkcs7_pad(data: &Vec[UInt8]) -> Vec[UInt8] {
   let block_size = 16;
-  let pad_val = block_size - (data.len() % block_size);
+  var pad_val = block_size - (data.len() % block_size);
   if pad_val == 0 { pad_val = 16; }
   var padded = Vec[UInt8].new();
   var i = 0;

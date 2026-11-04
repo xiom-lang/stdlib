@@ -81,7 +81,7 @@ pub fn var_opt(name: Str) -> Option<Str>
   // lose statements when always-inlined into a caller (BUG 21/26 family --
   // re-triggered by 4e95717e; see COMPILER_BUGS.md BUG 28 #1).
   let c_name = cstr(name);
-  let raw: *UInt8;
+  var raw: *UInt8;
   unsafe {
     raw = getenv(c_name);
     if raw == null {

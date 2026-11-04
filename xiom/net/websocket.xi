@@ -732,7 +732,7 @@ pub fn ws_connect(url: Str) -> Result[WsConnection, Str]
   let key = ws_random_key();
   let request = ws_handshake_request(host, path, key);
   let sr = socket.socket_tcp();
-  let fd: Int;
+  var fd: Int;
   match sr {
     Ok(f) => { fd = f; },
     Err(_) => { return Err("failed to create socket"); },

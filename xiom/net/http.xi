@@ -604,7 +604,7 @@ pub fn http_request(method: Str, url: Str, headers: &Vec[(Str, Str)], body: &Vec
     send_buf[si] = req_str.byte_at(si);
     si = si + 1;
   }
-  let sent32: Int32;
+  var sent32: Int32;
   unsafe {
     sent32 = xiom_socket_send(fd, &send_buf as *UInt8, rlen);
   }
@@ -617,7 +617,7 @@ pub fn http_request(method: Str, url: Str, headers: &Vec[(Str, Str)], body: &Vec
   var raw: Vec[UInt8] = Vec[UInt8]::with_capacity(8192);
   var done = false;
   while !done {
-    let nrecv32: Int32;
+    var nrecv32: Int32;
     unsafe {
       nrecv32 = xiom_socket_recv(fd, &recv_buf as *UInt8, 8192);
     }

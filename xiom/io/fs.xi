@@ -50,7 +50,7 @@ pub fn fs_read(path: Str) -> Result[Vec[UInt8], Str>
 pub fn fs_write(path: Str, data: &Vec[UInt8]) -> Result[Unit, Str]
   ensures: result is Err => result.value.len() > 0
 {
-  let file: *UInt8;
+  var file: *UInt8;
   unsafe {
     file = fopen(path.c_str(), "wb");
   }
@@ -61,7 +61,7 @@ pub fn fs_write(path: Str, data: &Vec[UInt8]) -> Result[Unit, Str]
   let n = data.len() as UInt;
   while i < n {
     let b = data[i];
-    let written: UInt;
+    var written: UInt;
     unsafe {
       written = fwrite(&b, 1 as UInt, 1 as UInt, file);
     }
@@ -80,7 +80,7 @@ pub fn fs_write(path: Str, data: &Vec[UInt8]) -> Result[Unit, Str]
 pub fn fs_append(path: Str, data: &Vec[UInt8]) -> Result[Unit, Str]
   ensures: result is Err => result.value.len() > 0
 {
-  let file: *UInt8;
+  var file: *UInt8;
   unsafe {
     file = fopen(path.c_str(), "ab");
   }
@@ -91,7 +91,7 @@ pub fn fs_append(path: Str, data: &Vec[UInt8]) -> Result[Unit, Str]
   let n = data.len() as UInt;
   while i < n {
     let b = data[i];
-    let written: UInt;
+    var written: UInt;
     unsafe {
       written = fwrite(&b, 1 as UInt, 1 as UInt, file);
     }
@@ -268,7 +268,7 @@ pub fn fs_read_range(path: Str, offset: Int, len: Int) -> Result[Vec[UInt8], Str
   if offset < 0 {
     return Err(err_msg("read range", path));
   }
-  let file: *UInt8;
+  var file: *UInt8;
   unsafe {
     file = fopen(path.c_str(), "rb");
   }
@@ -318,7 +318,7 @@ pub fn fs_write_range(path: Str, offset: Int, data: &Vec[UInt8]) -> Result[Int, 
   if offset < 0 {
     return Err(err_msg("write range", path));
   }
-  let file: *UInt8;
+  var file: *UInt8;
   unsafe {
     file = fopen(path.c_str(), "r+b");
   }
@@ -333,7 +333,7 @@ pub fn fs_write_range(path: Str, offset: Int, data: &Vec[UInt8]) -> Result[Int, 
   let n = data.len() as UInt;
   while i < n {
     let b = data[i];
-    let written: UInt;
+    var written: UInt;
     unsafe {
       written = fwrite(&b, 1 as UInt, 1 as UInt, file);
     }
@@ -353,7 +353,7 @@ pub fn fs_write_range(path: Str, offset: Int, data: &Vec[UInt8]) -> Result[Int, 
 pub fn fs_touch(path: Str) -> Result[Unit, Str]
   ensures: result is Err => result.value.len() > 0
 {
-  let file: *UInt8;
+  var file: *UInt8;
   unsafe {
     file = fopen(path.c_str(), "ab");
   }

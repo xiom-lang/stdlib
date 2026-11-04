@@ -52,7 +52,7 @@ pub fn errno_set(code: Int)
   requires: code >= 0
 {
   unsafe {
-    let p = xiom_errno_ptr() as *UInt8;
+    var p = xiom_errno_ptr() as *UInt8;
     p[0] = ( code        & 0xFF) as UInt8;
     p[1] = ((code >>  8) & 0xFF) as UInt8;
     p[2] = ((code >> 16) & 0xFF) as UInt8;

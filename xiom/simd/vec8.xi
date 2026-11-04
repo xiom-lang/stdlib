@@ -280,7 +280,7 @@ pub fn f32x8_store(ptr: Int, x: F32x8)
   requires: ptr != 0
 {
   unsafe {
-    let p = ptr as *Float32;
+    var p = ptr as *Float32;
     p[0] = x.a0;
     p[1] = x.a1;
     p[2] = x.a2;

@@ -4,7 +4,46 @@ All notable changes to the XIOM standard library are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.65.6] - 2026-11-04
+
+### Fixed
+
+- The POSIX confinement trampoline no longer saves the signal mask on every
+  confined-block entry: `xiom_trap_enter` and `xiom_trampoline_call` use
+  `sigsetjmp(..., 0)` (the per-entry `sigprocmask` was the t3-hot-reload
+  floor), and the fault handler unblocks the delivered signal before
+  `siglongjmp` so the pre-handler mask is restored on the fault path. A
+  second fault in the same thread is still contained. Linux t3-hot-reload:
+  27 ms -> 5 ms internal (peer Rust 6 ms); probes
+  `tests/regression/t3_trampoline_floor` and `confined_repeat_fault`, e2e
+  `e2e_t3_trampoline_floor_budget` and
+  `e2e_confined_repeat_fault_contained`
+  (REL-20261010-1554-benchmark).
+- The guard arena recycles freed blocks (B-05): `xiom_guard_alloc` now
+  carries a 16-byte block header and `xiom_guard_free` returns the block to
+  a size-bucketed free list instead of leaving it retained until confined
+  block exit. A balanced alloc/free loop inside one confined block stays
+  flat instead of retaining about 16 bytes per pair. Probe
+  `tests/regression/b05_alloc_guard_loop`.
+- `string.builder.sb_to_str` is declared `#[borrows_vec]`: the argument
+  buffer stays owned by the caller, so the JSON renderer's scratch `Vec`
+  is reclaimed at scope exit.
+- JSON parsing and rendering carry ownership contracts: `json_parse` is
+  `#[owns_return]`, the buffer helpers distinguish `#[borrows_str]` from
+  `#[owns_str]`, and `json_stringify` / `build` are `#[consumes_agg]`.
+  Literal keys and borrowed string leaves are never freed; the parse tree,
+  builder containers and scratch buffers are reclaimed (REL-1704 and
+  REL-2117).
+- `server_parse_request` is `#[borrows_vec]` and the scratch `malloc`
+  buffer behind each parsed field span is freed after the `Str` copy, so a
+  request cycle no longer retains the parse buffer. `server_build_response`
+  is `#[owns_str]`.
+
+### Changed
+
+- Modules use `var` for locals that are reassigned (including deferred
+  initialization inside `unsafe`), matching the init-once `let`/`const`
+  immutability checker. No public signatures change.
 
 ## [0.65.5] - 2026-10-31
 

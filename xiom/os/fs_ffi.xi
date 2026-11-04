@@ -278,7 +278,7 @@ pub fn writev(fd: Int, buffers: &Vec[Vec[UInt8]]) -> Result[Int, Str]
   while i < nseg {
     let seglen = buffers[i].len();
     if seglen > 0 {
-      let addr: Int;
+      var addr: Int;
       unsafe {
         addr = (&buffers[i][0] as *UInt8) as Int;
       }
@@ -291,7 +291,7 @@ pub fn writev(fd: Int, buffers: &Vec[Vec[UInt8]]) -> Result[Int, Str]
   if nlive == 0 {
     return Ok(0);
   }
-  let rc: Int;
+  var rc: Int;
   unsafe {
     rc = xiom_fd_writev(fd, &layout[0] as *Int, nlive);
   }
@@ -331,7 +331,7 @@ pub fn sendfile(out_fd: Int, in_fd: Int, offset: Int, count: Int) -> Result[Int,
   if count == 0 {
     return Ok(0);
   }
-  let rc: Int;
+  var rc: Int;
   unsafe {
     rc = xiom_fd_sendfile(out_fd, in_fd, offset, count);
   }
@@ -375,7 +375,7 @@ extern "C" {
 pub fn fsync(fd: Int) -> Result[Unit, Str]
   requires: fd >= 0
 {
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_fsync_fd(fd);
   }
@@ -391,7 +391,7 @@ pub fn fsync(fd: Int) -> Result[Unit, Str]
 pub fn fdatasync(fd: Int) -> Result[Unit, Str]
   requires: fd >= 0
 {
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_fdatasync_fd(fd);
   }

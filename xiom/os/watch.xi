@@ -79,7 +79,7 @@ pub fn watch_dir(path: Str, recursive: Bool) -> Result[Int, Str]
   if recursive {
     rec = 1;
   }
-  let h: Int;
+  var h: Int;
   unsafe {
     h = xiom_watch_open(path.c_str(), rec);
   }
@@ -122,7 +122,7 @@ pub fn watch_poll(handle: Int, timeout_ms: Int) -> Result[Vec[WatchEvent], Str]
     if first {
       wait_ms = timeout_ms;
     }
-    let rc: Int;
+    var rc: Int;
     unsafe {
       rc = xiom_watch_poll(handle, wait_ms, &kindv, &pbuf[0] as *UInt8, 1024);
     }
@@ -153,7 +153,7 @@ pub fn watch_poll(handle: Int, timeout_ms: Int) -> Result[Vec[WatchEvent], Str]
 /// no Result, mirroring fs_ffi.munmap).
 pub fn watch_close(handle: Int) {
   if handle > 0 {
-    let rc: Int;
+    var rc: Int;
     unsafe {
       rc = xiom_watch_close(handle);
     }

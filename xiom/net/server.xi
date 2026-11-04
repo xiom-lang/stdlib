@@ -11,6 +11,7 @@ use xiom.string;
 
 extern "C" {
   fn malloc(size: UInt) -> *UInt8;
+  fn free(ptr: *UInt8);
 }
 
 /// server_default_port returns the default HTTP server port (80).
@@ -66,6 +67,7 @@ pub type ServerRequest = {
 /// parsed directly from the byte buffer using (start, len) spans: no
 /// whole-head copy is made and each returned field is a single
 /// allocation. Complexity: O(n). Pure.
+#[borrows_vec]
 pub fn server_parse_request(bytes: &Vec[UInt8]) -> Option[ServerRequest]
   ensures: (bytes.len() == 0) => (result.is_none == true)
 {
@@ -184,6 +186,7 @@ pub fn server_build_status_line(code: Int) -> Str
 
 /// server_build_response builds a minimal HTTP/1.1 response with a
 /// text/plain body. Complexity: O(n). Pure.
+#[owns_str]
 pub fn server_build_response(code: Int, body: Str) -> Str
   ensures: result.len() >= body.len() + 81
 {
@@ -260,7 +263,9 @@ fn _str_from_byte_span(bytes: &Vec[UInt8], start: Int, end: Int) -> Str {
       i = i + 1;
     }
     buf[len] = 0u8;
-    return Str.from_cstring(buf);
+    let out = Str.from_cstring(buf);
+    free(buf);
+    return out;
   }
 }
 
@@ -286,7 +291,9 @@ fn _str_lower_from_byte_span(bytes: &Vec[UInt8], start: Int, end: Int) -> Str {
       i = i + 1;
     }
     buf[len] = 0u8;
-    return Str.from_cstring(buf);
+    let out = Str.from_cstring(buf);
+    free(buf);
+    return out;
   }
 }
 

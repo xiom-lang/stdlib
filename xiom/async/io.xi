@@ -92,8 +92,8 @@ pub fn async_write(fd: Int, data: &Vec[UInt8]) -> Future
 pub fn async_read_file(path: Str) -> Future
   ensures: result.ready == true
 {
-  let raw: *UInt8;
-  let size: Int;
+  var raw: *UInt8;
+  var size: Int;
   unsafe {
     raw = xiom_read_file(path.c_str());
     if raw == 0 {
@@ -120,7 +120,7 @@ pub fn async_read_file(path: Str) -> Future
 pub fn async_write_file(path: Str, data: &Vec[UInt8]) -> Future
   ensures: result.ready == true
 {
-  let file: *UInt8;
+  var file: *UInt8;
   unsafe {
     file = fopen(path.c_str(), "wb");
   }
@@ -130,7 +130,7 @@ pub fn async_write_file(path: Str, data: &Vec[UInt8]) -> Future
   var i: Int = 0;
   while i < data.len() {
     let b = data[i];
-    let written: UInt;
+    var written: UInt;
     unsafe {
       written = fwrite(&b, 1 as UInt, 1 as UInt, file);
     }
@@ -155,7 +155,7 @@ pub fn async_accept(listener: Int) -> Future
 {
   var ip_buf: [64]UInt8;
   var port_val: Int = 0;
-  let client32: Int32;
+  var client32: Int32;
   unsafe {
     client32 = xiom_socket_accept(listener, &ip_buf as *UInt8, &port_val);
   }
@@ -178,7 +178,7 @@ pub fn async_connect(fd: Int, addr: Str, port: Int) -> Future
     i = i + 1;
   }
   c_host[i] = 0 as UInt8;
-  let rc32: Int32;
+  var rc32: Int32;
   unsafe {
     rc32 = xiom_socket_connect(fd, &c_host as *UInt8, port);
   }

@@ -695,7 +695,7 @@ fn format_timestamp_date(d: &Date) -> Str {
   let y_str = format_int_padded(d.year, 4);
   let m_str = format_int_padded(d.month, 2);
   let d_str = format_int_padded(d.day, 2);
-  let result = y_str + "-";
+  var result = y_str + "-";
   result = result + m_str;
   result = result + "-";
   result = result + d_str;
@@ -860,7 +860,7 @@ pub fn format_timestamp(ts: Int) -> Str
   ensures: result.len() >= 19
 {
   let dt = decompose_epoch(ts);
-  let result = format_int_padded(dt.year, 4) + "-";
+  var result = format_int_padded(dt.year, 4) + "-";
   result = result + format_int_padded(dt.month, 2);
   result = result + "-";
   result = result + format_int_padded(dt.day, 2);

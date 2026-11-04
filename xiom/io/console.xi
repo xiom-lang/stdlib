@@ -48,7 +48,7 @@ pub fn console_read_line() -> Result[Str, Str]
   ensures: result is Err => result.value.len() > 0
 {
   var buf: [4096]UInt8;
-  let ptr: *UInt8;
+  var ptr: *UInt8;
   unsafe {
     ptr = fgets(&buf[0], 4096 as Int32, xiom_stdin() as *UInt8);
   }

@@ -139,7 +139,7 @@ fn _csv_push_field(s: Str, delimiter: UInt8, sb: &mut Vec[UInt8]) {
   let base: *UInt8 = s.c_str();
   var i = 0;
   while i < s.len() {
-    let b: UInt8;
+    var b: UInt8;
     unsafe { b = *(base + i); }
     if b == _CSV_QUOTE {
       builder.sb_push_byte(sb, 34);

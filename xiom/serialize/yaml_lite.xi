@@ -260,7 +260,7 @@ fn _yaml_push_dquote(s: Str, sb: &mut Vec[UInt8]) {
   var i = 0;
   while i < s.len() {
     let c = _yaml_get_char(s, i);
-    let b: UInt8;
+    var b: UInt8;
     unsafe { b = *(base + i); }
     if c == '"' {
       builder.sb_push_byte(sb, 92);

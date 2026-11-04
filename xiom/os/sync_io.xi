@@ -53,7 +53,7 @@ pub fn read_exact(fd: Int, buf: &mut Vec[UInt8]) -> Result[Int, Str]
     if chunk > 4096 {
       chunk = 4096;
     }
-    let n32: Int32;
+    var n32: Int32;
     unsafe {
       n32 = xiom_read(fd as Int32, &stage[0] as *UInt8, chunk as UInt);
     }
@@ -84,7 +84,7 @@ pub fn write_all(fd: Int, data: &Vec[UInt8]) -> Result[Int, Str]
   }
   var sent = 0;
   while sent < n {
-    let w32: Int32;
+    var w32: Int32;
     unsafe {
       w32 = xiom_write(fd as Int32, &data[sent] as *UInt8, (n - sent) as UInt);
     }
@@ -147,7 +147,7 @@ pub fn flush_fd(fd: Int) -> Result[Unit, Str] {
 pub fn sync_fd(fd: Int) -> Result[Unit, Str]
   requires: fd >= 0
 {
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_fsync_fd(fd);
   }
@@ -165,7 +165,7 @@ pub fn sync_fd(fd: Int) -> Result[Unit, Str]
 pub fn fsync_dir(path: Str) -> Result[Unit, Str]
   requires: path.len() > 0
 {
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_fsync_dir(path.c_str());
   }
@@ -181,7 +181,7 @@ pub fn fsync_dir(path: Str) -> Result[Unit, Str]
 pub fn open_append(path: Str) -> Result[Int, Str]
   requires: path.len() > 0
 {
-  let fd32: Int32;
+  var fd32: Int32;
   unsafe {
     fd32 = xiom_open_append(path.c_str());
   }
@@ -198,7 +198,7 @@ pub fn open_append(path: Str) -> Result[Int, Str]
 pub fn open_read(path: Str) -> Result[Int, Str]
   requires: path.len() > 0
 {
-  let fd32: Int32;
+  var fd32: Int32;
   unsafe {
     fd32 = xiom_open_read(path.c_str());
   }
@@ -216,7 +216,7 @@ pub fn open_read(path: Str) -> Result[Int, Str]
 pub fn open_rw(path: Str) -> Result[Int, Str]
   requires: path.len() > 0
 {
-  let fd32: Int32;
+  var fd32: Int32;
   unsafe {
     fd32 = xiom_open_rw(path.c_str());
   }
@@ -231,7 +231,7 @@ pub fn open_rw(path: Str) -> Result[Int, Str]
 pub fn close_fd(fd: Int) -> Result[Unit, Str]
   requires: fd >= 0
 {
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_close(fd as Int32);
   }
@@ -247,7 +247,7 @@ pub fn truncate_fd(fd: Int, len: Int) -> Result[Unit, Str]
   requires: fd >= 0
   requires: len >= 0
 {
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_ftruncate_fd(fd as Int32, len);
   }
@@ -285,7 +285,7 @@ pub fn file_allocate(fd: Int, offset: Int, length: Int) -> Result[Unit, Str] {
 pub fn file_lock(fd: Int) -> Result[Unit, Str]
   requires: fd >= 0
 {
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_flock_fd(fd as Int32, 1);
   }
@@ -300,7 +300,7 @@ pub fn file_lock(fd: Int) -> Result[Unit, Str]
 pub fn file_unlock(fd: Int) -> Result[Unit, Str]
   requires: fd >= 0
 {
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_funlock_fd(fd as Int32);
   }
@@ -317,7 +317,7 @@ pub fn file_unlock(fd: Int) -> Result[Unit, Str]
 pub fn file_try_lock(fd: Int) -> Bool
   requires: fd >= 0
 {
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_flock_fd(fd as Int32, 0);
   }

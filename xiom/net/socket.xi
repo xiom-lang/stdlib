@@ -209,7 +209,7 @@ pub fn socket_send(fd: Int, data: &Vec[UInt8]) -> Result[Int, Str]
     raw_buf[i] = data[i];
     i = i + 1;
   }
-  let n32: Int32;
+  var n32: Int32;
   unsafe {
     n32 = xiom_socket_send(fd, &raw_buf as *UInt8, dlen);
   }
@@ -237,7 +237,7 @@ pub fn socket_send_all(fd: Int, data: &Vec[UInt8]) -> Result[Int, Str]
   }
   var sent = 0;
   while sent < n {
-    let w32: Int32;
+    var w32: Int32;
     unsafe {
       w32 = xiom_socket_send(fd, &data[sent] as *UInt8, n - sent);
     }
@@ -602,7 +602,7 @@ pub fn socket_set_timeout(fd: Int, ms: Int) -> Result[Unit, Str]
   if ms < 0 {
     return Err("socket_set_timeout: negative timeout");
   }
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_socket_set_timeout(fd, ms);
   }
@@ -625,7 +625,7 @@ pub fn socket_set_nonblocking(fd: Int, on: Bool) -> Result[Unit, Str]
   if on {
     v = 1;
   }
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_socket_set_nonblocking(fd, v);
   }
@@ -647,7 +647,7 @@ pub fn socket_set_nodelay(fd: Int, on: Bool) -> Result[Unit, Str]
   if on {
     v = 1;
   }
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_socket_set_nodelay(fd, v);
   }
@@ -669,7 +669,7 @@ pub fn socket_set_keepalive(fd: Int, on: Bool) -> Result[Unit, Str]
   if on {
     v = 1;
   }
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_socket_set_keepalive(fd, v);
   }
@@ -693,7 +693,7 @@ pub fn socket_shutdown(fd: Int, how: Int) -> Result[Unit, Str]
   if how < 0 || how > 2 {
     return Err("socket_shutdown: invalid how");
   }
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_socket_shutdown(fd, how);
   }
@@ -765,7 +765,7 @@ pub fn socket_reuse_addr(fd: Int, on: Bool) -> Result[Unit, Str]
   if on {
     v = 1;
   }
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_socket_reuse_addr(fd, v);
   }
@@ -790,7 +790,7 @@ pub fn socket_set_reuseport(fd: Int, on: Bool) -> Result[Unit, Str]
   if on {
     v = 1;
   }
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_socket_reuseport(fd, v);
   }
@@ -828,7 +828,7 @@ fn poll_impl(fds: &Vec[Int], timeout_ms: Int, for_write: Bool) -> Result[Vec[Int
   if for_write {
     mode = 1;
   }
-  let rc: Int;
+  var rc: Int;
   unsafe {
     rc = xiom_poll(&arr[0] as *Int, n, timeout_ms, mode);
   }
@@ -908,13 +908,13 @@ pub fn socket_listen_fds() -> Result[Vec[Int], Str]
     return Err("socket_listen_fds: systemd socket activation is POSIX-only");
   };
   let pid_raw = env.get_var("LISTEN_PID");
-  let pid_text: Str;
+  var pid_text: Str;
   match pid_raw {
     Ok(v) => { pid_text = v; },
     Err(_) => { return Err("socket_listen_fds: LISTEN_PID is not set"); },
   };
   let pid_parsed = _listen_fds_count(pid_text);
-  let listen_pid: Int;
+  var listen_pid: Int;
   match pid_parsed {
     Ok(v) => { listen_pid = v; },
     Err(e) => { return Err(e); },
@@ -927,7 +927,7 @@ pub fn socket_listen_fds() -> Result[Vec[Int], Str]
     return Err("socket_listen_fds: LISTEN_PID does not match this process");
   };
   let fds_raw = env.get_var("LISTEN_FDS");
-  let fds_text: Str;
+  var fds_text: Str;
   match fds_raw {
     Ok(v) => { fds_text = v; },
     Err(_) => { return Err("socket_listen_fds: LISTEN_FDS is not set"); },

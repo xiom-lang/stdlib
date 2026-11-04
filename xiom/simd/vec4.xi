@@ -157,7 +157,7 @@ pub fn f32x4_store(ptr: Int, x: F32x4)
   requires: ptr != 0
 {
   unsafe {
-    let p = ptr as *Float32;
+    var p = ptr as *Float32;
     p[0] = x.a;
     p[1] = x.b;
     p[2] = x.c;

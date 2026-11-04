@@ -354,7 +354,7 @@ pub fn Once.call_once(self, f: fn())
   requires: state != null
 {
   unsafe {
-    let st = xiom_atomic_load(state);
+    var st = xiom_atomic_load(state);
     if st == 2 { return; };
     xiom_mutex_lock(inner);
     st = xiom_atomic_load(state);

@@ -134,7 +134,7 @@ pub fn spawn_command(cmd: Str, args: &Vec[Str]) -> Result[Int, Str]
 {
     let cmd_str = build_command_string(cmd, args);
     // Use the system() extern; same as os.xi's private spawn function.
-    let rc: Int32;
+    var rc: Int32;
     unsafe {
         rc = system(cstr(cmd_str));
     }
@@ -168,7 +168,7 @@ pub fn command_exists(name: Str) -> Bool
     } else {
         check_cmd = "which " + name + " > /dev/null 2>&1";
     };
-    let rc: Int32;
+    var rc: Int32;
     unsafe {
         rc = system(cstr(check_cmd));
     }
@@ -198,7 +198,7 @@ pub fn spawn_blocking(command: Str) -> Result[Int, Str]
     requires: command.len() > 0
     ensures:  result is Ok => result >= 0
 {
-    let rc: Int64;
+    var rc: Int64;
     unsafe {
         rc = xiom_process_spawn(cstr(command));
     }
@@ -213,7 +213,7 @@ pub fn spawn_blocking(command: Str) -> Result[Int, Str]
 pub fn kill(pid: Int) -> Bool
     requires: pid > 0
 {
-    let rc: Int32;
+    var rc: Int32;
     unsafe {
         rc = xiom_process_kill(pid as Int64);
     }
@@ -227,7 +227,7 @@ pub fn kill(pid: Int) -> Bool
 pub fn wait(pid: Int) -> Result[Int, Str]
     requires: pid > 0
 {
-    let rc: Int64;
+    var rc: Int64;
     unsafe {
         rc = xiom_process_wait(pid as Int64);
     }
@@ -243,7 +243,7 @@ pub fn wait(pid: Int) -> Result[Int, Str]
 pub fn is_running(pid: Int) -> Bool
     requires: pid > 0
 {
-    let rc: Int32;
+    var rc: Int32;
     unsafe {
         rc = xiom_process_running(pid as Int64);
     }

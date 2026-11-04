@@ -163,7 +163,7 @@ pub fn trace_point(name: Str) -> Str
     requires: name.len() > 0
     ensures:  result.len() > 0
 {
-    let ts: Int;
+    var ts: Int;
     unsafe {
         // Use xiom.io.time_now() instead of inline extern "C"
         ts = xiom.io.time_now();

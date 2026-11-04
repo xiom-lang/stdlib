@@ -32,7 +32,7 @@ pub fn pipe_create() -> (Int, Int)
   ensures: result.0 == -1 => result.1 == -1
 {
   var fds: [2]Int32;
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_pipe(&fds[0]);
   }
@@ -51,7 +51,7 @@ pub fn pipe_read(fd: Int, buf: &mut Vec[UInt8]) -> Result[Int, Str]
   ensures: result is Err => result.value.len() > 0
 {
   var one: [256]UInt8;
-  let n32: Int32;
+  var n32: Int32;
   unsafe {
     n32 = xiom_read(fd as Int32, &one[0], 256 as UInt);
   }
@@ -79,7 +79,7 @@ pub fn pipe_write(fd: Int, data: &Vec[UInt8]) -> Result[Int, Str]
   var i: Int = 0;
   while i < data.len() {
     let b = data[i];
-    let n32: Int32;
+    var n32: Int32;
     unsafe {
       n32 = xiom_write(fd as Int32, &b, 1 as UInt);
     }
@@ -128,7 +128,7 @@ pub fn pipe_read_line(fd: Int) -> Result[Str, Str]
   var done = false;
   while !done {
     var one: [1]UInt8;
-    let n32: Int32;
+    var n32: Int32;
     unsafe {
       n32 = xiom_read(fd as Int32, &one[0], 1 as UInt);
     }
@@ -168,7 +168,7 @@ pub fn pipe_write_line(fd: Int, s: Str) -> Result[Unit, Str]
   var i: Int = 0;
   while i < slen {
     let b = _raw_byte(sbase, i);
-    let n32: Int32;
+    var n32: Int32;
     unsafe {
       n32 = xiom_write(fd as Int32, &b, 1 as UInt);
     }
@@ -179,7 +179,7 @@ pub fn pipe_write_line(fd: Int, s: Str) -> Result[Unit, Str]
     i = i + 1;
   }
   let nl: UInt8 = 10;
-  let n2: Int32;
+  var n2: Int32;
   unsafe {
     n2 = xiom_write(fd as Int32, &nl, 1 as UInt);
   }
@@ -208,7 +208,7 @@ pub fn pipe_read_timeout(fd: Int, ms: Int) -> Result[Int, Str]
   ensures: result is Err => result.value.len() > 0
 {
   var one: [1]UInt8;
-  let n32: Int32;
+  var n32: Int32;
   unsafe {
     n32 = xiom_read(fd as Int32, &one[0], 1 as UInt);
   }
@@ -235,7 +235,7 @@ pub fn pipe_write_timeout(fd: Int, data: &Vec[UInt8], ms: Int) -> Result[Int, St
   var i: Int = 0;
   while i < data.len() {
     let b = data[i];
-    let n32: Int32;
+    var n32: Int32;
     unsafe {
       n32 = xiom_write(fd as Int32, &b, 1 as UInt);
     }

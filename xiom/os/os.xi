@@ -175,7 +175,7 @@ fn get_permissions(path: Str) -> Result[Int, Str]
 fn read_link(path: Str) -> Result[Str, Str] {
   let c_path = cstr(path);
   var buf: [4096]UInt8;
-  let len: Int;
+  var len: Int;
   unsafe {
     len = xiom_readlink(c_path, &buf[0], 4096 as UInt);
   }
@@ -192,7 +192,7 @@ fn create_symlink(original: Str, link: Str) -> Result[Unit, Str]
   requires: original.len() > 0
   requires: link.len() > 0
 {
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_symlink(cstr(original), cstr(link));
   }
@@ -205,7 +205,7 @@ fn create_symlink(original: Str, link: Str) -> Result[Unit, Str]
 fn is_symlink(path: Str) -> Bool
   requires: path.len() > 0
 {
-  let result: Int32;
+  var result: Int32;
   unsafe {
     result = xiom_is_symlink(cstr(path));
   }
@@ -251,7 +251,7 @@ fn spawn(command: Str, args: Vec[Str]) -> Result[Int, Str]
   ensures:  result is Ok => result >= 0
 {
   let cmd = build_command_string(command, args);
-  let rc: Int64;
+  var rc: Int64;
   unsafe {
     rc = xiom_process_spawn(cstr(cmd));
   }
@@ -270,7 +270,7 @@ fn spawn_piped(command: Str, args: Vec[Str]) -> Result[(Int, Int, Int), Str]
 fn wait(pid: Int) -> Result[Int, Str]
   requires: pid > 0
 {
-  let rc: Int64;
+  var rc: Int64;
   unsafe {
     rc = xiom_process_wait(pid as Int64);
   }
@@ -283,7 +283,7 @@ fn wait(pid: Int) -> Result[Int, Str]
 fn kill(pid: Int) -> Result[Unit, Str]
   requires: pid > 0
 {
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_process_kill(pid as Int64);
   }
@@ -552,7 +552,7 @@ pub fn create_pipe() -> Result[Pipe, Str]
   ensures: result is Ok => result.read_fd >= 0 && result.write_fd >= 0
 {
   var fds: [2]Int32;
-  let rc: Int32;
+  var rc: Int32;
   unsafe {
     rc = xiom_pipe(&fds[0]);
   }
@@ -570,7 +570,7 @@ pub fn Pipe.read(self, buf: &mut Vec[UInt8]) -> Result[Int, Str]
   requires: self.read_fd >= 0
   ensures:  result is Ok => result >= 0
 {
-  let n: Int;
+  var n: Int;
   unsafe {
     n = xiom_read(self.read_fd as Int32, buf.as_mut_ptr(), buf.len());
   }
@@ -585,7 +585,7 @@ pub fn Pipe.write(self, data: &Vec[UInt8]) -> Result[Int, Str]
   requires: self.write_fd >= 0
   ensures:  result is Ok => result >= 0
 {
-  let n: Int;
+  var n: Int;
   unsafe {
     n = xiom_write(self.write_fd as Int32, data.as_ptr(), data.len() as UInt);
   }
@@ -619,7 +619,7 @@ pub fn disk_free(path: Str) -> Result[Int, Str]
   ensures:  result is Ok => result >= 0
 {
   let c_path = cstr(path);
-  let free: UInt64;
+  var free: UInt64;
   unsafe {
     free = xiom_disk_free(c_path);
   }
@@ -632,7 +632,7 @@ pub fn disk_total(path: Str) -> Result[Int, Str]
   ensures:  result is Ok => result >= 0
 {
   let c_path = cstr(path);
-  let total: UInt64;
+  var total: UInt64;
   unsafe {
     total = xiom_disk_total(c_path);
   }

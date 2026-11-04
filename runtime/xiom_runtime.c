@@ -417,6 +417,25 @@ void* xiom_alloc(long long size) {
    locks, no cross-thread interference.
    ================================================================ */
 
+/* B-05: every guard-heap block carries a 16-byte header so a balanced
+   alloc/free pair can be recycled instead of silently consuming arena
+   space until block exit. Pre-fix `xiom_guard_free` was a no-op for arena
+   pointers, so a loop of alloc(8)+free inside ONE confined block retained
+   ~16 bytes per pair (10M pairs = 156 MB) even though the program freed
+   every block. The header records the total block size (header included);
+   the user payload starts 16 bytes in, which keeps 16-byte alignment. */
+#define XIOM_GUARD_HDR 16
+#define XIOM_GUARD_MAGIC 0x5849414D47554152ULL /* "XIAMGUAR" */
+/* Indexed free lists cover total block sizes 32..1024 in 16-byte steps
+   (indices 2..64); index 64 also holds larger blocks (exact-size scan). */
+#define XIOM_GUARD_FREE_BUCKETS 65
+#define XIOM_GUARD_FREE_MAX 1024
+
+typedef struct XiomGuardHdr {
+    unsigned long long magic;
+    unsigned long long size; /* total block bytes, header included */
+} XiomGuardHdr;
+
 typedef struct XiomGuardArena {
     void** slabs;        /* array of slab pointers */
     long*  slab_sizes;   /* per-slab allocated bytes (parallel to slabs) */
@@ -426,6 +445,8 @@ typedef struct XiomGuardArena {
     long   cur_off;      /* byte offset within cur_slab */
     long   slab_size;    /* bytes per slab (default 64KB) */
     int    active;       /* 1 while an unsafe block is running */
+    /* B-05 free lists: freed in-slab blocks, linked through the payload. */
+    void*  free_lists[XIOM_GUARD_FREE_BUCKETS];
 } XiomGuardArena;
 
 #ifdef _WIN32
@@ -495,6 +516,7 @@ void xiom_guard_heap_enter(void) {
         xiom_guard_arena.cur_off = 0;
         xiom_guard_arena.slab_size = XIOM_GUARD_SLAB;
         xiom_guard_arena.active = 0;
+        memset(xiom_guard_arena.free_lists, 0, sizeof(xiom_guard_arena.free_lists));
         xiom_guard_initialized = 1;
     }
     xiom_guard_arena.active++;
@@ -517,6 +539,49 @@ void xiom_guard_heap_exit(void) {
     a->slab_cap = 0;
     a->cur_slab = -1;
     a->cur_off = 0;
+    /* B-05: free lists point into the slabs just unmapped. */
+    memset(a->free_lists, 0, sizeof(a->free_lists));
+}
+
+/* B-05 free-list bucket for a total block size. Indexed buckets stop at
+   XIOM_GUARD_FREE_MAX; the last bucket is a size-scanned large list. */
+static int xiom_guard_bucket(long block_bytes) {
+    if (block_bytes >= XIOM_GUARD_HDR && block_bytes <= XIOM_GUARD_FREE_MAX &&
+        (block_bytes % XIOM_GUARD_HDR) == 0) {
+        return (int)(block_bytes / XIOM_GUARD_HDR);
+    }
+    return XIOM_GUARD_FREE_BUCKETS - 1;
+}
+
+/* B-05: recycle a freed in-slab block of exactly `block_bytes`. Marks the
+   header live again and re-zeroes the payload (xiom_guard_alloc's contract). */
+static void* xiom_guard_take_free(XiomGuardArena* a, long block_bytes) {
+    int b = xiom_guard_bucket(block_bytes);
+    if (b < XIOM_GUARD_FREE_BUCKETS - 1) {
+        void* p = a->free_lists[b];
+        if (!p) return NULL;
+        a->free_lists[b] = *(void**)p;
+        XiomGuardHdr* h = ((XiomGuardHdr*)p) - 1;
+        h->magic = XIOM_GUARD_MAGIC;
+        h->size = (unsigned long long)block_bytes;
+        memset(p, 0, (size_t)block_bytes);
+        return p;
+    }
+    /* Large blocks: exact-size scan (their headers survive the free). */
+    void** link = &a->free_lists[b];
+    while (*link) {
+        void* p = *link;
+        XiomGuardHdr* h = ((XiomGuardHdr*)p) - 1;
+        if ((long)h->size == block_bytes) {
+            *link = *(void**)p;
+            h->magic = XIOM_GUARD_MAGIC;
+            h->size = (unsigned long long)block_bytes;
+            memset(p, 0, (size_t)block_bytes);
+            return p;
+        }
+        link = (void**)p;
+    }
+    return NULL;
 }
 
 /* Allocate from the guard arena (zeroed, 16-byte aligned). */
@@ -525,14 +590,18 @@ void* xiom_guard_alloc(long long size) {
     /* Arena-audit bound check (compiler-lane request, v0.63.0): `size + 15`
        in the alignment math below must not wrap. Sizes above LLONG_MAX - 16
        can only wrap into a bogus slab offset (silent OOB), so fail closed
-       before any arithmetic. xiom_alloc already rejects such sizes safely. */
-    if (size > LLONG_MAX - 16) return NULL;
+       before any arithmetic. xiom_alloc already rejects such sizes safely.
+       B-05 adds the 16-byte block header to the same sum. */
+    if (size > LLONG_MAX - (XIOM_GUARD_HDR + 15)) return NULL;
     if (xiom_guard_arena.active <= 0) return xiom_alloc(size); /* fallback */
     XiomGuardArena* a = &xiom_guard_arena;
-    /* 16-byte alignment */
+    /* 16-byte alignment, payload + block header */
     long align = 16;
-    long aligned = (long)size + (align - 1);
+    long aligned = (long)size + XIOM_GUARD_HDR + (align - 1);
     aligned &= ~(long)(align - 1);
+    /* B-05: a balanced free earlier in this block is reusable now. */
+    void* recycled = xiom_guard_take_free(a, aligned);
+    if (recycled) return recycled;
     xiom_guard_ensure_slab(a);
     if (a->cur_slab < 0 || a->cur_off + aligned > a->slab_size) {
         /* allocate a fresh slab for oversized allocations */
@@ -556,16 +625,21 @@ void* xiom_guard_alloc(long long size) {
         a->cur_off = 0;
         if (aligned > a->slab_size) {
             /* oversized: hand out the whole slab, next alloc gets a new one */
-            void* p = (char*)slab;
+            XiomGuardHdr* h = (XiomGuardHdr*)slab;
             a->cur_off = a->slab_size; /* force new slab next time */
-            memset(p, 0, (size_t)aligned);
-            return p;
+            memset(slab, 0, (size_t)aligned);
+            h->magic = XIOM_GUARD_MAGIC;
+            h->size = (unsigned long long)aligned;
+            return (char*)slab + XIOM_GUARD_HDR;
         }
     }
-    void* p = (char*)a->slabs[a->cur_slab] + a->cur_off;
-    memset(p, 0, (size_t)aligned);
+    void* base = (char*)a->slabs[a->cur_slab] + a->cur_off;
+    XiomGuardHdr* h = (XiomGuardHdr*)base;
+    memset(base, 0, (size_t)aligned);
+    h->magic = XIOM_GUARD_MAGIC;
+    h->size = (unsigned long long)aligned;
     a->cur_off += aligned;
-    return p;
+    return (char*)base + XIOM_GUARD_HDR;
 }
 
 /* Fault-injection probe for the arena-audit bound check
@@ -628,16 +702,27 @@ void* xiom_guard_copy_out_if_arena(const void* src, long long copy_len, long lon
     return p;
 }
 
-/* Guard-aware free (B-05 runtime half; surfaced by the wave-124 runtime
-   rebuild). The codegen emits xiom_guard_free for frees inside confined
-   (unsafe) blocks: pointers inside the active guard arena are no-ops (the
-   whole arena is discarded at block exit), anything else is a main-heap
-   pointer and is freed normally. Exported because the compiler's guard
-   instrumentation links against this exact symbol name. */
+/* Guard-aware free (B-05). The codegen emits xiom_guard_free for frees
+   inside confined (unsafe) blocks. An arena-owned block returns to the
+   matching free list and is reused by the next same-size xiom_guard_alloc,
+   so a balanced alloc/free loop inside ONE confined block stays flat (pre-fix
+   it was a no-op and retained ~16 bytes per pair until block exit). Anything
+   outside the arena is a main-heap pointer and is freed normally. Exported
+   because the compiler's guard instrumentation links this exact symbol. */
 void xiom_guard_free(void* p) {
     if (!p) return;
-    if (xiom_guard_arena_contains(&xiom_guard_arena, p)) return;
-    free(p);
+    XiomGuardArena* a = &xiom_guard_arena;
+    if (!xiom_guard_arena_contains(a, p)) {
+        free(p);
+        return;
+    }
+    XiomGuardHdr* h = ((XiomGuardHdr*)p) - 1;
+    if (h->magic != XIOM_GUARD_MAGIC) return; /* not a block start: no-op */
+    long block_bytes = (long)h->size;
+    h->magic = 0;
+    int b = xiom_guard_bucket(block_bytes);
+    *(void**)p = a->free_lists[b];
+    a->free_lists[b] = p;
 }
 
 /* Arena-aware realloc: grow a guard-arena allocation. `realloc` cannot grow a
@@ -1023,6 +1108,19 @@ static __thread int xiom_trampoline_os_code = 0;
 static __thread uintptr_t xiom_trampoline_fault_addr = 0;
 static __thread int xiom_trampoline_handlers_installed = 0;
 
+/* The sigsetjmp calls below use savemask=0: saving the signal mask costs a
+   sigprocmask syscall on EVERY confined-block entry, which is the t3
+   hot-reload floor (100k entries x ~200 ns). On a fault the kernel has
+   blocked the delivered signal for the duration of the handler, so restore
+   the pre-handler mask before jumping out. This is async-signal-safe and
+   runs only on the fault path. */
+static void xiom_unblock_signal_before_jump(int sig) {
+    sigset_t unblock;
+    sigemptyset(&unblock);
+    sigaddset(&unblock, sig);
+    sigprocmask(SIG_UNBLOCK, &unblock, NULL);
+}
+
 static void xiom_trampoline_handler(int sig, siginfo_t* si, void* uc) {
     (void)uc;
     if (xiom_trampoline_active) {
@@ -1030,6 +1128,7 @@ static void xiom_trampoline_handler(int sig, siginfo_t* si, void* uc) {
         int code = (sig == SIGSEGV) ? 1 : (sig == SIGILL) ? 2 : (sig == SIGFPE) ? 3 : 6;
         xiom_trampoline_os_code = sig;
         xiom_trampoline_fault_addr = si ? (uintptr_t)si->si_addr : 0;
+        xiom_unblock_signal_before_jump(sig);
         siglongjmp(xiom_trampoline_jmp, code);
     }
     /* Not in a trampoline: restore default and re-raise (crash loudly). */
@@ -1052,6 +1151,7 @@ static void xiom_trap_handler(int sig, siginfo_t* si, void* uc) {
     if (xiom_trap_active) {
         int code = (sig == SIGSEGV) ? 1 : (sig == SIGILL) ? 2 : (sig == SIGFPE) ? 3 : 6;
         xiom_trap_fault = code;
+        xiom_unblock_signal_before_jump(sig);
         siglongjmp(xiom_trap_jmp, code);
     }
     signal(sig, SIG_DFL);
@@ -1075,9 +1175,10 @@ int64_t xiom_trap_enter(void) {
     xiom_trap_install_handlers();
     xiom_trap_active = 1;
     xiom_trap_fault = 0;
-    int code = sigsetjmp(xiom_trap_jmp, 1);
+    int code = sigsetjmp(xiom_trap_jmp, 0);
     /* Reached twice: once normally (code==0), once after a fault
-       (code != 0). */
+       (code != 0). savemask=0 keeps the hot path syscall-free; the handler
+       restores the mask before its longjmp. */
     return (code == 0) ? 0 : xiom_trap_fault;
 }
 
@@ -1109,7 +1210,9 @@ int64_t xiom_trampoline_call(xiom_block_fn fn, uint8_t* ctx) {
     while (1) {
         xiom_trampoline_active = 1;
         xiom_trampoline_returned = 0;
-        int code = sigsetjmp(xiom_trampoline_jmp, 1);
+        /* savemask=0: the per-entry mask save is the t3-hot-reload floor.
+           The handler restores the delivered signal's mask on a fault. */
+        int code = sigsetjmp(xiom_trampoline_jmp, 0);
         int64_t result = 0;
         if (code == 0) {
             result = fn(ctx);
