@@ -502,8 +502,11 @@ pub fn bigint_div_mod(a: &BigInt, b: &BigInt) -> (BigInt, BigInt)
             BigInt{ digits: Vec[Int].new(); negative: false; });
   }
   if _abs_compare(a, b) < 0 {
+    // |a| < |b|: quotient 0, remainder a. Preserve the dividend's sign so
+    // the q*b + r == a identity holds for negative a (truncated division,
+    // matching the general path's remainder.negative = a.negative).
     var r = _copy(a);
-    r.negative = false;
+    r.negative = a.negative;
     return (BigInt{ digits: Vec[Int].new(); negative: false; }, r);
   }
   var abs_a = _copy(a);

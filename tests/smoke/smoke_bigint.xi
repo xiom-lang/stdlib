@@ -230,5 +230,23 @@ fn main() -> Int {
   if !(xiom.bigint.bigint_eq(&m21, &e21)) { return 21; }
   var q21 = xiom.bigint.bigint_div(&m21, &b21);
   if !(xiom.bigint.bigint_eq(&q21, &a21)) { return 21; }
+  // 22. div_mod sign for negative dividends (A3 fuzz regression):
+  //     -16 = 0*97 + (-16); |r| < |b|; bigint_mod is non-negative (81).
+  var neg16 = xiom.bigint.bigint_from_int(-16);
+  var d97 = xiom.bigint.bigint_from_int(97);
+  var dm22 = xiom.bigint.bigint_div_mod(&neg16, &d97);
+  if xiom.bigint.bigint_to_str(&dm22.0) != "0" { return 22; }
+  if xiom.bigint.bigint_to_str(&dm22.1) != "-16" { return 22; }
+  var recon22 = xiom.bigint.bigint_add(&xiom.bigint.bigint_mul(&dm22.0, &d97), &dm22.1);
+  if !(xiom.bigint.bigint_eq(&recon22, &neg16)) { return 22; }
+  var absr22 = xiom.bigint.bigint_abs(&dm22.1);
+  if xiom.bigint.bigint_compare(&absr22, &d97) >= 0 { return 22; }
+  if xiom.bigint.bigint_to_str(&xiom.bigint.bigint_mod(&neg16, &d97)) != "81" { return 22; }
+  // General path (|a| > |b|): -100 / 7 truncates to q=-14, r=-2.
+  var neg100 = xiom.bigint.bigint_from_int(-100);
+  var d7 = xiom.bigint.bigint_from_int(7);
+  var dm22b = xiom.bigint.bigint_div_mod(&neg100, &d7);
+  if xiom.bigint.bigint_to_str(&dm22b.0) != "-14" { return 22; }
+  if xiom.bigint.bigint_to_str(&dm22b.1) != "-2" { return 22; }
   return 0;
 }
