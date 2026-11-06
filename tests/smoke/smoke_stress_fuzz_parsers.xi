@@ -85,9 +85,9 @@ fn mutate(seed: Int, sample: Str) -> Str {
 }
 
 fn check_json(input: Str, code: Int) -> Int {
-  match json_parse(input) {
+  match json.json_parse(input) {
     Ok(v) => {
-      match json_parse(json_stringify(v)) {
+      match json.json_parse(json.json_stringify(v)) {
         Ok(_) => { return 0; },
         Err(_) => { io.println("json reparse"); return code; },
       }
@@ -123,7 +123,56 @@ fn check_csv(input: Str, code: Int) -> Int {
   }
 }
 
+fn check_edges() -> Int {
+  // JSON depth cap and unicode escape contract (A3): 128 levels accepted,
+  // 129 rejected; \uXXXX decoded; surrogate pairs combined; lone surrogates
+  // and invalid escapes rejected.
+  var deep = "";
+  var i = 0;
+  while i < 128 { deep = deep + "["; i = i + 1; }
+  i = 0;
+  while i < 128 { deep = deep + "]"; i = i + 1; }
+  match json.json_parse(deep) {
+    Ok(_) => {},
+    Err(_) => { io.println("json depth128"); return 50; },
+  }
+  match json.json_parse(deep + "[]") {
+    Ok(_) => { io.println("json depth129"); return 51; },
+    Err(_) => {},
+  }
+  match json.json_parse("\"\\u0041\"") {
+    Ok(v) => { if json.json_stringify(v) != "\"A\"" { io.println("json u0041"); return 52; } },
+    Err(_) => { io.println("json u0041 err"); return 52; },
+  }
+  match json.json_parse("\"\\uD800\"") {
+    Ok(_) => { io.println("json lone high accepted"); return 53; },
+    Err(_) => {},
+  }
+  match json.json_parse("\"\\uDC00\"") {
+    Ok(_) => { io.println("json lone low accepted"); return 54; },
+    Err(_) => {},
+  }
+  match json.json_parse("\"\\uD83D\\uDE00\"") {
+    Ok(v) => {
+      let s = json.json_stringify(v);
+      if s.len() != 6 { io.println("json pair len"); return 55; }
+      match json.json_parse(s) {
+        Ok(_) => {},
+        Err(_) => { io.println("json pair reparse"); return 56; },
+      }
+    },
+    Err(_) => { io.println("json pair rejected"); return 55; },
+  }
+  match json.json_parse("\"\\uZZZZ\"") {
+    Ok(_) => { io.println("json bad escape accepted"); return 57; },
+    Err(_) => {},
+  }
+  return 0;
+}
+
 fn main() -> Int {
+  let edge = check_edges();
+  if edge != 0 { return edge; }
   let json_sample = "{\"a\":[1,2.5,true,null],\"b\":\"x\\ny\",\"c\":{},\"d\":-3}";
   let toml_sample = "title = \"root\"\ncount = 3\nratio = 1.5\nflag = true\ntools = [\"a\", \"b\"]\n[package]\nname = \"demo\"\n[build]\ntargets = [\"x\"]\n";
   let csv_sample = "a,b,c\n1,\"x,y\",3\n4,,6\n";

@@ -313,22 +313,49 @@ fn _json_parse_string_val(base: *UInt8, n: Int, pos: &mut Int) -> Result[JsonVal
         // NOTE (wave 111 fix): the old branch then fell through to a shared
         // `*pos = *pos + 1`, consuming one byte PAST the 4 hex digits and
         // dropping it from the value ("a\u0042c" parsed as "aB").
-        var cp = code as UInt32;
+        var cp = code;
+        if cp >= 0xD800 && cp <= 0xDBFF {
+          // High surrogate: require a following \uXXXX low surrogate.
+          if *pos + 5 >= n {
+            return Err("json_parse: lone surrogate");
+          }
+          if _json_char(base, *pos) != '\\' || _json_char(base, *pos + 1) != 'u' {
+            return Err("json_parse: lone surrogate");
+          }
+          var lo = 0;
+          var m = 0;
+          while m < 4 {
+            let hv2 = _json_hex_value(_json_char(base, *pos + 2 + m));
+            if hv2 < 0 {
+              return Err("json_parse: invalid unicode escape");
+            }
+            lo = lo * 16 + hv2;
+            m = m + 1;
+          }
+          if lo < 0xDC00 || lo > 0xDFFF {
+            return Err("json_parse: lone surrogate");
+          }
+          cp = 0x10000 + ((cp - 0xD800) << 10) + (lo - 0xDC00);
+          *pos = *pos + 6;
+        } elif cp >= 0xDC00 && cp <= 0xDFFF {
+          return Err("json_parse: lone surrogate");
+        }
+        var cpx = cp as UInt32;
         var utf = Vec[UInt8].new();
-        if cp < 0x80 {
-          utf.push(cp as UInt8);
-        } elif cp < 0x800 {
-          utf.push((0xC0 | (cp >> 6)) as UInt8);
-          utf.push((0x80 | (cp & 0x3F)) as UInt8);
-        } elif cp < 0x10000 {
-          utf.push((0xE0 | (cp >> 12)) as UInt8);
-          utf.push((0x80 | ((cp >> 6) & 0x3F)) as UInt8);
-          utf.push((0x80 | (cp & 0x3F)) as UInt8);
+        if cpx < 0x80 {
+          utf.push(cpx as UInt8);
+        } elif cpx < 0x800 {
+          utf.push((0xC0 | (cpx >> 6)) as UInt8);
+          utf.push((0x80 | (cpx & 0x3F)) as UInt8);
+        } elif cpx < 0x10000 {
+          utf.push((0xE0 | (cpx >> 12)) as UInt8);
+          utf.push((0x80 | ((cpx >> 6) & 0x3F)) as UInt8);
+          utf.push((0x80 | (cpx & 0x3F)) as UInt8);
         } else {
-          utf.push((0xF0 | (cp >> 18)) as UInt8);
-          utf.push((0x80 | ((cp >> 12) & 0x3F)) as UInt8);
-          utf.push((0x80 | ((cp >> 6) & 0x3F)) as UInt8);
-          utf.push((0x80 | (cp & 0x3F)) as UInt8);
+          utf.push((0xF0 | (cpx >> 18)) as UInt8);
+          utf.push((0x80 | ((cpx >> 12) & 0x3F)) as UInt8);
+          utf.push((0x80 | ((cpx >> 6) & 0x3F)) as UInt8);
+          utf.push((0x80 | (cpx & 0x3F)) as UInt8);
         }
         var dec = xiom.encoding.utf8_decode(&utf);
         match dec {
