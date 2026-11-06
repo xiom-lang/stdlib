@@ -42,11 +42,15 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   the first nightly ASan run records the fuzz budgets. Local compile-only
   memory 15/15, leak 12/12. Next: first nightly run, record/add the fuzz
   leak budgets, Windows ASan, shrink the baseline.
-- **G3 (in_progress, block 339):** `tools/check_release_state.ps1` guards
-  annotated-tag ancestry, no merge commits after the tag,
-  package.xi/release-notes/CHANGELOG agreement, and a concrete
-  `COMPILER_VERSION`; wired into the CI static job with `fetch-depth: 0`.
-  Remaining: compiler+stdlib pair CI and pin/version automation.
+- **G3 (in_progress, blocks 339/340):** `tools/check_release_state.ps1`
+  guards annotated-tag ancestry, no merges after the tag,
+  package/notes/CHANGELOG agreement, and a concrete pin.
+  `tools/check_pair_state.ps1` + nightly `pair.yml` verify the compiler
+  tag's `STDLIB_VERSION` names a real stdlib release (a behind pin warns
+  during the stdlib-first window unless `-RequireLatest`); current pair
+  `v0.65.6 -> stdlib-v0.65.6`. **REL-20261106-1801-stdlib** is open with
+  compiler for the invariant/timing confirmation. Remaining: pin/version
+  automation.
 - **Queue:** 1551 OPEN (compiler Str reassignment; net smokes carved out);
   1709 FIXED (ref accessors; PULSE verify pending); 1625 info open;
   2202 compiler Send/Sync. 1531/1807/wishlist33 external.
@@ -62,7 +66,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\stdlib pull --ff-only origin main
   git -C E:\xiom-lang\xiom-relays pull --ff-only
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 121 + blocks 337/336/335.
+Read docs/stdlib_session.md snapshot 121 + blocks 340/339/338.
 
 STATE (2026-11-06):
 - READINESS 10/10; v0.65.6 shipped (tag 6fdde4e; release 41873341844;
@@ -79,8 +83,9 @@ STATE (2026-11-06):
   leak lane 12 baselined; local compile-only 15/15 + 12/12. First nightly
   run with the broadened lane pending; then record leak budgets, Windows
   ASan, shrink the baseline.
-- G3 (in_progress): release-state guard live in CI; remaining
-  compiler+stdlib pair CI + pin/version automation.
+- G3 (in_progress): release-state + pair guards live (pair.yml nightly);
+  compiler relay REL-20261106-1801-stdlib open for invariant/timing;
+  remaining pin/version automation.
 - Queue: 1551 OPEN (compiler Str); 1709 FIXED (PULSE verify); 1625 info;
   2202 compiler Send/Sync. 1531/1807/wishlist33 external.
 
@@ -90,8 +95,8 @@ PRIORITY (roadmap; no release cuts):
 2. A1: observe the first nightly sanitizer run with the 15-file memory lane;
    record the fuzz-target leak budgets, then add them to the leak lane;
    Windows ASan; keep the leak audit green and shrink the baseline.
-3. G3: add compiler+stdlib pair CI and pin/version automation (the
-   release-state guard is live).
+3. G3: process the compiler ack on REL-20261106-1801-stdlib; add
+   pin/version automation (the release-state and pair guards are live).
 4. B2: reclassify the 285 EX-0 functions to clauses or EX-1..EX-5; retire
    EX-0; extend the checker to per-function records. E4 same-leaf dedup
    before 1.0.
@@ -4667,6 +4672,26 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-11-06 block 340 (G3 pair check: compiler STDLIB_VERSION vs stdlib release tag; compiler relay opened)**
+- **Relay:** opened **REL-20261106-1801-stdlib** (stdlib -> compiler,
+  info/medium), pushed relay `e78960f`. Asks: confirm the compiler release
+  tag's `STDLIB_VERSION` is the canonical other half of the pair and is
+  immutable; confirm the stdlib-first pin timing; accept or redirect the
+  raw.githubusercontent endpoint; pin-PR ownership.
+- **Checker:** `tools/check_pair_state.ps1` reads
+  `<CompilerRepo>/<tag>:STDLIB_VERSION` locally or
+  `raw.githubusercontent.com/xiom-lang/xiom/<COMPILER_VERSION>/STDLIB_VERSION`
+  in CI. It validates the pin names a real stdlib tag: exact match is OK, a
+  behind pin is a warning during the stdlib-first window unless
+  `-RequireLatest`, an ahead pin fails.
+- **CI:** `.github/workflows/pair.yml` nightly 03:45 UTC + dispatch
+  (`require_latest` input); read-only, no compiler build.
+- **Validation:** local-tag and network modes both OK
+  (`v0.65.6 -> stdlib-v0.65.6 == latest`); `v0.65.5` warns, and
+  `-RequireLatest` exits 1.
+- **No release cut.** Next: compiler ack on `-1801`, pin/version automation,
+  E4, X1/X5.
 
 **SESSION 2026-11-06 block 339 (G3: release-state guard for tag ancestry, linear history, version/notes/CHANGELOG, concrete pin)**
 - **Checker:** `tools/check_release_state.ps1` verifies the latest

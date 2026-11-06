@@ -1,0 +1,40 @@
+# Compiler+stdlib pair check (roadmap G3): the compiler tag named by
+# COMPILER_VERSION must expose STDLIB_VERSION, and that pin must name a real
+# stdlib release tag. Nightly + dispatch; read-only, no compiler build.
+#
+# The default mode warns when the compiler pin is behind the latest stdlib
+# tag (the stdlib-first release window). Dispatch with require_latest=true at
+# pair closeout when the tags must match exactly.
+name: XIOM Stdlib Pair
+
+on:
+  workflow_dispatch:
+    inputs:
+      require_latest:
+        description: "Fail if the compiler pin is behind the latest stdlib tag"
+        type: boolean
+        default: false
+  schedule:
+    - cron: "45 3 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  pair:
+    name: pair (ubuntu)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+
+      - name: Pair state
+        shell: pwsh
+        run: |
+          $strict = '${{ inputs.require_latest }}'
+          if ($strict -eq 'true') {
+            ./tools/check_pair_state.ps1 -RequireLatest
+          } else {
+            ./tools/check_pair_state.ps1
+          }
