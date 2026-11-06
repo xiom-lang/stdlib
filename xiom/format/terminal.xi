@@ -389,7 +389,9 @@ pub fn ansi_cursor_back(n: Int) -> Str
 }
 
 /// Move the cursor to the home position (1, 1).
-pub fn ansi_cursor_home() -> Str {
+pub fn ansi_cursor_home() -> Str
+  ensures: result == "\u{001b}[H"
+{
   return "\u{001b}[H";
 }
 
@@ -409,42 +411,58 @@ pub fn ansi_cursor_to(row: Int, col: Int) -> Str
 }
 
 /// Clear the whole screen and home the cursor.
-pub fn ansi_clear_screen() -> Str {
+pub fn ansi_clear_screen() -> Str
+  ensures: result == "\u{001b}[2J\u{001b}[H"
+{
   return "\u{001b}[2J\u{001b}[H";
 }
 
 /// Clear the current line.
-pub fn ansi_clear_line() -> Str {
+pub fn ansi_clear_line() -> Str
+  ensures: result == "\u{001b}[2K"
+{
   return "\u{001b}[2K";
 }
 
 /// Erase from the cursor up to the top of the screen.
-pub fn ansi_erase_above() -> Str {
+pub fn ansi_erase_above() -> Str
+  ensures: result == "\u{001b}[1J"
+{
   return "\u{001b}[1J";
 }
 
 /// Erase from the cursor down to the bottom of the screen.
-pub fn ansi_erase_below() -> Str {
+pub fn ansi_erase_below() -> Str
+  ensures: result == "\u{001b}[0J"
+{
   return "\u{001b}[0J";
 }
 
 /// Make the cursor visible again.
-pub fn ansi_show_cursor() -> Str {
+pub fn ansi_show_cursor() -> Str
+  ensures: result == "\u{001b}[?25h"
+{
   return "\u{001b}[?25h";
 }
 
 /// Hide the cursor.
-pub fn ansi_hide_cursor() -> Str {
+pub fn ansi_hide_cursor() -> Str
+  ensures: result == "\u{001b}[?25l"
+{
   return "\u{001b}[?25l";
 }
 
 /// Save the current cursor position.
-pub fn ansi_save_cursor() -> Str {
+pub fn ansi_save_cursor() -> Str
+  ensures: result == "\u{001b}[s"
+{
   return "\u{001b}[s";
 }
 
 /// Restore the last saved cursor position.
-pub fn ansi_restore_cursor() -> Str {
+pub fn ansi_restore_cursor() -> Str
+  ensures: result == "\u{001b}[u"
+{
   return "\u{001b}[u";
 }
 

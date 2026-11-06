@@ -3,9 +3,9 @@
   "generated": "2026-11-06",
   "policy": "docs/CONTRACT_POLICY.md",
   "ownership_map": "docs/MODULE_OWNERSHIP.md",
-  "total": 285,
+  "total": 276,
   "note": "EX-0 is the remaining grandfathered gate-8 no-clause tail. It is closed to new entries and must shrink. EX-1..EX-5 entries are per-function B2 reclassifications; tools/check_contract_policy.ps1 validates each function/path against the source. Counts are the difference between pub fns and pub-with-clause fns reported by tools/coverage_scan.ps1.",
-  "source": "readiness gate 8 (wave 208, refreshed 2026-10-31) + coverage_scan.ps1 run 2026-11-06; B2 per-function reclassification 2026-11-06 (ffi 4)",
+  "source": "readiness gate 8 (wave 208, refreshed 2026-10-31) + coverage_scan.ps1 run 2026-11-06; B2 per-function reclassification 2026-11-06 (ffi 4, thread 5, serialize 6, format 2); nine format ANSI helpers moved to clauses",
   "modules": [
     {
       "module": "iter",
@@ -123,19 +123,83 @@
     },
     {
       "module": "serialize",
-      "count": 6,
-      "category": "EX-0",
+      "function": "json_get",
+      "path": "xiom/serialize/json.xi",
+      "category": "EX-3",
       "owner": "stdlib lane",
       "approved": "2026-11-06",
-      "rationale": "gate-8 no-clause tail; total parser/serializer helpers over internal state. Reclassify per function in B2."
+      "expires": "never",
+      "rationale": "Object member accessor; it delegates to the covered json_get_ref and the Option is the whole contract."
+    },
+    {
+      "module": "serialize",
+      "function": "to_json",
+      "path": "xiom/serialize/serialize.xi",
+      "category": "EX-1",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "expires": "never",
+      "rationale": "Generic Serialize dispatcher; the trait and the Result are the contract and no stronger postcondition is expressible."
+    },
+    {
+      "module": "serialize",
+      "function": "from_json",
+      "path": "xiom/serialize/serialize.xi",
+      "category": "EX-1",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "expires": "never",
+      "rationale": "Generic Deserialize parser; the Result encodes success/failure and the trait defines the value contract."
+    },
+    {
+      "module": "serialize",
+      "function": "JsonValue.get",
+      "path": "xiom/serialize/serialize.xi",
+      "category": "EX-3",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "expires": "never",
+      "rationale": "Object member accessor on JsonValue; the Option is the observable contract."
+    },
+    {
+      "module": "serialize",
+      "function": "yaml_stringify",
+      "path": "xiom/serialize/yaml_lite.xi",
+      "category": "EX-1",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "expires": "never",
+      "rationale": "Total YAML serializer over a YamlValue; there is no partial behavior and the text is the whole result."
+    },
+    {
+      "module": "serialize",
+      "function": "yaml_get",
+      "path": "xiom/serialize/yaml_lite.xi",
+      "category": "EX-3",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "expires": "never",
+      "rationale": "Mapping member accessor; the Option is the observable contract."
     },
     {
       "module": "format",
-      "count": 11,
-      "category": "EX-0",
+      "function": "print",
+      "path": "xiom/format/fmt.xi",
+      "category": "EX-1",
       "owner": "stdlib lane",
       "approved": "2026-11-06",
-      "rationale": "gate-8 no-clause tail; total formatting helpers. Reclassify per function in B2 (expected EX-1 totals)."
+      "expires": "never",
+      "rationale": "Total stdout helper with no return value; the only postcondition is the write, which the clause language does not model."
+    },
+    {
+      "module": "format",
+      "function": "println",
+      "path": "xiom/format/fmt.xi",
+      "category": "EX-1",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "expires": "never",
+      "rationale": "Total stdout line helper with no return value; the write is the whole observable effect and is not modeled."
     }
   ]
 }

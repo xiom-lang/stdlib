@@ -24,11 +24,11 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   os 111, math 94, thread 5, ffi 4, serialize 6, format 11), 0 pending.
   EX-0 is closed to new entries; B2 reclassifies it per function and
   ratchets to 100% counted.
-- **B2 (in_progress, blocks 341/342/343):** `docs/CONTRACT_TAIL.md` tracks
-  all 285 uncovered functions. ffi 4/4 and thread 5/5 are now per-function
-  EX-2/EX-1; the tail is **276 EX-0 + 9 per-function**. The checker validates
-  each function/path (including generics), and the inventory shows the
-  category per row. Next: serialize 6, format 11, then iter/os/math.
+- **B2 (in_progress, blocks 341/342/343/345):** `docs/CONTRACT_TAIL.md`
+  tracks all uncovered functions. ffi, thread, serialize and format are now
+  per-function exemptions (17); the nine format ANSI helpers carry constant
+  clauses. Coverage is **6,716/6,992 (96.1%)**; the tail is **259 EX-0
+  (iter/os/math) + 17 per-function**. Next: iter 54, then os 111 / math 94.
 - **Readiness 10/10:** unchanged (gate 9 closed 2026-11-04; PULSE verified
   1704 on the published v0.65.6). v0.65.6 shipped: tag `6fdde4e`, release
   41873341844, registry 41873341859 (xiom-std 0.65.6, compiler v0.65.6).
@@ -71,7 +71,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\stdlib pull --ff-only origin main
   git -C E:\xiom-lang\xiom-relays pull --ff-only
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 121 + blocks 344/343/342.
+Read docs/stdlib_session.md snapshot 121 + blocks 345/344/343.
 
 STATE (2026-11-06):
 - READINESS 10/10; v0.65.6 shipped (tag 6fdde4e; release 41873341844;
@@ -81,10 +81,9 @@ STATE (2026-11-06):
   6,992 pub fns, 6,707 covered (95.9%), 285 EX-0 tail; registry
   tools/contract_exemptions.json; checker tools/check_contract_policy.ps1
   green in the CI static job.
-- B2 (in_progress): docs/CONTRACT_TAIL.md tracks 285 uncovered functions;
-  ffi 4/4 and thread 5/5 are per-function EX-2/EX-1, leaving 276 EX-0.
-  Checker validates per-function function/path (incl. generics); inventory
-  shows Category. Next: serialize 6, format 11, then iter/os/math.
+- B2 (in_progress): coverage 6,716/6,992 (96.1%); tail 276 = 259 EX-0
+  (iter/os/math) + 17 per-function (ffi/thread/serialize/format). Nine ANSI
+  helpers carry clauses. Next: iter 54, then os 111 / math 94.
 - A3 (in_progress): parser fuzz + smoke_fuzz_bignum/ffi/encodings landed;
   nightly fuzz.yml (3 seeds x 2000); bigint_div_mod(-16,97) sign found and
   fixed with smoke_bigint case 22. First nightly run pending.
@@ -107,9 +106,9 @@ PRIORITY (roadmap; no release cuts):
 3. G3: add the compiler asset/manifest commit-field check; pin/version
    automation. v0.65.7 must be a fresh immutable tag at the fixed commit;
    never re-point 0.65.6.
-4. B2: work the remaining 276 EX-0 rows in docs/CONTRACT_TAIL.md into
-   clauses or EX-1..EX-5 (ffi and thread are done); retire EX-0. E4
-   same-leaf dedup before 1.0.
+4. B2: work the remaining 259 EX-0 rows (iter/os/math) in
+   docs/CONTRACT_TAIL.md into clauses or EX-1..EX-5; ffi/thread/serialize/
+   format are done. E4 same-leaf dedup before 1.0.
 5. X1/X5 growth policy drafts; expansion after 1.0.
 6. Run tools/check_roadmap.ps1, tools/check_contract_policy.ps1,
    tools/check_release_state.ps1, and tools/check_pair_state.ps1 after
@@ -4683,6 +4682,22 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-11-06 block 345 (B2 third slice: serialize/format; 9 ANSI constant clauses; coverage 96.1%)**
+- **Serialize 6 -> per-function:** `json_get`, `JsonValue.get`, `yaml_get`
+  EX-3 (accessors); `to_json`, `from_json`, `yaml_stringify` EX-1 (generic
+  trait/total serializer).
+- **Format:** the nine ANSI constant helpers (`ansi_cursor_home`,
+  `ansi_clear_screen`, `ansi_clear_line`, `ansi_erase_above`,
+  `ansi_erase_below`, `ansi_show_cursor`, `ansi_hide_cursor`,
+  `ansi_save_cursor`, `ansi_restore_cursor`) now carry exact `ensures`
+  clauses; `print`/`println` are per-function EX-1.
+- **Coverage:** 6,716/6,992 public fns (**96.1%**), 9,247 clauses. The tail
+  is 276 = 259 EX-0 (iter/os/math) + 17 per-function (ffi/thread/serialize/
+  format). The inventory now captures method names such as `JsonValue.get`.
+- **Validation:** ANSI/terminal smokes green; contract policy checker OK;
+  inventory reports 259 EX-0 + 17 per-function.
+- **No release cut.** Next: iter 54, then os 111 / math 94.
 
 **SESSION 2026-11-06 block 344 (G3 tag-move guard: compiler reply confirms stdlib-v0.65.6 moved; release locks added)**
 - **Compiler reply:** `REL-20261106-1803-compiler` (high): `STDLIB_VERSION`

@@ -208,10 +208,11 @@ No-regression rule:
 Measured by `tools/coverage_scan.ps1` on `main`:
 
 - 44 modules, 9,449 functions, 6,992 public functions.
-- 9,238 clauses; 6,707 public functions covered (95.9%).
-- 285 uncovered public functions in 7 modules: iter 54, os 111, math 94,
-  thread 5, ffi 4, serialize 6, format 11. All are EX-0.
-- Signature: `GLOBAL: fns=9449  pubFns=6992  clauses=9238  pubCovered=6707`;
-  `pub-with-clause = 95.9%`.
+- 9,247 clauses; 6,716 public functions covered (96.1%).
+- 276 uncovered public functions in 7 modules: 259 EX-0 (iter 54, os 111,
+  math 94) and 17 per-function exemptions (ffi 4, thread 5, serialize 6,
+  format 2). The nine format ANSI helpers now carry constant clauses.
+- Signature: `GLOBAL: fns=9449  pubFns=6992  clauses=9247  pubCovered=6716`;
+  `pub-with-clause = 96.1%`.
 
-This baseline is the B1 sign-off point and the B2 starting line.
+This baseline is the B1 sign-off point and the current B2 line.

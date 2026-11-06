@@ -66,7 +66,7 @@ foreach ($f in $files) {
         $hc = ([regex]::Matches($header, '(requires|ensures)\s*:')).Count
         if ($hc -eq 0) {
           $name = "(unknown)"
-          if ($line -match '^\s*pub\s+fn\s+([A-Za-z_][A-Za-z0-9_]*)') { $name = $Matches[1] }
+          if ($line -match '^\s*pub\s+fn\s+([A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)?)') { $name = $Matches[1] }
           $rel = $f.FullName.Substring($Root.Length).TrimStart('\', '/') -replace '\\', '/'
           $idx = $rel.IndexOfAny([char[]]@('\', '/'))
           $dir = if ($idx -ge 0) { $rel.Substring(0, $idx) } else { '(root)' }

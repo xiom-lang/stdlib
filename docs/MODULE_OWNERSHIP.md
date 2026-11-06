@@ -23,11 +23,11 @@ disagree, or if any module is `pending`.
 
 ## Sign-off summary
 
-- 44 modules; 6,992 public functions; 6,707 covered (95.9%); 285 exemptions
-  in 7 modules (276 EX-0 + 9 per-function EX-1/EX-2).
+- 44 modules; 6,992 public functions; 6,716 covered (96.1%); 276 exemptions
+  in 7 modules (259 EX-0 + 17 per-function EX-1/EX-2/EX-3).
 - 37 modules `signed-off` at 100%; 7 modules `tail-approved` with a recorded
-  budget (5 with EX-0; ffi and thread with per-function EX-1/EX-2). No module
-  is `pending`.
+  budget (3 with EX-0: iter/os/math; ffi/thread/serialize/format with
+  per-function exemptions). No module is `pending`.
 - The sign-off formalizes the readiness gate-8 evidence (wave 208, refreshed
   2026-10-31) and the 2026-11-06 scanner run. It is not a fresh clause-quality
   audit of every function; B2 performs the function-level reclassification.
@@ -50,7 +50,7 @@ disagree, or if any module is `pending`.
 | encoding | stdlib lane | 95 | 95 | 0 | 100% | signed-off | 2026-11-06 |
 | error | stdlib lane | 42 | 42 | 0 | 100% | signed-off | 2026-11-06 |
 | ffi | stdlib lane | 73 | 69 | 4 | 94.5% | tail-approved | 2026-11-06 |
-| format | stdlib lane | 231 | 220 | 11 | 95.2% | tail-approved | 2026-11-06 |
+| format | stdlib lane | 231 | 229 | 2 | 99.1% | tail-approved | 2026-11-06 |
 | geom | stdlib lane | 414 | 414 | 0 | 100% | signed-off | 2026-11-06 |
 | hash | stdlib lane | 93 | 93 | 0 | 100% | signed-off | 2026-11-06 |
 | io | stdlib lane | 122 | 122 | 0 | 100% | signed-off | 2026-11-06 |
@@ -78,22 +78,26 @@ disagree, or if any module is `pending`.
 | text | stdlib lane | 41 | 41 | 0 | 100% | signed-off | 2026-11-06 |
 | thread | stdlib lane | 59 | 54 | 5 | 91.5% | tail-approved | 2026-11-06 |
 | time | stdlib lane | 138 | 138 | 0 | 100% | signed-off | 2026-11-06 |
-| **Total** | | **6992** | **6707** | **285** | **95.9%** | 37 / 7 / 0 | |
+| **Total** | | **6992** | **6716** | **276** | **96.1%** | 37 / 7 / 0 | |
 
 Status meanings: `signed-off` = every public function covered; `tail-approved`
 = every uncovered function is a recorded exemption (EX-0 or per-function
 EX-1..EX-5); `pending` = not signed off (CI fails).
 
-B2 blocks 342/343: ffi's 4 and thread's 5 exemptions are per-function --
-ffi: `dl_open_global`/`dl_sym_address` EX-2, `errno_perror`/`safe_ptr_free`
-EX-1; thread: `scope` EX-2, `sleep_ms`/`is_main_thread`/`thread_yield`/
-`thread_parallel_for` EX-1. The other 276 are EX-0.
+B2 blocks 342/343/345: ffi 4, thread 5, serialize 6 and format 2 exemptions
+are per-function -- ffi: `dl_open_global`/`dl_sym_address` EX-2,
+`errno_perror`/`safe_ptr_free` EX-1; thread: `scope` EX-2,
+`sleep_ms`/`is_main_thread`/`thread_yield`/`thread_parallel_for` EX-1;
+serialize: `json_get`/`JsonValue.get`/`yaml_get` EX-3,
+`to_json`/`from_json`/`yaml_stringify` EX-1; format: `print`/`println` EX-1.
+The nine format ANSI helpers moved to constant clauses. The other 259
+(iter/os/math) are EX-0.
 
 ## Sign-off record
 
 | Date | Reviewer | Scope | Basis |
 |---|---|---|---|
-| 2026-11-06 | stdlib lane | all 44 modules | readiness gate-8 evidence (wave 208, refreshed 2026-10-31) + `tools/coverage_scan.ps1` run on `main` at snapshot 120; 285 tail entries recorded in `tools/contract_exemptions.json` (276 EX-0 + 9 per-function ffi/thread EX-1/EX-2) |
+| 2026-11-06 | stdlib lane | all 44 modules | readiness gate-8 evidence (wave 208, refreshed 2026-10-31) + `tools/coverage_scan.ps1` run on `main` at snapshot 120; 276 tail entries recorded in `tools/contract_exemptions.json` (259 EX-0 + 17 per-function ffi/thread/serialize/format EX-1/EX-2/EX-3); the nine format ANSI helpers carry constant clauses |
 
 ## Change protocol
 

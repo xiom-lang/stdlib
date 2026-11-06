@@ -7,16 +7,16 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 Generated: 2026-11-06 by `tools/contract_tail_inventory.ps1`.
 Authoritative counts: `tools/coverage_scan.ps1`. Policy: `docs/CONTRACT_POLICY.md`.
 
-**285 uncovered public functions across 7 modules: 276 EX-0 and 9 per-function exemptions.** Each row becomes a clause or an EX-1..EX-5 exemption in B2; EX-0 is closed to new entries.
+**276 uncovered public functions across 7 modules: 259 EX-0 and 17 per-function exemptions.** Each row becomes a clause or an EX-1..EX-5 exemption in B2; EX-0 is closed to new entries.
 
 | Module | Uncovered | EX-0 | Per-function |
 |---|---:|---:|---:|
 | ffi | 4 | 0 | 4 |
-| format | 11 | 11 | 0 |
+| format | 2 | 0 | 2 |
 | iter | 54 | 54 | 0 |
 | math | 94 | 94 | 0 |
 | os | 111 | 111 | 0 |
-| serialize | 6 | 6 | 0 |
+| serialize | 6 | 0 | 6 |
 | thread | 5 | 0 | 5 |
 
 ## Functions
@@ -27,22 +27,13 @@ Authoritative counts: `tools/coverage_scan.ps1`. Policy: `docs/CONTRACT_POLICY.m
 | ffi | ffi/dl.xi | 111 | `dl_sym_address` | `EX-2` | `pub fn dl_sym_address(handle: Int, name: Str) -> Result[Int, Str] {` |
 | ffi | ffi/errno.xi | 80 | `errno_perror` | `EX-1` | `pub fn errno_perror(msg: Str) {` |
 | ffi | ffi/ffi.xi | 88 | `safe_ptr_free` | `EX-1` | `pub fn safe_ptr_free(ptr: SafePtr) {` |
-| format | format/fmt.xi | 143 | `print` | `EX-0` | `pub fn print(s: Str) {` |
-| format | format/fmt.xi | 148 | `println` | `EX-0` | `pub fn println(s: Str) {` |
-| format | format/terminal.xi | 392 | `ansi_cursor_home` | `EX-0` | `pub fn ansi_cursor_home() -> Str {` |
-| format | format/terminal.xi | 412 | `ansi_clear_screen` | `EX-0` | `pub fn ansi_clear_screen() -> Str {` |
-| format | format/terminal.xi | 417 | `ansi_clear_line` | `EX-0` | `pub fn ansi_clear_line() -> Str {` |
-| format | format/terminal.xi | 422 | `ansi_erase_above` | `EX-0` | `pub fn ansi_erase_above() -> Str {` |
-| format | format/terminal.xi | 427 | `ansi_erase_below` | `EX-0` | `pub fn ansi_erase_below() -> Str {` |
-| format | format/terminal.xi | 432 | `ansi_show_cursor` | `EX-0` | `pub fn ansi_show_cursor() -> Str {` |
-| format | format/terminal.xi | 437 | `ansi_hide_cursor` | `EX-0` | `pub fn ansi_hide_cursor() -> Str {` |
-| format | format/terminal.xi | 442 | `ansi_save_cursor` | `EX-0` | `pub fn ansi_save_cursor() -> Str {` |
-| format | format/terminal.xi | 447 | `ansi_restore_cursor` | `EX-0` | `pub fn ansi_restore_cursor() -> Str {` |
+| format | format/fmt.xi | 143 | `print` | `EX-1` | `pub fn print(s: Str) {` |
+| format | format/fmt.xi | 148 | `println` | `EX-1` | `pub fn println(s: Str) {` |
 | iter | iter/fold.xi | 269 | `iter_for_each` | `EX-0` | `pub fn iter_for_each(v: &Vec[Int], f: fn(&Int)) {` |
-| iter | iter/iter.xi | 294 | `Range` | `EX-0` | `pub fn Range.map[U](self, f: fn(Int) -> U) -> MapIter[Int, U] {` |
-| iter | iter/iter.xi | 300 | `Range` | `EX-0` | `pub fn Range.filter(self, predicate: fn(&Int) -> Bool) -> FilterIter[Int] {` |
-| iter | iter/iter.xi | 330 | `Range` | `EX-0` | `pub fn Range.chain(self, other: Range) -> ChainIter[Int, Int] {` |
-| iter | iter/iter.xi | 342 | `Range` | `EX-0` | `pub fn Range.zip(self, other: Range) -> ZipIter[Int, Int] {` |
+| iter | iter/iter.xi | 294 | `Range.map` | `EX-0` | `pub fn Range.map[U](self, f: fn(Int) -> U) -> MapIter[Int, U] {` |
+| iter | iter/iter.xi | 300 | `Range.filter` | `EX-0` | `pub fn Range.filter(self, predicate: fn(&Int) -> Bool) -> FilterIter[Int] {` |
+| iter | iter/iter.xi | 330 | `Range.chain` | `EX-0` | `pub fn Range.chain(self, other: Range) -> ChainIter[Int, Int] {` |
+| iter | iter/iter.xi | 342 | `Range.zip` | `EX-0` | `pub fn Range.zip(self, other: Range) -> ZipIter[Int, Int] {` |
 | iter | iter/iter.xi | 451 | `MapIter` | `EX-0` | `pub fn MapIter[T, U].next(self) -> Option[U] {` |
 | iter | iter/iter.xi | 459 | `FilterIter` | `EX-0` | `pub fn FilterIter[T].next(self) -> Option[T] {` |
 | iter | iter/iter.xi | 514 | `ChainIter` | `EX-0` | `pub fn ChainIter[T, U].next(self) -> Option[T] {` |
@@ -90,7 +81,7 @@ Authoritative counts: `tools/coverage_scan.ps1`. Policy: `docs/CONTRACT_POLICY.m
 | iter | iter/iter.xi | 1174 | `ZipIter` | `EX-0` | `pub fn ZipIter[T, U].any(self, predicate: fn(&(T, U)) -> Bool) -> Bool {` |
 | iter | iter/iter.xi | 1180 | `ZipIter` | `EX-0` | `pub fn ZipIter[T, U].nth(self, n: Int) -> Option[(T, U)] {` |
 | iter | iter/iter.xi | 1186 | `ZipIter` | `EX-0` | `pub fn ZipIter[T, U].last(self) -> Option[(T, U)] {` |
-| iter | iter/iter.xi | 1298 | `Range` | `EX-0` | `pub fn Range.inspect(self, f: fn(&Int)) -> InspectIter[Int] {` |
+| iter | iter/iter.xi | 1298 | `Range.inspect` | `EX-0` | `pub fn Range.inspect(self, f: fn(&Int)) -> InspectIter[Int] {` |
 | iter | iter/iter.xi | 1304 | `InspectIter` | `EX-0` | `pub fn InspectIter[T].next(self) -> Option[T] {` |
 | math | math/algebra_extended.xi | 281 | `algebraic_number` | `EX-0` | `pub fn algebraic_number(alpha: Float64, polynomial: &Vec[Float64]) -> Bool {` |
 | math | math/calculus.xi | 117 | `limit` | `EX-0` | `pub fn limit(f: fn(Float64) -> Float64, x: Float64) -> Float64 {` |
@@ -235,7 +226,7 @@ Authoritative counts: `tools/coverage_scan.ps1`. Policy: `docs/CONTRACT_POLICY.m
 | os | os/ioctl.xi | 45 | `ioctl_fionread` | `EX-0` | `pub fn ioctl_fionread(fd: Int) -> Result[Int, Str] {` |
 | os | os/lock.xi | 167 | `file_lock_release` | `EX-0` | `pub fn file_lock_release(l: FileLock) {` |
 | os | os/mmap.xi | 296 | `mmap_resize` | `EX-0` | `pub fn mmap_resize(ptr: Int, old_len: Int, new_len: Int) -> Result[Int, Str] {` |
-| os | os/os.xi | 503 | `FileWatcher` | `EX-0` | `pub fn FileWatcher.close(self) {` |
+| os | os/os.xi | 503 | `FileWatcher.close` | `EX-0` | `pub fn FileWatcher.close(self) {` |
 | os | os/os.xi | 741 | `sleep_millis` | `EX-0` | `pub fn sleep_millis(ms: Int) {` |
 | os | os/proc_ffi.xi | 388 | `fork` | `EX-0` | `pub fn fork() -> Result[Int, Str] {` |
 | os | os/proc_ffi.xi | 396 | `waitpid` | `EX-0` | `pub fn waitpid(pid: Int, options: Int) -> Result[Int, Str] {` |
@@ -297,12 +288,12 @@ Authoritative counts: `tools/coverage_scan.ps1`. Policy: `docs/CONTRACT_POLICY.m
 | os | os/win.xi | 90 | `win_service_stop` | `EX-0` | `pub fn win_service_stop(name: Str) -> Result[Unit, Str] {` |
 | os | os/win.xi | 98 | `win_shell_execute` | `EX-0` | `pub fn win_shell_execute(verb: Str, file: Str, args: Str) -> Result[Int, Str] {` |
 | os | os/win.xi | 117 | `win_is_admin` | `EX-0` | `pub fn win_is_admin() -> Bool {` |
-| serialize | serialize/json.xi | 924 | `json_get` | `EX-0` | `pub fn json_get(v: JsonValue, key: Str) -> Option[JsonValue] {` |
-| serialize | serialize/serialize.xi | 196 | `to_json` | `EX-0` | `pub fn to_json[T: Serialize](value: T) -> Result[Str, SerializeError] {` |
-| serialize | serialize/serialize.xi | 201 | `from_json` | `EX-0` | `pub fn from_json[T: Deserialize](s: Str) -> Result[T, SerializeError] {` |
-| serialize | serialize/serialize.xi | 563 | `JsonValue` | `EX-0` | `pub fn JsonValue.get(self, key: Str) -> Option[JsonValue] {` |
-| serialize | serialize/yaml_lite.xi | 233 | `yaml_stringify` | `EX-0` | `pub fn yaml_stringify(v: YamlValue) -> Str {` |
-| serialize | serialize/yaml_lite.xi | 389 | `yaml_get` | `EX-0` | `pub fn yaml_get(v: YamlValue, key: Str) -> Option[YamlValue] {` |
+| serialize | serialize/json.xi | 924 | `json_get` | `EX-3` | `pub fn json_get(v: JsonValue, key: Str) -> Option[JsonValue] {` |
+| serialize | serialize/serialize.xi | 196 | `to_json` | `EX-1` | `pub fn to_json[T: Serialize](value: T) -> Result[Str, SerializeError] {` |
+| serialize | serialize/serialize.xi | 201 | `from_json` | `EX-1` | `pub fn from_json[T: Deserialize](s: Str) -> Result[T, SerializeError] {` |
+| serialize | serialize/serialize.xi | 563 | `JsonValue.get` | `EX-3` | `pub fn JsonValue.get(self, key: Str) -> Option[JsonValue] {` |
+| serialize | serialize/yaml_lite.xi | 233 | `yaml_stringify` | `EX-1` | `pub fn yaml_stringify(v: YamlValue) -> Str {` |
+| serialize | serialize/yaml_lite.xi | 389 | `yaml_get` | `EX-3` | `pub fn yaml_get(v: YamlValue, key: Str) -> Option[YamlValue] {` |
 | thread | thread/spawn.xi | 142 | `sleep_ms` | `EX-1` | `pub fn sleep_ms(ms: Int) {` |
 | thread | thread/spawn.xi | 183 | `is_main_thread` | `EX-1` | `pub fn is_main_thread() -> Bool {` |
 | thread | thread/thread.xi | 165 | `scope` | `EX-2` | `pub fn scope[T](f: fn(&Scope) -> T) -> T {` |
