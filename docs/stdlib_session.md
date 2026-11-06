@@ -4460,6 +4460,22 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
+**SESSION 2026-11-06 block 335 (A1 sanitizer lane live: memory clean, leak audit baselined; run 42242340821 green)**
+- **Nightly lane:** `.github/workflows/sanitizers.yml` (nightly + dispatch)
+  runs a memory-error lane (ASan/UBSan, `detect_leaks=0`) and a leak-audit
+  lane (LSan vs `tools/sanitizer_leak_baseline.json`; growth beyond
+  budget*1.1 + 64 fails) over a 12-file focused set.
+- **Runner:** `tools/run_sanitizers.ps1` supports `-CompileOnly` (local
+  Windows, where the ASan runtime DLL is absent) and `-Leaks` baseline mode.
+- **First run 42241569479** found only LSan leaks, no memory errors; the
+  baseline records the compiler drop residual (REL-20261104-1551) as a
+  budget, not a suppression. **Re-run 42242340821 green** (memory clean,
+  leak audit within budget).
+- **Local:** 12/12 ASan compile-only on Windows.
+- **No release cut** (owner: only via compiler relay). Next roadmap: B1
+  contract policy; then broaden sanitizers/fuzz (bigint/FFI, full corpus)
+  and G3 release automation.
+
 **SESSION 2026-11-06 block 334 (readiness 10/10; A3 wave: json_parse surrogate fix + depth/unicode edges)**
 - **Readiness 10/10:** PULSE verified and closed 1704 on the published
   v0.65.6 (builder build+stringify 14.4 B/iter, parse 15.1 B/iter, capped
