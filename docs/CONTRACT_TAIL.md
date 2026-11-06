@@ -7,7 +7,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 Generated: 2026-11-06 by `tools/contract_tail_inventory.ps1`.
 Authoritative counts: `tools/coverage_scan.ps1`. Policy: `docs/CONTRACT_POLICY.md`.
 
-**276 uncovered public functions across 7 modules: 205 EX-0 and 71 per-function exemptions.** Each row becomes a clause or an EX-1..EX-5 exemption in B2; EX-0 is closed to new entries.
+**276 uncovered public functions across 7 modules: 94 EX-0 and 182 per-function exemptions.** Each row becomes a clause or an EX-1..EX-5 exemption in B2; EX-0 is closed to new entries.
 
 | Module | Uncovered | EX-0 | Per-function |
 |---|---:|---:|---:|
@@ -15,7 +15,7 @@ Authoritative counts: `tools/coverage_scan.ps1`. Policy: `docs/CONTRACT_POLICY.m
 | format | 2 | 0 | 2 |
 | iter | 54 | 0 | 54 |
 | math | 94 | 94 | 0 |
-| os | 111 | 111 | 0 |
+| os | 111 | 0 | 111 |
 | serialize | 6 | 0 | 6 |
 | thread | 5 | 0 | 5 |
 
@@ -177,117 +177,117 @@ Authoritative counts: `tools/coverage_scan.ps1`. Policy: `docs/CONTRACT_POLICY.m
 | math | math/precision.xi | 168 | `is_signed` | `EX-0` | `pub fn is_signed[T: PrecisionLimits]() -> Bool {` |
 | math | math/series.xi | 124 | `maclaurin_series` | `EX-0` | `pub fn maclaurin_series(f: fn(Float64) -> Float64, order: Int, x: Float64) -> Float64 {` |
 | math | math/topology.xi | 43 | `closed_set` | `EX-0` | `pub fn closed_set(tau: &Vec[Vec[Int]], s: &Vec[Int], universe: &Vec[Int]) -> Bool {` |
-| os | os/err.xi | 23 | `errno` | `EX-0` | `pub fn errno() -> Int {` |
-| os | os/err.xi | 157 | `perror` | `EX-0` | `pub fn perror(msg: Str) -> Unit {` |
-| os | os/err.xi | 173 | `errno_set` | `EX-0` | `pub fn errno_set(code: Int) -> Unit {` |
-| os | os/err.xi | 181 | `backtrace` | `EX-0` | `pub fn backtrace() -> Vec[Str] {` |
-| os | os/err.xi | 190 | `backtrace_symbols` | `EX-0` | `pub fn backtrace_symbols(frames: &Vec[Int]) -> Vec[Str] {` |
-| os | os/err.xi | 208 | `last_error` | `EX-0` | `pub fn last_error() -> Str {` |
-| os | os/event.xi | 46 | `epoll_create` | `EX-0` | `pub fn epoll_create() -> Result[Int, Str] {` |
-| os | os/event.xi | 53 | `epoll_add` | `EX-0` | `pub fn epoll_add(ep: Int, fd: Int, events: Int) -> Result[Unit, Str] {` |
-| os | os/event.xi | 63 | `epoll_mod` | `EX-0` | `pub fn epoll_mod(ep: Int, fd: Int, events: Int) -> Result[Unit, Str] {` |
-| os | os/event.xi | 73 | `epoll_del` | `EX-0` | `pub fn epoll_del(ep: Int, fd: Int) -> Result[Unit, Str] {` |
-| os | os/event.xi | 82 | `epoll_wait` | `EX-0` | `pub fn epoll_wait(ep: Int, max_events: Int, timeout_ms: Int) -> Result[Vec[EpollEvent], Str] {` |
-| os | os/event.xi | 91 | `epoll_close` | `EX-0` | `pub fn epoll_close(ep: Int) -> Unit {` |
-| os | os/event.xi | 99 | `kqueue_create` | `EX-0` | `pub fn kqueue_create() -> Result[Int, Str] {` |
-| os | os/event.xi | 105 | `kqueue_add_read` | `EX-0` | `pub fn kqueue_add_read(kq: Int, fd: Int) -> Unit {` |
-| os | os/event.xi | 112 | `kqueue_add_write` | `EX-0` | `pub fn kqueue_add_write(kq: Int, fd: Int) -> Unit {` |
-| os | os/event.xi | 120 | `kqueue_wait` | `EX-0` | `pub fn kqueue_wait(kq: Int, timeout_ms: Int) -> Result[Vec[KEvent], Str] {` |
-| os | os/event.xi | 128 | `kqueue_close` | `EX-0` | `pub fn kqueue_close(kq: Int) -> Unit {` |
-| os | os/event.xi | 136 | `eventfd_new` | `EX-0` | `pub fn eventfd_new(init: Int) -> Result[Int, Str] {` |
-| os | os/event.xi | 144 | `eventfd_read` | `EX-0` | `pub fn eventfd_read(fd: Int) -> Result[Int, Str] {` |
-| os | os/event.xi | 152 | `eventfd_write` | `EX-0` | `pub fn eventfd_write(fd: Int, value: Int) -> Result[Unit, Str] {` |
-| os | os/event.xi | 162 | `timerfd_new` | `EX-0` | `pub fn timerfd_new() -> Result[Int, Str] {` |
-| os | os/event.xi | 169 | `timerfd_set` | `EX-0` | `pub fn timerfd_set(fd: Int, ms: Int) -> Result[Unit, Str] {` |
-| os | os/event.xi | 179 | `signalfd_new` | `EX-0` | `pub fn signalfd_new(signals: &Vec[Int]) -> Result[Int, Str] {` |
-| os | os/event.xi | 188 | `poll` | `EX-0` | `pub fn poll(fds: &Vec[PollFd], timeout_ms: Int) -> Result[Int, Str] {` |
-| os | os/event.xi | 198 | `ppoll` | `EX-0` | `pub fn ppoll(fds: &Vec[PollFd], timeout_ms: Int) -> Result[Int, Str] {` |
-| os | os/event.xi | 208 | `select` | `EX-0` | `pub fn select(read_fds: &Vec[Int], write_fds: &Vec[Int], timeout_ms: Int) -> Result[Int, Str] {` |
-| os | os/event.xi | 219 | `pselect` | `EX-0` | `pub fn pselect(read_fds: &Vec[Int], write_fds: &Vec[Int], timeout_ms: Int) -> Result[Int, Str] {` |
-| os | os/fs_ffi.xi | 37 | `symlink` | `EX-0` | `pub fn symlink(target: Str, link: Str) -> Result[Unit, Str] {` |
-| os | os/fs_ffi.xi | 46 | `readlink` | `EX-0` | `pub fn readlink(path: Str) -> Result[Str, Str] {` |
-| os | os/fs_ffi.xi | 53 | `is_symlink` | `EX-0` | `pub fn is_symlink(path: Str) -> Bool {` |
-| os | os/fs_ffi.xi | 61 | `hard_link` | `EX-0` | `pub fn hard_link(old: Str, new: Str) -> Result[Unit, Str] {` |
-| os | os/fs_ffi.xi | 70 | `chown` | `EX-0` | `pub fn chown(path: Str, uid: Int, gid: Int) -> Result[Unit, Str] {` |
-| os | os/fs_ffi.xi | 181 | `dup` | `EX-0` | `pub fn dup(fd: Int) -> Result[Int, Str] {` |
-| os | os/fs_ffi.xi | 189 | `dup2` | `EX-0` | `pub fn dup2(old: Int, new: Int) -> Result[Int, Str] {` |
-| os | os/fs_ffi.xi | 198 | `truncate` | `EX-0` | `pub fn truncate(path: Str, length: Int) -> Result[Unit, Str] {` |
-| os | os/fs_ffi.xi | 207 | `ftruncate` | `EX-0` | `pub fn ftruncate(fd: Int, length: Int) -> Result[Unit, Str] {` |
-| os | os/fs_ffi.xi | 216 | `fallocate` | `EX-0` | `pub fn fallocate(fd: Int, offset: Int, length: Int) -> Result[Unit, Str] {` |
-| os | os/fs_ffi.xi | 226 | `pread` | `EX-0` | `pub fn pread(fd: Int, offset: Int, length: Int) -> Result[Vec[UInt8], Str] {` |
-| os | os/fs_ffi.xi | 236 | `pwrite` | `EX-0` | `pub fn pwrite(fd: Int, offset: Int, data: &Vec[UInt8]) -> Result[Int, Str] {` |
-| os | os/fs_ffi.xi | 246 | `readv` | `EX-0` | `pub fn readv(fd: Int, buffers: &Vec[Vec[UInt8]]) -> Result[Int, Str] {` |
-| os | os/fs_ffi.xi | 353 | `splice` | `EX-0` | `pub fn splice(in_fd: Int, out_fd: Int, count: Int) -> Result[Int, Str] {` |
-| os | os/fs_ffi.xi | 407 | `mkfifo` | `EX-0` | `pub fn mkfifo(path: Str, mode: Int) -> Result[Unit, Str] {` |
-| os | os/fs_ffi.xi | 416 | `fifo_open` | `EX-0` | `pub fn fifo_open(path: Str) -> Result[Int, Str] {` |
-| os | os/ioctl.xi | 18 | `ioctl` | `EX-0` | `pub fn ioctl(fd: Int, request: Int, arg: Int) -> Result[Int, Str] {` |
-| os | os/ioctl.xi | 28 | `ioctl_get_winsize` | `EX-0` | `pub fn ioctl_get_winsize(fd: Int) -> Result[(Int, Int), Str] {` |
-| os | os/ioctl.xi | 36 | `ioctl_set_nonblock` | `EX-0` | `pub fn ioctl_set_nonblock(fd: Int, on: Bool) -> Result[Unit, Str] {` |
-| os | os/ioctl.xi | 45 | `ioctl_fionread` | `EX-0` | `pub fn ioctl_fionread(fd: Int) -> Result[Int, Str] {` |
-| os | os/lock.xi | 167 | `file_lock_release` | `EX-0` | `pub fn file_lock_release(l: FileLock) {` |
-| os | os/mmap.xi | 296 | `mmap_resize` | `EX-0` | `pub fn mmap_resize(ptr: Int, old_len: Int, new_len: Int) -> Result[Int, Str] {` |
-| os | os/os.xi | 503 | `FileWatcher.close` | `EX-0` | `pub fn FileWatcher.close(self) {` |
-| os | os/os.xi | 741 | `sleep_millis` | `EX-0` | `pub fn sleep_millis(ms: Int) {` |
-| os | os/proc_ffi.xi | 388 | `fork` | `EX-0` | `pub fn fork() -> Result[Int, Str] {` |
-| os | os/proc_ffi.xi | 396 | `waitpid` | `EX-0` | `pub fn waitpid(pid: Int, options: Int) -> Result[Int, Str] {` |
-| os | os/proc_ffi.xi | 405 | `wait` | `EX-0` | `pub fn wait() -> Result[Int, Str] {` |
-| os | os/proc_ffi.xi | 414 | `execv` | `EX-0` | `pub fn execv(path: Str, args: &Vec[Str]) -> Result[Int, Str] {` |
-| os | os/proc_ffi.xi | 423 | `execvp` | `EX-0` | `pub fn execvp(file: Str, args: &Vec[Str]) -> Result[Int, Str] {` |
-| os | os/proc_ffi.xi | 441 | `getppid` | `EX-0` | `pub fn getppid() -> Int {` |
-| os | os/proc_ffi.xi | 447 | `getsid` | `EX-0` | `pub fn getsid(pid: Int) -> Int {` |
-| os | os/proc_ffi.xi | 456 | `raise` | `EX-0` | `pub fn raise(sig: Int) -> Result[Unit, Str] {` |
-| os | os/proc_ffi.xi | 484 | `process_status` | `EX-0` | `pub fn process_status(pid: Int) -> Option[Int] {` |
-| os | os/sync_io.xi | 103 | `read_until_eof` | `EX-0` | `pub fn read_until_eof(fd: Int) -> Result[Vec[UInt8], Str] {` |
-| os | os/sync_io.xi | 111 | `read_line_buffered` | `EX-0` | `pub fn read_line_buffered(fd: Int) -> Result[Str, Str] {` |
-| os | os/sync_io.xi | 119 | `copy_fd` | `EX-0` | `pub fn copy_fd(src: Int, dst: Int) -> Result[Int, Str] {` |
-| os | os/sync_io.xi | 128 | `copy_fd_n` | `EX-0` | `pub fn copy_fd_n(src: Int, dst: Int, n: Int) -> Result[Int, Str] {` |
-| os | os/sync_io.xi | 138 | `flush_fd` | `EX-0` | `pub fn flush_fd(fd: Int) -> Result[Unit, Str] {` |
-| os | os/sync_io.xi | 263 | `file_advise` | `EX-0` | `pub fn file_advise(fd: Int, offset: Int, length: Int, advice: Int) -> Result[Unit, Str] {` |
-| os | os/sync_io.xi | 274 | `file_allocate` | `EX-0` | `pub fn file_allocate(fd: Int, offset: Int, length: Int) -> Result[Unit, Str] {` |
-| os | os/term.xi | 24 | `term_is_tty` | `EX-0` | `pub fn term_is_tty(fd: Int) -> Bool {` |
-| os | os/term.xi | 97 | `term_width` | `EX-0` | `pub fn term_width() -> Int {` |
-| os | os/terminal.xi | 31 | `isatty` | `EX-0` | `pub fn isatty(fd: Int) -> Bool {` |
-| os | os/terminal.xi | 39 | `tty_name` | `EX-0` | `pub fn tty_name(fd: Int) -> Result[Str, Str] {` |
-| os | os/terminal.xi | 47 | `pty_open` | `EX-0` | `pub fn pty_open() -> Result[(Int, Int), Str] {` |
-| os | os/terminal.xi | 53 | `pty_close` | `EX-0` | `pub fn pty_close(master: Int, slave: Int) -> Unit {` |
-| os | os/terminal.xi | 61 | `termios_get` | `EX-0` | `pub fn termios_get(fd: Int) -> Result[Termios, Str] {` |
-| os | os/terminal.xi | 69 | `termios_set` | `EX-0` | `pub fn termios_set(fd: Int, t: Termios) -> Result[Unit, Str] {` |
-| os | os/terminal.xi | 78 | `raw_mode` | `EX-0` | `pub fn raw_mode(fd: Int) -> Result[Termios, Str] {` |
-| os | os/terminal.xi | 86 | `restore_mode` | `EX-0` | `pub fn restore_mode(fd: Int, t: Termios) -> Result[Unit, Str] {` |
-| os | os/terminal.xi | 95 | `cbreak_mode` | `EX-0` | `pub fn cbreak_mode(fd: Int) -> Result[Termios, Str] {` |
-| os | os/terminal.xi | 103 | `canonical_mode` | `EX-0` | `pub fn canonical_mode(fd: Int) -> Result[Termios, Str] {` |
-| os | os/terminal.xi | 111 | `nonblock` | `EX-0` | `pub fn nonblock(fd: Int) -> Result[Unit, Str] {` |
-| os | os/terminal.xi | 119 | `blocking` | `EX-0` | `pub fn blocking(fd: Int) -> Result[Unit, Str] {` |
-| os | os/terminal.xi | 127 | `winsize` | `EX-0` | `pub fn winsize(fd: Int) -> Result[(Int, Int), Str] {` |
-| os | os/terminal.xi | 135 | `set_winsize` | `EX-0` | `pub fn set_winsize(fd: Int, rows: Int, cols: Int) -> Result[Unit, Str] {` |
-| os | os/terminal.xi | 144 | `terminal_width` | `EX-0` | `pub fn terminal_width() -> Int {` |
-| os | os/terminal.xi | 150 | `terminal_height` | `EX-0` | `pub fn terminal_height() -> Int {` |
-| os | os/unix.xi | 21 | `unix_umask` | `EX-0` | `pub fn unix_umask(mask: Int) -> Int {` |
-| os | os/unix.xi | 28 | `unix_uid` | `EX-0` | `pub fn unix_uid() -> Int {` |
-| os | os/unix.xi | 34 | `unix_gid` | `EX-0` | `pub fn unix_gid() -> Int {` |
-| os | os/unix.xi | 41 | `unix_username` | `EX-0` | `pub fn unix_username(uid: Int) -> Result[Str, Str] {` |
-| os | os/unix.xi | 49 | `unix_groupname` | `EX-0` | `pub fn unix_groupname(gid: Int) -> Result[Str, Str] {` |
-| os | os/unix.xi | 69 | `unix_hostname` | `EX-0` | `pub fn unix_hostname() -> Str {` |
-| os | os/unix.xi | 75 | `unix_domainname` | `EX-0` | `pub fn unix_domainname() -> Str {` |
-| os | os/unix.xi | 81 | `unix_uptime` | `EX-0` | `pub fn unix_uptime() -> Int {` |
-| os | os/unix.xi | 87 | `unix_loadavg` | `EX-0` | `pub fn unix_loadavg() -> (Float64, Float64, Float64) {` |
-| os | os/unix.xi | 93 | `unix_sysconf` | `EX-0` | `pub fn unix_sysconf(name: Int) -> Int {` |
-| os | os/unix.xi | 100 | `unix_pathconf` | `EX-0` | `pub fn unix_pathconf(path: Str, name: Int) -> Int {` |
-| os | os/unix.xi | 108 | `unix_getrlimit` | `EX-0` | `pub fn unix_getrlimit(resource: Int) -> (Int, Int) {` |
-| os | os/unix.xi | 116 | `unix_setrlimit` | `EX-0` | `pub fn unix_setrlimit(resource: Int, soft: Int, hard: Int) -> Result[Unit, Str] {` |
-| os | os/unix.xi | 126 | `unix_utime` | `EX-0` | `pub fn unix_utime(path: Str, atime: Int, mtime: Int) -> Result[Unit, Str] {` |
-| os | os/unix.xi | 136 | `unix_chroot` | `EX-0` | `pub fn unix_chroot(path: Str) -> Result[Unit, Str] {` |
-| os | os/unix.xi | 144 | `unix_nice` | `EX-0` | `pub fn unix_nice(inc: Int) -> Result[Int, Str] {` |
-| os | os/watch.xi | 154 | `watch_close` | `EX-0` | `pub fn watch_close(handle: Int) {` |
-| os | os/win.xi | 22 | `win_registry_read` | `EX-0` | `pub fn win_registry_read(hive: Int, path: Str, name: Str) -> Result[Str, Str] {` |
-| os | os/win.xi | 32 | `win_registry_write` | `EX-0` | `pub fn win_registry_write(hive: Int, path: Str, name: Str, value: Str) -> Result[Unit, Str] {` |
-| os | os/win.xi | 43 | `win_registry_delete` | `EX-0` | `pub fn win_registry_delete(hive: Int, path: Str, name: Str) -> Result[Unit, Str] {` |
-| os | os/win.xi | 66 | `win_set_environment_var` | `EX-0` | `pub fn win_set_environment_var(name: Str, value: Str) -> Result[Unit, Str] {` |
-| os | os/win.xi | 74 | `win_service_status` | `EX-0` | `pub fn win_service_status(name: Str) -> Str {` |
-| os | os/win.xi | 82 | `win_service_start` | `EX-0` | `pub fn win_service_start(name: Str) -> Result[Unit, Str] {` |
-| os | os/win.xi | 90 | `win_service_stop` | `EX-0` | `pub fn win_service_stop(name: Str) -> Result[Unit, Str] {` |
-| os | os/win.xi | 98 | `win_shell_execute` | `EX-0` | `pub fn win_shell_execute(verb: Str, file: Str, args: Str) -> Result[Int, Str] {` |
-| os | os/win.xi | 117 | `win_is_admin` | `EX-0` | `pub fn win_is_admin() -> Bool {` |
+| os | os/err.xi | 23 | `errno` | `EX-2` | `pub fn errno() -> Int {` |
+| os | os/err.xi | 157 | `perror` | `EX-2` | `pub fn perror(msg: Str) -> Unit {` |
+| os | os/err.xi | 173 | `errno_set` | `EX-2` | `pub fn errno_set(code: Int) -> Unit {` |
+| os | os/err.xi | 181 | `backtrace` | `EX-2` | `pub fn backtrace() -> Vec[Str] {` |
+| os | os/err.xi | 190 | `backtrace_symbols` | `EX-2` | `pub fn backtrace_symbols(frames: &Vec[Int]) -> Vec[Str] {` |
+| os | os/err.xi | 208 | `last_error` | `EX-2` | `pub fn last_error() -> Str {` |
+| os | os/event.xi | 46 | `epoll_create` | `EX-2` | `pub fn epoll_create() -> Result[Int, Str] {` |
+| os | os/event.xi | 53 | `epoll_add` | `EX-2` | `pub fn epoll_add(ep: Int, fd: Int, events: Int) -> Result[Unit, Str] {` |
+| os | os/event.xi | 63 | `epoll_mod` | `EX-2` | `pub fn epoll_mod(ep: Int, fd: Int, events: Int) -> Result[Unit, Str] {` |
+| os | os/event.xi | 73 | `epoll_del` | `EX-2` | `pub fn epoll_del(ep: Int, fd: Int) -> Result[Unit, Str] {` |
+| os | os/event.xi | 82 | `epoll_wait` | `EX-2` | `pub fn epoll_wait(ep: Int, max_events: Int, timeout_ms: Int) -> Result[Vec[EpollEvent], Str] {` |
+| os | os/event.xi | 91 | `epoll_close` | `EX-2` | `pub fn epoll_close(ep: Int) -> Unit {` |
+| os | os/event.xi | 99 | `kqueue_create` | `EX-2` | `pub fn kqueue_create() -> Result[Int, Str] {` |
+| os | os/event.xi | 105 | `kqueue_add_read` | `EX-2` | `pub fn kqueue_add_read(kq: Int, fd: Int) -> Unit {` |
+| os | os/event.xi | 112 | `kqueue_add_write` | `EX-2` | `pub fn kqueue_add_write(kq: Int, fd: Int) -> Unit {` |
+| os | os/event.xi | 120 | `kqueue_wait` | `EX-2` | `pub fn kqueue_wait(kq: Int, timeout_ms: Int) -> Result[Vec[KEvent], Str] {` |
+| os | os/event.xi | 128 | `kqueue_close` | `EX-2` | `pub fn kqueue_close(kq: Int) -> Unit {` |
+| os | os/event.xi | 136 | `eventfd_new` | `EX-2` | `pub fn eventfd_new(init: Int) -> Result[Int, Str] {` |
+| os | os/event.xi | 144 | `eventfd_read` | `EX-2` | `pub fn eventfd_read(fd: Int) -> Result[Int, Str] {` |
+| os | os/event.xi | 152 | `eventfd_write` | `EX-2` | `pub fn eventfd_write(fd: Int, value: Int) -> Result[Unit, Str] {` |
+| os | os/event.xi | 162 | `timerfd_new` | `EX-2` | `pub fn timerfd_new() -> Result[Int, Str] {` |
+| os | os/event.xi | 169 | `timerfd_set` | `EX-2` | `pub fn timerfd_set(fd: Int, ms: Int) -> Result[Unit, Str] {` |
+| os | os/event.xi | 179 | `signalfd_new` | `EX-2` | `pub fn signalfd_new(signals: &Vec[Int]) -> Result[Int, Str] {` |
+| os | os/event.xi | 188 | `poll` | `EX-2` | `pub fn poll(fds: &Vec[PollFd], timeout_ms: Int) -> Result[Int, Str] {` |
+| os | os/event.xi | 198 | `ppoll` | `EX-2` | `pub fn ppoll(fds: &Vec[PollFd], timeout_ms: Int) -> Result[Int, Str] {` |
+| os | os/event.xi | 208 | `select` | `EX-2` | `pub fn select(read_fds: &Vec[Int], write_fds: &Vec[Int], timeout_ms: Int) -> Result[Int, Str] {` |
+| os | os/event.xi | 219 | `pselect` | `EX-2` | `pub fn pselect(read_fds: &Vec[Int], write_fds: &Vec[Int], timeout_ms: Int) -> Result[Int, Str] {` |
+| os | os/fs_ffi.xi | 37 | `symlink` | `EX-2` | `pub fn symlink(target: Str, link: Str) -> Result[Unit, Str] {` |
+| os | os/fs_ffi.xi | 46 | `readlink` | `EX-2` | `pub fn readlink(path: Str) -> Result[Str, Str] {` |
+| os | os/fs_ffi.xi | 53 | `is_symlink` | `EX-2` | `pub fn is_symlink(path: Str) -> Bool {` |
+| os | os/fs_ffi.xi | 61 | `hard_link` | `EX-2` | `pub fn hard_link(old: Str, new: Str) -> Result[Unit, Str] {` |
+| os | os/fs_ffi.xi | 70 | `chown` | `EX-2` | `pub fn chown(path: Str, uid: Int, gid: Int) -> Result[Unit, Str] {` |
+| os | os/fs_ffi.xi | 181 | `dup` | `EX-2` | `pub fn dup(fd: Int) -> Result[Int, Str] {` |
+| os | os/fs_ffi.xi | 189 | `dup2` | `EX-2` | `pub fn dup2(old: Int, new: Int) -> Result[Int, Str] {` |
+| os | os/fs_ffi.xi | 198 | `truncate` | `EX-2` | `pub fn truncate(path: Str, length: Int) -> Result[Unit, Str] {` |
+| os | os/fs_ffi.xi | 207 | `ftruncate` | `EX-2` | `pub fn ftruncate(fd: Int, length: Int) -> Result[Unit, Str] {` |
+| os | os/fs_ffi.xi | 216 | `fallocate` | `EX-2` | `pub fn fallocate(fd: Int, offset: Int, length: Int) -> Result[Unit, Str] {` |
+| os | os/fs_ffi.xi | 226 | `pread` | `EX-2` | `pub fn pread(fd: Int, offset: Int, length: Int) -> Result[Vec[UInt8], Str] {` |
+| os | os/fs_ffi.xi | 236 | `pwrite` | `EX-2` | `pub fn pwrite(fd: Int, offset: Int, data: &Vec[UInt8]) -> Result[Int, Str] {` |
+| os | os/fs_ffi.xi | 246 | `readv` | `EX-2` | `pub fn readv(fd: Int, buffers: &Vec[Vec[UInt8]]) -> Result[Int, Str] {` |
+| os | os/fs_ffi.xi | 353 | `splice` | `EX-2` | `pub fn splice(in_fd: Int, out_fd: Int, count: Int) -> Result[Int, Str] {` |
+| os | os/fs_ffi.xi | 407 | `mkfifo` | `EX-2` | `pub fn mkfifo(path: Str, mode: Int) -> Result[Unit, Str] {` |
+| os | os/fs_ffi.xi | 416 | `fifo_open` | `EX-2` | `pub fn fifo_open(path: Str) -> Result[Int, Str] {` |
+| os | os/ioctl.xi | 18 | `ioctl` | `EX-2` | `pub fn ioctl(fd: Int, request: Int, arg: Int) -> Result[Int, Str] {` |
+| os | os/ioctl.xi | 28 | `ioctl_get_winsize` | `EX-2` | `pub fn ioctl_get_winsize(fd: Int) -> Result[(Int, Int), Str] {` |
+| os | os/ioctl.xi | 36 | `ioctl_set_nonblock` | `EX-2` | `pub fn ioctl_set_nonblock(fd: Int, on: Bool) -> Result[Unit, Str] {` |
+| os | os/ioctl.xi | 45 | `ioctl_fionread` | `EX-2` | `pub fn ioctl_fionread(fd: Int) -> Result[Int, Str] {` |
+| os | os/lock.xi | 167 | `file_lock_release` | `EX-2` | `pub fn file_lock_release(l: FileLock) {` |
+| os | os/mmap.xi | 296 | `mmap_resize` | `EX-2` | `pub fn mmap_resize(ptr: Int, old_len: Int, new_len: Int) -> Result[Int, Str] {` |
+| os | os/os.xi | 503 | `FileWatcher.close` | `EX-2` | `pub fn FileWatcher.close(self) {` |
+| os | os/os.xi | 741 | `sleep_millis` | `EX-2` | `pub fn sleep_millis(ms: Int) {` |
+| os | os/proc_ffi.xi | 388 | `fork` | `EX-2` | `pub fn fork() -> Result[Int, Str] {` |
+| os | os/proc_ffi.xi | 396 | `waitpid` | `EX-2` | `pub fn waitpid(pid: Int, options: Int) -> Result[Int, Str] {` |
+| os | os/proc_ffi.xi | 405 | `wait` | `EX-2` | `pub fn wait() -> Result[Int, Str] {` |
+| os | os/proc_ffi.xi | 414 | `execv` | `EX-2` | `pub fn execv(path: Str, args: &Vec[Str]) -> Result[Int, Str] {` |
+| os | os/proc_ffi.xi | 423 | `execvp` | `EX-2` | `pub fn execvp(file: Str, args: &Vec[Str]) -> Result[Int, Str] {` |
+| os | os/proc_ffi.xi | 441 | `getppid` | `EX-2` | `pub fn getppid() -> Int {` |
+| os | os/proc_ffi.xi | 447 | `getsid` | `EX-2` | `pub fn getsid(pid: Int) -> Int {` |
+| os | os/proc_ffi.xi | 456 | `raise` | `EX-2` | `pub fn raise(sig: Int) -> Result[Unit, Str] {` |
+| os | os/proc_ffi.xi | 484 | `process_status` | `EX-2` | `pub fn process_status(pid: Int) -> Option[Int] {` |
+| os | os/sync_io.xi | 103 | `read_until_eof` | `EX-2` | `pub fn read_until_eof(fd: Int) -> Result[Vec[UInt8], Str] {` |
+| os | os/sync_io.xi | 111 | `read_line_buffered` | `EX-2` | `pub fn read_line_buffered(fd: Int) -> Result[Str, Str] {` |
+| os | os/sync_io.xi | 119 | `copy_fd` | `EX-2` | `pub fn copy_fd(src: Int, dst: Int) -> Result[Int, Str] {` |
+| os | os/sync_io.xi | 128 | `copy_fd_n` | `EX-2` | `pub fn copy_fd_n(src: Int, dst: Int, n: Int) -> Result[Int, Str] {` |
+| os | os/sync_io.xi | 138 | `flush_fd` | `EX-2` | `pub fn flush_fd(fd: Int) -> Result[Unit, Str] {` |
+| os | os/sync_io.xi | 263 | `file_advise` | `EX-2` | `pub fn file_advise(fd: Int, offset: Int, length: Int, advice: Int) -> Result[Unit, Str] {` |
+| os | os/sync_io.xi | 274 | `file_allocate` | `EX-2` | `pub fn file_allocate(fd: Int, offset: Int, length: Int) -> Result[Unit, Str] {` |
+| os | os/term.xi | 24 | `term_is_tty` | `EX-2` | `pub fn term_is_tty(fd: Int) -> Bool {` |
+| os | os/term.xi | 97 | `term_width` | `EX-2` | `pub fn term_width() -> Int {` |
+| os | os/terminal.xi | 31 | `isatty` | `EX-2` | `pub fn isatty(fd: Int) -> Bool {` |
+| os | os/terminal.xi | 39 | `tty_name` | `EX-2` | `pub fn tty_name(fd: Int) -> Result[Str, Str] {` |
+| os | os/terminal.xi | 47 | `pty_open` | `EX-2` | `pub fn pty_open() -> Result[(Int, Int), Str] {` |
+| os | os/terminal.xi | 53 | `pty_close` | `EX-2` | `pub fn pty_close(master: Int, slave: Int) -> Unit {` |
+| os | os/terminal.xi | 61 | `termios_get` | `EX-2` | `pub fn termios_get(fd: Int) -> Result[Termios, Str] {` |
+| os | os/terminal.xi | 69 | `termios_set` | `EX-2` | `pub fn termios_set(fd: Int, t: Termios) -> Result[Unit, Str] {` |
+| os | os/terminal.xi | 78 | `raw_mode` | `EX-2` | `pub fn raw_mode(fd: Int) -> Result[Termios, Str] {` |
+| os | os/terminal.xi | 86 | `restore_mode` | `EX-2` | `pub fn restore_mode(fd: Int, t: Termios) -> Result[Unit, Str] {` |
+| os | os/terminal.xi | 95 | `cbreak_mode` | `EX-2` | `pub fn cbreak_mode(fd: Int) -> Result[Termios, Str] {` |
+| os | os/terminal.xi | 103 | `canonical_mode` | `EX-2` | `pub fn canonical_mode(fd: Int) -> Result[Termios, Str] {` |
+| os | os/terminal.xi | 111 | `nonblock` | `EX-2` | `pub fn nonblock(fd: Int) -> Result[Unit, Str] {` |
+| os | os/terminal.xi | 119 | `blocking` | `EX-2` | `pub fn blocking(fd: Int) -> Result[Unit, Str] {` |
+| os | os/terminal.xi | 127 | `winsize` | `EX-2` | `pub fn winsize(fd: Int) -> Result[(Int, Int), Str] {` |
+| os | os/terminal.xi | 135 | `set_winsize` | `EX-2` | `pub fn set_winsize(fd: Int, rows: Int, cols: Int) -> Result[Unit, Str] {` |
+| os | os/terminal.xi | 144 | `terminal_width` | `EX-2` | `pub fn terminal_width() -> Int {` |
+| os | os/terminal.xi | 150 | `terminal_height` | `EX-2` | `pub fn terminal_height() -> Int {` |
+| os | os/unix.xi | 21 | `unix_umask` | `EX-2` | `pub fn unix_umask(mask: Int) -> Int {` |
+| os | os/unix.xi | 28 | `unix_uid` | `EX-2` | `pub fn unix_uid() -> Int {` |
+| os | os/unix.xi | 34 | `unix_gid` | `EX-2` | `pub fn unix_gid() -> Int {` |
+| os | os/unix.xi | 41 | `unix_username` | `EX-2` | `pub fn unix_username(uid: Int) -> Result[Str, Str] {` |
+| os | os/unix.xi | 49 | `unix_groupname` | `EX-2` | `pub fn unix_groupname(gid: Int) -> Result[Str, Str] {` |
+| os | os/unix.xi | 69 | `unix_hostname` | `EX-2` | `pub fn unix_hostname() -> Str {` |
+| os | os/unix.xi | 75 | `unix_domainname` | `EX-2` | `pub fn unix_domainname() -> Str {` |
+| os | os/unix.xi | 81 | `unix_uptime` | `EX-2` | `pub fn unix_uptime() -> Int {` |
+| os | os/unix.xi | 87 | `unix_loadavg` | `EX-2` | `pub fn unix_loadavg() -> (Float64, Float64, Float64) {` |
+| os | os/unix.xi | 93 | `unix_sysconf` | `EX-2` | `pub fn unix_sysconf(name: Int) -> Int {` |
+| os | os/unix.xi | 100 | `unix_pathconf` | `EX-2` | `pub fn unix_pathconf(path: Str, name: Int) -> Int {` |
+| os | os/unix.xi | 108 | `unix_getrlimit` | `EX-2` | `pub fn unix_getrlimit(resource: Int) -> (Int, Int) {` |
+| os | os/unix.xi | 116 | `unix_setrlimit` | `EX-2` | `pub fn unix_setrlimit(resource: Int, soft: Int, hard: Int) -> Result[Unit, Str] {` |
+| os | os/unix.xi | 126 | `unix_utime` | `EX-2` | `pub fn unix_utime(path: Str, atime: Int, mtime: Int) -> Result[Unit, Str] {` |
+| os | os/unix.xi | 136 | `unix_chroot` | `EX-2` | `pub fn unix_chroot(path: Str) -> Result[Unit, Str] {` |
+| os | os/unix.xi | 144 | `unix_nice` | `EX-2` | `pub fn unix_nice(inc: Int) -> Result[Int, Str] {` |
+| os | os/watch.xi | 154 | `watch_close` | `EX-2` | `pub fn watch_close(handle: Int) {` |
+| os | os/win.xi | 22 | `win_registry_read` | `EX-2` | `pub fn win_registry_read(hive: Int, path: Str, name: Str) -> Result[Str, Str] {` |
+| os | os/win.xi | 32 | `win_registry_write` | `EX-2` | `pub fn win_registry_write(hive: Int, path: Str, name: Str, value: Str) -> Result[Unit, Str] {` |
+| os | os/win.xi | 43 | `win_registry_delete` | `EX-2` | `pub fn win_registry_delete(hive: Int, path: Str, name: Str) -> Result[Unit, Str] {` |
+| os | os/win.xi | 66 | `win_set_environment_var` | `EX-2` | `pub fn win_set_environment_var(name: Str, value: Str) -> Result[Unit, Str] {` |
+| os | os/win.xi | 74 | `win_service_status` | `EX-2` | `pub fn win_service_status(name: Str) -> Str {` |
+| os | os/win.xi | 82 | `win_service_start` | `EX-2` | `pub fn win_service_start(name: Str) -> Result[Unit, Str] {` |
+| os | os/win.xi | 90 | `win_service_stop` | `EX-2` | `pub fn win_service_stop(name: Str) -> Result[Unit, Str] {` |
+| os | os/win.xi | 98 | `win_shell_execute` | `EX-2` | `pub fn win_shell_execute(verb: Str, file: Str, args: Str) -> Result[Int, Str] {` |
+| os | os/win.xi | 117 | `win_is_admin` | `EX-2` | `pub fn win_is_admin() -> Bool {` |
 | serialize | serialize/json.xi | 924 | `json_get` | `EX-3` | `pub fn json_get(v: JsonValue, key: Str) -> Option[JsonValue] {` |
 | serialize | serialize/serialize.xi | 196 | `to_json` | `EX-1` | `pub fn to_json[T: Serialize](value: T) -> Result[Str, SerializeError] {` |
 | serialize | serialize/serialize.xi | 201 | `from_json` | `EX-1` | `pub fn from_json[T: Deserialize](s: Str) -> Result[T, SerializeError] {` |

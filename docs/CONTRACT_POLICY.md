@@ -213,8 +213,8 @@ Measured by `tools/coverage_scan.ps1` on `main`:
 
 - 44 modules, 9,449 functions, 6,992 public functions.
 - 9,247 clauses; 6,716 public functions covered (96.1%).
-- 276 uncovered public functions in 7 modules: 205 EX-0 (os 111, math 94)
-  and 71 per-function exemptions (iter 54, serialize 6, thread 5, ffi 4,
+- 276 uncovered public functions in 7 modules: 94 EX-0 (math) and 182
+  per-function exemptions (os 111, iter 54, serialize 6, thread 5, ffi 4,
   format 2). The nine format ANSI helpers now carry constant clauses.
 - Signature: `GLOBAL: fns=9449  pubFns=6992  clauses=9247  pubCovered=6716`;
   `pub-with-clause = 96.1%`.
