@@ -35,9 +35,18 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `bigint_div_mod(-16,97)` returning +16; fixed in `xiom/num/bigint.xi`
   (remainder keeps the dividend sign) with `smoke_bigint` case 22.
   Remaining: observe the first nightly run + 48 h triage.
-- **A1 (in_progress):** nightly `sanitizers.yml` (memory + leak audit) green
-  run `42242340821`; `tools/run_sanitizers.ps1 -CompileOnly/-Leaks`. Next:
-  broaden to the full corpus, Windows ASan, shrink the leak baseline.
+- **A1 (in_progress, block 338):** nightly `sanitizers.yml` (memory + leak
+  audit) green run `42242340821`; `run_sanitizers.ps1` now has
+  `-MemoryFiles`/`-LeakFiles`. Memory lane broadened to 15 files (adds the
+  three A3 fuzz targets); leak lane stays on the 12 baselined files until
+  the first nightly ASan run records the fuzz budgets. Local compile-only
+  memory 15/15, leak 12/12. Next: first nightly run, record/add the fuzz
+  leak budgets, Windows ASan, shrink the baseline.
+- **G3 (in_progress, block 339):** `tools/check_release_state.ps1` guards
+  annotated-tag ancestry, no merge commits after the tag,
+  package.xi/release-notes/CHANGELOG agreement, and a concrete
+  `COMPILER_VERSION`; wired into the CI static job with `fetch-depth: 0`.
+  Remaining: compiler+stdlib pair CI and pin/version automation.
 - **Queue:** 1551 OPEN (compiler Str reassignment; net smokes carved out);
   1709 FIXED (ref accessors; PULSE verify pending); 1625 info open;
   2202 compiler Send/Sync. 1531/1807/wishlist33 external.
@@ -66,22 +75,30 @@ STATE (2026-11-06):
 - A3 (in_progress): parser fuzz + smoke_fuzz_bignum/ffi/encodings landed;
   nightly fuzz.yml (3 seeds x 2000); bigint_div_mod(-16,97) sign found and
   fixed with smoke_bigint case 22. First nightly run pending.
-- A1 (in_progress): sanitizers.yml green run 42242340821; next broaden the
-  corpus, Windows ASan, shrink the leak baseline.
+- A1 (in_progress): memory lane broadened to 15 files (A3 fuzz targets);
+  leak lane 12 baselined; local compile-only 15/15 + 12/12. First nightly
+  run with the broadened lane pending; then record leak budgets, Windows
+  ASan, shrink the baseline.
+- G3 (in_progress): release-state guard live in CI; remaining
+  compiler+stdlib pair CI + pin/version automation.
 - Queue: 1551 OPEN (compiler Str); 1709 FIXED (PULSE verify); 1625 info;
   2202 compiler Send/Sync. 1531/1807/wishlist33 external.
 
 PRIORITY (roadmap; no release cuts):
 1. A3: observe the first nightly fuzz run; keep the parser/bignum/encoding/
    FFI corpora green and triage any crash within 48 h.
-2. A1: broaden sanitizers toward the full corpus (including the new fuzz
-   files); Windows ASan; keep the leak audit green and shrink the baseline.
-3. B2: reclassify the 285 EX-0 functions to clauses or EX-1..EX-5; retire
-   EX-0; extend the checker to per-function records.
-4. G3: release automation. E4 same-leaf dedup before 1.0.
+2. A1: observe the first nightly sanitizer run with the 15-file memory lane;
+   record the fuzz-target leak budgets, then add them to the leak lane;
+   Windows ASan; keep the leak audit green and shrink the baseline.
+3. G3: add compiler+stdlib pair CI and pin/version automation (the
+   release-state guard is live).
+4. B2: reclassify the 285 EX-0 functions to clauses or EX-1..EX-5; retire
+   EX-0; extend the checker to per-function records. E4 same-leaf dedup
+   before 1.0.
 5. X1/X5 growth policy drafts; expansion after 1.0.
-6. Run tools/check_roadmap.ps1 and tools/check_contract_policy.ps1 after
-   edits; update rows with evidence and append to the review log.
+6. Run tools/check_roadmap.ps1, tools/check_contract_policy.ps1, and
+   tools/check_release_state.ps1 after edits; update rows with evidence and
+   append to the review log.
 
 RULES:
 - No tag/release without a fresh compiler-relay GO; released tags are
@@ -4650,6 +4667,34 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-11-06 block 339 (G3: release-state guard for tag ancestry, linear history, version/notes/CHANGELOG, concrete pin)**
+- **Checker:** `tools/check_release_state.ps1` verifies the latest
+  `stdlib-v*` tag is annotated and an ancestor of `HEAD`, `package.xi` is
+  not behind it (ahead is allowed during release prep), no merge commits
+  exist after the tag, `release-notes/v<ver>.md` and the CHANGELOG entry
+  exist, and `COMPILER_VERSION` is a concrete `vX.Y.Z`.
+- **CI:** wired into the static job; the static checkout now uses
+  `fetch-depth: 0` so tags and history are present, and it checks the PR
+  head SHA (not the synthetic merge commit) for the merge-count guard.
+- **Validation:** local main passes (`tag=stdlib-v0.65.6`, package 0.65.6,
+  compiler v0.65.6, merges_after_tag=0). Negative tests: `HEAD` at the
+  tag's parent fails the ancestry check; a missing tag prefix fails.
+- **Remaining G3:** compiler+stdlib pair CI and pin/version automation.
+- **No release cut.** Next: pair CI/pin automation, E4, X1/X5.
+
+**SESSION 2026-11-06 block 338 (A1: sanitizer memory lane broadened to the A3 fuzz targets; leak lane kept baselined)**
+- **Runner:** `tools/run_sanitizers.ps1` now has `-Files` (base),
+  `-MemoryFiles` (default base + the three A3 fuzz targets), and
+  `-LeakFiles` (default base). The leak lane deliberately excludes the new
+  targets until a nightly ASan run records their leak budget; they do not
+  get a silent 0-byte budget.
+- **Validation:** local v0.65.6 archive, `-CompileOnly`: memory lane
+  **15/15**, leak lane **12/12**.
+- **Next:** first nightly sanitizer run with the broadened memory lane;
+  record the fuzz-target leak budgets, then add them to the leak lane;
+  Windows ASan; shrink the compiler drop residual baseline.
+- **No release cut.**
 
 **SESSION 2026-11-06 block 337 (A3: bigint/bigfloat + encodings + FFI fuzz targets; nightly fuzz.yml; bigint div_mod sign fix)**
 - **Targets:** `tests/smoke/smoke_fuzz_bignum.xi` (bigint str/hex/base36

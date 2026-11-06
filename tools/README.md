@@ -11,6 +11,7 @@ All scripts are repo-relative: they work from any CWD and from CI checkouts.
 | Corpus | `run_smokes.ps1` / `run_smokes.sh` | compile + run every `tests/smoke/*.xi`; nonzero exit on any failure |
 | Coverage ratchet | `coverage_scan.ps1` | contract-clause coverage never falls below the recorded floors |
 | Contract policy | `check_contract_policy.ps1` | every public fn is covered or in the reviewed EX-0 tail; the ownership map, exemption registry, and scanner agree (`docs/CONTRACT_POLICY.md`) |
+| Release state | `check_release_state.ps1` | the last release tag is annotated and an ancestor of HEAD; package.xi/release notes/CHANGELOG agree; no merge commits after the tag; `COMPILER_VERSION` is concrete |
 | Bare-name scan | `barename_scan.ps1` | strict catalog-body findings across all manifest modules (0 expected) |
 | Module check | `check_modules.ps1` | `xiom --check` type-checks every manifest module |
 | Roadmap tracker | `check_roadmap.ps1` | roadmap rows have valid unique IDs, horizons, statuses, exit criteria, and evidence on `in_progress`/`blocked`/`done` |
@@ -61,6 +62,9 @@ pwsh tools/coverage_scan.ps1 -DumpFloors tools/coverage_floors67.json
 
 # contract policy (B1): scanner + exemption registry + ownership map agree
 pwsh tools/check_contract_policy.ps1
+
+# release state (G3): last tag on HEAD, version/notes/CHANGELOG, linear history
+pwsh tools/check_release_state.ps1
 
 # strict bare-name gate over all 509 manifest modules
 pwsh tools/barename_scan.ps1 -Compiler C:\path\to\xiom.exe

@@ -24,26 +24,41 @@ param(
   [string]$Compiler = "",
   [ValidateSet("address", "undefined", "leak")]
   [string[]]$Sanitizers = @("address", "undefined"),
-  [string[]]$Files = @(
-    "tests/smoke/smoke_alloc.xi",
-    "tests/smoke/smoke_alloc_edge.xi",
-    "tests/smoke/smoke_collections_map_edge.xi",
-    "tests/smoke/smoke_collections_vec_insert_remove.xi",
-    "tests/smoke/smoke_stress_fuzz_parsers.xi",
-    "tests/smoke/smoke_stress_serialize_json_nested.xi",
-    "tests/smoke/smoke_stress_serialize_json_parse_nested.xi",
-    "tests/smoke/smoke_string_builder.xi",
-    "tests/smoke/smoke_string_unicode.xi",
-    "tools/probes/p_json_1704_obj.xi",
-    "tools/probes/p_json_ref_api.xi",
-    "tools/probes/p_json_parse_depth_cap.xi"
-  ),
+  [string[]]$Files = @(),
+  [string[]]$MemoryFiles = @(),
+  [string[]]$LeakFiles = @(),
   [string]$WorkDir = "",
   [string]$Json = "",
   [string]$LeakBaseline = "",
   [switch]$Leaks,
   [switch]$CompileOnly
 )
+
+# Default sets. The memory lane includes the A3 fuzz targets; the leak lane
+# keeps the original baselined files until a nightly ASan run records a leak
+# budget for the fuzz targets (do not give them a silent 0-byte budget).
+$defaultFiles = @(
+  "tests/smoke/smoke_alloc.xi",
+  "tests/smoke/smoke_alloc_edge.xi",
+  "tests/smoke/smoke_collections_map_edge.xi",
+  "tests/smoke/smoke_collections_vec_insert_remove.xi",
+  "tests/smoke/smoke_stress_fuzz_parsers.xi",
+  "tests/smoke/smoke_stress_serialize_json_nested.xi",
+  "tests/smoke/smoke_stress_serialize_json_parse_nested.xi",
+  "tests/smoke/smoke_string_builder.xi",
+  "tests/smoke/smoke_string_unicode.xi",
+  "tools/probes/p_json_1704_obj.xi",
+  "tools/probes/p_json_ref_api.xi",
+  "tools/probes/p_json_parse_depth_cap.xi"
+)
+$fuzzFiles = @(
+  "tests/smoke/smoke_fuzz_bignum.xi",
+  "tests/smoke/smoke_fuzz_ffi.xi",
+  "tests/smoke/smoke_fuzz_encodings.xi"
+)
+if ($Files.Count -eq 0) { $Files = $defaultFiles }
+if ($MemoryFiles.Count -eq 0) { $MemoryFiles = @($Files) + $fuzzFiles }
+if ($LeakFiles.Count -eq 0) { $LeakFiles = $Files }
 
 $ErrorActionPreference = "Continue"
 $repoRoot = Split-Path -Parent $PSScriptRoot
@@ -76,7 +91,10 @@ $compiled = 0
 foreach ($san in $Sanitizers) {
   $dir = Join-Path $WorkDir $san
   New-Item -ItemType Directory -Path $dir -Force | Out-Null
-  foreach ($rel in $Files) {
+  $activeFiles = $Files
+  if ($Leaks) { $activeFiles = $LeakFiles }
+  elseif ($MemoryFiles.Count -gt 0) { $activeFiles = $MemoryFiles }
+  foreach ($rel in $activeFiles) {
     $src = Join-Path $repoRoot $rel
     $name = [System.IO.Path]::GetFileNameWithoutExtension($rel)
     $exe = Join-Path $dir $name
@@ -138,13 +156,15 @@ foreach ($san in $Sanitizers) {
   }
 }
 
+$summaryFiles = $MemoryFiles
+if ($Leaks) { $summaryFiles = $LeakFiles }
 $summary = [pscustomobject]@{
   generated = (Get-Date).ToUniversalTime().ToString("o")
   compiler = $Compiler
   sanitizers = $Sanitizers
   compile_only = [bool]$CompileOnly
   leak_audit = [bool]$Leaks
-  files = $Files.Count
+  files = $summaryFiles.Count
   compiled = $compiled
   failed = $failed
   results = $results
@@ -153,6 +173,6 @@ if ($Json -ne "") {
   $summary | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $Json -Encoding utf8
 }
 
-Write-Output ("sanitizers: {0}  files={1} compiled={2} failed={3} leak_audit={4}" -f ($Sanitizers -join ","), $Files.Count, $compiled, $failed, [bool]$Leaks)
+Write-Output ("sanitizers: {0}  files={1} compiled={2} failed={3} leak_audit={4}" -f ($Sanitizers -join ","), $summaryFiles.Count, $compiled, $failed, [bool]$Leaks)
 if ($failed -ne 0) { exit 1 }
 exit 0
