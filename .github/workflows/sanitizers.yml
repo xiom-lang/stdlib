@@ -1,6 +1,10 @@
 # Sanitizer lane (roadmap A1): focused ASan/UBSan corpus on the pinned
 # compiler. Kept out of PR CI so the Tier-1 minutes stay sustainable; runs
 # nightly and on dispatch. Broadening the file set is a roadmap task.
+#
+# Two lanes:
+#   - memory errors (ASan/UBSan, leaks off)       -> must be clean
+#   - leak audit (ASan LSan) vs the recorded budget -> fails on growth only
 name: XIOM Stdlib Sanitizers
 
 on:
@@ -29,14 +33,20 @@ jobs:
         with:
           ref: ${{ steps.pin.outputs.ref }}
 
-      - name: Sanitizer smoke set
+      - name: Memory errors (ASan/UBSan)
         shell: pwsh
         run: ./tools/run_sanitizers.ps1 -Compiler '${{ steps.compiler.outputs.binary }}' -Json sanitizer-results.json
+
+      - name: Leak audit (ASan LSan baseline)
+        shell: pwsh
+        run: ./tools/run_sanitizers.ps1 -Compiler '${{ steps.compiler.outputs.binary }}' -Sanitizers address -Leaks -Json sanitizer-leaks.json
 
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: sanitizer-results
-          path: sanitizer-results.json
+          path: |
+            sanitizer-results.json
+            sanitizer-leaks.json
           if-no-files-found: ignore

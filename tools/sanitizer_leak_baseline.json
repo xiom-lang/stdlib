@@ -1,0 +1,16 @@
+{
+  "_note": "Known LSan leak budget for the A1 nightly. These are the compiler drop residual (m375 class, tracked in REL-20261104-1551-stdlib), not suppressions. The leak audit fails on growth beyond budget*1.1 + 64 bytes; shrink entries as the compiler improves.",
+  "_observed": "2026-11-06 sanitizer run 42241569479 (compiler v0.65.6)",
+  "tests/smoke/smoke_alloc.xi": 0,
+  "tests/smoke/smoke_alloc_edge.xi": 64,
+  "tests/smoke/smoke_collections_map_edge.xi": 1024,
+  "tests/smoke/smoke_collections_vec_insert_remove.xi": 0,
+  "tests/smoke/smoke_stress_fuzz_parsers.xi": 3147703,
+  "tests/smoke/smoke_stress_serialize_json_nested.xi": 20421,
+  "tests/smoke/smoke_stress_serialize_json_parse_nested.xi": 5701,
+  "tests/smoke/smoke_string_builder.xi": 81,
+  "tests/smoke/smoke_string_unicode.xi": 1651,
+  "tools/probes/p_json_1704_obj.xi": 260032,
+  "tools/probes/p_json_ref_api.xi": 203442,
+  "tools/probes/p_json_parse_depth_cap.xi": 229376
+}
