@@ -7,7 +7,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 Generated: 2026-11-06 by `tools/contract_tail_inventory.ps1`.
 Authoritative counts: `tools/coverage_scan.ps1`. Policy: `docs/CONTRACT_POLICY.md`.
 
-**285 uncovered public functions across 7 modules: 281 EX-0 and 4 per-function exemptions.** Each row becomes a clause or an EX-1..EX-5 exemption in B2; EX-0 is closed to new entries.
+**285 uncovered public functions across 7 modules: 276 EX-0 and 9 per-function exemptions.** Each row becomes a clause or an EX-1..EX-5 exemption in B2; EX-0 is closed to new entries.
 
 | Module | Uncovered | EX-0 | Per-function |
 |---|---:|---:|---:|
@@ -17,7 +17,7 @@ Authoritative counts: `tools/coverage_scan.ps1`. Policy: `docs/CONTRACT_POLICY.m
 | math | 94 | 94 | 0 |
 | os | 111 | 111 | 0 |
 | serialize | 6 | 6 | 0 |
-| thread | 5 | 5 | 0 |
+| thread | 5 | 0 | 5 |
 
 ## Functions
 
@@ -303,9 +303,9 @@ Authoritative counts: `tools/coverage_scan.ps1`. Policy: `docs/CONTRACT_POLICY.m
 | serialize | serialize/serialize.xi | 563 | `JsonValue` | `EX-0` | `pub fn JsonValue.get(self, key: Str) -> Option[JsonValue] {` |
 | serialize | serialize/yaml_lite.xi | 233 | `yaml_stringify` | `EX-0` | `pub fn yaml_stringify(v: YamlValue) -> Str {` |
 | serialize | serialize/yaml_lite.xi | 389 | `yaml_get` | `EX-0` | `pub fn yaml_get(v: YamlValue, key: Str) -> Option[YamlValue] {` |
-| thread | thread/spawn.xi | 142 | `sleep_ms` | `EX-0` | `pub fn sleep_ms(ms: Int) {` |
-| thread | thread/spawn.xi | 183 | `is_main_thread` | `EX-0` | `pub fn is_main_thread() -> Bool {` |
-| thread | thread/thread.xi | 165 | `scope` | `EX-0` | `pub fn scope[T](f: fn(&Scope) -> T) -> T {` |
-| thread | thread/thread.xi | 226 | `thread_yield` | `EX-0` | `pub fn thread_yield() {` |
-| thread | thread/thread.xi | 236 | `thread_parallel_for` | `EX-0` | `pub fn thread_parallel_for(start: Int, end: Int, f: fn(Int)) {` |
+| thread | thread/spawn.xi | 142 | `sleep_ms` | `EX-1` | `pub fn sleep_ms(ms: Int) {` |
+| thread | thread/spawn.xi | 183 | `is_main_thread` | `EX-1` | `pub fn is_main_thread() -> Bool {` |
+| thread | thread/thread.xi | 165 | `scope` | `EX-2` | `pub fn scope[T](f: fn(&Scope) -> T) -> T {` |
+| thread | thread/thread.xi | 226 | `thread_yield` | `EX-1` | `pub fn thread_yield() {` |
+| thread | thread/thread.xi | 236 | `thread_parallel_for` | `EX-1` | `pub fn thread_parallel_for(start: Int, end: Int, f: fn(Int)) {` |
 

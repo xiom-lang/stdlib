@@ -65,7 +65,7 @@ foreach ($m in @($exDoc.modules)) {
       $srcPath = Join-Path $repoRoot $relPath
       if (-not (Test-Path -LiteralPath $srcPath)) {
         $errs.Add("registry ${name}.${fn}: path not found: $relPath")
-      } elseif ((Get-Content -LiteralPath $srcPath -Raw) -notmatch ('fn\s+' + [regex]::Escape($fn) + '\s*\(')) {
+      } elseif ((Get-Content -LiteralPath $srcPath -Raw) -notmatch ('fn\s+' + [regex]::Escape($fn) + '(\[[^\]]*\])?\s*\(')) {
         $errs.Add("registry ${name}.${fn}: function not found in $relPath")
       }
     }

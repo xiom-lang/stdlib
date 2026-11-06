@@ -24,11 +24,11 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   os 111, math 94, thread 5, ffi 4, serialize 6, format 11), 0 pending.
   EX-0 is closed to new entries; B2 reclassifies it per function and
   ratchets to 100% counted.
-- **B2 (in_progress, blocks 341/342):** `docs/CONTRACT_TAIL.md` tracks all
-  285 uncovered functions. ffi 4/4 reclassified to per-function EX-2/EX-1;
-  the tail is now **281 EX-0 + 4 per-function**. The checker validates each
-  function/path, and the inventory shows the category per row. Next:
-  reclassify the remaining 281 (thread 5, serialize 6, format 11 are next).
+- **B2 (in_progress, blocks 341/342/343):** `docs/CONTRACT_TAIL.md` tracks
+  all 285 uncovered functions. ffi 4/4 and thread 5/5 are now per-function
+  EX-2/EX-1; the tail is **276 EX-0 + 9 per-function**. The checker validates
+  each function/path (including generics), and the inventory shows the
+  category per row. Next: serialize 6, format 11, then iter/os/math.
 - **Readiness 10/10:** unchanged (gate 9 closed 2026-11-04; PULSE verified
   1704 on the published v0.65.6). v0.65.6 shipped: tag `6fdde4e`, release
   41873341844, registry 41873341859 (xiom-std 0.65.6, compiler v0.65.6).
@@ -71,7 +71,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\stdlib pull --ff-only origin main
   git -C E:\xiom-lang\xiom-relays pull --ff-only
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 121 + blocks 342/341/340.
+Read docs/stdlib_session.md snapshot 121 + blocks 343/342/341.
 
 STATE (2026-11-06):
 - READINESS 10/10; v0.65.6 shipped (tag 6fdde4e; release 41873341844;
@@ -82,8 +82,9 @@ STATE (2026-11-06):
   tools/contract_exemptions.json; checker tools/check_contract_policy.ps1
   green in the CI static job.
 - B2 (in_progress): docs/CONTRACT_TAIL.md tracks 285 uncovered functions;
-  ffi 4/4 is per-function EX-2/EX-1, leaving 281 EX-0. Checker validates
-  per-function function/path; inventory shows Category. Next: remaining 281.
+  ffi 4/4 and thread 5/5 are per-function EX-2/EX-1, leaving 276 EX-0.
+  Checker validates per-function function/path (incl. generics); inventory
+  shows Category. Next: serialize 6, format 11, then iter/os/math.
 - A3 (in_progress): parser fuzz + smoke_fuzz_bignum/ffi/encodings landed;
   nightly fuzz.yml (3 seeds x 2000); bigint_div_mod(-16,97) sign found and
   fixed with smoke_bigint case 22. First nightly run pending.
@@ -105,9 +106,9 @@ PRIORITY (roadmap; no release cuts):
    Windows ASan; keep the leak audit green and shrink the baseline.
 3. G3: process the compiler ack on REL-20261106-1801-stdlib; add
    pin/version automation (the release-state and pair guards are live).
-4. B2: work the remaining 281 EX-0 rows in docs/CONTRACT_TAIL.md into
-   clauses or EX-1..EX-5 (ffi is done); retire EX-0. E4 same-leaf dedup
-   before 1.0.
+4. B2: work the remaining 276 EX-0 rows in docs/CONTRACT_TAIL.md into
+   clauses or EX-1..EX-5 (ffi and thread are done); retire EX-0. E4
+   same-leaf dedup before 1.0.
 5. X1/X5 growth policy drafts; expansion after 1.0.
 6. Run tools/check_roadmap.ps1, tools/check_contract_policy.ps1,
    tools/check_release_state.ps1, and tools/check_pair_state.ps1 after
@@ -4681,6 +4682,18 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-11-06 block 343 (B2 second slice: thread 5 reclassified; checker generic-parameter fix)**
+- **Registry:** thread's EX-0 count of 5 is replaced by five per-function
+  entries: `scope` EX-2 (structured concurrency); `sleep_ms`,
+  `is_main_thread`, `thread_yield`, `thread_parallel_for` EX-1 (total
+  runtime helpers). Total stays 285; EX-0 is now 276.
+- **Checker:** the function-existence regex now allows an optional generic
+  parameter list, fixing the false negative on `fn scope[T](...)`.
+- **Inventory:** `docs/CONTRACT_TAIL.md` regenerated as **276 EX-0 + 9
+  per-function** (ffi 4, thread 5).
+- **Map:** `MODULE_OWNERSHIP.md` summary, legend and sign-off note updated.
+- **No release cut.** Next: serialize 6, format 11, then iter/os/math.
 
 **SESSION 2026-11-06 block 342 (B2 first slice: ffi 4 reclassified to per-function EX-2/EX-1; checker and inventory support per-function records)**
 - **Registry:** the ffi EX-0 count of 4 is replaced by four per-function

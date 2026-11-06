@@ -33,11 +33,53 @@
     },
     {
       "module": "thread",
-      "count": 5,
-      "category": "EX-0",
+      "function": "sleep_ms",
+      "path": "xiom/thread/spawn.xi",
+      "category": "EX-1",
       "owner": "stdlib lane",
       "approved": "2026-11-06",
-      "rationale": "gate-8 no-clause tail; runtime-enforced thread/handle invariants. Reclassify per function in B2."
+      "expires": "never",
+      "rationale": "Total sleep helper: negative durations are clamped to 0 and the timing postcondition is outside the clause language."
+    },
+    {
+      "module": "thread",
+      "function": "is_main_thread",
+      "path": "xiom/thread/spawn.xi",
+      "category": "EX-1",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "expires": "never",
+      "rationale": "Total runtime predicate: the Bool identifies the main thread and no stronger postcondition is available."
+    },
+    {
+      "module": "thread",
+      "function": "scope",
+      "path": "xiom/thread/thread.xi",
+      "category": "EX-2",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "expires": "never",
+      "rationale": "Structured-concurrency primitive: the runtime/scope owns join semantics and the callback return is the result."
+    },
+    {
+      "module": "thread",
+      "function": "thread_yield",
+      "path": "xiom/thread/thread.xi",
+      "category": "EX-1",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "expires": "never",
+      "rationale": "Total scheduler hint with no return value; the side effect is not modeled by the clause language."
+    },
+    {
+      "module": "thread",
+      "function": "thread_parallel_for",
+      "path": "xiom/thread/thread.xi",
+      "category": "EX-1",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "expires": "never",
+      "rationale": "Total sequential loop over [start, end); no precondition and the callback carries the effect."
     },
     {
       "module": "ffi",
