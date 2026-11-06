@@ -1,0 +1,48 @@
+# Fuzz lane (roadmap A3): deterministic mutation harnesses for the parsers,
+# bigint/bigfloat, encodings, and FFI boundaries on the pinned compiler.
+# Nightly + dispatch; kept out of PR CI so Tier-1 minutes stay sustainable.
+#
+# The harnesses read XIOM_FUZZ_ITERS (default 120) and XIOM_FUZZ_SEED and
+# run three seeds internally. The nightly value below is deliberately higher
+# than the normal smoke corpus while still bounded (~seconds per target).
+name: XIOM Stdlib Fuzz
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 3 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  fuzz:
+    name: fuzz (ubuntu)
+    runs-on: ubuntu-latest
+    env:
+      XIOM_FUZZ_ITERS: "2000"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Read COMPILER_VERSION
+        id: pin
+        shell: bash
+        run: echo "ref=$(tr -d '\r\n ' < COMPILER_VERSION)" >> "$GITHUB_OUTPUT"
+
+      - name: Build pinned compiler
+        id: compiler
+        uses: ./.github/actions/build-compiler
+        with:
+          ref: ${{ steps.pin.outputs.ref }}
+
+      - name: Fuzz corpus (3 seeds x 2000)
+        shell: pwsh
+        run: ./tools/run_smokes.ps1 -Compiler '${{ steps.compiler.outputs.binary }}' -Filter fuzz -Workers 2 -Json fuzz-results.json
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: fuzz-results
+          path: fuzz-results.json
+          if-no-files-found: ignore

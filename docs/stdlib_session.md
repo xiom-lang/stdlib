@@ -17,7 +17,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 121 (updated 2026-11-06; **B1 CONTRACT POLICY LANDED: `docs/CONTRACT_POLICY.md` + `docs/MODULE_OWNERSHIP.md` (44 modules, 6,992 pub fns, 6,707 covered / 95.9%, 285 EX-0 tail); `tools/contract_exemptions.json`; `tools/check_contract_policy.ps1` green in the CI static job. READINESS 10/10; v0.65.6 SHIPPED. NO release cuts without compiler-relay GO.**)
+## 0A. CONTINUE HERE -- handoff snapshot 121 (updated 2026-11-06; **B1 CONTRACT POLICY + A3 FUZZ WAVE LANDED: `docs/CONTRACT_POLICY.md` + `docs/MODULE_OWNERSHIP.md` (44 modules, 6,992 pub fns, 6,707 covered / 95.9%, 285 EX-0 tail); `tools/contract_exemptions.json`; `tools/check_contract_policy.ps1` green in CI. A3: `smoke_fuzz_bignum`/`smoke_fuzz_ffi`/`smoke_fuzz_encodings` + nightly `fuzz.yml`; fuzz caught and fixed `bigint_div_mod(-16,97)` sign. READINESS 10/10; v0.65.6 SHIPPED. NO release cuts without compiler-relay GO.**)
 
 - **B1 done (block 336):** policy + per-module sign-off map + exemption
   registry + CI checker. 37 modules signed-off, 7 tail-approved (iter 54,
@@ -27,10 +27,14 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 - **Readiness 10/10:** unchanged (gate 9 closed 2026-11-04; PULSE verified
   1704 on the published v0.65.6). v0.65.6 shipped: tag `6fdde4e`, release
   41873341844, registry 41873341859 (xiom-std 0.65.6, compiler v0.65.6).
-- **A3 (in_progress):** json surrogate fix `84c1d73`; depth/unicode edges in
-  `smoke_stress_fuzz_parsers` with qualified `json.*`; 600/600 JSON, 21/21
-  serde smokes, 9/9 JSON probes. Next: bigint/FFI targets + nightly fuzz
-  schedule.
+- **A3 (in_progress, block 337):** json surrogate fix `84c1d73`; parser fuzz
+  600/600; added `smoke_fuzz_bignum` (bigint/bigfloat round-trips +
+  arithmetic invariants), `smoke_fuzz_ffi` (SafePtr/FFIBuffer bounds), and
+  `smoke_fuzz_encodings` (hex/base64/base32/percent), all seed/iteration
+  configurable (3 seeds). Nightly `fuzz.yml` at 3x2000. Fuzz caught
+  `bigint_div_mod(-16,97)` returning +16; fixed in `xiom/num/bigint.xi`
+  (remainder keeps the dividend sign) with `smoke_bigint` case 22.
+  Remaining: observe the first nightly run + 48 h triage.
 - **A1 (in_progress):** nightly `sanitizers.yml` (memory + leak audit) green
   run `42242340821`; `tools/run_sanitizers.ps1 -CompileOnly/-Leaks`. Next:
   broaden to the full corpus, Windows ASan, shrink the leak baseline.
@@ -49,7 +53,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\stdlib pull --ff-only origin main
   git -C E:\xiom-lang\xiom-relays pull --ff-only
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 121 + blocks 336/335/334.
+Read docs/stdlib_session.md snapshot 121 + blocks 337/336/335.
 
 STATE (2026-11-06):
 - READINESS 10/10; v0.65.6 shipped (tag 6fdde4e; release 41873341844;
@@ -59,17 +63,19 @@ STATE (2026-11-06):
   6,992 pub fns, 6,707 covered (95.9%), 285 EX-0 tail; registry
   tools/contract_exemptions.json; checker tools/check_contract_policy.ps1
   green in the CI static job.
-- A3 (in_progress): json surrogate fix 84c1d73; next bigint/FFI targets +
-  nightly fuzz schedule.
+- A3 (in_progress): parser fuzz + smoke_fuzz_bignum/ffi/encodings landed;
+  nightly fuzz.yml (3 seeds x 2000); bigint_div_mod(-16,97) sign found and
+  fixed with smoke_bigint case 22. First nightly run pending.
 - A1 (in_progress): sanitizers.yml green run 42242340821; next broaden the
   corpus, Windows ASan, shrink the leak baseline.
 - Queue: 1551 OPEN (compiler Str); 1709 FIXED (PULSE verify); 1625 info;
   2202 compiler Send/Sync. 1531/1807/wishlist33 external.
 
 PRIORITY (roadmap; no release cuts):
-1. A3: bigint/FFI fuzz targets + nightly schedule; keep JSON edges green.
-2. A1: broaden sanitizers toward the full corpus; Windows ASan; keep the
-   leak audit green and shrink the baseline.
+1. A3: observe the first nightly fuzz run; keep the parser/bignum/encoding/
+   FFI corpora green and triage any crash within 48 h.
+2. A1: broaden sanitizers toward the full corpus (including the new fuzz
+   files); Windows ASan; keep the leak audit green and shrink the baseline.
 3. B2: reclassify the 285 EX-0 functions to clauses or EX-1..EX-5; retire
    EX-0; extend the checker to per-function records.
 4. G3: release automation. E4 same-leaf dedup before 1.0.
@@ -4644,6 +4650,33 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-11-06 block 337 (A3: bigint/bigfloat + encodings + FFI fuzz targets; nightly fuzz.yml; bigint div_mod sign fix)**
+- **Targets:** `tests/smoke/smoke_fuzz_bignum.xi` (bigint str/hex/base36
+  and bigfloat scientific-notation round-trip, arithmetic invariants),
+  `smoke_fuzz_ffi.xi` (SafePtr read/write bounds, fill/copy/to_vec,
+  FFIBuffer capacity/range, ffi_check/ffi_check_ptr), and
+  `smoke_fuzz_encodings.xi` (hex/base64 plain+padded+url/base32/base32hex/
+  percent byte round-trips; text encode/decode; total decoders). All read
+  `XIOM_FUZZ_SEED` / `XIOM_FUZZ_ITERS` and run 3 seeds internally.
+- **Bug found and fixed:** the bignum harness caught
+  `bigint_div_mod(-16, 97)` returning remainder `+16` (the `|a| < |b|`
+  fast path cleared the dividend sign), so `q*b + r == a` failed. Fixed in
+  `xiom/num/bigint.xi` (preserve `a.negative`; truncated-division semantics
+  matches the general path); `bigint_mod(-16, 97)` is now the non-negative
+  `81`. Regression added as `smoke_bigint.xi` case 22. Targeted consumers
+  green: `kat_num_bigint`, `smoke_num_precision`, `smoke_crypto_curves`,
+  `smoke_stress_crypto_rsa_keypair`, `smoke_crypto_known_vectors`,
+  `smoke_crypto`.
+- **Nightly:** `.github/workflows/fuzz.yml` (03:30 UTC + dispatch) builds
+  the pinned compiler and runs `run_smokes.ps1 -Filter fuzz` with
+  `XIOM_FUZZ_ITERS=2000` (3 seeds), uploading `fuzz-results.json`.
+- **Validation:** local v0.65.6 archive: each target 3x1000 green
+  (bignum 1.56 s, ffi 0.93 s, encodings 0.37 s); runner filter 4/4
+  (including the parser fuzz) in 24.2 s at 50 iters. A3 stays
+  `in_progress` until the first scheduled run is observed.
+- **No release cut.** Next: A1 broaden the sanitizer memory lane to the new
+  fuzz files (leak budget separately), then G3/E4.
 
 **SESSION 2026-11-06 block 336 (B1 contract policy: policy + per-module sign-off map + exemption registry; checker green in CI)**
 - **Policy:** `docs/CONTRACT_POLICY.md` -- every public fn needs a
