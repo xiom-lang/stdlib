@@ -66,7 +66,12 @@ foreach ($f in $files) {
         $hc = ([regex]::Matches($header, '(requires|ensures)\s*:')).Count
         if ($hc -eq 0) {
           $name = "(unknown)"
-          if ($line -match '^\s*pub\s+fn\s+([A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)?)') { $name = $Matches[1] }
+          if ($line -match '^\s*pub\s+fn\s+([A-Za-z_][A-Za-z0-9_]*)(?:\[[^\]]*\])?(?:\.([A-Za-z_][A-Za-z0-9_]*))?') {
+            $name = $Matches[1]
+            if ($Matches.Count -ge 3 -and [string]$Matches[2] -ne "") {
+              $name = $name + "." + [string]$Matches[2]
+            }
+          }
           $rel = $f.FullName.Substring($Root.Length).TrimStart('\', '/') -replace '\\', '/'
           $idx = $rel.IndexOfAny([char[]]@('\', '/'))
           $dir = if ($idx -ge 0) { $rel.Substring(0, $idx) } else { '(root)' }
@@ -97,9 +102,17 @@ $fnCategories = @{}
 if (Test-Path -LiteralPath $exPath) {
   $exDoc = Get-Content -LiteralPath $exPath -Raw | ConvertFrom-Json
   foreach ($m in @($exDoc.modules)) {
-    $fn = [string]$m.function
-    if (-not [string]::IsNullOrWhiteSpace($fn)) {
-      $fnCategories[([string]$m.module + "|" + $fn)] = [string]$m.category
+    $mod = [string]$m.module
+    $cat = [string]$m.category
+    if (-not [string]::IsNullOrWhiteSpace([string]$m.function)) {
+      $fnCategories[$mod + "|" + [string]$m.function] = $cat
+    }
+    if ($null -ne $m.functions) {
+      foreach ($x in @($m.functions)) {
+        if (-not [string]::IsNullOrWhiteSpace([string]$x)) {
+          $fnCategories[$mod + "|" + [string]$x] = $cat
+        }
+      }
     }
   }
 }

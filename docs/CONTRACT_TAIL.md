@@ -7,13 +7,13 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 Generated: 2026-11-06 by `tools/contract_tail_inventory.ps1`.
 Authoritative counts: `tools/coverage_scan.ps1`. Policy: `docs/CONTRACT_POLICY.md`.
 
-**276 uncovered public functions across 7 modules: 259 EX-0 and 17 per-function exemptions.** Each row becomes a clause or an EX-1..EX-5 exemption in B2; EX-0 is closed to new entries.
+**276 uncovered public functions across 7 modules: 205 EX-0 and 71 per-function exemptions.** Each row becomes a clause or an EX-1..EX-5 exemption in B2; EX-0 is closed to new entries.
 
 | Module | Uncovered | EX-0 | Per-function |
 |---|---:|---:|---:|
 | ffi | 4 | 0 | 4 |
 | format | 2 | 0 | 2 |
-| iter | 54 | 54 | 0 |
+| iter | 54 | 0 | 54 |
 | math | 94 | 94 | 0 |
 | os | 111 | 111 | 0 |
 | serialize | 6 | 0 | 6 |
@@ -29,60 +29,60 @@ Authoritative counts: `tools/coverage_scan.ps1`. Policy: `docs/CONTRACT_POLICY.m
 | ffi | ffi/ffi.xi | 88 | `safe_ptr_free` | `EX-1` | `pub fn safe_ptr_free(ptr: SafePtr) {` |
 | format | format/fmt.xi | 143 | `print` | `EX-1` | `pub fn print(s: Str) {` |
 | format | format/fmt.xi | 148 | `println` | `EX-1` | `pub fn println(s: Str) {` |
-| iter | iter/fold.xi | 269 | `iter_for_each` | `EX-0` | `pub fn iter_for_each(v: &Vec[Int], f: fn(&Int)) {` |
-| iter | iter/iter.xi | 294 | `Range.map` | `EX-0` | `pub fn Range.map[U](self, f: fn(Int) -> U) -> MapIter[Int, U] {` |
-| iter | iter/iter.xi | 300 | `Range.filter` | `EX-0` | `pub fn Range.filter(self, predicate: fn(&Int) -> Bool) -> FilterIter[Int] {` |
-| iter | iter/iter.xi | 330 | `Range.chain` | `EX-0` | `pub fn Range.chain(self, other: Range) -> ChainIter[Int, Int] {` |
-| iter | iter/iter.xi | 342 | `Range.zip` | `EX-0` | `pub fn Range.zip(self, other: Range) -> ZipIter[Int, Int] {` |
-| iter | iter/iter.xi | 451 | `MapIter` | `EX-0` | `pub fn MapIter[T, U].next(self) -> Option[U] {` |
-| iter | iter/iter.xi | 459 | `FilterIter` | `EX-0` | `pub fn FilterIter[T].next(self) -> Option[T] {` |
-| iter | iter/iter.xi | 514 | `ChainIter` | `EX-0` | `pub fn ChainIter[T, U].next(self) -> Option[T] {` |
-| iter | iter/iter.xi | 522 | `ZipIter` | `EX-0` | `pub fn ZipIter[T, U].next(self) -> Option[(T, U)] {` |
-| iter | iter/iter.xi | 536 | `MapIter` | `EX-0` | `pub fn MapIter[T, U].map[V](self, f: fn(U) -> V) -> MapIter[U, V] {` |
-| iter | iter/iter.xi | 542 | `MapIter` | `EX-0` | `pub fn MapIter[T, U].filter(self, predicate: fn(&U) -> Bool) -> FilterIter[U] {` |
-| iter | iter/iter.xi | 572 | `MapIter` | `EX-0` | `pub fn MapIter[T, U].chain(self, other: Range) -> ChainIter[U, Int] {` |
-| iter | iter/iter.xi | 580 | `MapIter` | `EX-0` | `pub fn MapIter[T, U].zip(self, other: Range) -> ZipIter[U, Int] {` |
-| iter | iter/iter.xi | 587 | `MapIter` | `EX-0` | `pub fn MapIter[T, U].collect(self) -> Vec[U] {` |
-| iter | iter/iter.xi | 593 | `MapIter` | `EX-0` | `pub fn MapIter[T, U].fold[B](self, init: B, f: fn(B, U) -> B) -> B {` |
-| iter | iter/iter.xi | 607 | `MapIter` | `EX-0` | `pub fn MapIter[T, U].sum(self) -> U {` |
-| iter | iter/iter.xi | 613 | `MapIter` | `EX-0` | `pub fn MapIter[T, U].product(self) -> U {` |
-| iter | iter/iter.xi | 619 | `MapIter` | `EX-0` | `pub fn MapIter[T, U].max(self) -> Option[U] {` |
-| iter | iter/iter.xi | 625 | `MapIter` | `EX-0` | `pub fn MapIter[T, U].min(self) -> Option[U] {` |
-| iter | iter/iter.xi | 631 | `MapIter` | `EX-0` | `pub fn MapIter[T, U].find(self, predicate: fn(&U) -> Bool) -> Option[U] {` |
-| iter | iter/iter.xi | 637 | `MapIter` | `EX-0` | `pub fn MapIter[T, U].all(self, predicate: fn(&U) -> Bool) -> Bool {` |
-| iter | iter/iter.xi | 643 | `MapIter` | `EX-0` | `pub fn MapIter[T, U].any(self, predicate: fn(&U) -> Bool) -> Bool {` |
-| iter | iter/iter.xi | 649 | `MapIter` | `EX-0` | `pub fn MapIter[T, U].nth(self, n: Int) -> Option[U] {` |
-| iter | iter/iter.xi | 655 | `MapIter` | `EX-0` | `pub fn MapIter[T, U].last(self) -> Option[U] {` |
-| iter | iter/iter.xi | 661 | `FilterIter` | `EX-0` | `pub fn FilterIter[T].map[U](self, f: fn(T) -> U) -> MapIter[T, U] {` |
-| iter | iter/iter.xi | 667 | `FilterIter` | `EX-0` | `pub fn FilterIter[T].filter(self, predicate: fn(&T) -> Bool) -> FilterIter[T] {` |
-| iter | iter/iter.xi | 697 | `FilterIter` | `EX-0` | `pub fn FilterIter[T].chain(self, other: Range) -> ChainIter[T, Int] {` |
-| iter | iter/iter.xi | 705 | `FilterIter` | `EX-0` | `pub fn FilterIter[T].zip(self, other: Range) -> ZipIter[T, Int] {` |
-| iter | iter/iter.xi | 712 | `FilterIter` | `EX-0` | `pub fn FilterIter[T].collect(self) -> Vec[T] {` |
-| iter | iter/iter.xi | 718 | `FilterIter` | `EX-0` | `pub fn FilterIter[T].fold[B](self, init: B, f: fn(B, T) -> B) -> B {` |
-| iter | iter/iter.xi | 732 | `FilterIter` | `EX-0` | `pub fn FilterIter[T].sum(self) -> T {` |
-| iter | iter/iter.xi | 738 | `FilterIter` | `EX-0` | `pub fn FilterIter[T].product(self) -> T {` |
-| iter | iter/iter.xi | 744 | `FilterIter` | `EX-0` | `pub fn FilterIter[T].max(self) -> Option[T] {` |
-| iter | iter/iter.xi | 750 | `FilterIter` | `EX-0` | `pub fn FilterIter[T].min(self) -> Option[T] {` |
-| iter | iter/iter.xi | 756 | `FilterIter` | `EX-0` | `pub fn FilterIter[T].find(self, predicate: fn(&T) -> Bool) -> Option[T] {` |
-| iter | iter/iter.xi | 762 | `FilterIter` | `EX-0` | `pub fn FilterIter[T].all(self, predicate: fn(&T) -> Bool) -> Bool {` |
-| iter | iter/iter.xi | 768 | `FilterIter` | `EX-0` | `pub fn FilterIter[T].any(self, predicate: fn(&T) -> Bool) -> Bool {` |
-| iter | iter/iter.xi | 774 | `FilterIter` | `EX-0` | `pub fn FilterIter[T].nth(self, n: Int) -> Option[T] {` |
-| iter | iter/iter.xi | 780 | `FilterIter` | `EX-0` | `pub fn FilterIter[T].last(self) -> Option[T] {` |
-| iter | iter/iter.xi | 1066 | `ChainIter` | `EX-0` | `pub fn ChainIter[T, U].collect(self) -> Vec[T] {` |
-| iter | iter/iter.xi | 1092 | `ChainIter` | `EX-0` | `pub fn ChainIter[T, U].map[V](self, f: fn(T) -> V) -> MapIter[T, V] {` |
-| iter | iter/iter.xi | 1106 | `ChainIter` | `EX-0` | `pub fn ChainIter[T, U].find(self, predicate: fn(&T) -> Bool) -> Option[T] {` |
-| iter | iter/iter.xi | 1112 | `ChainIter` | `EX-0` | `pub fn ChainIter[T, U].all(self, predicate: fn(&T) -> Bool) -> Bool {` |
-| iter | iter/iter.xi | 1118 | `ChainIter` | `EX-0` | `pub fn ChainIter[T, U].any(self, predicate: fn(&T) -> Bool) -> Bool {` |
-| iter | iter/iter.xi | 1124 | `ChainIter` | `EX-0` | `pub fn ChainIter[T, U].nth(self, n: Int) -> Option[T] {` |
-| iter | iter/iter.xi | 1130 | `ChainIter` | `EX-0` | `pub fn ChainIter[T, U].last(self) -> Option[T] {` |
-| iter | iter/iter.xi | 1136 | `ZipIter` | `EX-0` | `pub fn ZipIter[T, U].collect(self) -> Vec[(T, U)] {` |
-| iter | iter/iter.xi | 1162 | `ZipIter` | `EX-0` | `pub fn ZipIter[T, U].find(self, predicate: fn(&(T, U)) -> Bool) -> Option[(T, U)] {` |
-| iter | iter/iter.xi | 1168 | `ZipIter` | `EX-0` | `pub fn ZipIter[T, U].all(self, predicate: fn(&(T, U)) -> Bool) -> Bool {` |
-| iter | iter/iter.xi | 1174 | `ZipIter` | `EX-0` | `pub fn ZipIter[T, U].any(self, predicate: fn(&(T, U)) -> Bool) -> Bool {` |
-| iter | iter/iter.xi | 1180 | `ZipIter` | `EX-0` | `pub fn ZipIter[T, U].nth(self, n: Int) -> Option[(T, U)] {` |
-| iter | iter/iter.xi | 1186 | `ZipIter` | `EX-0` | `pub fn ZipIter[T, U].last(self) -> Option[(T, U)] {` |
-| iter | iter/iter.xi | 1298 | `Range.inspect` | `EX-0` | `pub fn Range.inspect(self, f: fn(&Int)) -> InspectIter[Int] {` |
-| iter | iter/iter.xi | 1304 | `InspectIter` | `EX-0` | `pub fn InspectIter[T].next(self) -> Option[T] {` |
+| iter | iter/fold.xi | 269 | `iter_for_each` | `EX-3` | `pub fn iter_for_each(v: &Vec[Int], f: fn(&Int)) {` |
+| iter | iter/iter.xi | 294 | `Range.map` | `EX-3` | `pub fn Range.map[U](self, f: fn(Int) -> U) -> MapIter[Int, U] {` |
+| iter | iter/iter.xi | 300 | `Range.filter` | `EX-3` | `pub fn Range.filter(self, predicate: fn(&Int) -> Bool) -> FilterIter[Int] {` |
+| iter | iter/iter.xi | 330 | `Range.chain` | `EX-3` | `pub fn Range.chain(self, other: Range) -> ChainIter[Int, Int] {` |
+| iter | iter/iter.xi | 342 | `Range.zip` | `EX-3` | `pub fn Range.zip(self, other: Range) -> ZipIter[Int, Int] {` |
+| iter | iter/iter.xi | 451 | `MapIter.next` | `EX-3` | `pub fn MapIter[T, U].next(self) -> Option[U] {` |
+| iter | iter/iter.xi | 459 | `FilterIter.next` | `EX-3` | `pub fn FilterIter[T].next(self) -> Option[T] {` |
+| iter | iter/iter.xi | 514 | `ChainIter.next` | `EX-3` | `pub fn ChainIter[T, U].next(self) -> Option[T] {` |
+| iter | iter/iter.xi | 522 | `ZipIter.next` | `EX-3` | `pub fn ZipIter[T, U].next(self) -> Option[(T, U)] {` |
+| iter | iter/iter.xi | 536 | `MapIter.map` | `EX-3` | `pub fn MapIter[T, U].map[V](self, f: fn(U) -> V) -> MapIter[U, V] {` |
+| iter | iter/iter.xi | 542 | `MapIter.filter` | `EX-3` | `pub fn MapIter[T, U].filter(self, predicate: fn(&U) -> Bool) -> FilterIter[U] {` |
+| iter | iter/iter.xi | 572 | `MapIter.chain` | `EX-3` | `pub fn MapIter[T, U].chain(self, other: Range) -> ChainIter[U, Int] {` |
+| iter | iter/iter.xi | 580 | `MapIter.zip` | `EX-3` | `pub fn MapIter[T, U].zip(self, other: Range) -> ZipIter[U, Int] {` |
+| iter | iter/iter.xi | 587 | `MapIter.collect` | `EX-3` | `pub fn MapIter[T, U].collect(self) -> Vec[U] {` |
+| iter | iter/iter.xi | 593 | `MapIter.fold` | `EX-3` | `pub fn MapIter[T, U].fold[B](self, init: B, f: fn(B, U) -> B) -> B {` |
+| iter | iter/iter.xi | 607 | `MapIter.sum` | `EX-3` | `pub fn MapIter[T, U].sum(self) -> U {` |
+| iter | iter/iter.xi | 613 | `MapIter.product` | `EX-3` | `pub fn MapIter[T, U].product(self) -> U {` |
+| iter | iter/iter.xi | 619 | `MapIter.max` | `EX-3` | `pub fn MapIter[T, U].max(self) -> Option[U] {` |
+| iter | iter/iter.xi | 625 | `MapIter.min` | `EX-3` | `pub fn MapIter[T, U].min(self) -> Option[U] {` |
+| iter | iter/iter.xi | 631 | `MapIter.find` | `EX-3` | `pub fn MapIter[T, U].find(self, predicate: fn(&U) -> Bool) -> Option[U] {` |
+| iter | iter/iter.xi | 637 | `MapIter.all` | `EX-3` | `pub fn MapIter[T, U].all(self, predicate: fn(&U) -> Bool) -> Bool {` |
+| iter | iter/iter.xi | 643 | `MapIter.any` | `EX-3` | `pub fn MapIter[T, U].any(self, predicate: fn(&U) -> Bool) -> Bool {` |
+| iter | iter/iter.xi | 649 | `MapIter.nth` | `EX-3` | `pub fn MapIter[T, U].nth(self, n: Int) -> Option[U] {` |
+| iter | iter/iter.xi | 655 | `MapIter.last` | `EX-3` | `pub fn MapIter[T, U].last(self) -> Option[U] {` |
+| iter | iter/iter.xi | 661 | `FilterIter.map` | `EX-3` | `pub fn FilterIter[T].map[U](self, f: fn(T) -> U) -> MapIter[T, U] {` |
+| iter | iter/iter.xi | 667 | `FilterIter.filter` | `EX-3` | `pub fn FilterIter[T].filter(self, predicate: fn(&T) -> Bool) -> FilterIter[T] {` |
+| iter | iter/iter.xi | 697 | `FilterIter.chain` | `EX-3` | `pub fn FilterIter[T].chain(self, other: Range) -> ChainIter[T, Int] {` |
+| iter | iter/iter.xi | 705 | `FilterIter.zip` | `EX-3` | `pub fn FilterIter[T].zip(self, other: Range) -> ZipIter[T, Int] {` |
+| iter | iter/iter.xi | 712 | `FilterIter.collect` | `EX-3` | `pub fn FilterIter[T].collect(self) -> Vec[T] {` |
+| iter | iter/iter.xi | 718 | `FilterIter.fold` | `EX-3` | `pub fn FilterIter[T].fold[B](self, init: B, f: fn(B, T) -> B) -> B {` |
+| iter | iter/iter.xi | 732 | `FilterIter.sum` | `EX-3` | `pub fn FilterIter[T].sum(self) -> T {` |
+| iter | iter/iter.xi | 738 | `FilterIter.product` | `EX-3` | `pub fn FilterIter[T].product(self) -> T {` |
+| iter | iter/iter.xi | 744 | `FilterIter.max` | `EX-3` | `pub fn FilterIter[T].max(self) -> Option[T] {` |
+| iter | iter/iter.xi | 750 | `FilterIter.min` | `EX-3` | `pub fn FilterIter[T].min(self) -> Option[T] {` |
+| iter | iter/iter.xi | 756 | `FilterIter.find` | `EX-3` | `pub fn FilterIter[T].find(self, predicate: fn(&T) -> Bool) -> Option[T] {` |
+| iter | iter/iter.xi | 762 | `FilterIter.all` | `EX-3` | `pub fn FilterIter[T].all(self, predicate: fn(&T) -> Bool) -> Bool {` |
+| iter | iter/iter.xi | 768 | `FilterIter.any` | `EX-3` | `pub fn FilterIter[T].any(self, predicate: fn(&T) -> Bool) -> Bool {` |
+| iter | iter/iter.xi | 774 | `FilterIter.nth` | `EX-3` | `pub fn FilterIter[T].nth(self, n: Int) -> Option[T] {` |
+| iter | iter/iter.xi | 780 | `FilterIter.last` | `EX-3` | `pub fn FilterIter[T].last(self) -> Option[T] {` |
+| iter | iter/iter.xi | 1066 | `ChainIter.collect` | `EX-3` | `pub fn ChainIter[T, U].collect(self) -> Vec[T] {` |
+| iter | iter/iter.xi | 1092 | `ChainIter.map` | `EX-3` | `pub fn ChainIter[T, U].map[V](self, f: fn(T) -> V) -> MapIter[T, V] {` |
+| iter | iter/iter.xi | 1106 | `ChainIter.find` | `EX-3` | `pub fn ChainIter[T, U].find(self, predicate: fn(&T) -> Bool) -> Option[T] {` |
+| iter | iter/iter.xi | 1112 | `ChainIter.all` | `EX-3` | `pub fn ChainIter[T, U].all(self, predicate: fn(&T) -> Bool) -> Bool {` |
+| iter | iter/iter.xi | 1118 | `ChainIter.any` | `EX-3` | `pub fn ChainIter[T, U].any(self, predicate: fn(&T) -> Bool) -> Bool {` |
+| iter | iter/iter.xi | 1124 | `ChainIter.nth` | `EX-3` | `pub fn ChainIter[T, U].nth(self, n: Int) -> Option[T] {` |
+| iter | iter/iter.xi | 1130 | `ChainIter.last` | `EX-3` | `pub fn ChainIter[T, U].last(self) -> Option[T] {` |
+| iter | iter/iter.xi | 1136 | `ZipIter.collect` | `EX-3` | `pub fn ZipIter[T, U].collect(self) -> Vec[(T, U)] {` |
+| iter | iter/iter.xi | 1162 | `ZipIter.find` | `EX-3` | `pub fn ZipIter[T, U].find(self, predicate: fn(&(T, U)) -> Bool) -> Option[(T, U)] {` |
+| iter | iter/iter.xi | 1168 | `ZipIter.all` | `EX-3` | `pub fn ZipIter[T, U].all(self, predicate: fn(&(T, U)) -> Bool) -> Bool {` |
+| iter | iter/iter.xi | 1174 | `ZipIter.any` | `EX-3` | `pub fn ZipIter[T, U].any(self, predicate: fn(&(T, U)) -> Bool) -> Bool {` |
+| iter | iter/iter.xi | 1180 | `ZipIter.nth` | `EX-3` | `pub fn ZipIter[T, U].nth(self, n: Int) -> Option[(T, U)] {` |
+| iter | iter/iter.xi | 1186 | `ZipIter.last` | `EX-3` | `pub fn ZipIter[T, U].last(self) -> Option[(T, U)] {` |
+| iter | iter/iter.xi | 1298 | `Range.inspect` | `EX-3` | `pub fn Range.inspect(self, f: fn(&Int)) -> InspectIter[Int] {` |
+| iter | iter/iter.xi | 1304 | `InspectIter.next` | `EX-3` | `pub fn InspectIter[T].next(self) -> Option[T] {` |
 | math | math/algebra_extended.xi | 281 | `algebraic_number` | `EX-0` | `pub fn algebraic_number(alpha: Float64, polynomial: &Vec[Float64]) -> Bool {` |
 | math | math/calculus.xi | 117 | `limit` | `EX-0` | `pub fn limit(f: fn(Float64) -> Float64, x: Float64) -> Float64 {` |
 | math | math/calculus.xi | 125 | `limit_left` | `EX-0` | `pub fn limit_left(f: fn(Float64) -> Float64, x: Float64) -> Float64 {` |

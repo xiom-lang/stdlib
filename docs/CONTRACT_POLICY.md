@@ -120,10 +120,14 @@ the function:
 An EX-0 entry carries `count` instead of `function`/`path`:
 
 ```json
-{ "module": "iter", "count": 54, "category": "EX-0",
+{ "module": "os", "count": 111, "category": "EX-0",
   "rationale": "gate-8 no-clause tail; reclassify per function in B2",
   "owner": "stdlib lane", "approved": "2026-11-06" }
 ```
+
+A homogeneous family may replace `function` with a `functions: ["Type.method",
+...]` list and one shared rationale. The checker still validates every name
+against the named path individually.
 
 Rules:
 
@@ -209,8 +213,8 @@ Measured by `tools/coverage_scan.ps1` on `main`:
 
 - 44 modules, 9,449 functions, 6,992 public functions.
 - 9,247 clauses; 6,716 public functions covered (96.1%).
-- 276 uncovered public functions in 7 modules: 259 EX-0 (iter 54, os 111,
-  math 94) and 17 per-function exemptions (ffi 4, thread 5, serialize 6,
+- 276 uncovered public functions in 7 modules: 205 EX-0 (os 111, math 94)
+  and 71 per-function exemptions (iter 54, serialize 6, thread 5, ffi 4,
   format 2). The nine format ANSI helpers now carry constant clauses.
 - Signature: `GLOBAL: fns=9449  pubFns=6992  clauses=9247  pubCovered=6716`;
   `pub-with-clause = 96.1%`.

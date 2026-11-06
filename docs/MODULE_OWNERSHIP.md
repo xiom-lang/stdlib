@@ -24,9 +24,9 @@ disagree, or if any module is `pending`.
 ## Sign-off summary
 
 - 44 modules; 6,992 public functions; 6,716 covered (96.1%); 276 exemptions
-  in 7 modules (259 EX-0 + 17 per-function EX-1/EX-2/EX-3).
+  in 7 modules (205 EX-0 + 71 per-function EX-1/EX-2/EX-3).
 - 37 modules `signed-off` at 100%; 7 modules `tail-approved` with a recorded
-  budget (3 with EX-0: iter/os/math; ffi/thread/serialize/format with
+  budget (2 with EX-0: os/math; ffi/thread/serialize/format/iter with
   per-function exemptions). No module is `pending`.
 - The sign-off formalizes the readiness gate-8 evidence (wave 208, refreshed
   2026-10-31) and the 2026-11-06 scanner run. It is not a fresh clause-quality
@@ -84,20 +84,22 @@ Status meanings: `signed-off` = every public function covered; `tail-approved`
 = every uncovered function is a recorded exemption (EX-0 or per-function
 EX-1..EX-5); `pending` = not signed off (CI fails).
 
-B2 blocks 342/343/345: ffi 4, thread 5, serialize 6 and format 2 exemptions
-are per-function -- ffi: `dl_open_global`/`dl_sym_address` EX-2,
-`errno_perror`/`safe_ptr_free` EX-1; thread: `scope` EX-2,
+B2 blocks 342/343/345/346: ffi 4, thread 5, serialize 6, format 2 and iter
+54 exemptions are per-function -- ffi: `dl_open_global`/`dl_sym_address`
+EX-2, `errno_perror`/`safe_ptr_free` EX-1; thread: `scope` EX-2,
 `sleep_ms`/`is_main_thread`/`thread_yield`/`thread_parallel_for` EX-1;
 serialize: `json_get`/`JsonValue.get`/`yaml_get` EX-3,
-`to_json`/`from_json`/`yaml_stringify` EX-1; format: `print`/`println` EX-1.
-The nine format ANSI helpers moved to constant clauses. The other 259
-(iter/os/math) are EX-0.
+`to_json`/`from_json`/`yaml_stringify` EX-1; format: `print`/`println` EX-1;
+iter: the 53 `Range`/`MapIter`/`FilterIter`/`ChainIter`/`ZipIter`/
+`InspectIter` protocol methods plus `iter_for_each` are EX-3. The nine
+format ANSI helpers moved to constant clauses. The other 205 (os/math) are
+EX-0.
 
 ## Sign-off record
 
 | Date | Reviewer | Scope | Basis |
 |---|---|---|---|
-| 2026-11-06 | stdlib lane | all 44 modules | readiness gate-8 evidence (wave 208, refreshed 2026-10-31) + `tools/coverage_scan.ps1` run on `main` at snapshot 120; 276 tail entries recorded in `tools/contract_exemptions.json` (259 EX-0 + 17 per-function ffi/thread/serialize/format EX-1/EX-2/EX-3); the nine format ANSI helpers carry constant clauses |
+| 2026-11-06 | stdlib lane | all 44 modules | readiness gate-8 evidence (wave 208, refreshed 2026-10-31) + `tools/coverage_scan.ps1` run on `main` at snapshot 120; 276 tail entries recorded in `tools/contract_exemptions.json` (205 EX-0 + 71 per-function ffi/thread/serialize/format/iter EX-1/EX-2/EX-3); the nine format ANSI helpers carry constant clauses |
 
 ## Change protocol
 

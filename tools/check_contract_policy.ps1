@@ -52,30 +52,46 @@ $functionSeen = @{}
 foreach ($m in @($exDoc.modules)) {
   $name = [string]$m.module
   if ([string]::IsNullOrWhiteSpace($name)) { $errs.Add("registry: entry with empty module"); continue }
-  $fn = [string]$m.function
-  if (-not [string]::IsNullOrWhiteSpace($fn)) {
+  $fnList = @()
+  if (-not [string]::IsNullOrWhiteSpace([string]$m.function)) { $fnList += [string]$m.function }
+  if ($null -ne $m.functions) {
+    foreach ($x in @($m.functions)) {
+      if (-not [string]::IsNullOrWhiteSpace([string]$x)) { $fnList += [string]$x }
+    }
+  }
+  if ($fnList.Count -gt 0) {
     $category = [string]$m.category
     if ($category -notin @("EX-1", "EX-2", "EX-3", "EX-4", "EX-5")) {
-      $errs.Add("registry ${name}.${fn}: per-function category must be EX-1..EX-5")
+      $errs.Add("registry ${name}: per-function category must be EX-1..EX-5")
     }
     $relPath = [string]$m.path
     if ([string]::IsNullOrWhiteSpace($relPath)) {
-      $errs.Add("registry ${name}.${fn}: missing path")
+      $errs.Add("registry ${name}: missing path")
     } else {
       $srcPath = Join-Path $repoRoot $relPath
       if (-not (Test-Path -LiteralPath $srcPath)) {
-        $errs.Add("registry ${name}.${fn}: path not found: $relPath")
-      } elseif ((Get-Content -LiteralPath $srcPath -Raw) -notmatch ('fn\s+' + [regex]::Escape($fn) + '(\[[^\]]*\])?\s*\(')) {
-        $errs.Add("registry ${name}.${fn}: function not found in $relPath")
+        $errs.Add("registry ${name}: path not found: $relPath")
+      } else {
+        $srcText = Get-Content -LiteralPath $srcPath -Raw
+        foreach ($fn in $fnList) {
+          $fnPattern = 'fn\s+' + [regex]::Escape($fn) + '(\[[^\]]*\])?\s*\('
+          if ($fn.Contains('.')) {
+            $parts = $fn -split '\.', 2
+            $fnPattern = 'fn\s+' + [regex]::Escape($parts[0]) + '(\[[^\]]*\])?\.' + [regex]::Escape($parts[1]) + '(\[[^\]]*\])?\s*\('
+          }
+          if ($srcText -notmatch $fnPattern) {
+            $errs.Add("registry ${name}.${fn}: function not found in $relPath")
+          }
+          $key = $name + "|" + $fn
+          if ($functionSeen.ContainsKey($key)) {
+            $errs.Add("registry ${name}.${fn}: duplicate per-function entry")
+          } else {
+            $functionSeen[$key] = $true
+          }
+          if ($exByDir.ContainsKey($name)) { $exByDir[$name] += 1 } else { $exByDir[$name] = 1 }
+        }
       }
     }
-    $key = $name + "|" + $fn
-    if ($functionSeen.ContainsKey($key)) {
-      $errs.Add("registry ${name}.${fn}: duplicate per-function entry")
-    } else {
-      $functionSeen[$key] = $true
-    }
-    if ($exByDir.ContainsKey($name)) { $exByDir[$name] += 1 } else { $exByDir[$name] = 1 }
   } else {
     if ([string]$m.category -ne "EX-0") {
       $errs.Add("registry ${name}: module-level records must be EX-0")
