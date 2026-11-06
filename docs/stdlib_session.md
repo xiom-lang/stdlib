@@ -4460,6 +4460,25 @@ registry pin, agent recon for the rest)**
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
 
+**SESSION 2026-11-06 block 334 (readiness 10/10; A3 wave: json_parse surrogate fix + depth/unicode edges)**
+- **Readiness 10/10:** PULSE verified and closed 1704 on the published
+  v0.65.6 (builder build+stringify 14.4 B/iter, parse 15.1 B/iter, capped
+  bttger 5k clean under 2048 MB); RF-0 marked done; registry 0.65.6 live.
+- **A3 bug found and fixed:** `json_parse` encoded each `\uXXXX` code unit
+  independently, so surrogate pairs became invalid UTF-8 and lone
+  surrogates were accepted. Ported the raw/keymgmt logic: combine
+  high+low pairs into U+10000..U+10FFFF, reject lone high/low and invalid
+  escapes.
+- **Test-shadowing fix:** unqualified `json_parse`/`json_stringify` in the
+  fuzz smoke resolved to the parent `xiom.serialize.serialize` parser
+  (`SerializeError`) through transitive imports; qualified to `json.*`.
+- **Validation:** fuzz smoke 600/600 JSON roundtrips rc 0; 21 JSON/serde
+  smokes green; 9/9 JSON probes green on official v0.65.6 + working-tree
+  stdlib. Committed `84c1d73`.
+- **No release cut** (owner: only via compiler relay). Next roadmap: A1
+  sanitizer CI; open compiler item 1551 (`Str` reassignment) and PULSE
+  verification of 1709.
+
 **SESSION 2026-11-04 block 333 (stdlib 0.65.6 PUBLISHED: registry live, compiler v0.65.6; cross-lane audit clean)**
 - **Release:** `stdlib-v0.65.6` tag at `6fdde4e` (tag object `3a81d74`;
   re-cut from `06795c8` on owner GO). Release run `41873341844` SUCCESS;

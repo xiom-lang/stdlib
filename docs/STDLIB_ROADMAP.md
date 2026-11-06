@@ -48,7 +48,7 @@ Horizons: H1 = 0-30 days, H2 = 30-90, H3 = 90-180, H4 = 6-12 months.
 
 | ID | Initiative | Horizon | Status | Exit criterion | Evidence |
 |---|---|---|---|---|---|
-| RF-0 | Flip gate 9: v0.65.6 release, archive re-run, mark 1704 fixed, PULSE confirmation, readiness 10/10 | H1 | in_progress | Green release dry-run + flat archive run + PULSE verified + queue at 10/10 | 1704 fixed on the v0.65.6 archive (flat 5.6/5.7/9.2 at 10k/20k/100k); stdlib 0.65.6 PUBLISHED (tag `6fdde4e`; release 41873341844; registry 41873341859: xiom-std 0.65.6 compiler v0.65.6, sha `7f6475d4`, 17:54:33Z); PULSE verification pending (REL-20261103-1807-stdlib) |
+| RF-0 | Flip gate 9: v0.65.6 release, archive re-run, mark 1704 fixed, PULSE confirmation, readiness 10/10 | H1 | done | Green release dry-run + flat archive run + PULSE verified + queue at 10/10 | DONE 2026-11-04: stdlib 0.65.6 tag `6fdde4e`; release 41873341844; registry 41873341859 (xiom-std 0.65.6, compiler v0.65.6, sha `7f6475d4`, 17:54:33Z); PULSE verified/closed 1704 (build+stringify 14.4 B/iter, parse 15.1 B/iter, bttger 5k clean); readiness 10/10 |
 
 ### Pillar A -- Adversarial correctness
 
@@ -56,7 +56,7 @@ Horizons: H1 = 0-30 days, H2 = 30-90, H3 = 90-180, H4 = 6-12 months.
 |---|---|---|---|---|---|
 | A1 | ASan + UBSan + LSan on the full corpus (Windows + Linux); no suppressions without an item | H1 | planned | Full corpus green under sanitizers on both platforms | |
 | A2 | TSan lane for async, pool, channel, thread; documented data-race policy | H2 | planned | TSan corpus green; races triaged | |
-| A3 | Fuzz targets: `json_parse` (depth/unicode), lexer/parser, bigint/bigfloat parse+format, encodings, FFI boundaries | H1 | planned | Corpora running continuously; crashes triaged within 48 h | |
+| A3 | Fuzz targets: `json_parse` (depth/unicode), lexer/parser, bigint/bigfloat parse+format, encodings, FFI boundaries | H1 | in_progress | Corpora running continuously; crashes triaged within 48 h | 2026-11-06: json depth 128/129 + unicode edges, surrogate-pair combine and lone-surrogate reject fixed; fuzz smoke 600/600 JSON roundtrips in CI; qualified `json.*` calls (same-leaf shadowing fix). Remaining: bigint/FFI targets + nightly schedule |
 | A4 | Fault/OOM injection: allocator failure points, trampoline repeat-fault, partial IO | H2 | planned | Suite green; failure paths covered | |
 | A5 | Per-subsystem memory gates + in-process allocator stats; flat-peak criteria; 1M-iteration soak | H1 | planned | Collections/string/io/async/serialize all flat under soak | |
 | A6 | Defect-to-probe policy: every fixed bug gets a `known_failures` repro, then a permanent probe | H2 | planned | Policy in README; reviews enforce it | |

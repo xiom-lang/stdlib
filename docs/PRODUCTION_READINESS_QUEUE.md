@@ -1,6 +1,6 @@
-# Production-readiness remaining queue (handoff 2026-09-25)
+﻿# Production-readiness remaining queue (handoff 2026-09-25)
 
-**90% -- 9 of 10 gates complete; gate 9 discrete.** (Compiler pin:
+**100% -- 10 of 10 gates complete; gate 9 closed 2026-11-04.** (Current pin: **compiler v0.65.6**; **stdlib 0.65.6** published + registry live.) (Compiler pin:
 **v0.65.4** published; v0.65.5 pin PR **#12** (chore/pin-stdlib-v0.65.5-compiler) **MERGED**; compiler main pins STDLIB_VERSION=stdlib-v0.65.5.
  **stdlib-v0.65.5 PUBLISHED** at
 `d1e4b36`/`88f3c12` (code `7b7583c`, release run 41447551297); registry
@@ -72,7 +72,7 @@ Post-release: JSON 1704, 2117 aggregate contract, compiler pin merge.
   commit remains on main (ruleset satisfied). The foreign Unreleased
   CHANGELOG WIP remains uncommitted.
 - **PUBLISHED (block 333):** stdlib 0.65.6 tag 6fdde4e; release 41873341844 SUCCESS; registry 41873341859 SUCCESS: xiom-std 0.65.6, compiler v0.65.6, sha 7f6475d4, published 2026-11-04T17:54:33Z. Gate 9 flat on the archive; PULSE verification pending -> 10/10 after it.
-- **Readiness unchanged at 9/10.**
+- **Readiness 10/10:** gate 9 closed on 2026-11-04. PULSE verified 1704 on the published v0.65.6: builder build+stringify **14.4 B/iter**, parse **15.1 B/iter**, capped bttger 5k clean under 2048 MB. stdlib 0.65.6 is live on the registry (compiler field v0.65.6).
 - **Post-10/10 roadmap:** `docs/STDLIB_ROADMAP.md` (created 2026-11-03).
   RF-0 is the gate-9 carry-over; pillars A-G track adversarial correctness,
   contracts, perf/memory SLOs, platform/ABI parity, 1.0/stability, dogfood,
@@ -96,9 +96,9 @@ Post-release: JSON 1704, 2117 aggregate contract, compiler pin merge.
   packages; kqueue done) and **1704** (compiler JsonValue/JSON-builder
   drop) remain acked. 1531 (xvector verify), 1807 (orbitdb compiler write
   path), and wishlist row 33 (compiler/install) are external.
-- **Readiness 9/10 (90%)**: gates 1-8 and 10 MET. Gate 7 is ratchet-green
+- **Readiness 10/10 (100%)**: all gates MET; gate 9 closed 2026-11-04 (PULSE verified 1704 on v0.65.6). Gate 7 is ratchet-green
   at 3541/6664 function refs (53.1%); gate 8's 285-fn no-clause tail is
-  documented policy (no clause waves). Only gate 9 (1704) is discrete.
+  documented policy (no clause waves).
 - **Release:** stdlib-v0.65.5 published, registry 0.65.5 live, compiler
   pin PR #12 merged (compiler main pins stdlib-v0.65.5).
 
