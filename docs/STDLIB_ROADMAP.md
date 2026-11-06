@@ -65,8 +65,8 @@ Horizons: H1 = 0-30 days, H2 = 30-90, H3 = 90-180, H4 = 6-12 months.
 
 | ID | Initiative | Horizon | Status | Exit criterion | Evidence |
 |---|---|---|---|---|---|
-| B1 | Contract policy: public function => contracts or documented exemption; per-module sign-off | H2 | planned | Policy doc merged; ownership map agrees | |
-| B2 | Ratchet public-API contract coverage from 53.1% to 100% of public functions (exemptions counted) | H2-H3 | planned | Floors at 100% public coverage; gate 7 tracks it | |
+| B1 | Contract policy: public function => contracts or documented exemption; per-module sign-off | H2 | done | Policy doc merged; ownership map agrees | 2026-11-06: `docs/CONTRACT_POLICY.md` + `docs/MODULE_OWNERSHIP.md` (44 modules, 6,992 pub fns, 6,707 covered, 285 EX-0 tail); `tools/contract_exemptions.json`; `tools/check_contract_policy.ps1` wired into the CI static job and green on `main` |
+| B2 | Ratchet public-API contract coverage from 95.9% global (100% non-tail) to 100% of public functions (exemptions counted) | H2-H3 | planned | Floors at 100% public coverage; gate 8 tracks it | 2026-11-06 baseline corrected: 53.1% was module-smoke function refs, not contract coverage; gate-8 contract baseline is 6,707/6,992 (95.9%) with the 285-function EX-0 tail |
 | B3 | Generate reference docs from contracts; run doc examples as tests | H3 | planned | Docs generated in CI; examples green | |
 | B4 | Decide contract-check runtime semantics and cost budget; document debug/release behavior | H3 | planned | Policy + measured cost recorded | |
 
@@ -257,3 +257,4 @@ starts after 1.0 (H4) so the stability and SLO work is not diluted.
 | Date | Event | Outcome |
 |---|---|---|
 | 2026-11-03 | Roadmap created; 	ools/check_roadmap.ps1 added and wired into the static CI job | RF-0 in_progress (blocked on v0.65.6 + PULSE); A-G and X1-X8 planned; next review when RF-0 lands |
+| 2026-11-06 | B1 contract policy landed on snapshot 120 | `docs/CONTRACT_POLICY.md` + `docs/MODULE_OWNERSHIP.md`: 44 modules, 6,992 pub fns, 6,707 covered (95.9%), 285 EX-0 tail; `tools/check_contract_policy.ps1` green and wired into CI; B2 baseline corrected from 53.1% (module-smoke refs) to 95.9% global / 100% non-tail (gate 8) |

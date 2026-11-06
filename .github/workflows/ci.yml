@@ -29,6 +29,10 @@ jobs:
         shell: pwsh
         run: ./tools/coverage_scan.ps1 -RatchetFile ./tools/coverage_floors197.json
 
+      - name: Contract policy (B1)
+        shell: pwsh
+        run: ./tools/check_contract_policy.ps1
+
       - name: Module smoke-coverage ratchet
         shell: pwsh
         run: ./tools/module_smoke_scan.ps1 -BaselineFile ./tools/module_smoke_floors.json

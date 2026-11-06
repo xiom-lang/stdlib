@@ -17,7 +17,77 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 120 (updated 2026-11-06; **v0.65.6 SHIPPED: stdlib tag `6fdde4e`, release 41873341844, registry 0.65.6 live (compiler v0.65.6); READINESS 10/10 (PULSE closed 1704); A3 json surrogate fix; A1 sanitizer lane green. Lane queue = 1551 open (compiler Str), 1709 fixed (PULSE verify), 1625 info. NO release cuts without compiler-relay GO.**)
+## 0A. CONTINUE HERE -- handoff snapshot 121 (updated 2026-11-06; **B1 CONTRACT POLICY LANDED: `docs/CONTRACT_POLICY.md` + `docs/MODULE_OWNERSHIP.md` (44 modules, 6,992 pub fns, 6,707 covered / 95.9%, 285 EX-0 tail); `tools/contract_exemptions.json`; `tools/check_contract_policy.ps1` green in the CI static job. READINESS 10/10; v0.65.6 SHIPPED. NO release cuts without compiler-relay GO.**)
+
+- **B1 done (block 336):** policy + per-module sign-off map + exemption
+  registry + CI checker. 37 modules signed-off, 7 tail-approved (iter 54,
+  os 111, math 94, thread 5, ffi 4, serialize 6, format 11), 0 pending.
+  EX-0 is closed to new entries; B2 reclassifies it per function and
+  ratchets to 100% counted.
+- **Readiness 10/10:** unchanged (gate 9 closed 2026-11-04; PULSE verified
+  1704 on the published v0.65.6). v0.65.6 shipped: tag `6fdde4e`, release
+  41873341844, registry 41873341859 (xiom-std 0.65.6, compiler v0.65.6).
+- **A3 (in_progress):** json surrogate fix `84c1d73`; depth/unicode edges in
+  `smoke_stress_fuzz_parsers` with qualified `json.*`; 600/600 JSON, 21/21
+  serde smokes, 9/9 JSON probes. Next: bigint/FFI targets + nightly fuzz
+  schedule.
+- **A1 (in_progress):** nightly `sanitizers.yml` (memory + leak audit) green
+  run `42242340821`; `tools/run_sanitizers.ps1 -CompileOnly/-Leaks`. Next:
+  broaden to the full corpus, Windows ASan, shrink the leak baseline.
+- **Queue:** 1551 OPEN (compiler Str reassignment; net smokes carved out);
+  1709 FIXED (ref accessors; PULSE verify pending); 1625 info open;
+  2202 compiler Send/Sync. 1531/1807/wishlist33 external.
+- **Rules:** no tag/release without a fresh compiler-relay GO; released tags
+  immutable; relay pull `--ff-only`; never edit another lane's item; stage
+  explicit paths only; no clause waves; `json_clear(&mut)` hangs; no
+  mutable-enum recursion.
+
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-11-06, snapshot 121)
+
+```
+Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
+  git -C E:\xiom-lang\stdlib pull --ff-only origin main
+  git -C E:\xiom-lang\xiom-relays pull --ff-only
+  python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
+Read docs/stdlib_session.md snapshot 121 + blocks 336/335/334.
+
+STATE (2026-11-06):
+- READINESS 10/10; v0.65.6 shipped (tag 6fdde4e; release 41873341844;
+  registry 0.65.6, compiler v0.65.6). DO NOT cut a release without a fresh
+  compiler-relay GO.
+- B1 DONE: docs/CONTRACT_POLICY.md + docs/MODULE_OWNERSHIP.md; 44 modules,
+  6,992 pub fns, 6,707 covered (95.9%), 285 EX-0 tail; registry
+  tools/contract_exemptions.json; checker tools/check_contract_policy.ps1
+  green in the CI static job.
+- A3 (in_progress): json surrogate fix 84c1d73; next bigint/FFI targets +
+  nightly fuzz schedule.
+- A1 (in_progress): sanitizers.yml green run 42242340821; next broaden the
+  corpus, Windows ASan, shrink the leak baseline.
+- Queue: 1551 OPEN (compiler Str); 1709 FIXED (PULSE verify); 1625 info;
+  2202 compiler Send/Sync. 1531/1807/wishlist33 external.
+
+PRIORITY (roadmap; no release cuts):
+1. A3: bigint/FFI fuzz targets + nightly schedule; keep JSON edges green.
+2. A1: broaden sanitizers toward the full corpus; Windows ASan; keep the
+   leak audit green and shrink the baseline.
+3. B2: reclassify the 285 EX-0 functions to clauses or EX-1..EX-5; retire
+   EX-0; extend the checker to per-function records.
+4. G3: release automation. E4 same-leaf dedup before 1.0.
+5. X1/X5 growth policy drafts; expansion after 1.0.
+6. Run tools/check_roadmap.ps1 and tools/check_contract_policy.ps1 after
+   edits; update rows with evidence and append to the review log.
+
+RULES:
+- No tag/release without a fresh compiler-relay GO; released tags are
+  immutable.
+- Relay: pull --ff-only; never edit another lane's item. The shared relay
+  clone has foreign uncommitted changes; do not revert.
+- Stage explicit paths only; never `git add .`; keep out/ disposable and
+  archives under %TEMP%.
+- No clause waves; json_clear(&mut) hangs; no mutable-enum recursion.
+```
+
+## 0A-120. PREVIOUS HANDOFF -- snapshot 120 (updated 2026-11-06; **v0.65.6 SHIPPED: stdlib tag `6fdde4e`, release 41873341844, registry 0.65.6 live (compiler v0.65.6); READINESS 10/10 (PULSE closed 1704); A3 json surrogate fix; A1 sanitizer lane green. Lane queue = 1551 open (compiler Str), 1709 fixed (PULSE verify), 1625 info. NO release cuts without compiler-relay GO.**)
 
 - **Readiness 10/10 (100%):** gate 9 closed 2026-11-04. PULSE verified
   1704 on the published v0.65.6: builder build+stringify **14.4 B/iter**,
@@ -71,7 +141,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   another lane's item; stage explicit paths only; no clause waves;
   `json_clear(&mut)` hangs; no mutable-enum recursion.
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-11-06, snapshot 120)
+## 0C-120. NEXT-SESSION PROMPT (2026-11-06, snapshot 120 -- SUPERSEDED by snapshot 121)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
@@ -128,6 +198,8 @@ RULES:
   archives under %TEMP%.
 - No clause waves; json_clear(&mut) hangs; no mutable-enum recursion.
 ```
+
+
 
 
 ## 0A-119. PREVIOUS HANDOFF -- snapshot 119 (updated 2026-11-02; **v0.65.5 SHIPPED: stdlib tag `d1e4b36`@`88f3c12`, release 41447551297, registry 0.65.5 live, compiler v0.65.5 released, pin PR #12 MERGED. Official v0.65.5 verification: 1600 e2e GREEN (1924 fixed); 1704 root-caused. The compiler fixed the nested-scope `#[owns_return]` drop alloca (REL-20261103-1626 **verified**) and the pair is flat: 5.6/5.6/6.4/9.2/14.0 MB at 10k/20k/40k/100k/200k (v0.65.5: 45.1/85.9/166.6/408.8/812.8). Stdlib contracts committed `9de28f1`. READINESS 9/10: flip pending the v0.65.6 archive + PULSE confirmation (REL-20261103-1807-stdlib). Lane queue = 2202 (compiler Send/Sync; brotli/zstd live; kqueue done) + 1704. 1531/1807/wishlist33 external.**)
@@ -4572,6 +4644,30 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-11-06 block 336 (B1 contract policy: policy + per-module sign-off map + exemption registry; checker green in CI)**
+- **Policy:** `docs/CONTRACT_POLICY.md` -- every public fn needs a
+  non-tautological `requires`/`ensures` or a recorded exemption; quality bar
+  (ownership/lifetime, failure, determinism, executable, no implementation
+  leakage); exemption categories EX-0 (grandfathered gate-8 tail, closed) and
+  EX-1..EX-5 (total / ABI / accessor / generated / deprecated); per-module
+  sign-off protocol; measurement/gates; B2/B3/B4 hand-off.
+- **Ownership map:** `docs/MODULE_OWNERSHIP.md` -- 44 modules, 6,992 public
+  fns, 6,707 covered (95.9%), 285 EX-0 tail (iter 54, os 111, math 94,
+  thread 5, ffi 4, serialize 6, format 11); 37 signed-off, 7 tail-approved,
+  0 pending; sign-off basis = gate 8 (wave 208, refreshed 2026-10-31) +
+  scanner run 2026-11-06.
+- **Registry + checker:** `tools/contract_exemptions.json` (v1, EX-0
+  module-level, total 285). `tools/check_contract_policy.ps1` validates the
+  scanner totals, the registry, and the ownership map; negative tests
+  (shrunken exemption count, map count drift) exit 1. Wired into the CI
+  static job after the coverage ratchet; `tools/README.md` updated.
+- **Roadmap:** B1 **done**; B2 baseline corrected from 53.1% (module-smoke
+  function refs) to 6,707/6,992 (95.9%; non-tail 100%, gate 8); review-log
+  row appended. `check_roadmap.ps1` OK (36 rows, 2 done).
+- **No release cut.** Next: A3 bigint/FFI fuzz targets + nightly schedule;
+  A1 broaden sanitizers toward the full corpus; then G3 release automation
+  and E4 dedup.
 
 **SESSION 2026-11-06 block 335 (A1 sanitizer lane live: memory clean, leak audit baselined; run 42242340821 green)**
 - **Nightly lane:** `.github/workflows/sanitizers.yml` (nightly + dispatch)

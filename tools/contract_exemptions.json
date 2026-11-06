@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "generated": "2026-11-06",
+  "policy": "docs/CONTRACT_POLICY.md",
+  "ownership_map": "docs/MODULE_OWNERSHIP.md",
+  "total": 285,
+  "note": "EX-0 is the grandfathered gate-8 no-clause tail. It is closed to new entries, must shrink, and is reclassified per function in roadmap B2. Counts are the difference between pub fns and pub-with-clause fns reported by tools/coverage_scan.ps1.",
+  "source": "readiness gate 8 (wave 208, refreshed 2026-10-31) + coverage_scan.ps1 run 2026-11-06 (snapshot 120)",
+  "modules": [
+    {
+      "module": "iter",
+      "count": 54,
+      "category": "EX-0",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "rationale": "gate-8 no-clause tail; no non-tautological clause remains that is expressible without restating the iterator protocol. Reclassify per function in B2."
+    },
+    {
+      "module": "os",
+      "count": 111,
+      "category": "EX-0",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "rationale": "gate-8 no-clause tail; platform/OS preconditions are currently documented at the platform layer. Reclassify per function in B2 (expected EX-2 shims)."
+    },
+    {
+      "module": "math",
+      "count": 94,
+      "category": "EX-0",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "rationale": "gate-8 no-clause tail; domain-closed numeric helpers where the remaining clause would be tautological. Reclassify per function in B2 (expected EX-1 totals)."
+    },
+    {
+      "module": "thread",
+      "count": 5,
+      "category": "EX-0",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "rationale": "gate-8 no-clause tail; runtime-enforced thread/handle invariants. Reclassify per function in B2."
+    },
+    {
+      "module": "ffi",
+      "count": 4,
+      "category": "EX-0",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "rationale": "gate-8 no-clause tail; ABI-defined shims. Reclassify per function in B2 (expected EX-2 shims)."
+    },
+    {
+      "module": "serialize",
+      "count": 6,
+      "category": "EX-0",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "rationale": "gate-8 no-clause tail; total parser/serializer helpers over internal state. Reclassify per function in B2."
+    },
+    {
+      "module": "format",
+      "count": 11,
+      "category": "EX-0",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "rationale": "gate-8 no-clause tail; total formatting helpers. Reclassify per function in B2 (expected EX-1 totals)."
+    }
+  ]
+}
