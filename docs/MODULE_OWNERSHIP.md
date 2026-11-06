@@ -23,10 +23,11 @@ disagree, or if any module is `pending`.
 
 ## Sign-off summary
 
-- 44 modules; 6,992 public functions; 6,707 covered (95.9%); 285 EX-0
-  exemptions in 7 modules.
+- 44 modules; 6,992 public functions; 6,707 covered (95.9%); 285 exemptions
+  in 7 modules (281 EX-0 + 4 per-function EX-1/EX-2).
 - 37 modules `signed-off` at 100%; 7 modules `tail-approved` with a recorded
-  EX-0 budget. No module is `pending`.
+  budget (6 with EX-0; ffi with 4 per-function EX-1/EX-2). No module is
+  `pending`.
 - The sign-off formalizes the readiness gate-8 evidence (wave 208, refreshed
   2026-10-31) and the 2026-11-06 scanner run. It is not a fresh clause-quality
   audit of every function; B2 performs the function-level reclassification.
@@ -80,14 +81,18 @@ disagree, or if any module is `pending`.
 | **Total** | | **6992** | **6707** | **285** | **95.9%** | 37 / 7 / 0 | |
 
 Status meanings: `signed-off` = every public function covered; `tail-approved`
-= every uncovered function is a recorded EX-0 entry; `pending` = not signed
-off (CI fails).
+= every uncovered function is a recorded exemption (EX-0 or per-function
+EX-1..EX-5); `pending` = not signed off (CI fails).
+
+B2 block 342: ffi's 4 exemptions are per-function -- `dl_open_global` and
+`dl_sym_address` EX-2, `errno_perror` and `safe_ptr_free` EX-1; the other 281
+are EX-0.
 
 ## Sign-off record
 
 | Date | Reviewer | Scope | Basis |
 |---|---|---|---|
-| 2026-11-06 | stdlib lane | all 44 modules | readiness gate-8 evidence (wave 208, refreshed 2026-10-31) + `tools/coverage_scan.ps1` run on `main` at snapshot 120; 285 EX-0 tail entries recorded in `tools/contract_exemptions.json` |
+| 2026-11-06 | stdlib lane | all 44 modules | readiness gate-8 evidence (wave 208, refreshed 2026-10-31) + `tools/coverage_scan.ps1` run on `main` at snapshot 120; 285 tail entries recorded in `tools/contract_exemptions.json` (281 EX-0 + 4 per-function ffi EX-1/EX-2) |
 
 ## Change protocol
 

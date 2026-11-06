@@ -13,6 +13,7 @@ All scripts are repo-relative: they work from any CWD and from CI checkouts.
 | Contract policy | `check_contract_policy.ps1` | every public fn is covered or in the reviewed EX-0 tail; the ownership map, exemption registry, and scanner agree (`docs/CONTRACT_POLICY.md`) |
 | Release state | `check_release_state.ps1` | the last release tag is annotated and an ancestor of HEAD; package.xi/release notes/CHANGELOG agree; no merge commits after the tag; `COMPILER_VERSION` is concrete |
 | Pair state | `check_pair_state.ps1` | the compiler tag named by `COMPILER_VERSION` exposes `STDLIB_VERSION` naming a real stdlib release; a one-release lag is a warning unless `-RequireLatest` |
+| Contract tail | `contract_tail_inventory.ps1` | lists the EX-0 uncovered public functions by module/file/line/function and cross-checks the counts against `coverage_scan.ps1` |
 | Bare-name scan | `barename_scan.ps1` | strict catalog-body findings across all manifest modules (0 expected) |
 | Module check | `check_modules.ps1` | `xiom --check` type-checks every manifest module |
 | Roadmap tracker | `check_roadmap.ps1` | roadmap rows have valid unique IDs, horizons, statuses, exit criteria, and evidence on `in_progress`/`blocked`/`done` |
@@ -70,6 +71,9 @@ pwsh tools/check_release_state.ps1
 # pair state (G3): compiler COMPILER_VERSION tag -> STDLIB_VERSION -> stdlib tag
 pwsh tools/check_pair_state.ps1
 pwsh tools/check_pair_state.ps1 -RequireLatest   # pair closeout
+
+# contract tail (B2): inventory the EX-0 rows (JSON + docs/CONTRACT_TAIL.md)
+pwsh tools/contract_tail_inventory.ps1 -Json out/contract_tail.json -Markdown docs/CONTRACT_TAIL.md
 
 # strict bare-name gate over all 509 manifest modules
 pwsh tools/barename_scan.ps1 -Compiler C:\path\to\xiom.exe

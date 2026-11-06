@@ -4,13 +4,13 @@
 #
 # Proves that the three contract-policy artifacts agree:
 #   - tools/coverage_scan.ps1 (authoritative counts)
-#   - tools/contract_exemptions.json (EX-0 budget for the no-clause tail)
+#   - tools/contract_exemptions.json (EX-0 budget + per-function EX-1..EX-5)
 #   - docs/MODULE_OWNERSHIP.md (per-module sign-off map)
 #
 # Fails (exit 1) when a public function is uncovered with no exemption, when
 # an exemption is stale, or when the ownership map drifts from the scanner.
-# The current registry is module-level EX-0 only; B2 extends this checker to
-# per-function EX-1..EX-5 records when the tail is reclassified.
+# Module-level records are EX-0 only; per-function records are EX-1..EX-5 and
+# are checked against the named source file/function.
 #
 # Repo-relative by default. Runs on PowerShell 5.1 and pwsh 7+.
 param(
@@ -47,16 +47,48 @@ try {
 if ([int]$exDoc.version -ne 1) { $errs.Add("registry: unsupported version '$($exDoc.version)'") }
 
 $exByDir = @{}
+$moduleLevelSeen = @{}
+$functionSeen = @{}
 foreach ($m in @($exDoc.modules)) {
   $name = [string]$m.module
   if ([string]::IsNullOrWhiteSpace($name)) { $errs.Add("registry: entry with empty module"); continue }
-  if ($exByDir.ContainsKey($name)) { $errs.Add("registry: duplicate module '$name'"); continue }
-  $count = 0
-  try { $count = [int]$m.count } catch { $errs.Add("registry ${name}: count is not an integer"); continue }
-  if ($count -lt 0) { $errs.Add("registry ${name}: negative count"); continue }
-  $exByDir[$name] = $count
-  if ([string]$m.category -ne "EX-0") {
-    $errs.Add("registry ${name}: module-level records must be EX-0 (per-function EX-1..EX-5 is B2)")
+  $fn = [string]$m.function
+  if (-not [string]::IsNullOrWhiteSpace($fn)) {
+    $category = [string]$m.category
+    if ($category -notin @("EX-1", "EX-2", "EX-3", "EX-4", "EX-5")) {
+      $errs.Add("registry ${name}.${fn}: per-function category must be EX-1..EX-5")
+    }
+    $relPath = [string]$m.path
+    if ([string]::IsNullOrWhiteSpace($relPath)) {
+      $errs.Add("registry ${name}.${fn}: missing path")
+    } else {
+      $srcPath = Join-Path $repoRoot $relPath
+      if (-not (Test-Path -LiteralPath $srcPath)) {
+        $errs.Add("registry ${name}.${fn}: path not found: $relPath")
+      } elseif ((Get-Content -LiteralPath $srcPath -Raw) -notmatch ('fn\s+' + [regex]::Escape($fn) + '\s*\(')) {
+        $errs.Add("registry ${name}.${fn}: function not found in $relPath")
+      }
+    }
+    $key = $name + "|" + $fn
+    if ($functionSeen.ContainsKey($key)) {
+      $errs.Add("registry ${name}.${fn}: duplicate per-function entry")
+    } else {
+      $functionSeen[$key] = $true
+    }
+    if ($exByDir.ContainsKey($name)) { $exByDir[$name] += 1 } else { $exByDir[$name] = 1 }
+  } else {
+    if ([string]$m.category -ne "EX-0") {
+      $errs.Add("registry ${name}: module-level records must be EX-0")
+    }
+    if ($moduleLevelSeen.ContainsKey($name)) {
+      $errs.Add("registry ${name}: duplicate module-level EX-0 record")
+    } else {
+      $moduleLevelSeen[$name] = $true
+    }
+    $count = 0
+    try { $count = [int]$m.count } catch { $errs.Add("registry ${name}: count is not an integer"); continue }
+    if ($count -lt 0) { $errs.Add("registry ${name}: negative count"); continue }
+    if ($exByDir.ContainsKey($name)) { $exByDir[$name] += $count } else { $exByDir[$name] = $count }
   }
   if ([string]::IsNullOrWhiteSpace([string]$m.owner)) { $errs.Add("registry ${name}: missing owner") }
   if ([string]::IsNullOrWhiteSpace([string]$m.rationale)) { $errs.Add("registry ${name}: missing rationale") }

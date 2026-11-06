@@ -4,8 +4,8 @@
   "policy": "docs/CONTRACT_POLICY.md",
   "ownership_map": "docs/MODULE_OWNERSHIP.md",
   "total": 285,
-  "note": "EX-0 is the grandfathered gate-8 no-clause tail. It is closed to new entries, must shrink, and is reclassified per function in roadmap B2. Counts are the difference between pub fns and pub-with-clause fns reported by tools/coverage_scan.ps1.",
-  "source": "readiness gate 8 (wave 208, refreshed 2026-10-31) + coverage_scan.ps1 run 2026-11-06 (snapshot 120)",
+  "note": "EX-0 is the remaining grandfathered gate-8 no-clause tail. It is closed to new entries and must shrink. EX-1..EX-5 entries are per-function B2 reclassifications; tools/check_contract_policy.ps1 validates each function/path against the source. Counts are the difference between pub fns and pub-with-clause fns reported by tools/coverage_scan.ps1.",
+  "source": "readiness gate 8 (wave 208, refreshed 2026-10-31) + coverage_scan.ps1 run 2026-11-06; B2 per-function reclassification 2026-11-06 (ffi 4)",
   "modules": [
     {
       "module": "iter",
@@ -41,11 +41,43 @@
     },
     {
       "module": "ffi",
-      "count": 4,
-      "category": "EX-0",
+      "function": "dl_open_global",
+      "path": "xiom/ffi/dl.xi",
+      "category": "EX-2",
       "owner": "stdlib lane",
       "approved": "2026-11-06",
-      "rationale": "gate-8 no-clause tail; ABI-defined shims. Reclassify per function in B2 (expected EX-2 shims)."
+      "expires": "never",
+      "rationale": "Dynamic-loader shim: the OS loader defines success/failure and the Result carries the handle or error; a clause would restate the ABI."
+    },
+    {
+      "module": "ffi",
+      "function": "dl_sym_address",
+      "path": "xiom/ffi/dl.xi",
+      "category": "EX-2",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "expires": "never",
+      "rationale": "Dynamic-loader symbol lookup shim: the OS loader and the Result define the contract; a clause would restate the ABI."
+    },
+    {
+      "module": "ffi",
+      "function": "errno_perror",
+      "path": "xiom/ffi/errno.xi",
+      "category": "EX-1",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "expires": "never",
+      "rationale": "Total diagnostic helper with no return value; the only postcondition is a stderr write, which the clause language does not model."
+    },
+    {
+      "module": "ffi",
+      "function": "safe_ptr_free",
+      "path": "xiom/ffi/ffi.xi",
+      "category": "EX-1",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "expires": "never",
+      "rationale": "Total deallocation primitive; the SafePtr owned/ptr fields are the ownership contract and the call has no return value to constrain."
     },
     {
       "module": "serialize",

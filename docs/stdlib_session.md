@@ -24,6 +24,11 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   os 111, math 94, thread 5, ffi 4, serialize 6, format 11), 0 pending.
   EX-0 is closed to new entries; B2 reclassifies it per function and
   ratchets to 100% counted.
+- **B2 (in_progress, blocks 341/342):** `docs/CONTRACT_TAIL.md` tracks all
+  285 uncovered functions. ffi 4/4 reclassified to per-function EX-2/EX-1;
+  the tail is now **281 EX-0 + 4 per-function**. The checker validates each
+  function/path, and the inventory shows the category per row. Next:
+  reclassify the remaining 281 (thread 5, serialize 6, format 11 are next).
 - **Readiness 10/10:** unchanged (gate 9 closed 2026-11-04; PULSE verified
   1704 on the published v0.65.6). v0.65.6 shipped: tag `6fdde4e`, release
   41873341844, registry 41873341859 (xiom-std 0.65.6, compiler v0.65.6).
@@ -66,7 +71,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\stdlib pull --ff-only origin main
   git -C E:\xiom-lang\xiom-relays pull --ff-only
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 121 + blocks 340/339/338.
+Read docs/stdlib_session.md snapshot 121 + blocks 342/341/340.
 
 STATE (2026-11-06):
 - READINESS 10/10; v0.65.6 shipped (tag 6fdde4e; release 41873341844;
@@ -76,6 +81,9 @@ STATE (2026-11-06):
   6,992 pub fns, 6,707 covered (95.9%), 285 EX-0 tail; registry
   tools/contract_exemptions.json; checker tools/check_contract_policy.ps1
   green in the CI static job.
+- B2 (in_progress): docs/CONTRACT_TAIL.md tracks 285 uncovered functions;
+  ffi 4/4 is per-function EX-2/EX-1, leaving 281 EX-0. Checker validates
+  per-function function/path; inventory shows Category. Next: remaining 281.
 - A3 (in_progress): parser fuzz + smoke_fuzz_bignum/ffi/encodings landed;
   nightly fuzz.yml (3 seeds x 2000); bigint_div_mod(-16,97) sign found and
   fixed with smoke_bigint case 22. First nightly run pending.
@@ -97,13 +105,14 @@ PRIORITY (roadmap; no release cuts):
    Windows ASan; keep the leak audit green and shrink the baseline.
 3. G3: process the compiler ack on REL-20261106-1801-stdlib; add
    pin/version automation (the release-state and pair guards are live).
-4. B2: reclassify the 285 EX-0 functions to clauses or EX-1..EX-5; retire
-   EX-0; extend the checker to per-function records. E4 same-leaf dedup
+4. B2: work the remaining 281 EX-0 rows in docs/CONTRACT_TAIL.md into
+   clauses or EX-1..EX-5 (ffi is done); retire EX-0. E4 same-leaf dedup
    before 1.0.
 5. X1/X5 growth policy drafts; expansion after 1.0.
-6. Run tools/check_roadmap.ps1, tools/check_contract_policy.ps1, and
-   tools/check_release_state.ps1 after edits; update rows with evidence and
-   append to the review log.
+6. Run tools/check_roadmap.ps1, tools/check_contract_policy.ps1,
+   tools/check_release_state.ps1, and tools/check_pair_state.ps1 after
+   edits; regenerate docs/CONTRACT_TAIL.md when contracts change; update
+   rows with evidence and append to the review log.
 
 RULES:
 - No tag/release without a fresh compiler-relay GO; released tags are
@@ -4672,6 +4681,33 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-11-06 block 342 (B2 first slice: ffi 4 reclassified to per-function EX-2/EX-1; checker and inventory support per-function records)**
+- **Registry:** the ffi EX-0 count of 4 is replaced by four per-function
+  entries: `dl_open_global`/`dl_sym_address` EX-2 (dynamic-loader ABI
+  shims); `errno_perror`/`safe_ptr_free` EX-1 (total diagnostic/dealloc).
+  The total stays 285.
+- **Checker:** `check_contract_policy.ps1` now accepts module-level EX-0
+  plus per-function EX-1..EX-5 and validates each function exists in the
+  named source path. Negative test: a misspelled function name exits 1.
+- **Inventory:** `contract_tail_inventory.ps1` joins the registry and emits a
+  Category per row; `docs/CONTRACT_TAIL.md` now reports **281 EX-0 + 4
+  per-function**, with ffi at 4/4.
+- **Map:** `MODULE_OWNERSHIP.md` legend/summary updated; ffi remains
+  `tail-approved` with 4 recorded per-function exemptions.
+- **No release cut.** Next: reclassify the remaining 281 (thread 5 or
+  serialize 6 are the next small modules).
+
+**SESSION 2026-11-06 block 341 (B2: contract-tail inventory -- 285 EX-0 functions enumerated)**
+- **Tool:** `tools/contract_tail_inventory.ps1` parses `pub fn` headers with
+  the same rules as `coverage_scan.ps1`, lists every uncovered public
+  function, and fails if any per-module count diverges from the scanner.
+- **Artifact:** `docs/CONTRACT_TAIL.md` -- 285 rows (ffi 4, format 11,
+  iter 54, math 94, os 111, serialize 6, thread 5) with
+  module/file/line/function/signature. This is B2's working checklist.
+- **Next:** reclassify each row to a clause or an EX-1..EX-5 exemption;
+  EX-0 stays closed to new entries until the tail is retired.
+- **No release cut.**
 
 **SESSION 2026-11-06 block 340 (G3 pair check: compiler STDLIB_VERSION vs stdlib release tag; compiler relay opened)**
 - **Relay:** opened **REL-20261106-1801-stdlib** (stdlib -> compiler,
