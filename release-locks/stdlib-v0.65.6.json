@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "tag": "stdlib-v0.65.6",
+  "version": "0.65.6",
+  "commit": "06795c88b9ab977c8db33cb022ac36bb7b74f5f0",
+  "tag_object": null,
+  "compiler_version": "v0.65.6",
+  "recorded": "2026-11-06",
+  "source": "compiler v0.65.6 published asset bundle per REL-20261106-1803-compiler (original release commit 06795c8)",
+  "known_moved": true,
+  "observed_commit": "6fdde4ee89f0108025715031e60976ca7d1a5e82",
+  "observed_tag_object": "3a81d74fa638d470f5615b36bb60f6be514a4b20",
+  "note": "Released tag moved 06795c8 -> 02be60e -> 6fdde4e after the compiler release. Do not re-point 0.65.6; v0.65.7 must be a fresh immutable tag at the fixed commit."
+}

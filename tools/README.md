@@ -11,7 +11,8 @@ All scripts are repo-relative: they work from any CWD and from CI checkouts.
 | Corpus | `run_smokes.ps1` / `run_smokes.sh` | compile + run every `tests/smoke/*.xi`; nonzero exit on any failure |
 | Coverage ratchet | `coverage_scan.ps1` | contract-clause coverage never falls below the recorded floors |
 | Contract policy | `check_contract_policy.ps1` | every public fn is covered or in the reviewed EX-0 tail; the ownership map, exemption registry, and scanner agree (`docs/CONTRACT_POLICY.md`) |
-| Release state | `check_release_state.ps1` | the last release tag is annotated and an ancestor of HEAD; package.xi/release notes/CHANGELOG agree; no merge commits after the tag; `COMPILER_VERSION` is concrete |
+| Release state | `check_release_state.ps1` | the last release tag is annotated and an ancestor of HEAD; package.xi/release notes/CHANGELOG agree; no merge commits after the tag; `COMPILER_VERSION` is concrete; the tag matches its release lock |
+| Release lock | `record_release_lock.ps1` | records the annotated tag object/commit and tag `COMPILER_VERSION` in `release-locks/<tag>.json` after the cut; it never creates or moves a tag |
 | Pair state | `check_pair_state.ps1` | the compiler tag named by `COMPILER_VERSION` exposes `STDLIB_VERSION` naming a real stdlib release; a one-release lag is a warning unless `-RequireLatest` |
 | Contract tail | `contract_tail_inventory.ps1` | lists the EX-0 uncovered public functions by module/file/line/function and cross-checks the counts against `coverage_scan.ps1` |
 | Bare-name scan | `barename_scan.ps1` | strict catalog-body findings across all manifest modules (0 expected) |
@@ -71,6 +72,9 @@ pwsh tools/check_release_state.ps1
 # pair state (G3): compiler COMPILER_VERSION tag -> STDLIB_VERSION -> stdlib tag
 pwsh tools/check_pair_state.ps1
 pwsh tools/check_pair_state.ps1 -RequireLatest   # pair closeout
+
+# release lock (G3): run after creating the annotated tag, then commit the lock
+pwsh tools/record_release_lock.ps1 -Tag stdlib-v<version>
 
 # contract tail (B2): inventory the EX-0 rows (JSON + docs/CONTRACT_TAIL.md)
 pwsh tools/contract_tail_inventory.ps1 -Json out/contract_tail.json -Markdown docs/CONTRACT_TAIL.md

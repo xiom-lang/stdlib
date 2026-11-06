@@ -48,6 +48,8 @@ try {
   $pkgVer = ""
   $cv = ""
   $mergeCount = -1
+  $tagObject = ""
+  $tagCommit = ""
 
   $tags = @(& git tag --list ($TagPrefix + "*") --sort=-v:refname 2>&1)
   if ($LASTEXITCODE -ne 0) {
@@ -86,6 +88,58 @@ try {
       $mergeCount = [int]$mergeText
       if ($mergeCount -ne 0) {
         $errs.Add("$mergeCount merge commit(s) after '$tag' on $HeadRef (land linearly)")
+      }
+    }
+
+    # Released tags are immutable. The lock records the original peel (and,
+    # for new releases, the tag object). A moved tag is a hard failure unless
+    # the lock explicitly marks a documented historical move.
+    $tagObject = (& git rev-parse $tag 2>&1 | Out-String).Trim()
+    $tagCommit = (& git rev-parse ("$tag^{}") 2>&1 | Out-String).Trim()
+    $lockPath = Join-Path $RepoRoot ("release-locks/" + $tag + ".json")
+    if (-not (Test-Path -LiteralPath $lockPath)) {
+      $errs.Add("release lock missing: release-locks/$tag.json (create it at cut time)")
+    } else {
+      $lock = $null
+      try {
+        $lock = Get-Content -LiteralPath $lockPath -Raw | ConvertFrom-Json
+      } catch {
+        $errs.Add("release lock parse failed: $lockPath")
+      }
+      if ($null -ne $lock) {
+        if ([string]$lock.tag -ne $tag) {
+          $errs.Add("release lock tag '$($lock.tag)' != '$tag'")
+        }
+        if ([string]$lock.version -ne $ver) {
+          $errs.Add("release lock version '$($lock.version)' != '$ver'")
+        }
+        $lockCommit = [string]$lock.commit
+        if ([string]::IsNullOrWhiteSpace($lockCommit)) {
+          $errs.Add("release lock ${tag}: missing commit")
+        } elseif ($lockCommit -ne $tagCommit) {
+          $msg = "released tag moved: lock commit $lockCommit, current $tagCommit"
+          if ([bool]$lock.known_moved) {
+            $notes.Add($msg + " (known_moved; do not re-point)")
+          } else {
+            $errs.Add($msg)
+          }
+        }
+        $lockObj = [string]$lock.tag_object
+        if (-not [string]::IsNullOrWhiteSpace($lockObj) -and $lockObj -ne $tagObject) {
+          $msg = "released tag object moved: lock $lockObj, current $tagObject"
+          if ([bool]$lock.known_moved) {
+            $notes.Add($msg + " (known_moved)")
+          } else {
+            $errs.Add($msg)
+          }
+        }
+        $lockCv = [string]$lock.compiler_version
+        if (-not [string]::IsNullOrWhiteSpace($lockCv)) {
+          $tagCv = (& git show ("$tag" + ":COMPILER_VERSION") 2>&1 | Out-String).Trim()
+          if ($tagCv -ne $lockCv) {
+            $errs.Add("tag $tag COMPILER_VERSION '$tagCv' != lock '$lockCv'")
+          }
+        }
       }
     }
   }
@@ -139,7 +193,7 @@ try {
   Pop-Location
 }
 
-Write-Output ("release-state: tag=" + $tag + " version=" + $ver + " package=" + $pkgVer + " compiler=" + $cv + " head=" + $HeadRef + " merges_after_tag=" + $mergeCount)
+Write-Output ("release-state: tag=" + $tag + " version=" + $ver + " package=" + $pkgVer + " compiler=" + $cv + " head=" + $HeadRef + " merges_after_tag=" + $mergeCount + " tag_object=" + $tagObject + " commit=" + $tagCommit)
 foreach ($n in $notes) { Write-Output ("  note: " + $n) }
 if ($errs.Count -gt 0) {
   Write-Output "RELEASE STATE: FAIL"

@@ -47,15 +47,15 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   the first nightly ASan run records the fuzz budgets. Local compile-only
   memory 15/15, leak 12/12. Next: first nightly run, record/add the fuzz
   leak budgets, Windows ASan, shrink the baseline.
-- **G3 (in_progress, blocks 339/340):** `tools/check_release_state.ps1`
-  guards annotated-tag ancestry, no merges after the tag,
-  package/notes/CHANGELOG agreement, and a concrete pin.
-  `tools/check_pair_state.ps1` + nightly `pair.yml` verify the compiler
-  tag's `STDLIB_VERSION` names a real stdlib release (a behind pin warns
-  during the stdlib-first window unless `-RequireLatest`); current pair
-  `v0.65.6 -> stdlib-v0.65.6`. **REL-20261106-1801-stdlib** is open with
-  compiler for the invariant/timing confirmation. Remaining: pin/version
-  automation.
+- **G3 (in_progress, blocks 339/340/344):** release-state + pair guards
+  live. Compiler reply **REL-20261106-1803-compiler** confirms
+  `STDLIB_VERSION` is canonical and `stdlib-v0.65.6` was moved
+  (`06795c8` -> `02be60e` -> `6fdde4e`) after the compiler release.
+  `release-locks/stdlib-v0.65.6.json` records the original commit and
+  `known_moved`; release/pair guards fail future moves, check the tag's
+  `COMPILER_VERSION`, and `record_release_lock.ps1` records new tags.
+  `-1801` is verified/closed; `-1803` acked. Remaining: compiler
+  asset/manifest commit field + pin/version automation.
 - **Queue:** 1551 OPEN (compiler Str reassignment; net smokes carved out);
   1709 FIXED (ref accessors; PULSE verify pending); 1625 info open;
   2202 compiler Send/Sync. 1531/1807/wishlist33 external.
@@ -71,7 +71,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\stdlib pull --ff-only origin main
   git -C E:\xiom-lang\xiom-relays pull --ff-only
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 121 + blocks 343/342/341.
+Read docs/stdlib_session.md snapshot 121 + blocks 344/343/342.
 
 STATE (2026-11-06):
 - READINESS 10/10; v0.65.6 shipped (tag 6fdde4e; release 41873341844;
@@ -92,9 +92,9 @@ STATE (2026-11-06):
   leak lane 12 baselined; local compile-only 15/15 + 12/12. First nightly
   run with the broadened lane pending; then record leak budgets, Windows
   ASan, shrink the baseline.
-- G3 (in_progress): release-state + pair guards live (pair.yml nightly);
-  compiler relay REL-20261106-1801-stdlib open for invariant/timing;
-  remaining pin/version automation.
+- G3 (in_progress): release-state + pair guards live; release locks record
+  v0.65.6 as known_moved (original 06795c8, current 6fdde4e); REL-1801
+  closed, REL-1803 acked; remaining asset-manifest field + pin automation.
 - Queue: 1551 OPEN (compiler Str); 1709 FIXED (PULSE verify); 1625 info;
   2202 compiler Send/Sync. 1531/1807/wishlist33 external.
 
@@ -104,8 +104,9 @@ PRIORITY (roadmap; no release cuts):
 2. A1: observe the first nightly sanitizer run with the 15-file memory lane;
    record the fuzz-target leak budgets, then add them to the leak lane;
    Windows ASan; keep the leak audit green and shrink the baseline.
-3. G3: process the compiler ack on REL-20261106-1801-stdlib; add
-   pin/version automation (the release-state and pair guards are live).
+3. G3: add the compiler asset/manifest commit-field check; pin/version
+   automation. v0.65.7 must be a fresh immutable tag at the fixed commit;
+   never re-point 0.65.6.
 4. B2: work the remaining 276 EX-0 rows in docs/CONTRACT_TAIL.md into
    clauses or EX-1..EX-5 (ffi and thread are done); retire EX-0. E4
    same-leaf dedup before 1.0.
@@ -4682,6 +4683,34 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-11-06 block 344 (G3 tag-move guard: compiler reply confirms stdlib-v0.65.6 moved; release locks added)**
+- **Compiler reply:** `REL-20261106-1803-compiler` (high): `STDLIB_VERSION`
+  is canonical and released tags must be immutable. `stdlib-v0.65.6` was
+  moved after the compiler release (`06795c8` -> `02be60e` -> `6fdde4e`);
+  the published compiler v0.65.6 asset bundles `06795c8`. v0.65.7 must be a
+  fresh immutable tag at the fixed commit; do not re-point 0.65.6. No
+  post-release `COMPILER_VERSION` bump.
+- **Verified locally:** tag object `3a81d74` peels to `6fdde4e`;
+  `06795c8` and `02be60e` are ancestors. The original tag object was not
+  recorded, so the lock records the original commit and the observed
+  object.
+- **Guard:** added `release-locks/stdlib-v0.65.6.json` with
+  `commit=06795c8`, `known_moved=true`, `observed_commit=6fdde4e`,
+  `observed_tag_object=3a81d74`. `check_release_state.ps1` now requires a
+  lock and fails a tag move unless `known_moved`; `check_pair_state.ps1`
+  also checks the stdlib tag's `COMPILER_VERSION`, the lock, and (local)
+  compiler-tag annotation; `record_release_lock.ps1` records a fresh tag's
+  object/commit and never moves a tag.
+- **Validation:** release-state OK with the known-move note; pair local and
+  network modes OK with the same warning; lock helper dry-run/write green;
+  missing tag exits 1. `RELEASE_DRY_RUN.md` now has the lock step and the
+  no-re-point rule.
+- **Relay:** `REL-20261106-1801-stdlib` verified/closed; `-1803` acked; a
+  new item asks compiler to publish the bundled stdlib commit in the
+  release manifest/asset so the nightly can compare the asset, not just the
+  tag ref.
+- **No release cut.**
 
 **SESSION 2026-11-06 block 343 (B2 second slice: thread 5 reclassified; checker generic-parameter fix)**
 - **Registry:** thread's EX-0 count of 5 is replaced by five per-function

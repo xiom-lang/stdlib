@@ -58,6 +58,8 @@ try {
   $pin = ""
   $pinVer = ""
   $source = ""
+  $latestCommit = ""
+  $tagCv = ""
 
   $tags = @(& git tag --list ($TagPrefix + "*") --sort=-v:refname 2>&1)
   if ($LASTEXITCODE -ne 0) {
@@ -92,6 +94,10 @@ try {
       if ($LASTEXITCODE -eq 0) {
         $pin = (& git -C $CompilerRepo show ("$cv" + ":STDLIB_VERSION") 2>&1 | Out-String).Trim()
         $source = "local-tag"
+        $compType = (& git -C $CompilerRepo cat-file -t $cv 2>&1 | Out-String).Trim()
+        if ($LASTEXITCODE -ne 0 -or $compType -ne "tag") {
+          $errs.Add("compiler tag '$cv' is '$compType', expected an annotated tag")
+        }
       } else {
         $pinPath = Join-Path $CompilerRepo "STDLIB_VERSION"
         if (Test-Path -LiteralPath $pinPath) {
@@ -112,6 +118,17 @@ try {
         $source = "network"
       } catch {
         $errs.Add("cannot fetch compiler pin '$url': " + $_.Exception.Message)
+      }
+    }
+    if ($source -eq "network") {
+      try {
+        $api = "https://api.github.com/repos/" + $CompilerRepoSlug + "/git/ref/tags/" + $cv
+        $ref = Invoke-RestMethod -UseBasicParsing -Uri $api -TimeoutSec 30 -Headers @{ 'User-Agent' = 'xiom-stdlib-pair-check' }
+        if ([string]$ref.object.type -ne "tag") {
+          $errs.Add("compiler tag '$cv' is '$($ref.object.type)', expected an annotated tag")
+        }
+      } catch {
+        $warns.Add("cannot verify compiler tag annotation via GitHub API: " + $_.Exception.Message)
       }
     }
     if ($pin -eq "" -and $Offline) {
@@ -145,11 +162,43 @@ try {
       $errs.Add("compiler pin is ahead of the latest stdlib tag ($pin > $latest)")
     }
   }
+
+  if ($latest -ne "") {
+    $latestCommit = (& git rev-parse ("${latest}^{}") 2>&1 | Out-String).Trim()
+    $tagCv = (& git show ("${latest}" + ":COMPILER_VERSION") 2>&1 | Out-String).Trim()
+    if ($cv -ne "" -and $tagCv -ne "" -and $tagCv -ne $cv) {
+      $msg = "stdlib tag ${latest} records COMPILER_VERSION $tagCv but the current pin is $cv (release prep)"
+      if ($RequireLatest) { $errs.Add($msg) } else { $warns.Add($msg) }
+    }
+
+    $lockPath = Join-Path $RepoRoot ("release-locks/" + $latest + ".json")
+    if (-not (Test-Path -LiteralPath $lockPath)) {
+      $errs.Add("release lock missing: release-locks/${latest}.json")
+    } else {
+      $lock = $null
+      try {
+        $lock = Get-Content -LiteralPath $lockPath -Raw | ConvertFrom-Json
+      } catch {
+        $errs.Add("release lock parse failed: $lockPath")
+      }
+      if ($null -ne $lock) {
+        $lockCommit = [string]$lock.commit
+        if ($lockCommit -ne "" -and $lockCommit -ne $latestCommit) {
+          $msg = "released stdlib tag moved: lock $lockCommit, current $latestCommit"
+          if ([bool]$lock.known_moved) { $warns.Add($msg + " (known_moved)") } else { $errs.Add($msg) }
+        }
+        $lockCv = [string]$lock.compiler_version
+        if ($lockCv -ne "" -and $tagCv -ne "" -and $lockCv -ne $tagCv) {
+          $errs.Add("release lock compiler_version '$lockCv' != tag ${latest} COMPILER_VERSION '$tagCv'")
+        }
+      }
+    }
+  }
 } finally {
   Pop-Location
 }
 
-Write-Output ("pair-state: compiler=" + $cv + " compiler_pin=" + $pin + " stdlib_latest=" + $latest + " source=" + $source + " require_latest=" + [bool]$RequireLatest)
+Write-Output ("pair-state: compiler=" + $cv + " compiler_pin=" + $pin + " stdlib_latest=" + $latest + " stdlib_commit=" + $latestCommit + " tag_compiler=" + $tagCv + " source=" + $source + " require_latest=" + [bool]$RequireLatest)
 foreach ($w in $warns) { Write-Output ("  warn: " + $w) }
 if ($errs.Count -gt 0) {
   Write-Output "PAIR STATE: FAIL"

@@ -124,6 +124,10 @@ archive and `XIOM_STDLIB` set to this checkout:
 4. **Tag + push** `stdlib-v<version>` at the release commit; the tag triggers
    `release.yml`. If the tag is on a branch, merge it to `main --no-ff` after
    the release.
+4b. **Record the tag lock**: run
+   `pwsh tools/record_release_lock.ps1 -Tag stdlib-v<version>` and commit
+   `release-locks/stdlib-v<version>.json` to main. `tools/check_release_state.ps1`
+   must pass without a moved-tag note.
 5. **Registry**: dispatch `publish-registry.yml` (the tag path auto-dispatches
    the staging canary), approve the `registry-publish` environment, verify the
    package metadata (sha256, compiler field) at
@@ -139,7 +143,10 @@ archive and `XIOM_STDLIB` set to this checkout:
    PR may hit the token-scope gap; the branch is still pushed). The
    coordination item for this candidate is REL-20261031-1542-stdlib.
 7. **Tags are immutable**: never move a released tag. Fix forward if a
-   problem surfaces.
+   problem surfaces. v0.65.6 was moved after the compiler release
+   (`06795c8` -> `02be60e` -> `6fdde4e`); its release lock records the
+   historical move and the tag must not be re-pointed. v0.65.7 gets a fresh
+   immutable tag at the fixed commit.
 
 ## 4. Draft release notes (next cut; two highlights)
 
