@@ -1,0 +1,42 @@
+# Sanitizer lane (roadmap A1): focused ASan/UBSan corpus on the pinned
+# compiler. Kept out of PR CI so the Tier-1 minutes stay sustainable; runs
+# nightly and on dispatch. Broadening the file set is a roadmap task.
+name: XIOM Stdlib Sanitizers
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 4 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  sanitizers:
+    name: sanitizers (ubuntu)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Read COMPILER_VERSION
+        id: pin
+        shell: bash
+        run: echo "ref=$(tr -d '\r\n ' < COMPILER_VERSION)" >> "$GITHUB_OUTPUT"
+
+      - name: Build pinned compiler
+        id: compiler
+        uses: ./.github/actions/build-compiler
+        with:
+          ref: ${{ steps.pin.outputs.ref }}
+
+      - name: Sanitizer smoke set
+        shell: pwsh
+        run: ./tools/run_sanitizers.ps1 -Compiler '${{ steps.compiler.outputs.binary }}' -Json sanitizer-results.json
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: sanitizer-results
+          path: sanitizer-results.json
+          if-no-files-found: ignore
