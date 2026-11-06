@@ -1,6 +1,9 @@
 ﻿# Production-readiness remaining queue (handoff 2026-09-25)
 
-**100% -- 10 of 10 gates complete; gate 9 closed 2026-11-04.** (Current pin: **compiler v0.65.6**; **stdlib 0.65.6** published + registry live.) (Compiler pin:
+**100% -- 10 of 10 gates complete; gate 9 closed 2026-11-04.**
+**Gates: corpus 955/955 (3 carve-outs; 958 total), modules 533/533, probes 427/427, barename 0/533, module-smoke 543/543.**
+Current: **stdlib 0.65.6** published (tag `6fdde4e`; registry xiom-std 0.65.6, compiler field **v0.65.6**); compiler main pins `STDLIB_VERSION=stdlib-v0.65.6`.
+Historical:
 **v0.65.4** published; v0.65.5 pin PR **#12** (chore/pin-stdlib-v0.65.5-compiler) **MERGED**; compiler main pins STDLIB_VERSION=stdlib-v0.65.5.
  **stdlib-v0.65.5 PUBLISHED** at
 `d1e4b36`/`88f3c12` (code `7b7583c`, release run 41447551297); registry

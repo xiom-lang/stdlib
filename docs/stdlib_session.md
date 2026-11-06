@@ -17,7 +17,120 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `tools/known_failures/` keeps the repro evidence and closed history,
   and `docs/STDLIB-WISHLIST.md` keeps the intake mirror with closed rows.
 
-## 0A. CONTINUE HERE -- handoff snapshot 119 (updated 2026-11-02; **v0.65.5 SHIPPED: stdlib tag `d1e4b36`@`88f3c12`, release 41447551297, registry 0.65.5 live, compiler v0.65.5 released, pin PR #12 MERGED. Official v0.65.5 verification: 1600 e2e GREEN (1924 fixed); 1704 root-caused. The compiler fixed the nested-scope `#[owns_return]` drop alloca (REL-20261103-1626 **verified**) and the pair is flat: 5.6/5.6/6.4/9.2/14.0 MB at 10k/20k/40k/100k/200k (v0.65.5: 45.1/85.9/166.6/408.8/812.8). Stdlib contracts committed `9de28f1`. READINESS 9/10: flip pending the v0.65.6 archive + PULSE confirmation (REL-20261103-1807-stdlib). Lane queue = 2202 (compiler Send/Sync; brotli/zstd live; kqueue done) + 1704. 1531/1807/wishlist33 external.**)
+## 0A. CONTINUE HERE -- handoff snapshot 120 (updated 2026-11-06; **v0.65.6 SHIPPED: stdlib tag `6fdde4e`, release 41873341844, registry 0.65.6 live (compiler v0.65.6); READINESS 10/10 (PULSE closed 1704); A3 json surrogate fix; A1 sanitizer lane green. Lane queue = 1551 open (compiler Str), 1709 fixed (PULSE verify), 1625 info. NO release cuts without compiler-relay GO.**)
+
+- **Readiness 10/10 (100%):** gate 9 closed 2026-11-04. PULSE verified
+  1704 on the published v0.65.6: builder build+stringify **14.4 B/iter**,
+  parse **15.1 B/iter**, capped bttger 5k clean under 2048 MB. `RF-0` is
+  marked done in `docs/STDLIB_ROADMAP.md`.
+- **v0.65.6 shipped:** tag `stdlib-v0.65.6` at **`6fdde4e`** (tag object
+  `3a81d74`; the original `06795c8` was re-cut on owner GO to include the
+  gate fix and the v0.65.6 smoke fixes). Release **41873341844 SUCCESS**;
+  GitHub Release `stdlib-v0.65.6` with `xiom-std-0.65.6.tar.gz` +
+  `SHA256SUMS`; registry publish **41873341859 SUCCESS**: `xiom-std`
+  **0.65.6**, compiler **v0.65.6**, sha256 `7f6475d4...`, published
+  `2026-11-04T17:54:33Z`. Compiler main pins
+  `STDLIB_VERSION=stdlib-v0.65.6` (the pin-PR job failure is cosmetic).
+- **Gate fixes:** `a2242e1` (owned bool/float string results; bounded
+  guard free-list zeroing) and `6fdde4e` (explicit `.to_str()` in five
+  v0.65.6-strict smokes; the three Ubuntu-only net smokes are the
+  documented release-gate carve-out tied to REL-20261104-1551).
+- **A3 (in_progress, `84c1d73`):** `json_parse` now combines surrogate
+  pairs and rejects lone surrogates/invalid escapes; the fuzz smoke has
+  depth 128/129, `\u0041`, pair roundtrip and lone/bad edges, with
+  qualified `json.*` calls (unqualified calls were resolving to the
+  parent serialize parser). 600/600 JSON roundtrips, 21/21 serde smokes,
+  9/9 JSON probes.
+- **A1 (in_progress):** nightly `.github/workflows/sanitizers.yml`
+  (memory lane ASan/UBSan leaks-off; leak audit vs
+  `tools/sanitizer_leak_baseline.json`, growth fails) over 12 files;
+  run **42242340821 green**. `tools/run_sanitizers.ps1` supports
+  `-CompileOnly` and `-Leaks`.
+- **Readiness doc / website:** `docs/PRODUCTION_READINESS_QUEUE.md` now
+  leads with the meter `**100% -- 10 of 10 gates complete**` and a
+  `**Gates: corpus 955/955 (3 carve-outs; 958 total), modules 533/533,
+  probes 427/427, barename 0/533, module-smoke 543/543.**` line, which
+  `xiom-website/js/progress-meter.js` fetches from raw main.
+- **Queue:** 1551 **OPEN** (compiler Str-reassignment garbage in
+  `http_build_request`; the 3 net smokes are the release carve-out);
+  1709 **FIXED** (ref accessors; PULSE verification pending); 1625 info
+  open; 2202 compiler `Send`/`Sync`. 1531/1807-orbitdb/wishlist33
+  external.
+- **Roadmap:** RF-0 **done**; A3/A1 **in_progress**; next **B1**
+  contract policy, then broaden A3 (bigint/FFI + nightly fuzz) and A1
+  (full corpus, Windows ASan, shrink the leak baseline), G3 release
+  automation, E4 same-leaf dedup, X1/X5 growth policy. Expansion starts
+  after 1.0.
+- **Worktree:** the shared checkout is on `main` at `0c36c2c`; untracked
+  scratch only (`out/`, `tests/smoke/smoke_diag_f128_l*`,
+  `tools/coverage_floors195.json`). No foreign uncommitted WIP in this
+  repo; the shared relay clone still has foreign uncommitted changes
+  (release-checks + some item files) -- do not revert.
+- **Rules:** no tag/release without a fresh **compiler-relay GO**;
+  released tags are immutable; relay pull `--ff-only`; never edit
+  another lane's item; stage explicit paths only; no clause waves;
+  `json_clear(&mut)` hangs; no mutable-enum recursion.
+
+## 0C. NEXT-SESSION PROMPT (paste-ready 2026-11-06, snapshot 120)
+
+```
+Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
+  git -C E:\xiom-lang\stdlib pull --ff-only origin main
+  git -C E:\xiom-lang\xiom-relays pull --ff-only
+  python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
+Read docs/stdlib_session.md snapshot 120 + blocks 335/334/333.
+
+STATE (2026-11-06):
+- READINESS 10/10 (100%): gate 9 closed 2026-11-04; PULSE verified 1704
+  on published v0.65.6 (build+stringify 14.4 B/iter, parse 15.1 B/iter,
+  capped bttger 5k clean).
+- v0.65.6 SHIPPED: stdlib tag 6fdde4e (tag object 3a81d74); release
+  41873341844 SUCCESS; GitHub Release stdlib-v0.65.6 with
+  xiom-std-0.65.6.tar.gz; registry 41873341859 SUCCESS: xiom-std 0.65.6,
+  compiler v0.65.6, sha 7f6475d4..., published 17:54:33Z. Compiler main
+  pins STDLIB_VERSION=stdlib-v0.65.6. DO NOT cut a release unless the
+  compiler relay says GO.
+- A3 (in_progress): json surrogate fix 84c1d73; depth/unicode edges in
+  smoke_stress_fuzz_parsers with qualified json.*; 600/600 JSON, 21/21
+  serde smokes, 9/9 JSON probes.
+- A1 (in_progress): nightly sanitizers.yml (memory + leak audit vs
+  tools/sanitizer_leak_baseline.json) green run 42242340821;
+  tools/run_sanitizers.ps1 -CompileOnly/-Leaks.
+- Queue: 1551 OPEN (compiler Str reassignment; net smokes carved out);
+  1709 FIXED (ref accessors; PULSE verify pending); 1625 info open;
+  2202 compiler Send/Sync. 1531/1807/wishlist33 external.
+- Readiness doc: PRODUCTION_READINESS_QUEUE.md has the website meter
+  line **100% -- 10 of 10 gates complete** and the **Gates:** line.
+
+PRIORITY (roadmap; no release cuts):
+1. B1: contract policy doc (public API -> contracts or documented
+   exemption; per-module sign-off). Next.
+2. A3: bigint/FFI fuzz targets + nightly fuzz schedule; keep the JSON
+   edges green.
+3. A1: broaden the sanitizer set toward the full corpus; Windows ASan;
+   keep the leak audit green and shrink the baseline as the compiler
+   drop residual improves.
+4. G3: release automation (main contains last release, compiler+stdlib
+   pair CI, pin/version automation). E4 same-leaf dedup (JsonValue x2,
+   json_escape x4, build x2) before 1.0.
+5. X1/X5 growth policy drafts (tiers/admission test; data-format
+   boundary). Expansion starts after 1.0.
+6. Run tools/check_roadmap.ps1 after edits; update rows with evidence
+   and append to the review log.
+
+RULES:
+- No tag/release without a fresh compiler-relay GO; released tags are
+  immutable.
+- Relay: pull --ff-only; never edit another lane's item. The shared
+  relay clone has foreign uncommitted changes; do not revert; validate
+  from a clean clone if needed.
+- Stage explicit paths only; never `git add .`; keep out/ disposable and
+  archives under %TEMP%.
+- No clause waves; json_clear(&mut) hangs; no mutable-enum recursion.
+```
+
+
+## 0A-119. PREVIOUS HANDOFF -- snapshot 119 (updated 2026-11-02; **v0.65.5 SHIPPED: stdlib tag `d1e4b36`@`88f3c12`, release 41447551297, registry 0.65.5 live, compiler v0.65.5 released, pin PR #12 MERGED. Official v0.65.5 verification: 1600 e2e GREEN (1924 fixed); 1704 root-caused. The compiler fixed the nested-scope `#[owns_return]` drop alloca (REL-20261103-1626 **verified**) and the pair is flat: 5.6/5.6/6.4/9.2/14.0 MB at 10k/20k/40k/100k/200k (v0.65.5: 45.1/85.9/166.6/408.8/812.8). Stdlib contracts committed `9de28f1`. READINESS 9/10: flip pending the v0.65.6 archive + PULSE confirmation (REL-20261103-1807-stdlib). Lane queue = 2202 (compiler Send/Sync; brotli/zstd live; kqueue done) + 1704. 1531/1807/wishlist33 external.**)
 
 - **v0.65.5 release (2026-11-02):** annotated tag `stdlib-v0.65.5`
   (object `d1e4b36`) at `88f3c12` (code `7b7583c`, package 0.65.5,
@@ -133,7 +246,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 - **No active cron/watch:** the 30-min relay watch was stopped after the
   release completed. Next release/tag needs a fresh owner GO.
 
-## 0C. NEXT-SESSION PROMPT (paste-ready 2026-11-02, snapshot 119)
+## 0C-119. NEXT-SESSION PROMPT (2026-11-02, snapshot 119 -- SUPERSEDED by snapshot 120)
 
 ```
 Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
