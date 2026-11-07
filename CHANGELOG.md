@@ -4,6 +4,49 @@ All notable changes to the XIOM standard library are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.65.7] - 2026-11-07
+
+### Security
+
+- `server_parse_request` rejects HTTP/1.1 request-smuggling shapes:
+  duplicate or conflicting `Content-Length`, non-digit or overflowing
+  `Content-Length`, whitespace before the field colon, duplicate or
+  non-chunked `Transfer-Encoding`, `Transfer-Encoding` plus
+  `Content-Length`, NUL/other CTLs in the head, extra request-line tokens
+  and obs-fold. The body remains binary-safe.
+  (REL-20261107-1032-pulse, REL-20261106-1716-pulse)
+- `ws_frame_take` rejects MSB-set, non-minimal and over-1-MiB lengths, RSV
+  bits, invalid opcodes and control frames, invalid close codes/reasons and
+  invalid UTF-8 in final text frames. The consumed count can no longer be
+  negative, closing the remote unauthenticated crash/hang.
+  (REL-20261107-1349-pulse)
+
+### Changed
+
+- `xiom_alloc` requests transparent huge pages for allocations of 4 MiB or
+  more before zeroing, on Linux x86_64. This is a hint only; memory contents
+  and lifetime are unchanged.
+- `convert.to_string` uses owned `+` concatenation, so the `str_slice`
+  temporary is freed instead of retained.
+- Contract coverage is 96.1% (6,716/6,992 public functions) with **0 EX-0**
+  exemptions; the 276 remaining uncovered functions have per-function
+  EX-1..EX-5 records and the ownership map/sign-off is current.
+- Release automation adds release locks, a compiler/stdlib pair guard and a
+  nightly pair check. The v0.65.6 tag remains an immutable historical record
+  (its lock records the known move and it is not re-pointed).
+- The v0.65.6 JSON/HTTP ownership contracts and server/convert ownership
+  annotations remain in place.
+
+### Breaking changes
+
+- `xiom.collect.threadpool.ThreadPool` is renamed `CollectThreadPool`
+  (pre-1.0 same-leaf dedup). The public function names are unchanged.
+
+### Fixed
+
+- Same-leaf audit is clean again: the `ThreadPool` shape conflict between
+  `collect/threadpool.xi` and `thread/pool.xi` is removed.
+
 ## [0.65.6] - 2026-11-04
 
 ### Fixed
