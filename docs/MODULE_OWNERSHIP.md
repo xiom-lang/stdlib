@@ -24,10 +24,9 @@ disagree, or if any module is `pending`.
 ## Sign-off summary
 
 - 44 modules; 6,992 public functions; 6,716 covered (96.1%); 276 exemptions
-  in 7 modules (94 EX-0 + 182 per-function EX-1/EX-2/EX-3).
-- 37 modules `signed-off` at 100%; 7 modules `tail-approved` with a recorded
-  budget (1 with EX-0: math; ffi/thread/serialize/format/iter/os with
-  per-function exemptions). No module is `pending`.
+  in 7 modules (0 EX-0 + 276 per-function EX-1/EX-2/EX-3).
+- 37 modules `signed-off` at 100%; 7 modules `tail-approved` with
+  per-function exemptions. No module is `pending`.
 - The sign-off formalizes the readiness gate-8 evidence (wave 208, refreshed
   2026-10-31) and the 2026-11-06 scanner run. It is not a fresh clause-quality
   audit of every function; B2 performs the function-level reclassification.
@@ -84,24 +83,23 @@ Status meanings: `signed-off` = every public function covered; `tail-approved`
 = every uncovered function is a recorded exemption (EX-0 or per-function
 EX-1..EX-5); `pending` = not signed off (CI fails).
 
-B2 blocks 342/343/345/346/347: ffi 4, thread 5, serialize 6, format 2,
-iter 54 and os 111 exemptions are per-function -- ffi:
+B2 blocks 342/343/345/346/347/348: ffi 4, thread 5, serialize 6, format 2,
+iter 54, os 111 and math 94 exemptions are per-function -- ffi:
 `dl_open_global`/`dl_sym_address` EX-2, `errno_perror`/`safe_ptr_free` EX-1;
 thread: `scope` EX-2, `sleep_ms`/`is_main_thread`/`thread_yield`/
 `thread_parallel_for` EX-1; serialize: `json_get`/`JsonValue.get`/`yaml_get`
 EX-3, `to_json`/`from_json`/`yaml_stringify` EX-1; format: `print`/`println`
 EX-1; iter: the 53 `Range`/`MapIter`/`FilterIter`/`ChainIter`/`ZipIter`/
 `InspectIter` protocol methods plus `iter_for_each` are EX-3; os: the 111
-platform/syscall/ABI functions in `err`, `event`, `fs_ffi`, `ioctl`, `lock`,
-`mmap`, `os`, `proc_ffi`, `sync_io`, `term`, `terminal`, `unix`, `watch` and
-`win` are EX-2. The nine format ANSI helpers moved to constant clauses. The
-other 94 (math) are EX-0.
+platform/syscall/ABI functions across 14 files are EX-2; math: the 94
+total/numeric and documented compiler-limited stub functions are EX-1. The
+nine format ANSI helpers moved to constant clauses. **EX-0 is retired.**
 
 ## Sign-off record
 
 | Date | Reviewer | Scope | Basis |
 |---|---|---|---|
-| 2026-11-06 | stdlib lane | all 44 modules | readiness gate-8 evidence (wave 208, refreshed 2026-10-31) + `tools/coverage_scan.ps1` run on `main` at snapshot 120; 276 tail entries recorded in `tools/contract_exemptions.json` (94 EX-0 + 182 per-function ffi/thread/serialize/format/iter/os EX-1/EX-2/EX-3); the nine format ANSI helpers carry constant clauses |
+| 2026-11-06 | stdlib lane | all 44 modules | readiness gate-8 evidence (wave 208, refreshed 2026-10-31) + `tools/coverage_scan.ps1` run on `main` at snapshot 120; 276 tail entries recorded in `tools/contract_exemptions.json` (0 EX-0 + 276 per-function ffi/thread/serialize/format/iter/os/math EX-1/EX-2/EX-3); the nine format ANSI helpers carry constant clauses |
 
 ## Change protocol
 

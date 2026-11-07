@@ -102,22 +102,23 @@ $fnCategories = @{}
 if (Test-Path -LiteralPath $exPath) {
   $exDoc = Get-Content -LiteralPath $exPath -Raw | ConvertFrom-Json
   foreach ($m in @($exDoc.modules)) {
-    $mod = [string]$m.module
     $cat = [string]$m.category
+    $p = [string]$m.path -replace '^xiom/', ''
+    if ([string]::IsNullOrWhiteSpace($p)) { continue }
     if (-not [string]::IsNullOrWhiteSpace([string]$m.function)) {
-      $fnCategories[$mod + "|" + [string]$m.function] = $cat
+      $fnCategories[$p + "|" + [string]$m.function] = $cat
     }
     if ($null -ne $m.functions) {
       foreach ($x in @($m.functions)) {
         if (-not [string]::IsNullOrWhiteSpace([string]$x)) {
-          $fnCategories[$mod + "|" + [string]$x] = $cat
+          $fnCategories[$p + "|" + [string]$x] = $cat
         }
       }
     }
   }
 }
 foreach ($row in $rows) {
-  $key = $row.Module + "|" + $row.Function
+  $key = $row.File + "|" + $row.Function
   $cat = "EX-0"
   if ($fnCategories.ContainsKey($key)) { $cat = $fnCategories[$key] }
   $row | Add-Member -NotePropertyName Category -NotePropertyValue $cat

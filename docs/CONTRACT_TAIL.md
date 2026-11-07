@@ -4,17 +4,17 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 # Contract Tail Inventory (roadmap B2)
 
-Generated: 2026-11-06 by `tools/contract_tail_inventory.ps1`.
+Generated: 2026-11-07 by `tools/contract_tail_inventory.ps1`.
 Authoritative counts: `tools/coverage_scan.ps1`. Policy: `docs/CONTRACT_POLICY.md`.
 
-**276 uncovered public functions across 7 modules: 94 EX-0 and 182 per-function exemptions.** Each row becomes a clause or an EX-1..EX-5 exemption in B2; EX-0 is closed to new entries.
+**276 uncovered public functions across 7 modules: 0 EX-0 and 276 per-function exemptions.** Each row becomes a clause or an EX-1..EX-5 exemption in B2; EX-0 is closed to new entries.
 
 | Module | Uncovered | EX-0 | Per-function |
 |---|---:|---:|---:|
 | ffi | 4 | 0 | 4 |
 | format | 2 | 0 | 2 |
 | iter | 54 | 0 | 54 |
-| math | 94 | 94 | 0 |
+| math | 94 | 0 | 94 |
 | os | 111 | 0 | 111 |
 | serialize | 6 | 0 | 6 |
 | thread | 5 | 0 | 5 |
@@ -83,100 +83,100 @@ Authoritative counts: `tools/coverage_scan.ps1`. Policy: `docs/CONTRACT_POLICY.m
 | iter | iter/iter.xi | 1186 | `ZipIter.last` | `EX-3` | `pub fn ZipIter[T, U].last(self) -> Option[(T, U)] {` |
 | iter | iter/iter.xi | 1298 | `Range.inspect` | `EX-3` | `pub fn Range.inspect(self, f: fn(&Int)) -> InspectIter[Int] {` |
 | iter | iter/iter.xi | 1304 | `InspectIter.next` | `EX-3` | `pub fn InspectIter[T].next(self) -> Option[T] {` |
-| math | math/algebra_extended.xi | 281 | `algebraic_number` | `EX-0` | `pub fn algebraic_number(alpha: Float64, polynomial: &Vec[Float64]) -> Bool {` |
-| math | math/calculus.xi | 117 | `limit` | `EX-0` | `pub fn limit(f: fn(Float64) -> Float64, x: Float64) -> Float64 {` |
-| math | math/calculus.xi | 125 | `limit_left` | `EX-0` | `pub fn limit_left(f: fn(Float64) -> Float64, x: Float64) -> Float64 {` |
-| math | math/calculus.xi | 133 | `limit_right` | `EX-0` | `pub fn limit_right(f: fn(Float64) -> Float64, x: Float64) -> Float64 {` |
-| math | math/calculus.xi | 142 | `is_continuous` | `EX-0` | `pub fn is_continuous(f: fn(Float64) -> Float64, x: Float64, tol: Float64) -> Bool {` |
-| math | math/calculus.xi | 158 | `gradient` | `EX-0` | `pub fn gradient(f: fn(&Vec[Float64]) -> Float64, x: &Vec[Float64]) -> Vec[Float64] {` |
-| math | math/calculus.xi | 167 | `partial_derivative` | `EX-0` | `pub fn partial_derivative(f: fn(&Vec[Float64]) -> Float64, x: &Vec[Float64], i: Int, h: Float64) -> Float64 {` |
-| math | math/calculus.xi | 175 | `jacobian` | `EX-0` | `pub fn jacobian(fs: &Vec[fn(&Vec[Float64]) -> Float64], x: &Vec[Float64]) -> Vec[Vec[Float64]] {` |
-| math | math/calculus.xi | 184 | `hessian` | `EX-0` | `pub fn hessian(f: fn(&Vec[Float64]) -> Float64, x: &Vec[Float64]) -> Vec[Vec[Float64]] {` |
-| math | math/calculus.xi | 193 | `laplacian` | `EX-0` | `pub fn laplacian(f: fn(&Vec[Float64]) -> Float64, x: &Vec[Float64]) -> Float64 {` |
-| math | math/calculus.xi | 202 | `curl` | `EX-0` | `pub fn curl(f: fn(&Vec[Float64]) -> Vec[Float64], x: &Vec[Float64]) -> Vec[Float64] {` |
-| math | math/calculus.xi | 211 | `divergence` | `EX-0` | `pub fn divergence(f: fn(&Vec[Float64]) -> Vec[Float64], x: &Vec[Float64]) -> Float64 {` |
-| math | math/control_theory.xi | 65 | `state_space` | `EX-0` | `pub fn state_space(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]], c: &Vec[Vec[Float64]], d: &Vec[Vec[Float64]]) -> (Vec[Vec[Float64]], Vec[Vec[Float64]], Vec[Vec...` |
-| math | math/control_theory.xi | 480 | `pole_placement` | `EX-0` | `pub fn pole_placement(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]], poles: &Vec[Float64]) -> Vec[Vec[Float64]] {` |
-| math | math/control_theory.xi | 488 | `lqr` | `EX-0` | `pub fn lqr(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]], q: &Vec[Vec[Float64]], r: &Vec[Vec[Float64]]) -> (Vec[Vec[Float64]], Vec[Vec[Float64]]) {` |
-| math | math/control_theory.xi | 497 | `lqg` | `EX-0` | `pub fn lqg(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]], c: &Vec[Vec[Float64]], q: &Vec[Vec[Float64]], r: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {` |
-| math | math/control_theory.xi | 522 | `h_infinity` | `EX-0` | `pub fn h_infinity(p: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {` |
-| math | math/control_theory.xi | 530 | `robust_control` | `EX-0` | `pub fn robust_control(nominal: fn(Float64) -> Float64, uncertainty: Float64) -> Bool {` |
-| math | math/differential.xi | 134 | `jacobian` | `EX-0` | `pub fn jacobian(fs: &Vec[fn(&Vec[Float64]) -> Float64], x: &Vec[Float64]) -> Vec[Vec[Float64]] {` |
-| math | math/fuzzy.xi | 137 | `fuzzy_relation` | `EX-0` | `pub fn fuzzy_relation(r: &Vec[Vec[Float64]]) -> Bool {` |
-| math | math/fuzzy.xi | 146 | `fuzzy_composition` | `EX-0` | `pub fn fuzzy_composition(r: &Vec[Vec[Float64]], s: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {` |
-| math | math/game_theory.xi | 28 | `nash_equilibrium` | `EX-0` | `pub fn nash_equilibrium(payoffs: &Vec[Vec[Float64]]) -> Vec[(Float64, Float64)] {` |
-| math | math/game_theory.xi | 36 | `minimax` | `EX-0` | `pub fn minimax(payoffs: &Vec[Vec[Float64]]) -> Float64 {` |
-| math | math/game_theory.xi | 85 | `dominant_strategy` | `EX-0` | `pub fn dominant_strategy(payoffs: &Vec[Vec[Float64]]) -> Option[Int] {` |
-| math | math/game_theory.xi | 92 | `pareto_optimal` | `EX-0` | `pub fn pareto_optimal(payoffs: &Vec[Vec[Float64]]) -> Vec[Int] {` |
-| math | math/game_theory.xi | 291 | `evolutionary_game` | `EX-0` | `pub fn evolutionary_game(payoffs: &Vec[Vec[Float64]], population: &Vec[Float64]) -> Vec[Float64] {` |
-| math | math/game_theory.xi | 299 | `replicator_dynamics` | `EX-0` | `pub fn replicator_dynamics(payoffs: &Vec[Vec[Float64]], population: &Vec[Float64], steps: Int) -> Vec[Vec[Float64]] {` |
-| math | math/information_theory.xi | 56 | `joint_entropy` | `EX-0` | `pub fn joint_entropy(p_joint: &Vec[Vec[Float64]]) -> Float64 {` |
-| math | math/information_theory.xi | 63 | `conditional_entropy` | `EX-0` | `pub fn conditional_entropy(p_joint: &Vec[Vec[Float64]]) -> Float64 {` |
-| math | math/information_theory.xi | 70 | `mutual_information` | `EX-0` | `pub fn mutual_information(p_joint: &Vec[Vec[Float64]]) -> Float64 {` |
-| math | math/information_theory.xi | 153 | `entropy_rate` | `EX-0` | `pub fn entropy_rate(p_transition: &Vec[Vec[Float64]], stationary: &Vec[Float64]) -> Float64 {` |
-| math | math/information_theory.xi | 163 | `channel_capacity` | `EX-0` | `pub fn channel_capacity(p_transition: &Vec[Vec[Float64]]) -> Float64 {` |
-| math | math/logic.xi | 31 | `boolean_expression` | `EX-0` | `pub fn boolean_expression(op: Str, a: Bool, b: Bool) -> Bool {` |
-| math | math/machine_learning.xi | 387 | `normalization_batch` | `EX-0` | `pub fn normalization_batch(x: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {` |
-| math | math/math.xi | 511 | `seed_rng` | `EX-0` | `pub fn seed_rng(seed: Int) {` |
-| math | math/mathematical_biology.xi | 132 | `ecology` | `EX-0` | `pub fn ecology(species: &Vec[Float64], interaction: &Vec[Vec[Float64]], dt: Float64) -> Vec[Float64] {` |
-| math | math/mathematical_economics.xi | 255 | `general_equilibrium` | `EX-0` | `pub fn general_equilibrium(endowments: &Vec[Vec[Float64]], utilities: &Vec[fn(&Vec[Float64]) -> Float64]) -> Vec[Float64] {` |
-| math | math/mathematical_logic.xi | 195 | `propositional` | `EX-0` | `pub fn propositional(expr: Str) -> Bool {` |
-| math | math/mathematical_logic.xi | 250 | `predicate` | `EX-0` | `pub fn predicate(expr: Str, domain: &Vec[Int]) -> Bool {` |
-| math | math/mathematical_logic.xi | 263 | `first_order` | `EX-0` | `pub fn first_order(formula: Str, structure: fn(&Vec[Int]) -> Bool) -> Bool {` |
-| math | math/mathematical_logic.xi | 278 | `modal` | `EX-0` | `pub fn modal(formula: Str, world: Int, relations: &Vec[(Int, Int)]) -> Bool {` |
-| math | math/mathematical_logic.xi | 421 | `temporal` | `EX-0` | `pub fn temporal(formula: Str, state: Int, next: fn(Int) -> Int) -> Bool {` |
-| math | math/mathematical_logic.xi | 527 | `fuzzy_logic` | `EX-0` | `pub fn fuzzy_logic(formula: Str, values: &Vec[Float64]) -> Float64 {` |
-| math | math/mathematical_logic.xi | 725 | `set_theory_axioms` | `EX-0` | `pub fn set_theory_axioms(axiom: Str) -> Bool {` |
-| math | math/mathematical_logic.xi | 744 | `type_theory` | `EX-0` | `pub fn type_theory(term: Str, context: fn(Str) -> Str) -> Option[Str] {` |
-| math | math/mathematical_logic.xi | 791 | `intuitionistic` | `EX-0` | `pub fn intuitionistic(formula: Str) -> Bool {` |
-| math | math/mathematical_logic.xi | 798 | `linear_logic` | `EX-0` | `pub fn linear_logic(formula: Str) -> Bool {` |
-| math | math/mathematical_logic.xi | 805 | `relevance` | `EX-0` | `pub fn relevance(formula: Str) -> Bool {` |
-| math | math/mathematical_physics.xi | 23 | `hamiltonian` | `EX-0` | `pub fn hamiltonian(q: &Vec[Float64], p: &Vec[Float64], h: fn(&Vec[Float64], &Vec[Float64]) -> Float64) -> Float64 {` |
-| math | math/mathematical_physics.xi | 28 | `lagrangian` | `EX-0` | `pub fn lagrangian(q: &Vec[Float64], qdot: &Vec[Float64], l: fn(&Vec[Float64], &Vec[Float64]) -> Float64) -> Float64 {` |
-| math | math/mathematical_physics.xi | 37 | `quantum_operators` | `EX-0` | `pub fn quantum_operators(observable: &Vec[Vec[Float64]], state: &Vec[Float64]) -> Vec[Float64] {` |
-| math | math/mathematical_physics.xi | 129 | `tensor_calculus` | `EX-0` | `pub fn tensor_calculus(tensor: &Vec[Float64], metric: &Vec[Vec[Float64]]) -> Vec[Float64] {` |
-| math | math/mathematical_physics.xi | 171 | `riemannian` | `EX-0` | `pub fn riemannian(g: &Vec[Vec[Float64]], point: &Vec[Float64]) -> Float64 {` |
-| math | math/mathematical_physics.xi | 178 | `symplectic` | `EX-0` | `pub fn symplectic(w: &Vec[Vec[Float64]], x: &Vec[Float64], y: &Vec[Float64]) -> Float64 {` |
-| math | math/mathematical_physics.xi | 185 | `lie_algebra` | `EX-0` | `pub fn lie_algebra(basis: &Vec[Vec[Vec[Float64]]], a: Int, b: Int) -> Vec[Vec[Float64]] {` |
-| math | math/mathematical_physics.xi | 193 | `lie_group` | `EX-0` | `pub fn lie_group(algebra: &Vec[Vec[Vec[Float64]]], params: &Vec[Float64]) -> Vec[Vec[Float64]] {` |
-| math | math/mathematical_physics.xi | 201 | `representation` | `EX-0` | `pub fn representation(group: &Vec[Vec[Float64]], algebra: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {` |
-| math | math/mathematical_physics.xi | 287 | `path_integral` | `EX-0` | `pub fn path_integral(action: fn(&Vec[Float64]) -> Float64, paths: &Vec[Vec[Float64]]) -> Vec[Float64] {` |
-| math | math/matrices.xi | 203 | `mat4_mul` | `EX-0` | `pub fn mat4_mul(a: Mat4, b: Mat4) -> Mat4 {` |
-| math | math/matrices.xi | 226 | `mat4_det` | `EX-0` | `pub fn mat4_det(m: Mat4) -> Float64 {` |
-| math | math/numerical.xi | 33 | `bisection` | `EX-0` | `pub fn bisection(f: fn(Float64) -> Float64, a: Float64, b: Float64, tol: Float64) -> Float64 {` |
-| math | math/numerical.xi | 78 | `newton` | `EX-0` | `pub fn newton(f: fn(Float64) -> Float64, fprime: fn(Float64) -> Float64, x0: Float64, tol: Float64) -> Float64 {` |
-| math | math/numerical.xi | 97 | `secant` | `EX-0` | `pub fn secant(f: fn(Float64) -> Float64, x0: Float64, x1: Float64, tol: Float64) -> Float64 {` |
-| math | math/numerical.xi | 233 | `fixed_point` | `EX-0` | `pub fn fixed_point(g: fn(Float64) -> Float64, x0: Float64, tol: Float64) -> Float64 {` |
-| math | math/numerical.xi | 250 | `steffensen` | `EX-0` | `pub fn steffensen(f: fn(Float64) -> Float64, x0: Float64, tol: Float64) -> Float64 {` |
-| math | math/numerical.xi | 1425 | `bisection_root` | `EX-0` | `pub fn bisection_root(f: fn(Float64) -> Float64, a: Float64, b: Float64, tol: Float64) -> Float64 {` |
-| math | math/numerical.xi | 1431 | `newton_root` | `EX-0` | `pub fn newton_root(f: fn(Float64) -> Float64, fprime: fn(Float64) -> Float64, x0: Float64, tol: Float64) -> Float64 {` |
-| math | math/operations_research.xi | 169 | `routing` | `EX-0` | `pub fn routing(distances: &Vec[Vec[Float64]], vehicles: Int) -> Vec[Vec[Int]] {` |
-| math | math/operations_research.xi | 177 | `assignment` | `EX-0` | `pub fn assignment(cost: &Vec[Vec[Float64]]) -> Vec[Int] {` |
-| math | math/operations_research.xi | 185 | `transportation` | `EX-0` | `pub fn transportation(supply: &Vec[Float64], demand: &Vec[Float64], cost: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {` |
-| math | math/operations_research.xi | 193 | `transshipment` | `EX-0` | `pub fn transshipment(supply: &Vec[Float64], demand: &Vec[Float64], transship: &Vec[Float64], cost: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {` |
-| math | math/operations_research.xi | 395 | `supply_chain` | `EX-0` | `pub fn supply_chain(demands: &Vec[Vec[Float64]], costs: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {` |
-| math | math/optimization.xi | 200 | `integer_programming` | `EX-0` | `pub fn integer_programming(c: &Vec[Float64], a: &Vec[Vec[Float64]], b: &Vec[Float64]) -> Vec[Int] {` |
-| math | math/optimization.xi | 208 | `mixed_integer_programming` | `EX-0` | `pub fn mixed_integer_programming(c: &Vec[Float64], a: &Vec[Vec[Float64]], b: &Vec[Float64], int_vars: &Vec[Bool]) -> Vec[Float64] {` |
-| math | math/optimization.xi | 216 | `quadratic_programming` | `EX-0` | `pub fn quadratic_programming(q: &Vec[Vec[Float64]], c: &Vec[Float64], a: &Vec[Vec[Float64]], b: &Vec[Float64]) -> Vec[Float64] {` |
-| math | math/optimization.xi | 224 | `nonlinear_programming` | `EX-0` | `pub fn nonlinear_programming(f: fn(&Vec[Float64]) -> Float64, cons: &Vec[fn(&Vec[Float64]) -> Float64], x0: &Vec[Float64]) -> Vec[Float64] {` |
-| math | math/optimization.xi | 402 | `lp_interior_point` | `EX-0` | `pub fn lp_interior_point(c: &Vec[Float64], a: &Vec[Vec[Float64]], b: &Vec[Float64]) -> Vec[Float64] {` |
-| math | math/optimization.xi | 410 | `branch_and_bound` | `EX-0` | `pub fn branch_and_bound(c: &Vec[Float64], a: &Vec[Vec[Float64]], b: &Vec[Float64]) -> Vec[Float64] {` |
-| math | math/optimization.xi | 418 | `cutting_plane` | `EX-0` | `pub fn cutting_plane(c: &Vec[Float64], a: &Vec[Vec[Float64]], b: &Vec[Float64]) -> Vec[Float64] {` |
-| math | math/optimization.xi | 426 | `sequential_quadratic` | `EX-0` | `pub fn sequential_quadratic(f: fn(&Vec[Float64]) -> Float64, cons: &Vec[fn(&Vec[Float64]) -> Float64], x0: &Vec[Float64]) -> Vec[Float64] {` |
-| math | math/optimization.xi | 434 | `penalty_method` | `EX-0` | `pub fn penalty_method(f: fn(&Vec[Float64]) -> Float64, cons: &Vec[fn(&Vec[Float64]) -> Float64], x0: &Vec[Float64]) -> Vec[Float64] {` |
-| math | math/optimization.xi | 442 | `barrier_method` | `EX-0` | `pub fn barrier_method(f: fn(&Vec[Float64]) -> Float64, cons: &Vec[fn(&Vec[Float64]) -> Float64], x0: &Vec[Float64]) -> Vec[Float64] {` |
-| math | math/optimization.xi | 450 | `augmented_lagrangian` | `EX-0` | `pub fn augmented_lagrangian(f: fn(&Vec[Float64]) -> Float64, cons: &Vec[fn(&Vec[Float64]) -> Float64], x0: &Vec[Float64]) -> Vec[Float64] {` |
-| math | math/optimization.xi | 458 | `genetic_algorithm` | `EX-0` | `pub fn genetic_algorithm(f: fn(&Vec[Float64]) -> Float64, bounds: &Vec[Vec[Float64]], pop_size: Int, generations: Int) -> Vec[Float64] {` |
-| math | math/optimization.xi | 530 | `particle_swarm` | `EX-0` | `pub fn particle_swarm(f: fn(&Vec[Float64]) -> Float64, bounds: &Vec[Vec[Float64]], particles: Int, iters: Int) -> Vec[Float64] {` |
-| math | math/optimization.xi | 615 | `differential_evolution` | `EX-0` | `pub fn differential_evolution(f: fn(&Vec[Float64]) -> Float64, bounds: &Vec[Vec[Float64]], pop_size: Int, iters: Int) -> Vec[Float64] {` |
-| math | math/optimization.xi | 623 | `bayesian_optimization` | `EX-0` | `pub fn bayesian_optimization(f: fn(&Vec[Float64]) -> Float64, bounds: &Vec[Vec[Float64]], iters: Int) -> Vec[Float64] {` |
-| math | math/optimization.xi | 631 | `grid_search` | `EX-0` | `pub fn grid_search(f: fn(&Vec[Float64]) -> Float64, bounds: &Vec[Vec[Float64]], n: Int) -> Vec[Float64] {` |
-| math | math/optimization.xi | 639 | `random_search` | `EX-0` | `pub fn random_search(f: fn(&Vec[Float64]) -> Float64, bounds: &Vec[Vec[Float64]], iters: Int) -> Vec[Float64] {` |
-| math | math/precision.xi | 123 | `max_value` | `EX-0` | `pub fn max_value[T: PrecisionLimits]() -> T {` |
-| math | math/precision.xi | 128 | `epsilon` | `EX-0` | `pub fn epsilon[T: PrecisionLimits]() -> T {` |
-| math | math/precision.xi | 168 | `is_signed` | `EX-0` | `pub fn is_signed[T: PrecisionLimits]() -> Bool {` |
-| math | math/series.xi | 124 | `maclaurin_series` | `EX-0` | `pub fn maclaurin_series(f: fn(Float64) -> Float64, order: Int, x: Float64) -> Float64 {` |
-| math | math/topology.xi | 43 | `closed_set` | `EX-0` | `pub fn closed_set(tau: &Vec[Vec[Int]], s: &Vec[Int], universe: &Vec[Int]) -> Bool {` |
+| math | math/algebra_extended.xi | 281 | `algebraic_number` | `EX-1` | `pub fn algebraic_number(alpha: Float64, polynomial: &Vec[Float64]) -> Bool {` |
+| math | math/calculus.xi | 117 | `limit` | `EX-1` | `pub fn limit(f: fn(Float64) -> Float64, x: Float64) -> Float64 {` |
+| math | math/calculus.xi | 125 | `limit_left` | `EX-1` | `pub fn limit_left(f: fn(Float64) -> Float64, x: Float64) -> Float64 {` |
+| math | math/calculus.xi | 133 | `limit_right` | `EX-1` | `pub fn limit_right(f: fn(Float64) -> Float64, x: Float64) -> Float64 {` |
+| math | math/calculus.xi | 142 | `is_continuous` | `EX-1` | `pub fn is_continuous(f: fn(Float64) -> Float64, x: Float64, tol: Float64) -> Bool {` |
+| math | math/calculus.xi | 158 | `gradient` | `EX-1` | `pub fn gradient(f: fn(&Vec[Float64]) -> Float64, x: &Vec[Float64]) -> Vec[Float64] {` |
+| math | math/calculus.xi | 167 | `partial_derivative` | `EX-1` | `pub fn partial_derivative(f: fn(&Vec[Float64]) -> Float64, x: &Vec[Float64], i: Int, h: Float64) -> Float64 {` |
+| math | math/calculus.xi | 175 | `jacobian` | `EX-1` | `pub fn jacobian(fs: &Vec[fn(&Vec[Float64]) -> Float64], x: &Vec[Float64]) -> Vec[Vec[Float64]] {` |
+| math | math/calculus.xi | 184 | `hessian` | `EX-1` | `pub fn hessian(f: fn(&Vec[Float64]) -> Float64, x: &Vec[Float64]) -> Vec[Vec[Float64]] {` |
+| math | math/calculus.xi | 193 | `laplacian` | `EX-1` | `pub fn laplacian(f: fn(&Vec[Float64]) -> Float64, x: &Vec[Float64]) -> Float64 {` |
+| math | math/calculus.xi | 202 | `curl` | `EX-1` | `pub fn curl(f: fn(&Vec[Float64]) -> Vec[Float64], x: &Vec[Float64]) -> Vec[Float64] {` |
+| math | math/calculus.xi | 211 | `divergence` | `EX-1` | `pub fn divergence(f: fn(&Vec[Float64]) -> Vec[Float64], x: &Vec[Float64]) -> Float64 {` |
+| math | math/control_theory.xi | 65 | `state_space` | `EX-1` | `pub fn state_space(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]], c: &Vec[Vec[Float64]], d: &Vec[Vec[Float64]]) -> (Vec[Vec[Float64]], Vec[Vec[Float64]], Vec[Vec...` |
+| math | math/control_theory.xi | 480 | `pole_placement` | `EX-1` | `pub fn pole_placement(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]], poles: &Vec[Float64]) -> Vec[Vec[Float64]] {` |
+| math | math/control_theory.xi | 488 | `lqr` | `EX-1` | `pub fn lqr(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]], q: &Vec[Vec[Float64]], r: &Vec[Vec[Float64]]) -> (Vec[Vec[Float64]], Vec[Vec[Float64]]) {` |
+| math | math/control_theory.xi | 497 | `lqg` | `EX-1` | `pub fn lqg(a: &Vec[Vec[Float64]], b: &Vec[Vec[Float64]], c: &Vec[Vec[Float64]], q: &Vec[Vec[Float64]], r: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {` |
+| math | math/control_theory.xi | 522 | `h_infinity` | `EX-1` | `pub fn h_infinity(p: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {` |
+| math | math/control_theory.xi | 530 | `robust_control` | `EX-1` | `pub fn robust_control(nominal: fn(Float64) -> Float64, uncertainty: Float64) -> Bool {` |
+| math | math/differential.xi | 134 | `jacobian` | `EX-1` | `pub fn jacobian(fs: &Vec[fn(&Vec[Float64]) -> Float64], x: &Vec[Float64]) -> Vec[Vec[Float64]] {` |
+| math | math/fuzzy.xi | 137 | `fuzzy_relation` | `EX-1` | `pub fn fuzzy_relation(r: &Vec[Vec[Float64]]) -> Bool {` |
+| math | math/fuzzy.xi | 146 | `fuzzy_composition` | `EX-1` | `pub fn fuzzy_composition(r: &Vec[Vec[Float64]], s: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {` |
+| math | math/game_theory.xi | 28 | `nash_equilibrium` | `EX-1` | `pub fn nash_equilibrium(payoffs: &Vec[Vec[Float64]]) -> Vec[(Float64, Float64)] {` |
+| math | math/game_theory.xi | 36 | `minimax` | `EX-1` | `pub fn minimax(payoffs: &Vec[Vec[Float64]]) -> Float64 {` |
+| math | math/game_theory.xi | 85 | `dominant_strategy` | `EX-1` | `pub fn dominant_strategy(payoffs: &Vec[Vec[Float64]]) -> Option[Int] {` |
+| math | math/game_theory.xi | 92 | `pareto_optimal` | `EX-1` | `pub fn pareto_optimal(payoffs: &Vec[Vec[Float64]]) -> Vec[Int] {` |
+| math | math/game_theory.xi | 291 | `evolutionary_game` | `EX-1` | `pub fn evolutionary_game(payoffs: &Vec[Vec[Float64]], population: &Vec[Float64]) -> Vec[Float64] {` |
+| math | math/game_theory.xi | 299 | `replicator_dynamics` | `EX-1` | `pub fn replicator_dynamics(payoffs: &Vec[Vec[Float64]], population: &Vec[Float64], steps: Int) -> Vec[Vec[Float64]] {` |
+| math | math/information_theory.xi | 56 | `joint_entropy` | `EX-1` | `pub fn joint_entropy(p_joint: &Vec[Vec[Float64]]) -> Float64 {` |
+| math | math/information_theory.xi | 63 | `conditional_entropy` | `EX-1` | `pub fn conditional_entropy(p_joint: &Vec[Vec[Float64]]) -> Float64 {` |
+| math | math/information_theory.xi | 70 | `mutual_information` | `EX-1` | `pub fn mutual_information(p_joint: &Vec[Vec[Float64]]) -> Float64 {` |
+| math | math/information_theory.xi | 153 | `entropy_rate` | `EX-1` | `pub fn entropy_rate(p_transition: &Vec[Vec[Float64]], stationary: &Vec[Float64]) -> Float64 {` |
+| math | math/information_theory.xi | 163 | `channel_capacity` | `EX-1` | `pub fn channel_capacity(p_transition: &Vec[Vec[Float64]]) -> Float64 {` |
+| math | math/logic.xi | 31 | `boolean_expression` | `EX-1` | `pub fn boolean_expression(op: Str, a: Bool, b: Bool) -> Bool {` |
+| math | math/machine_learning.xi | 387 | `normalization_batch` | `EX-1` | `pub fn normalization_batch(x: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {` |
+| math | math/math.xi | 511 | `seed_rng` | `EX-1` | `pub fn seed_rng(seed: Int) {` |
+| math | math/mathematical_biology.xi | 132 | `ecology` | `EX-1` | `pub fn ecology(species: &Vec[Float64], interaction: &Vec[Vec[Float64]], dt: Float64) -> Vec[Float64] {` |
+| math | math/mathematical_economics.xi | 255 | `general_equilibrium` | `EX-1` | `pub fn general_equilibrium(endowments: &Vec[Vec[Float64]], utilities: &Vec[fn(&Vec[Float64]) -> Float64]) -> Vec[Float64] {` |
+| math | math/mathematical_logic.xi | 195 | `propositional` | `EX-1` | `pub fn propositional(expr: Str) -> Bool {` |
+| math | math/mathematical_logic.xi | 250 | `predicate` | `EX-1` | `pub fn predicate(expr: Str, domain: &Vec[Int]) -> Bool {` |
+| math | math/mathematical_logic.xi | 263 | `first_order` | `EX-1` | `pub fn first_order(formula: Str, structure: fn(&Vec[Int]) -> Bool) -> Bool {` |
+| math | math/mathematical_logic.xi | 278 | `modal` | `EX-1` | `pub fn modal(formula: Str, world: Int, relations: &Vec[(Int, Int)]) -> Bool {` |
+| math | math/mathematical_logic.xi | 421 | `temporal` | `EX-1` | `pub fn temporal(formula: Str, state: Int, next: fn(Int) -> Int) -> Bool {` |
+| math | math/mathematical_logic.xi | 527 | `fuzzy_logic` | `EX-1` | `pub fn fuzzy_logic(formula: Str, values: &Vec[Float64]) -> Float64 {` |
+| math | math/mathematical_logic.xi | 725 | `set_theory_axioms` | `EX-1` | `pub fn set_theory_axioms(axiom: Str) -> Bool {` |
+| math | math/mathematical_logic.xi | 744 | `type_theory` | `EX-1` | `pub fn type_theory(term: Str, context: fn(Str) -> Str) -> Option[Str] {` |
+| math | math/mathematical_logic.xi | 791 | `intuitionistic` | `EX-1` | `pub fn intuitionistic(formula: Str) -> Bool {` |
+| math | math/mathematical_logic.xi | 798 | `linear_logic` | `EX-1` | `pub fn linear_logic(formula: Str) -> Bool {` |
+| math | math/mathematical_logic.xi | 805 | `relevance` | `EX-1` | `pub fn relevance(formula: Str) -> Bool {` |
+| math | math/mathematical_physics.xi | 23 | `hamiltonian` | `EX-1` | `pub fn hamiltonian(q: &Vec[Float64], p: &Vec[Float64], h: fn(&Vec[Float64], &Vec[Float64]) -> Float64) -> Float64 {` |
+| math | math/mathematical_physics.xi | 28 | `lagrangian` | `EX-1` | `pub fn lagrangian(q: &Vec[Float64], qdot: &Vec[Float64], l: fn(&Vec[Float64], &Vec[Float64]) -> Float64) -> Float64 {` |
+| math | math/mathematical_physics.xi | 37 | `quantum_operators` | `EX-1` | `pub fn quantum_operators(observable: &Vec[Vec[Float64]], state: &Vec[Float64]) -> Vec[Float64] {` |
+| math | math/mathematical_physics.xi | 129 | `tensor_calculus` | `EX-1` | `pub fn tensor_calculus(tensor: &Vec[Float64], metric: &Vec[Vec[Float64]]) -> Vec[Float64] {` |
+| math | math/mathematical_physics.xi | 171 | `riemannian` | `EX-1` | `pub fn riemannian(g: &Vec[Vec[Float64]], point: &Vec[Float64]) -> Float64 {` |
+| math | math/mathematical_physics.xi | 178 | `symplectic` | `EX-1` | `pub fn symplectic(w: &Vec[Vec[Float64]], x: &Vec[Float64], y: &Vec[Float64]) -> Float64 {` |
+| math | math/mathematical_physics.xi | 185 | `lie_algebra` | `EX-1` | `pub fn lie_algebra(basis: &Vec[Vec[Vec[Float64]]], a: Int, b: Int) -> Vec[Vec[Float64]] {` |
+| math | math/mathematical_physics.xi | 193 | `lie_group` | `EX-1` | `pub fn lie_group(algebra: &Vec[Vec[Vec[Float64]]], params: &Vec[Float64]) -> Vec[Vec[Float64]] {` |
+| math | math/mathematical_physics.xi | 201 | `representation` | `EX-1` | `pub fn representation(group: &Vec[Vec[Float64]], algebra: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {` |
+| math | math/mathematical_physics.xi | 287 | `path_integral` | `EX-1` | `pub fn path_integral(action: fn(&Vec[Float64]) -> Float64, paths: &Vec[Vec[Float64]]) -> Vec[Float64] {` |
+| math | math/matrices.xi | 203 | `mat4_mul` | `EX-1` | `pub fn mat4_mul(a: Mat4, b: Mat4) -> Mat4 {` |
+| math | math/matrices.xi | 226 | `mat4_det` | `EX-1` | `pub fn mat4_det(m: Mat4) -> Float64 {` |
+| math | math/numerical.xi | 33 | `bisection` | `EX-1` | `pub fn bisection(f: fn(Float64) -> Float64, a: Float64, b: Float64, tol: Float64) -> Float64 {` |
+| math | math/numerical.xi | 78 | `newton` | `EX-1` | `pub fn newton(f: fn(Float64) -> Float64, fprime: fn(Float64) -> Float64, x0: Float64, tol: Float64) -> Float64 {` |
+| math | math/numerical.xi | 97 | `secant` | `EX-1` | `pub fn secant(f: fn(Float64) -> Float64, x0: Float64, x1: Float64, tol: Float64) -> Float64 {` |
+| math | math/numerical.xi | 233 | `fixed_point` | `EX-1` | `pub fn fixed_point(g: fn(Float64) -> Float64, x0: Float64, tol: Float64) -> Float64 {` |
+| math | math/numerical.xi | 250 | `steffensen` | `EX-1` | `pub fn steffensen(f: fn(Float64) -> Float64, x0: Float64, tol: Float64) -> Float64 {` |
+| math | math/numerical.xi | 1425 | `bisection_root` | `EX-1` | `pub fn bisection_root(f: fn(Float64) -> Float64, a: Float64, b: Float64, tol: Float64) -> Float64 {` |
+| math | math/numerical.xi | 1431 | `newton_root` | `EX-1` | `pub fn newton_root(f: fn(Float64) -> Float64, fprime: fn(Float64) -> Float64, x0: Float64, tol: Float64) -> Float64 {` |
+| math | math/operations_research.xi | 169 | `routing` | `EX-1` | `pub fn routing(distances: &Vec[Vec[Float64]], vehicles: Int) -> Vec[Vec[Int]] {` |
+| math | math/operations_research.xi | 177 | `assignment` | `EX-1` | `pub fn assignment(cost: &Vec[Vec[Float64]]) -> Vec[Int] {` |
+| math | math/operations_research.xi | 185 | `transportation` | `EX-1` | `pub fn transportation(supply: &Vec[Float64], demand: &Vec[Float64], cost: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {` |
+| math | math/operations_research.xi | 193 | `transshipment` | `EX-1` | `pub fn transshipment(supply: &Vec[Float64], demand: &Vec[Float64], transship: &Vec[Float64], cost: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {` |
+| math | math/operations_research.xi | 395 | `supply_chain` | `EX-1` | `pub fn supply_chain(demands: &Vec[Vec[Float64]], costs: &Vec[Vec[Float64]]) -> Vec[Vec[Float64]] {` |
+| math | math/optimization.xi | 200 | `integer_programming` | `EX-1` | `pub fn integer_programming(c: &Vec[Float64], a: &Vec[Vec[Float64]], b: &Vec[Float64]) -> Vec[Int] {` |
+| math | math/optimization.xi | 208 | `mixed_integer_programming` | `EX-1` | `pub fn mixed_integer_programming(c: &Vec[Float64], a: &Vec[Vec[Float64]], b: &Vec[Float64], int_vars: &Vec[Bool]) -> Vec[Float64] {` |
+| math | math/optimization.xi | 216 | `quadratic_programming` | `EX-1` | `pub fn quadratic_programming(q: &Vec[Vec[Float64]], c: &Vec[Float64], a: &Vec[Vec[Float64]], b: &Vec[Float64]) -> Vec[Float64] {` |
+| math | math/optimization.xi | 224 | `nonlinear_programming` | `EX-1` | `pub fn nonlinear_programming(f: fn(&Vec[Float64]) -> Float64, cons: &Vec[fn(&Vec[Float64]) -> Float64], x0: &Vec[Float64]) -> Vec[Float64] {` |
+| math | math/optimization.xi | 402 | `lp_interior_point` | `EX-1` | `pub fn lp_interior_point(c: &Vec[Float64], a: &Vec[Vec[Float64]], b: &Vec[Float64]) -> Vec[Float64] {` |
+| math | math/optimization.xi | 410 | `branch_and_bound` | `EX-1` | `pub fn branch_and_bound(c: &Vec[Float64], a: &Vec[Vec[Float64]], b: &Vec[Float64]) -> Vec[Float64] {` |
+| math | math/optimization.xi | 418 | `cutting_plane` | `EX-1` | `pub fn cutting_plane(c: &Vec[Float64], a: &Vec[Vec[Float64]], b: &Vec[Float64]) -> Vec[Float64] {` |
+| math | math/optimization.xi | 426 | `sequential_quadratic` | `EX-1` | `pub fn sequential_quadratic(f: fn(&Vec[Float64]) -> Float64, cons: &Vec[fn(&Vec[Float64]) -> Float64], x0: &Vec[Float64]) -> Vec[Float64] {` |
+| math | math/optimization.xi | 434 | `penalty_method` | `EX-1` | `pub fn penalty_method(f: fn(&Vec[Float64]) -> Float64, cons: &Vec[fn(&Vec[Float64]) -> Float64], x0: &Vec[Float64]) -> Vec[Float64] {` |
+| math | math/optimization.xi | 442 | `barrier_method` | `EX-1` | `pub fn barrier_method(f: fn(&Vec[Float64]) -> Float64, cons: &Vec[fn(&Vec[Float64]) -> Float64], x0: &Vec[Float64]) -> Vec[Float64] {` |
+| math | math/optimization.xi | 450 | `augmented_lagrangian` | `EX-1` | `pub fn augmented_lagrangian(f: fn(&Vec[Float64]) -> Float64, cons: &Vec[fn(&Vec[Float64]) -> Float64], x0: &Vec[Float64]) -> Vec[Float64] {` |
+| math | math/optimization.xi | 458 | `genetic_algorithm` | `EX-1` | `pub fn genetic_algorithm(f: fn(&Vec[Float64]) -> Float64, bounds: &Vec[Vec[Float64]], pop_size: Int, generations: Int) -> Vec[Float64] {` |
+| math | math/optimization.xi | 530 | `particle_swarm` | `EX-1` | `pub fn particle_swarm(f: fn(&Vec[Float64]) -> Float64, bounds: &Vec[Vec[Float64]], particles: Int, iters: Int) -> Vec[Float64] {` |
+| math | math/optimization.xi | 615 | `differential_evolution` | `EX-1` | `pub fn differential_evolution(f: fn(&Vec[Float64]) -> Float64, bounds: &Vec[Vec[Float64]], pop_size: Int, iters: Int) -> Vec[Float64] {` |
+| math | math/optimization.xi | 623 | `bayesian_optimization` | `EX-1` | `pub fn bayesian_optimization(f: fn(&Vec[Float64]) -> Float64, bounds: &Vec[Vec[Float64]], iters: Int) -> Vec[Float64] {` |
+| math | math/optimization.xi | 631 | `grid_search` | `EX-1` | `pub fn grid_search(f: fn(&Vec[Float64]) -> Float64, bounds: &Vec[Vec[Float64]], n: Int) -> Vec[Float64] {` |
+| math | math/optimization.xi | 639 | `random_search` | `EX-1` | `pub fn random_search(f: fn(&Vec[Float64]) -> Float64, bounds: &Vec[Vec[Float64]], iters: Int) -> Vec[Float64] {` |
+| math | math/precision.xi | 123 | `max_value` | `EX-1` | `pub fn max_value[T: PrecisionLimits]() -> T {` |
+| math | math/precision.xi | 128 | `epsilon` | `EX-1` | `pub fn epsilon[T: PrecisionLimits]() -> T {` |
+| math | math/precision.xi | 168 | `is_signed` | `EX-1` | `pub fn is_signed[T: PrecisionLimits]() -> Bool {` |
+| math | math/series.xi | 124 | `maclaurin_series` | `EX-1` | `pub fn maclaurin_series(f: fn(Float64) -> Float64, order: Int, x: Float64) -> Float64 {` |
+| math | math/topology.xi | 43 | `closed_set` | `EX-1` | `pub fn closed_set(tau: &Vec[Vec[Int]], s: &Vec[Int], universe: &Vec[Int]) -> Bool {` |
 | os | os/err.xi | 23 | `errno` | `EX-2` | `pub fn errno() -> Int {` |
 | os | os/err.xi | 157 | `perror` | `EX-2` | `pub fn perror(msg: Str) -> Unit {` |
 | os | os/err.xi | 173 | `errno_set` | `EX-2` | `pub fn errno_set(code: Int) -> Unit {` |

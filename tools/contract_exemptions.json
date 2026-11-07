@@ -5,7 +5,7 @@
   "ownership_map": "docs/MODULE_OWNERSHIP.md",
   "total": 276,
   "note": "EX-0 is the remaining grandfathered gate-8 no-clause tail. It is closed to new entries and must shrink. EX-1..EX-5 entries are per-function B2 reclassifications; tools/check_contract_policy.ps1 validates each function/path against the source. Counts are the difference between pub fns and pub-with-clause fns reported by tools/coverage_scan.ps1.",
-  "source": "readiness gate 8 (wave 208, refreshed 2026-10-31) + coverage_scan.ps1 run 2026-11-06; B2 per-function reclassification 2026-11-06 (ffi 4, thread 5, serialize 6, format 2, iter 54, os 111); nine format ANSI helpers moved to clauses",
+  "source": "readiness gate 8 (wave 208, refreshed 2026-10-31) + coverage_scan.ps1 run 2026-11-06; B2 per-function reclassification 2026-11-06 (ffi 4, thread 5, serialize 6, format 2, iter 54, os 111, math 94); nine format ANSI helpers moved to clauses. EX-0 is retired.",
   "modules": [
     {
       "module": "iter",
@@ -336,11 +336,303 @@
     },
     {
       "module": "math",
-      "count": 94,
-      "category": "EX-0",
+      "function": "algebraic_number",
+      "path": "xiom/math/algebra_extended.xi",
+      "category": "EX-1",
       "owner": "stdlib lane",
       "approved": "2026-11-06",
-      "rationale": "gate-8 no-clause tail; domain-closed numeric helpers where the remaining clause would be tautological. Reclassify per function in B2 (expected EX-1 totals)."
+      "expires": "never",
+      "rationale": "Total algebraic-number constructor; the returned representation is the whole contract."
+    },
+    {
+      "module": "math",
+      "functions": [
+        "limit",
+        "limit_left",
+        "limit_right",
+        "is_continuous",
+        "gradient",
+        "partial_derivative",
+        "jacobian",
+        "hessian",
+        "laplacian",
+        "curl",
+        "divergence"
+      ],
+      "category": "EX-1",
+      "path": "xiom/math/calculus.xi",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "expires": "never",
+      "rationale": "Documented compiler-limited stubs (BUG 20/23); the frozen signatures return the documented default 0.0/empty result, which is the whole observable contract."
+    },
+    {
+      "module": "math",
+      "functions": [
+        "state_space",
+        "pole_placement",
+        "lqr",
+        "lqg",
+        "h_infinity",
+        "robust_control"
+      ],
+      "category": "EX-1",
+      "path": "xiom/math/control_theory.xi",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "expires": "never",
+      "rationale": "Compiler-limited/partial control module; matrix-valued functions return documented empty matrices, the scalar helpers are total, and the returned value is the contract."
+    },
+    {
+      "module": "math",
+      "function": "jacobian",
+      "path": "xiom/math/differential.xi",
+      "category": "EX-1",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "expires": "never",
+      "rationale": "Compiler-limited Jacobian stub; the frozen signature returns the documented default result."
+    },
+    {
+      "module": "math",
+      "functions": [
+        "fuzzy_relation",
+        "fuzzy_composition"
+      ],
+      "category": "EX-1",
+      "path": "xiom/math/fuzzy.xi",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "expires": "never",
+      "rationale": "Total finite fuzzy-relation operations; the returned relation is the whole contract."
+    },
+    {
+      "module": "math",
+      "functions": [
+        "nash_equilibrium",
+        "minimax",
+        "dominant_strategy",
+        "pareto_optimal",
+        "evolutionary_game",
+        "replicator_dynamics"
+      ],
+      "category": "EX-1",
+      "path": "xiom/math/game_theory.xi",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "expires": "never",
+      "rationale": "Total game-theory solvers over finite payoff inputs; the returned equilibrium/value is the contract, and invalid shapes return documented defaults."
+    },
+    {
+      "module": "math",
+      "functions": [
+        "joint_entropy",
+        "conditional_entropy",
+        "mutual_information",
+        "entropy_rate",
+        "channel_capacity"
+      ],
+      "category": "EX-1",
+      "path": "xiom/math/information_theory.xi",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "expires": "never",
+      "rationale": "Total entropy/channel functions over finite distributions; the returned value is the contract, and invalid shapes return documented defaults."
+    },
+    {
+      "module": "math",
+      "function": "boolean_expression",
+      "path": "xiom/math/logic.xi",
+      "category": "EX-1",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "expires": "never",
+      "rationale": "Total boolean-expression parser/evaluator over the documented mini-language."
+    },
+    {
+      "module": "math",
+      "function": "normalization_batch",
+      "path": "xiom/math/machine_learning.xi",
+      "category": "EX-1",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "expires": "never",
+      "rationale": "Total batch normalization; the returned batch is the whole contract."
+    },
+    {
+      "module": "math",
+      "function": "seed_rng",
+      "path": "xiom/math/math.xi",
+      "category": "EX-1",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "expires": "never",
+      "rationale": "Total RNG seed setter; the state change is the whole contract."
+    },
+    {
+      "module": "math",
+      "function": "ecology",
+      "path": "xiom/math/mathematical_biology.xi",
+      "category": "EX-1",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "expires": "never",
+      "rationale": "Documented compiler-limited ecology model; returns the documented result shape."
+    },
+    {
+      "module": "math",
+      "function": "general_equilibrium",
+      "path": "xiom/math/mathematical_economics.xi",
+      "category": "EX-1",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "expires": "never",
+      "rationale": "Documented compiler-limited equilibrium model; returns the documented result shape."
+    },
+    {
+      "module": "math",
+      "functions": [
+        "propositional",
+        "predicate",
+        "first_order",
+        "modal",
+        "temporal",
+        "fuzzy_logic",
+        "set_theory_axioms",
+        "type_theory",
+        "intuitionistic",
+        "linear_logic",
+        "relevance"
+      ],
+      "category": "EX-1",
+      "path": "xiom/math/mathematical_logic.xi",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "expires": "never",
+      "rationale": "Finite-domain formal-system entry points over the documented mini-language; total, with documented stubs where the compiler cannot express the semantics."
+    },
+    {
+      "module": "math",
+      "functions": [
+        "hamiltonian",
+        "lagrangian",
+        "quantum_operators",
+        "tensor_calculus",
+        "riemannian",
+        "symplectic",
+        "lie_algebra",
+        "lie_group",
+        "representation",
+        "path_integral"
+      ],
+      "category": "EX-1",
+      "path": "xiom/math/mathematical_physics.xi",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "expires": "never",
+      "rationale": "Documented compiler-limited physics helpers; frozen signatures return the documented default/result shape."
+    },
+    {
+      "module": "math",
+      "functions": ["mat4_mul", "mat4_det"],
+      "category": "EX-1",
+      "path": "xiom/math/matrices.xi",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "expires": "never",
+      "rationale": "Total 4x4 matrix kernels; the returned matrix/determinant is the whole observable contract."
+    },
+    {
+      "module": "math",
+      "functions": [
+        "bisection",
+        "newton",
+        "secant",
+        "fixed_point",
+        "steffensen",
+        "bisection_root",
+        "newton_root"
+      ],
+      "category": "EX-1",
+      "path": "xiom/math/numerical.xi",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "expires": "never",
+      "rationale": "Total bounded-iteration root solvers; the last iterate is returned and non-convergence/guards are documented."
+    },
+    {
+      "module": "math",
+      "functions": [
+        "routing",
+        "assignment",
+        "transportation",
+        "transshipment",
+        "supply_chain"
+      ],
+      "category": "EX-1",
+      "path": "xiom/math/operations_research.xi",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "expires": "never",
+      "rationale": "Total operations-research solvers over finite inputs; the returned plan/value is the contract, and invalid shapes return documented defaults."
+    },
+    {
+      "module": "math",
+      "functions": [
+        "integer_programming",
+        "mixed_integer_programming",
+        "quadratic_programming",
+        "nonlinear_programming",
+        "lp_interior_point",
+        "branch_and_bound",
+        "cutting_plane",
+        "sequential_quadratic",
+        "penalty_method",
+        "barrier_method",
+        "augmented_lagrangian",
+        "genetic_algorithm",
+        "particle_swarm",
+        "differential_evolution",
+        "bayesian_optimization",
+        "grid_search",
+        "random_search"
+      ],
+      "category": "EX-1",
+      "path": "xiom/math/optimization.xi",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "expires": "never",
+      "rationale": "Total LP/metaheuristic solvers; invalid input returns the documented empty/default result, otherwise the argmin/plan."
+    },
+    {
+      "module": "math",
+      "functions": ["max_value", "epsilon", "is_signed"],
+      "category": "EX-1",
+      "path": "xiom/math/precision.xi",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "expires": "never",
+      "rationale": "Total PrecisionLimits dispatcher; the impl value is the whole contract."
+    },
+    {
+      "module": "math",
+      "function": "maclaurin_series",
+      "path": "xiom/math/series.xi",
+      "category": "EX-1",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "expires": "never",
+      "rationale": "Documented compiler-limited series helper; returns the documented result shape."
+    },
+    {
+      "module": "math",
+      "function": "closed_set",
+      "path": "xiom/math/topology.xi",
+      "category": "EX-1",
+      "owner": "stdlib lane",
+      "approved": "2026-11-06",
+      "expires": "never",
+      "rationale": "Total finite-topology predicate; the Bool is the whole contract."
     },
     {
       "module": "thread",

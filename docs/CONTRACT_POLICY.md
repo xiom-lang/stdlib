@@ -117,7 +117,8 @@ the function:
 }
 ```
 
-An EX-0 entry carries `count` instead of `function`/`path`:
+Historical EX-0 form (retired in B2 block 348; kept for older release
+records). It carried `count` instead of `function`/`path`:
 
 ```json
 { "module": "os", "count": 111, "category": "EX-0",
@@ -197,9 +198,10 @@ No-regression rule:
 
 ## 9. Roadmap hand-off
 
-- **B2** reclassifies every EX-0 function into a clause or EX-1..EX-5, retires
-  EX-0, and ratchets `pub-with-clause` to 100% (exemptions counted). It also
-  moves the checker from count-level to function-level where useful.
+- **B2** retired EX-0 in block 348: all 276 uncovered functions now have
+  per-function EX-1..EX-5 records (0 EX-0), and the checker validates each
+  function/path. Nine format ANSI helpers gained constant clauses; the rest
+  are documented exemptions.
 - **B3** generates reference documentation from the contracts and runs doc
   examples as tests.
 - **B4** decides contract-check runtime semantics (debug/release) and the cost
@@ -213,9 +215,9 @@ Measured by `tools/coverage_scan.ps1` on `main`:
 
 - 44 modules, 9,449 functions, 6,992 public functions.
 - 9,247 clauses; 6,716 public functions covered (96.1%).
-- 276 uncovered public functions in 7 modules: 94 EX-0 (math) and 182
-  per-function exemptions (os 111, iter 54, serialize 6, thread 5, ffi 4,
-  format 2). The nine format ANSI helpers now carry constant clauses.
+- 276 uncovered public functions in 7 modules, all per-function exemptions
+  (EX-0 is retired): os 111, math 94, iter 54, serialize 6, thread 5, ffi 4,
+  format 2. The nine format ANSI helpers carry constant clauses.
 - Signature: `GLOBAL: fns=9449  pubFns=6992  clauses=9247  pubCovered=6716`;
   `pub-with-clause = 96.1%`.
 

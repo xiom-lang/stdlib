@@ -82,7 +82,7 @@ foreach ($m in @($exDoc.modules)) {
           if ($srcText -notmatch $fnPattern) {
             $errs.Add("registry ${name}.${fn}: function not found in $relPath")
           }
-          $key = $name + "|" + $fn
+          $key = $relPath + "|" + $fn
           if ($functionSeen.ContainsKey($key)) {
             $errs.Add("registry ${name}.${fn}: duplicate per-function entry")
           } else {
