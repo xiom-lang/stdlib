@@ -110,3 +110,26 @@ nine format ANSI helpers moved to constant clauses. **EX-0 is retired.**
   before merge.
 - If coverage falls or an uncovered function is not exempt, the row becomes
   `pending` until the owner restores or exempts it.
+
+## Relay triage SLA (G2)
+
+Targets for items addressed to the stdlib lane:
+
+- **critical:** ack within 1 h; triage/fix plan within 4 h.
+- **high:** ack within 4 h; triage/fix plan within 24 h.
+- **medium/low:** ack within 24 h; triage/fix plan within 5 business days.
+- **owner-gated:** escalate in the item; never mark fixed before owner GO.
+- While a session is active, the 2 h relay doorbell is the polling floor;
+  high/critical items are acked before other work.
+
+Measurement 2026-10-08..2026-11-07 (131 items to stdlib):
+
+- 123 had an explicit `open -> acked` transition: median ack **0.45 h**,
+  max **23.43 h**, and **0** of those exceeded 24 h.
+- 8 items had no explicit ack transition (closed/fixed/wontfix directly).
+- Two open items at measurement were unacked:
+  `REL-20261107-1032-pulse` (critical, 2.9 h) and
+  `REL-20261106-1716-pulse` (high, 20.2 h). Both were acked on 2026-11-07;
+  the critical ack (~3 h) and high ack (~20 h) are recorded breaches of the
+  1 h / 4 h targets. Corrective: keep the 2 h doorbell running while a
+  session is active and ack high/critical items first.

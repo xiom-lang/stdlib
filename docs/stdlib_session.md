@@ -56,6 +56,18 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   `COMPILER_VERSION`, and `record_release_lock.ps1` records new tags.
   `-1801` is verified/closed; `-1803` acked. Remaining: compiler
   asset/manifest commit field + pin/version automation.
+- **PULSE HTTP framing fixed (block 349):** `REL-20261107-1032-pulse`
+  (critical) and `REL-20261106-1716-pulse` (high) are fixed:
+  `server_parse_request` rejects duplicate/conflicting/overflow CL, BWS
+  before the colon, TE.TE/TE+CL, NUL/CTL in the head, extra request-line
+  tokens and obs-fold; `smoke_net_framing_strict` added. SLA breaches were
+  recorded (critical ~3 h, high ~20 h).
+- **E4 (in_progress, block 349):** same-leaf audit found a `ThreadPool`
+  conflict; collect type renamed `CollectThreadPool`; re-audit 0 conflicts.
+  Remaining: `JsonValue` x2, `json_escape` x4, `build` x2 + api_freeze.
+- **G2 done (block 349):** `MODULE_OWNERSHIP.md` has the ownership map +
+  relay triage SLA; 131 items measured (median ack 0.45 h, max 23.43 h, 0
+  over 24 h; two open breaches acked).
 - **Queue:** 1551 OPEN (compiler Str reassignment; net smokes carved out);
   1709 FIXED (ref accessors; PULSE verify pending); 1625 info open;
   2202 compiler Send/Sync. 1531/1807/wishlist33 external.
@@ -71,7 +83,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\stdlib pull --ff-only origin main
   git -C E:\xiom-lang\xiom-relays pull --ff-only
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 121 + blocks 348/347/346.
+Read docs/stdlib_session.md snapshot 121 + blocks 349/348/347.
 
 STATE (2026-11-06):
 - READINESS 10/10; v0.65.6 shipped (tag 6fdde4e; release 41873341844;
@@ -84,6 +96,12 @@ STATE (2026-11-06):
 - B2 DONE: EX-0 retired; 276 per-function exemptions (os 111, math 94, iter
   54, serialize 6, thread 5, ffi 4, format 2); coverage 6,716/6,992 (96.1%);
   every public function is covered or exempt.
+- PULSE HTTP framing fixed: REL-20261107-1032 (critical) / REL-20261106-1716
+  (high); strict `server_parse_request` + `smoke_net_framing_strict`.
+- E4 in_progress: ThreadPool -> CollectThreadPool; audit 0 conflicts;
+  remaining JsonValue/json_escape/build + api_freeze.
+- G2 DONE: ownership map + relay triage SLA; 131 items, median ack 0.45 h;
+  two open breaches acked.
 - A3 (in_progress): parser fuzz + smoke_fuzz_bignum/ffi/encodings landed;
   nightly fuzz.yml (3 seeds x 2000); bigint_div_mod(-16,97) sign found and
   fixed with smoke_bigint case 22. First nightly run pending.
@@ -106,12 +124,13 @@ PRIORITY (roadmap; no release cuts):
 3. G3: add the compiler asset/manifest commit-field check; pin/version
    automation. v0.65.7 must be a fresh immutable tag at the fixed commit;
    never re-point 0.65.6.
-4. E4 same-leaf dedup before 1.0 (B2 is done: 0 EX-0, 276 per-function).
-5. X1/X5 growth policy drafts; expansion after 1.0.
-6. Run tools/check_roadmap.ps1, tools/check_contract_policy.ps1,
-   tools/check_release_state.ps1, and tools/check_pair_state.ps1 after
-   edits; regenerate docs/CONTRACT_TAIL.md when contracts change; update
-   rows with evidence and append to the review log.
+4. E4: finish JsonValue/json_escape/build dedup + api_freeze (ThreadPool
+   is done; audit is clean).
+5. X1/X5/E1/E2/E3/G1/G4/X3/X4/X6/X7/X8 policy/ecosystem work; A4/A5
+   hardening. Expansion after 1.0.
+6. Run check_roadmap, check_contract_policy, check_release_state,
+   check_pair_state, same_leaf_audit after edits; regenerate CONTRACT_TAIL;
+   update rows with evidence and append to the review log.
 
 RULES:
 - No tag/release without a fresh compiler-relay GO; released tags are
@@ -4680,6 +4699,31 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-11-07 block 349 (PULSE HTTP/1.1 framing hardening; E4 ThreadPool dedup; G2 relay SLA)**
+- **PULSE critical/high:** `REL-20261107-1032-pulse` (critical) and
+  `REL-20261106-1716-pulse` (high) were open and unacked; both are now acked
+  (SLA breaches recorded: ~3 h vs 1 h and ~20 h vs 4 h). Both are fixed:
+  `server_parse_request` rejects NUL/CTL/DEL in the head, extra
+  request-line tokens / non-HTTP1.x versions, duplicate/conflicting/
+  overflow/non-digit Content-Length, BWS in or before the colon, obs-fold,
+  duplicate/non-chunked Transfer-Encoding, and TE+CL. The body stays
+  binary-safe. New `smoke_net_framing_strict`; server/probe consumers green;
+  memory sanitizer lane 16/16, leak 12/12.
+- **E4:** the same-leaf re-run found a live `ThreadPool` shape conflict
+  (`collect` 7 fields vs `thread.pool` 10 fields); renamed the collect type
+  to `CollectThreadPool`. Re-audit: 0 conflicts (355 declarations, 23
+  multi-declaration leaves); `smoke_collect_threadpool` +
+  `p_wave193_collect_contracts` green. `JsonValue` / `json_escape` / `build`
+  dedup plan is in `docs/STDLIB_DEDUP_INVENTORY.md`.
+- **G2:** `MODULE_OWNERSHIP.md` now carries the relay triage SLA. Measured
+  131 items to stdlib (2026-10-08..11-07): 123 explicit acks, median 0.45 h,
+  max 23.43 h, 0 over 24 h; two open breaches acked on 11-07. Corrective:
+  2 h doorbell while a session is active.
+- **Roadmap:** E4 in_progress; G2 done. Remaining unblocked: X1/X5/E1/E2/E3/
+  G1/G4/X3/X4/X6/X7/X8 and A4/A5. G3 asset field is waiting on compiler
+  `REL-20261106-1817-stdlib`.
+- **No release cut.**
 
 **SESSION 2026-11-07 block 348 (B2 COMPLETE: math 94 -> EX-1; EX-0 retired at 0)**
 - **Schema/tooling:** per-function identity now keys `path|function`, so the
