@@ -108,9 +108,20 @@ jobs:
         run: |
           ver="${{ steps.ver.outputs.version }}"
           mkdir -p pkg
-          curl -fsSL -o "xiom-std-${ver}.tar.gz" \
-            "https://github.com/xiom-lang/stdlib/releases/download/stdlib-v${ver}/xiom-std-${ver}.tar.gz"
-          tar -xzf "xiom-std-${ver}.tar.gz" -C pkg
+          base="https://github.com/xiom-lang/stdlib/releases/download/stdlib-v${ver}"
+          asset="xiom-std-${ver}.tar.gz"
+          curl -fsSL -o "${asset}" "${base}/${asset}"
+          curl -fsSL -o stdlib-SHA256SUMS "${base}/SHA256SUMS"
+          # Normalize CRLF (Windows-generated manifests) and accept both the
+          # two-space text form and the binary "*name" form.
+          tr -d '\r' < stdlib-SHA256SUMS > stdlib-SHA256SUMS.clean
+          expected="$(awk -v a="$asset" '($2==a || $2==("*" a)) {print $1; exit}' stdlib-SHA256SUMS.clean)"
+          if [ -z "$expected" ]; then
+            echo "no SHA256 entry for $asset" >&2
+            exit 1
+          fi
+          printf '%s  %s\n' "$expected" "$asset" | sha256sum -c -
+          tar -xzf "${asset}" -C pkg
           test -f pkg/package.xi
           echo "package contents:"; ls -la pkg
 
@@ -124,9 +135,16 @@ jobs:
           curl -fsSL -o "${asset}" "${base}/${asset}"
           # The official archive is pinned by its published SHA256SUMS: a
           # tampered mirror or a truncated download fails here, before the
-          # compiler ever runs in the publish job. Keep the canonical asset
-          # name -- `sha256sum -c` resolves the file name from the manifest.
-          grep " ${asset}\$" SHA256SUMS | sha256sum -c -
+          # compiler ever runs in the publish job. Normalize CRLF (the Windows
+          # release manifest is CRLF) and accept both the two-space text form
+          # and the binary "*name" form.
+          tr -d '\r' < SHA256SUMS > SHA256SUMS.clean
+          expected="$(awk -v a="$asset" '($2==a || $2==("*" a)) {print $1; exit}' SHA256SUMS.clean)"
+          if [ -z "$expected" ]; then
+            echo "no SHA256 entry for $asset" >&2
+            exit 1
+          fi
+          printf '%s  %s\n' "$expected" "$asset" | sha256sum -c -
           mkdir -p compiler
           tar -xzf "${asset}" -C compiler
           if [ ! -x compiler/bin/xiom ]; then
