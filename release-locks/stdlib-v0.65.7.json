@@ -1,0 +1,10 @@
+﻿{
+    "schema":  1,
+    "tag":  "stdlib-v0.65.7",
+    "version":  "0.65.7",
+    "commit":  "4ec2055196fad89211e62244ba5b5802bf6927f2",
+    "tag_object":  "7eb9a7728fda4ce2238146bbf27501a49f93e680",
+    "compiler_version":  "v0.65.7",
+    "recorded":  "2026-11-07",
+    "source":  "tools/record_release_lock.ps1 at cut time"
+}
