@@ -6,8 +6,14 @@ different shapes under one leaf can clobber each other's fields. This is
 exactly how `net.net.HttpResponse` (2 fields) vs `net.http.HttpResponse`
 (3 fields) broke `http_parse_response`.
 
-**STATUS 2026-09-18: 0 conflicts.** All 16 original groups are resolved
-stdlib-side (renames in `tools/same_leaf_audit.ps1` batches 1-5) or
+**STATUS 2026-11-07: 0 conflicts.** The clean state regressed when
+`thread/pool.xi` added a 10-field `ThreadPool` alongside the 7-field
+`collect/threadpool.xi` type. The collect type is renamed
+`CollectThreadPool`; `thread.pool.ThreadPool` remains canonical (richer).
+Re-audit: 355 declarations, 23 multi-declaration leaves, 0 shape conflicts.
+
+**STATUS 2026-09-18 (historical): 0 conflicts.** All 16 original groups are
+resolved stdlib-side (renames in `tools/same_leaf_audit.ps1` batches 1-5) or
 reclassified by the audit parser fix for inline bodies:
 
 | Leaf | Resolution |
@@ -20,6 +26,7 @@ reclassified by the audit parser fix for inline bodies:
 | `IntMap` | `collect/map.xi` renamed `HashIntMap` |
 | `StringMap` | `collect/intmap.xi` renamed `OrderedStringMap` |
 | `Graph` | `math/graph_theory.xi` renamed `WeightedGraph` |
+| `ThreadPool` | `collect/threadpool.xi` renamed `CollectThreadPool` (2026-11-07); `thread.pool.ThreadPool` (10 fields) is canonical |
 | `Executor` | `async/async.xi` renamed `AsyncExecutor` |
 | `Future` | `async/timer.xi` renamed `TimerFuture` |
 | `FloatScan` | `format/fmt.xi` renamed `FormatFloatScan` |

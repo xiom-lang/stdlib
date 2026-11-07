@@ -311,3 +311,29 @@ kat_convert_base64_parity.xi as the template).
 4. Convert twin to shim; run FULL sweep; expect zero deltas beyond shim
    smoke additions.
 5. Mark shim headers DEPRECATED with migration note.
+
+## E4 same-leaf public dedup (2026-11-07)
+
+- **ThreadPool (done):** `collect/threadpool.xi` declared a 7-field
+  `ThreadPool` while `thread/pool.xi` declared the richer 10-field
+  `ThreadPool`; this was a live R44 shape conflict. The collect type is now
+  `CollectThreadPool` (public function names unchanged). Re-audit: 355
+  declarations, 23 multi-declaration leaves, **0 shape conflicts**;
+  `smoke_collect_threadpool` and `p_wave193_collect_contracts` green.
+- **JsonValue:** the same enum is declared in `serialize/json.xi` and
+  `serialize/serialize.xi` (shape-identical). Plan: keep `serialize/json.xi`
+  canonical, make `serialize/serialize.xi` reference/re-export it, then
+  verify the `Serialize`/`Deserialize` impls and `use xiom.serialize`
+  consumers before regenerating api_freeze. No rename until the freeze.
+- **json_escape x4:** `convert/json.xi`, `serialize/json.xi`,
+  `serialize/serialize.xi` (pub) and `log/json.xi` (private). Plan: compare
+  quote/control-char/unicode vectors first; consolidate the private log
+  helper onto the canonical serializer escape; then keep one public
+  entrypoint and make the others delegate, with twin-vs-vector parity.
+- **build x2:** the current tree only shows the private
+  `error.context.build`; the roadmap's `build` x2 likely refers to builder
+  methods. Re-audit the exact symbols before changing anything.
+- **Exit:** same-leaf audit clean (done); api_freeze regeneration via the
+  existing m125+CI path is the remaining E4 closeout step after JsonValue /
+  json_escape.
+

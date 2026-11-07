@@ -16,7 +16,7 @@ module xiom.collect.threadpool
 /// the handle waits in the queue; pool_join completes every pending job
 /// instantly (no real work runs) and returns all workers to idle. Submit after
 /// shutdown returns false.
-pub type ThreadPool = {
+pub type CollectThreadPool = {
   workers: Int;
   idle: Int;
   busy: Int;
@@ -30,7 +30,7 @@ pub type ThreadPool = {
 /// Params: workers - fixed number of workers (clamped to >= 1).
 /// Returns: a new pool with all workers idle and no pending jobs.
 /// Complexity: O(1).
-pub fn thread_pool_new(workers: Int) -> ThreadPool
+pub fn thread_pool_new(workers: Int) -> CollectThreadPool
   ensures: result.workers >= 1
   ensures: result.idle == result.workers
   ensures: result.busy == 0
@@ -38,7 +38,7 @@ pub fn thread_pool_new(workers: Int) -> ThreadPool
 {
   var w = workers;
   if w < 1 { w = 1; }
-  return ThreadPool{ workers: w; idle: w; busy: 0; queued: Vec[Int].new(); next_id: 0; completed: 0; closed: false; };
+  return CollectThreadPool{ workers: w; idle: w; busy: 0; queued: Vec[Int].new(); next_id: 0; completed: 0; closed: false; };
 }
 
 /// Enqueue a job; false if the pool is shut down.
@@ -46,7 +46,7 @@ pub fn thread_pool_new(workers: Int) -> ThreadPool
 /// pool is a pure-XIOM simulation over Int job handles).
 /// Returns: true on acceptance, false if the pool is shut down.
 /// Complexity: O(1) amortized.
-pub fn pool_submit(p: &mut ThreadPool, job: fn()) -> Bool
+pub fn pool_submit(p: &mut CollectThreadPool, job: fn()) -> Bool
   ensures: result == true => p.queued.len() >= 1
   ensures: p.busy + p.idle == p.workers
 {
@@ -66,7 +66,7 @@ pub fn pool_submit(p: &mut ThreadPool, job: fn()) -> Bool
 /// Completes every queued job (they finish immediately in the simulation) and
 /// returns all workers to the idle state.
 /// Complexity: O(n) where n is the number of pending jobs.
-pub fn pool_join(p: &mut ThreadPool)
+pub fn pool_join(p: &mut CollectThreadPool)
   ensures: p.queued.len() == 0
   ensures: p.busy == 0
   ensures: p.idle == p.workers
@@ -84,7 +84,7 @@ pub fn pool_join(p: &mut ThreadPool)
 /// Closes the pool (submit returns false afterwards) and drains the pending
 /// queue as pool_join does.
 /// Complexity: O(n) where n is the number of pending jobs.
-pub fn pool_shutdown(p: &mut ThreadPool)
+pub fn pool_shutdown(p: &mut CollectThreadPool)
   ensures: p.closed == true
   ensures: p.queued.len() == 0
 {
@@ -96,7 +96,7 @@ pub fn pool_shutdown(p: &mut ThreadPool)
 /// Params: p - the pool.
 /// Returns: the fixed worker count.
 /// Complexity: O(1).
-pub fn pool_size(p: &ThreadPool) -> Int
+pub fn pool_size(p: &CollectThreadPool) -> Int
   ensures: result >= 0
 {
   return p.workers;
@@ -106,7 +106,7 @@ pub fn pool_size(p: &ThreadPool) -> Int
 /// Params: p - the pool.
 /// Returns: workers not currently assigned a job.
 /// Complexity: O(1).
-pub fn pool_idle_count(p: &ThreadPool) -> Int
+pub fn pool_idle_count(p: &CollectThreadPool) -> Int
   ensures: result >= 0
 {
   return p.idle;
@@ -116,7 +116,7 @@ pub fn pool_idle_count(p: &ThreadPool) -> Int
 /// Params: p - the pool.
 /// Returns: workers currently assigned a job (does not include queued work).
 /// Complexity: O(1).
-pub fn pool_busy_count(p: &ThreadPool) -> Int
+pub fn pool_busy_count(p: &CollectThreadPool) -> Int
   ensures: result >= 0
 {
   return p.busy;
