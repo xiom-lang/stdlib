@@ -79,7 +79,9 @@ pub fn to_string(n: Int) -> Str
   var i = digits.len() - 1;
   while i >= 0 {
     var d = digits[i];
-    result = string.str_concat(result, string.str_slice("0123456789", d, d + 1));
+    // `+` lowers to the runtime concat (one allocation) and the codegen
+    // frees the freshly allocated `str_slice` temporary after the copy.
+    result = result + string.str_slice("0123456789", d, d + 1);
     i = i - 1;
   };
   result

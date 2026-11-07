@@ -52,15 +52,16 @@ $defaultFiles = @(
   "tools/probes/p_json_ref_api.xi",
   "tools/probes/p_json_parse_depth_cap.xi"
 )
-$fuzzFiles = @(
+$extraMemoryFiles = @(
   "tests/smoke/smoke_fuzz_bignum.xi",
   "tests/smoke/smoke_fuzz_ffi.xi",
   "tests/smoke/smoke_fuzz_encodings.xi",
   "tests/smoke/smoke_net_framing_strict.xi",
-  "tests/smoke/smoke_net_websocket_strict.xi"
+  "tests/smoke/smoke_net_websocket_strict.xi",
+  "tests/smoke/smoke_stress_convert_int_to_string_min.xi"
 )
 if ($Files.Count -eq 0) { $Files = $defaultFiles }
-if ($MemoryFiles.Count -eq 0) { $MemoryFiles = @($Files) + $fuzzFiles }
+if ($MemoryFiles.Count -eq 0) { $MemoryFiles = @($Files) + $extraMemoryFiles }
 if ($LeakFiles.Count -eq 0) { $LeakFiles = $Files }
 
 $ErrorActionPreference = "Continue"
