@@ -29,6 +29,7 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <sys/statvfs.h>
+#include <sys/mman.h>
 #endif
 
 #if defined(__APPLE__)
@@ -393,7 +394,20 @@ void xiom_process_exit(int code) {
 void* xiom_alloc(long long size) {
     if (size <= 0) return NULL;
     void* p = malloc((size_t)size);
-    if (p) memset(p, 0, (size_t)size);
+    if (!p) return NULL;
+#if defined(__linux__) && defined(__x86_64__) && defined(MADV_HUGEPAGE)
+    /* Large blocks: request 2 MiB transparent huge pages BEFORE the first
+       touch. The memset below (and any immediately following bulk fill)
+       then faults 2 MiB pages instead of 4 KiB pages. This is a hint only:
+       kernels with THP disabled return EINVAL and the allocation still has
+       identical zeroed-memory semantics. */
+    if (size >= (4LL << 20)) {
+        uintptr_t start = (uintptr_t)p & ~(uintptr_t)4095u;
+        uintptr_t end = (uintptr_t)p + (uintptr_t)size;
+        (void)madvise((void*)start, (size_t)(end - start), MADV_HUGEPAGE);
+    }
+#endif
+    memset(p, 0, (size_t)size);
     return p;
 }
 
