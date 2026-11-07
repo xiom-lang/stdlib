@@ -62,6 +62,11 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   before the colon, TE.TE/TE+CL, NUL/CTL in the head, extra request-line
   tokens and obs-fold; `smoke_net_framing_strict` added. SLA breaches were
   recorded (critical ~3 h, high ~20 h).
+- **PULSE WebSocket critical fixed (block 350):** `REL-20261107-1349-pulse`:
+  `ws_frame_take` rejects MSB-set/non-minimal/oversize lengths, RSV bits,
+  invalid opcodes/control frames, invalid close codes/reasons and invalid
+  UTF-8 final text; new `smoke_net_websocket_strict`; memory 17/17, leak
+  12/12.
 - **E4 (in_progress, block 349):** same-leaf audit found a `ThreadPool`
   conflict; collect type renamed `CollectThreadPool`; re-audit 0 conflicts.
   Remaining: `JsonValue` x2, `json_escape` x4, `build` x2 + api_freeze.
@@ -83,7 +88,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\stdlib pull --ff-only origin main
   git -C E:\xiom-lang\xiom-relays pull --ff-only
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 121 + blocks 349/348/347.
+Read docs/stdlib_session.md snapshot 121 + blocks 350/349/348.
 
 STATE (2026-11-06):
 - READINESS 10/10; v0.65.6 shipped (tag 6fdde4e; release 41873341844;
@@ -98,6 +103,8 @@ STATE (2026-11-06):
   every public function is covered or exempt.
 - PULSE HTTP framing fixed: REL-20261107-1032 (critical) / REL-20261106-1716
   (high); strict `server_parse_request` + `smoke_net_framing_strict`.
+- PULSE WebSocket critical fixed: REL-20261107-1349; strict `ws_frame_take`
+  (negative-count class) + `smoke_net_websocket_strict`; memory 17/17.
 - E4 in_progress: ThreadPool -> CollectThreadPool; audit 0 conflicts;
   remaining JsonValue/json_escape/build + api_freeze.
 - G2 DONE: ownership map + relay triage SLA; 131 items, median ack 0.45 h;
@@ -4699,6 +4706,20 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-11-07 block 350 (PULSE critical WebSocket frame hardening; negative consumed count fixed)**
+- **REL-20261107-1349-pulse (critical)** acked and fixed in `e8ab289`.
+  Root cause: the 64-bit length shift produced a negative `Int` when the MSB
+  was set, so `ws_frame_take` returned a negative consumed count.
+- **Parser:** rejects MSB-set and non-minimal 16/64-bit lengths, declared
+  payloads over 1 MiB, RSV bits, invalid opcodes, fragmented/oversize
+  control frames, 1-byte/invalid close codes (including 1005/1006/1015 and
+  reserved ranges) with a UTF-8 reason, and invalid UTF-8 in final text
+  frames. The consumed count can no longer be negative.
+- **Tests:** `smoke_net_websocket_strict` covers the negative corpus;
+  `p_wave121_shapes` and `p_wave62_shapes` are green; memory sanitizer lane
+  **17/17**, leak lane **12/12**.
+- **No release cut.**
 
 **SESSION 2026-11-07 block 349 (PULSE HTTP/1.1 framing hardening; E4 ThreadPool dedup; G2 relay SLA)**
 - **PULSE critical/high:** `REL-20261107-1032-pulse` (critical) and
