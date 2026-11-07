@@ -61,12 +61,23 @@ pub type ServerRequest = {
 
 /// server_parse_request parses raw HTTP/1.x request bytes (head + body)
 /// into method/target/version, a lowercased (name, value) header list and
-/// the body span. Returns None when the request line is malformed, the
-/// header block is not CRLF-terminated, a header has no colon, or a
-/// Content-Length value is missing/negative/not an integer. The head is
-/// parsed directly from the byte buffer using (start, len) spans: no
-/// whole-head copy is made and each returned field is a single
+/// the body span. Returns None when the request line is malformed or has a
+/// CTL/NUL/DEL or an extra token, the version is not HTTP/1.x, the header
+/// block is not CRLF-terminated, a field line is obs-folded/leading-spaced,
+/// a field line contains a forbidden CTL, a field name contains whitespace
+/// or has whitespace before the colon, a Content-Length is duplicated,
+/// non-digit or overflowing, a Transfer-Encoding is duplicated or not
+/// exactly "chunked", or both Content-Length and Transfer-Encoding are
+/// present. The body remains binary-safe (only the head is validated). The
+/// head is parsed directly from the byte buffer using (start, len) spans:
+/// no whole-head copy is made and each returned field is a single
 /// allocation. Complexity: O(n). Pure.
+///
+/// R3: the returned Some payload owns its Str leaves (method/target/version,
+/// header names/values) and its `headers` Vec buffer; the caller may reclaim
+/// them. `#[owns_return]` also forces main-heap allocation for the payload so
+/// a confined caller can free it.
+#[owns_return]
 #[borrows_vec]
 pub fn server_parse_request(bytes: &Vec[UInt8]) -> Option[ServerRequest]
   ensures: (bytes.len() == 0) => (result.is_none == true)
@@ -99,6 +110,16 @@ pub fn server_parse_request(bytes: &Vec[UInt8]) -> Option[ServerRequest]
     }
   }
   if rl_end <= 0 { return None; }
+
+  // Strict request-line hygiene: no CTLs (including NUL) and no DEL. This is
+  // what prevents the NUL-truncation differential: _str_from_byte_span uses
+  // Str.from_cstring, so a NUL would silently cut the field.
+  var rl_scan = 0;
+  while rl_scan < rl_end {
+    if bytes[rl_scan] < 32u8 || bytes[rl_scan] == 127u8 { return None; }
+    rl_scan = rl_scan + 1;
+  }
+
   var sp1 = -1;
   var b = 0;
   while b < rl_end {
@@ -125,14 +146,27 @@ pub fn server_parse_request(bytes: &Vec[UInt8]) -> Option[ServerRequest]
   let method = _str_from_byte_span(bytes, 0, sp1);
   let target = _str_from_byte_span(bytes, sp1 + 1, sp2);
   let version = _str_from_byte_span(bytes, sp2 + 1, rl_end);
+  // Exactly HTTP/1.<digit>; an extra request-line token makes the version
+  // longer and is rejected here.
+  if version.len() != 8 { return None; }
+  if !string.str_starts_with(version, "HTTP/1.") { return None; }
 
-  // Headers: parse name/value pairs straight from the buffer. The name is
-  // lowercased in the same copy; the value skips one leading space to
-  // match the historic single-OWS trim.
+  // Headers: parse name/value pairs straight from the buffer. Names are
+  // lowercased in the same copy. RFC 9112 framing is enforced:
+  //   - no obs-fold or leading whitespace on a field line;
+  //   - no CTL in a field line (HTAB is allowed in the value only);
+  //   - no whitespace inside the field name or before the colon;
+  //   - OWS is trimmed from both ends of the value;
+  //   - exactly one Content-Length, digits only, no overflow;
+  //   - at most one Transfer-Encoding and it must be exactly "chunked";
+  //   - Content-Length and Transfer-Encoding cannot both be present.
   var headers = Vec[(Str, Str)].with_capacity(8);
   var body_len = 0;
+  var cl_seen = false;
+  var te_seen = false;
   var pos = rl_end + 2;
   while pos < head_end {
+    if bytes[pos] == 32u8 || bytes[pos] == 9u8 { return None; }
     var le = -1;
     var d = pos;
     while d + 1 < head_end {
@@ -144,6 +178,14 @@ pub fn server_parse_request(bytes: &Vec[UInt8]) -> Option[ServerRequest]
       }
     }
     if le < 0 { le = head_end; }
+
+    var fscan = pos;
+    while fscan < le {
+      let fb = bytes[fscan];
+      if ((fb < 32u8) && (fb != 9u8)) || fb == 127u8 { return None; }
+      fscan = fscan + 1;
+    }
+
     var colon = -1;
     var e = pos;
     while e < le {
@@ -155,21 +197,47 @@ pub fn server_parse_request(bytes: &Vec[UInt8]) -> Option[ServerRequest]
       }
     }
     if colon <= pos { return None; }
+    var ns = pos;
+    while ns < colon {
+      if bytes[ns] == 32u8 || bytes[ns] == 9u8 { return None; }
+      ns = ns + 1;
+    }
     let name = _str_lower_from_byte_span(bytes, pos, colon);
+
     var vstart = colon + 1;
-    if vstart < le {
-      if bytes[vstart] == 32u8 { vstart = vstart + 1; }
+    while vstart < le && (bytes[vstart] == 32u8 || bytes[vstart] == 9u8) {
+      vstart = vstart + 1;
     }
-    let value = _str_from_byte_span(bytes, vstart, le);
+    var vend = le;
+    while vend > vstart && (bytes[vend - 1] == 32u8 || bytes[vend - 1] == 9u8) {
+      vend = vend - 1;
+    }
+    let value = _str_from_byte_span(bytes, vstart, vend);
+
     if name == "content-length" {
-      match string.str_to_int(value) {
-        Ok(v) => {
-          if v < 0 { return None; }
-          body_len = v;
-        },
-        Err(_) => { return None; },
+      if cl_seen { return None; }
+      cl_seen = true;
+      if vstart >= vend { return None; }
+      var v = 0;
+      var k = vstart;
+      while k < vend {
+        let db = bytes[k];
+        if db < 48u8 || db > 57u8 { return None; }
+        let dg = (db - 48u8) as Int;
+        if v > 922337203685477580 { return None; }
+        if v == 922337203685477580 && dg > 7 { return None; }
+        v = v * 10 + dg;
+        k = k + 1;
       }
+      body_len = v;
     }
+    if name == "transfer-encoding" {
+      if te_seen { return None; }
+      te_seen = true;
+      if string.str_lower(value) != "chunked" { return None; }
+    }
+    if cl_seen && te_seen { return None; }
+
     headers.push((name, value));
     pos = le + 2;
   }
@@ -178,6 +246,7 @@ pub fn server_parse_request(bytes: &Vec[UInt8]) -> Option[ServerRequest]
 
 /// server_build_status_line builds a status line like
 /// "HTTP/1.1 200 OK". Complexity: O(1). Pure.
+#[owns_str]
 pub fn server_build_status_line(code: Int) -> Str
   ensures: result.len() >= 13 && ((code == 200) => (result == "HTTP/1.1 200 OK")) && ((code == 404) => (result == "HTTP/1.1 404 Not Found")) && ((code == 500) => (result == "HTTP/1.1 500 Internal Server Error"))
 {

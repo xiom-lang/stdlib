@@ -34,9 +34,10 @@ param(
   [switch]$CompileOnly
 )
 
-# Default sets. The memory lane includes the A3 fuzz targets; the leak lane
-# keeps the original baselined files until a nightly ASan run records a leak
-# budget for the fuzz targets (do not give them a silent 0-byte budget).
+# Default sets. The memory lane includes the A3 fuzz targets and the strict
+# HTTP framing parser corpus; the leak lane keeps the original baselined files
+# until a nightly ASan run records a leak budget for the new targets (do not
+# give them a silent 0-byte budget).
 $defaultFiles = @(
   "tests/smoke/smoke_alloc.xi",
   "tests/smoke/smoke_alloc_edge.xi",
@@ -54,7 +55,8 @@ $defaultFiles = @(
 $fuzzFiles = @(
   "tests/smoke/smoke_fuzz_bignum.xi",
   "tests/smoke/smoke_fuzz_ffi.xi",
-  "tests/smoke/smoke_fuzz_encodings.xi"
+  "tests/smoke/smoke_fuzz_encodings.xi",
+  "tests/smoke/smoke_net_framing_strict.xi"
 )
 if ($Files.Count -eq 0) { $Files = $defaultFiles }
 if ($MemoryFiles.Count -eq 0) { $MemoryFiles = @($Files) + $fuzzFiles }
