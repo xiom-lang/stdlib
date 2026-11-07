@@ -29,6 +29,11 @@ SPDX-License-Identifier: MIT OR Apache-2.0
   ffi 4, format 2). Coverage is **6,716/6,992 (96.1%)** with the nine format
   ANSI clauses; every public function is covered or has a per-function
   exemption.
+- **v0.65.7 cut (block 351):** tag `stdlib-v0.65.7` object `7eb9a77` at
+  `4ec2055`; `package.xi` 0.65.7 and `COMPILER_VERSION=v0.65.7`; release
+  lock recorded; the v0.65.6 tag is not re-pointed. Release run `42381337823`
+  has validate green; the compiler `v0.65.7` tag/asset is still pending, so
+  the stdlib asset may need a re-run.
 - **Readiness 10/10:** unchanged (gate 9 closed 2026-11-04; PULSE verified
   1704 on the published v0.65.6). v0.65.6 shipped: tag `6fdde4e`, release
   41873341844, registry 41873341859 (xiom-std 0.65.6, compiler v0.65.6).
@@ -88,7 +93,7 @@ Resume the XIOM stdlib lane (repo E:\xiom-lang\stdlib). Start with:
   git -C E:\xiom-lang\stdlib pull --ff-only origin main
   git -C E:\xiom-lang\xiom-relays pull --ff-only
   python E:\xiom-lang\xiom-relays\tools\relay.py view --lane stdlib
-Read docs/stdlib_session.md snapshot 121 + blocks 350/349/348.
+Read docs/stdlib_session.md snapshot 121 + blocks 351/350/349.
 
 STATE (2026-11-06):
 - READINESS 10/10; v0.65.6 shipped (tag 6fdde4e; release 41873341844;
@@ -105,6 +110,9 @@ STATE (2026-11-06):
   (high); strict `server_parse_request` + `smoke_net_framing_strict`.
 - PULSE WebSocket critical fixed: REL-20261107-1349; strict `ws_frame_take`
   (negative-count class) + `smoke_net_websocket_strict`; memory 17/17.
+- v0.65.7 tag cut: `stdlib-v0.65.7` object 7eb9a77 at 4ec2055; package
+  0.65.7, COMPILER_VERSION v0.65.7, lock recorded. Release run 42381337823
+  validate green; compiler v0.65.7 tag/asset pending (asset may need re-run).
 - E4 in_progress: ThreadPool -> CollectThreadPool; audit 0 conflicts;
   remaining JsonValue/json_escape/build + api_freeze.
 - G2 DONE: ownership map + relay triage SLA; 131 items, median ack 0.45 h;
@@ -4706,6 +4714,27 @@ registry pin, agent recon for the rest)**
 - This wave is the first POST-TAG tail: stdlib-v0.64.6 stays at b81430b
   (the actor's pin; does not carry this fix) -- noted on 1404/1452 for
   the next pin.
+
+**SESSION 2026-11-07 block 351 (v0.65.7 RELEASE CUT: stdlib-v0.65.7 tag pushed; asset pending compiler v0.65.7)**
+- **Fixes adopted:** THP `madvise` for `xiom_alloc` >= 4 MiB (`eb4509e`);
+  `convert.to_string` owned concat (`1860c66`). Convert suite green; memory
+  sanitizer lane **18/18**; the modified runtime compiled and ran on Windows.
+- **Release prep (`4ec2055`):** `package.xi` 0.65.7,
+  `COMPILER_VERSION=v0.65.7`, CHANGELOG and
+  `release-notes/v0.65.7.md` (HTTP/WebSocket framing hardening, THP, contract
+  tail, `CollectThreadPool` breaking rename).
+- **Tag:** `stdlib-v0.65.7` annotated tag object
+  `7eb9a7728fda4ce2238146bbf27501a49f93e680` at commit
+  `4ec2055196fad89211e62244ba5b5802bf6927f2`, pushed.
+  `release-locks/stdlib-v0.65.7.json` recorded; the release-state guard is
+  OK. The v0.65.6 tag is untouched and not re-pointed.
+- **Release run `42381337823`:** validate SUCCESS; gates in progress. The
+  compiler `v0.65.7` tag is still absent remotely, so the compiler-build
+  gate (and therefore the asset) may fail. Once the compiler lane creates
+  `v0.65.7` pinning `stdlib-v0.65.7`, re-run the stdlib release workflow and
+  report the asset SHA256.
+- **Relay:** `REL-20261107-1333-compiler` acked with the tag object/commit;
+  the asset remains pending.
 
 **SESSION 2026-11-07 block 350 (PULSE critical WebSocket frame hardening; negative consumed count fixed)**
 - **REL-20261107-1349-pulse (critical)** acked and fixed in `e8ab289`.
