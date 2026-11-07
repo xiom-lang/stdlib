@@ -56,7 +56,8 @@ $fuzzFiles = @(
   "tests/smoke/smoke_fuzz_bignum.xi",
   "tests/smoke/smoke_fuzz_ffi.xi",
   "tests/smoke/smoke_fuzz_encodings.xi",
-  "tests/smoke/smoke_net_framing_strict.xi"
+  "tests/smoke/smoke_net_framing_strict.xi",
+  "tests/smoke/smoke_net_websocket_strict.xi"
 )
 if ($Files.Count -eq 0) { $Files = $defaultFiles }
 if ($MemoryFiles.Count -eq 0) { $MemoryFiles = @($Files) + $fuzzFiles }

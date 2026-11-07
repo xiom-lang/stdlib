@@ -455,12 +455,28 @@ pub fn ws_frame_encode_fin(opcode: Int, fin: Bool, payload: &Vec[UInt8], mask: B
   out
 }
 
+// _valid_close_code accepts the RFC 6455 close-code ranges. 1005/1006 are
+// reserved for local reporting and MUST NOT appear on the wire; 1016..2999
+// are reserved; 5000+ is unassigned.
+fn _valid_close_code(code: Int) -> Bool {
+  if code < 1000 { return false; }
+  if code == 1004 || code == 1005 || code == 1006 || code == 1015 { return false; }
+  if code >= 1016 && code <= 2999 { return false; }
+  if code > 4999 { return false; }
+  return true;
+}
+
 /// ws_frame_take parses the first WebSocket frame from bytes and reports
 /// how many bytes it consumed (only that many belong to the frame; any
 /// trailing bytes stay with the caller). Err("incomplete frame") means
 /// "read more bytes and retry" -- the incremental reader treats every Err
-/// as insufficient input and is bounded by its own size cap. Complexity:
-/// O(n). Pure.
+/// as insufficient input and is bounded by its own size cap. Validation:
+/// RSV bits are rejected, only known opcodes are accepted, control frames
+/// must be final and <=125 bytes, lengths must be minimal, the 64-bit MSB
+/// must be clear, declared payloads above 1 MiB are rejected, close codes
+/// must be wire-valid (with a UTF-8 reason), and a final text frame must be
+/// valid UTF-8. Fragmented text/continuation validity is the caller's
+/// reassembly responsibility. Complexity: O(n). Pure.
 pub fn ws_frame_take(bytes: &Vec[UInt8]) -> Result[(WsFrame, Int), Str]
   ensures: result is Ok => bytes.len() >= 2
 {
@@ -472,18 +488,31 @@ pub fn ws_frame_take(bytes: &Vec[UInt8]) -> Result[(WsFrame, Int), Str]
   let fin = (b0 & 0x80) != 0;
   let opcode = b0 & 0x0F;
   let masked = (b1 & 0x80) != 0;
+  if (b0 & 0x70) != 0 { return Err("reserved bits set"); }
+  if !(opcode == 0 || opcode == 1 || opcode == 2 || opcode == 8 || opcode == 9 || opcode == 10) {
+    return Err("invalid opcode");
+  }
   var payload_len = b1 & 0x7F;
+  if opcode >= 8 {
+    if !fin { return Err("fragmented control frame"); }
+    if payload_len > 125 { return Err("control frame too large"); }
+  }
   var offset = 2;
   if payload_len == 126 {
     if bytes.len() < 4 {
       return Err("incomplete frame");
     }
     payload_len = ((bytes[2] as Int) << 8) | (bytes[3] as Int);
+    if payload_len < 126 { return Err("non-minimal length"); }
     offset = 4;
   } elif payload_len == 127 {
     if bytes.len() < 10 {
       return Err("incomplete frame");
     }
+    // Bit 63 of the 64-bit length must be zero; the RFC caps the value at
+    // 2^63-1. Shifting 0x80.. into a signed Int would go negative and the
+    // old parser returned that negative count to the caller.
+    if (bytes[2] as Int) >= 128 { return Err("invalid frame length"); }
     payload_len = 0;
     var shift = 56;
     var k = 2;
@@ -492,8 +521,11 @@ pub fn ws_frame_take(bytes: &Vec[UInt8]) -> Result[(WsFrame, Int), Str]
       shift = shift - 8;
       k = k + 1;
     }
+    if payload_len < 0 { return Err("invalid frame length"); }
+    if payload_len < 65536 { return Err("non-minimal length"); }
     offset = 10;
   }
+  if payload_len > 1048576 { return Err("frame too large"); }
   var mask_key: [4]UInt8;
   if masked {
     if bytes.len() < offset + 4 {
@@ -507,6 +539,7 @@ pub fn ws_frame_take(bytes: &Vec[UInt8]) -> Result[(WsFrame, Int), Str]
     offset = offset + 4;
   }
   let total = offset + payload_len;
+  if total < 0 { return Err("invalid frame length"); }
   if bytes.len() < total {
     return Err("incomplete frame");
   }
@@ -519,6 +552,23 @@ pub fn ws_frame_take(bytes: &Vec[UInt8]) -> Result[(WsFrame, Int), Str]
       payload.push(bytes[offset + i]);
     }
     i = i + 1;
+  }
+  if opcode == 1 && fin {
+    if !encoding.utf8_valid(&payload) { return Err("invalid utf8"); }
+  }
+  if opcode == 8 {
+    if payload.len() == 1 { return Err("invalid close payload"); }
+    if payload.len() >= 2 {
+      let code = ((payload[0] as Int) << 8) | (payload[1] as Int);
+      if !_valid_close_code(code) { return Err("invalid close code"); }
+      var reason = Vec[UInt8].new();
+      var ri = 2;
+      while ri < payload.len() {
+        reason.push(payload[ri]);
+        ri = ri + 1;
+      }
+      if !encoding.utf8_valid(&reason) { return Err("invalid close reason"); }
+    }
   }
   Ok((WsFrame{ opcode: opcode; fin: fin; masked: masked; payload: payload; }, total))
 }
